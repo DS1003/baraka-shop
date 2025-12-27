@@ -4,6 +4,7 @@ import React from 'react'
 import { Package, Clock, CreditCard, ChevronRight, Zap, Target, History, Sparkles, Truck } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 
 export default function AccountPage() {
     return (
@@ -112,11 +113,19 @@ export default function AccountPage() {
 
             {/* Info Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-8 rounded-[2.5rem] border border-gray-100 bg-white hover:border-black transition-all group">
-                    <History className="text-gray-300 mb-6 group-hover:text-black transition-colors" size={32} />
-                    <h4 className="text-lg font-black mb-2">Dernière activité</h4>
-                    <p className="text-sm text-gray-400 font-medium leading-relaxed">Vous avez mis à jour votre adresse de livraison au Plateau.</p>
-                </div>
+                <Link href="/account/wishlist" className="p-8 rounded-[2.5rem] border border-gray-100 bg-white hover:border-red-500 hover:shadow-2xl hover:shadow-red-500/5 transition-all group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Sparkles size={80} />
+                    </div>
+                    <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <History size={24} />
+                    </div>
+                    <h4 className="text-lg font-black mb-2 uppercase italic tracking-tighter">Ma Wishlist</h4>
+                    <p className="text-sm text-gray-400 font-medium leading-relaxed mb-6">4 articles attendent que vous craquiez.</p>
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase text-red-500 group-hover:gap-4 transition-all">
+                        Voir mes favoris <ChevronRight size={14} />
+                    </div>
+                </Link>
                 <div className="p-8 rounded-[2.5rem] border border-gray-100 bg-white hover:border-black transition-all group">
                     <Target className="text-gray-300 mb-6 group-hover:text-black transition-colors" size={32} />
                     <h4 className="text-lg font-black mb-2">Préférences</h4>
@@ -127,6 +136,4 @@ export default function AccountPage() {
     )
 }
 
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(' ')
-}
+

@@ -83,10 +83,10 @@ export default function Navbar() {
                         <div className="flex items-center gap-2 md:gap-3">
 
                             {/* Desktop/Tablet Icons */}
-                            <Link href="/wishlist" className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 text-gray-900 transition-all hover:bg-red-50 hover:text-red-500 overflow-hidden lg:hidden xl:flex xl:w-auto xl:h-auto xl:bg-white xl:border xl:border-gray-100 xl:px-4 xl:py-2 xl:gap-3 xl:rounded-full">
+                            <Link href="/account/wishlist" className="hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 text-gray-900 transition-all hover:bg-red-50 hover:text-red-500 overflow-hidden lg:hidden xl:flex xl:w-auto xl:h-auto xl:bg-white xl:border xl:border-gray-100 xl:px-4 xl:py-2 xl:gap-3 xl:rounded-full">
                                 <div className="hidden xl:flex flex-col items-end leading-none">
                                     <span className="text-[9px] text-gray-400 font-bold uppercase">Mes Favoris</span>
-                                    <span className="text-xs font-black">0 Items</span>
+                                    <span className="text-xs font-black">4 Items</span>
                                 </div>
                                 <Heart size={18} className="xl:text-gray-900 group-hover:scale-110 transition-transform" />
                             </Link>
@@ -231,6 +231,15 @@ export default function Navbar() {
                                         <div className="flex-1">
                                             <div className="font-black text-gray-900 text-sm">Mon Compte</div>
                                             <div className="text-[10px] text-gray-400 font-bold">Gérer mes commandes</div>
+                                        </div>
+                                    </Link>
+                                    <Link href="/account/wishlist" onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-5 bg-gray-50 rounded-3xl group border border-gray-100">
+                                        <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                                            <Heart size={20} className="text-red-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="font-black text-gray-900 text-sm">Mes Favoris</div>
+                                            <div className="text-[10px] text-gray-400 font-bold">Liste de souhaits</div>
                                         </div>
                                     </Link>
                                     <Link href="/track-order" onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-5 bg-gray-50 rounded-3xl group border border-gray-100">
