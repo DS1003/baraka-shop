@@ -62,9 +62,10 @@ export default function CategoryBlock({ title, category, image, description }: C
                             >
                                 <div className="relative aspect-[4/5] mb-3 bg-[#f4f4f5] rounded-xl overflow-hidden">
                                     {/* Badges */}
-                                    {product.discount && (
+                                    {/* Badges */}
+                                    {product.oldPrice && (
                                         <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
-                                            -{product.discount}%
+                                            -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
                                         </span>
                                     )}
 
