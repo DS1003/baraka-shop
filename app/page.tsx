@@ -12,16 +12,20 @@ import CategoryBlock from '@/components/features/home/CategoryBlock'
 import Brands from '@/components/features/home/Brands'
 import PromoGrid from '@/components/features/home/PromoGrid'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
+import MobileStories from '@/components/features/navigation/MobileStories'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#f8f9fa] overflow-x-hidden">
+    <main className="min-h-screen bg-[#f8f9fa] overflow-x-hidden pb-32 md:pb-0">
 
       {/* Hero Section - Full Width, Immersive */}
       <Hero />
 
+      {/* Mobile-Only Stories Highlight */}
+      <MobileStories />
+
       {/* Service Features - Floating overlap with Glassmorphism */}
-      <div className="relative z-10 -mt-10 mb-16 container mx-auto px-4">
+      <div className="relative z-10 -mt-6 md:-mt-10 mb-10 md:mb-16 container mx-auto px-4">
         <ScrollReveal delay={0.2} direction="up">
           <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl rounded-2xl p-2">
             <ServiceFeatures />

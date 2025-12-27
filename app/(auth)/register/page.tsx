@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
-import Image from 'next/image'
+import { Eye, EyeOff, Globe, Sparkles, ArrowRight, ShieldCheck, UserPlus } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false)
@@ -12,126 +12,126 @@ export default function RegisterPage() {
 
     const handleRegister = (e: React.FormEvent) => {
         e.preventDefault()
-        // Mock register
         router.push('/account')
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
-                <div className="text-center">
-                    <Link href="/" className="inline-block relative w-32 h-10 mb-6">
-                        <Image
-                            src="https://darkslateblue-narwhal-655051.hostingersite.com/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png"
-                            alt="Baraka Shop"
-                            fill
-                            className="object-contain"
-                        />
+        <div className="min-h-screen bg-black flex overflow-hidden">
+
+            {/* Left Side: Branding (Cinematic) */}
+            <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-16 overflow-hidden">
+                <div className="relative z-10">
+                    <Link href="/" className="inline-block relative group">
+                        <div className="text-white font-black text-3xl tracking-tighter">Baraka<span className="text-primary italic">.</span></div>
                     </Link>
-                    <h2 className="text-3xl font-extrabold text-gray-900">Créer un compte</h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                        Rejoignez la communauté Baraka Shop
-                    </p>
+                    <motion.div
+                        initial={{ opacity: 0, x: -50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="mt-20"
+                    >
+                        <h1 className="text-7xl font-black text-white leading-none tracking-tighter mb-8">
+                            Privilège <br /> & <span className="text-primary italic">Innovation.</span>
+                        </h1>
+                        <p className="text-gray-400 text-lg font-medium max-w-sm">
+                            Rejoignez plus de 50,000 clients satisfaits à travers le Sénégal et profitez du meilleur de la technologie.
+                        </p>
+                    </motion.div>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleRegister}>
-                    <div className="space-y-4">
+                <div className="relative z-10 space-y-6">
+                    <div className="flex items-center gap-4 text-white/60">
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                            <ShieldCheck size={20} className="text-primary" />
+                        </div>
+                        <p className="text-xs font-bold leading-tight uppercase tracking-wider">Données 100% sécurisées <br /> & chiffrées</p>
+                    </div>
+                </div>
+
+                {/* Animated Background Glows */}
+                <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px] -mr-96 -mb-96" />
+                <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px] -ml-40 -mt-20" />
+            </div>
+
+            {/* Right Side: Form */}
+            <div className="flex-1 bg-white lg:rounded-l-[4rem] flex flex-col justify-center px-8 md:px-20 relative shadow-[-20px_0_60px_rgba(0,0,0,0.3)]">
+
+                {/* Mobile Header */}
+                <div className="lg:hidden absolute top-8 left-8 right-8 flex justify-between items-center">
+                    <div className="text-black font-black text-2xl tracking-tighter">Baraka<span className="text-primary italic">.</span></div>
+                    <Link href="/login" className="text-[10px] font-black uppercase tracking-widest text-primary">Se Connecter</Link>
+                </div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-md w-full mx-auto py-12"
+                >
+                    <div className="mb-10 text-center lg:text-left">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-[1.5rem] mb-6 lg:hidden">
+                            <UserPlus size={28} />
+                        </div>
+                        <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-none mb-4">Créer un compte.</h2>
+                        <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Simple. Rapide. Sécurisé.</p>
+                    </div>
+
+                    <form className="space-y-4" onSubmit={handleRegister}>
                         <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="first-name" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Prénom
-                                </label>
-                                <input
-                                    id="first-name"
-                                    name="first-name"
-                                    type="text"
-                                    required
-                                    className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                    placeholder="Moussa"
-                                />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Prénom</label>
+                                <input type="text" required className="w-full bg-gray-50 border-2 border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-black transition-all outline-none" placeholder="Moussa" />
                             </div>
-                            <div>
-                                <label htmlFor="last-name" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Nom
-                                </label>
-                                <input
-                                    id="last-name"
-                                    name="last-name"
-                                    type="text"
-                                    required
-                                    className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                    placeholder="Diop"
-                                />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Nom</label>
+                                <input type="text" required className="w-full bg-gray-50 border-2 border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-black transition-all outline-none" placeholder="Diop" />
                             </div>
                         </div>
 
-                        <div>
-                            <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
-                                Adresse Email
-                            </label>
-                            <input
-                                id="email-address"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                placeholder="vous@exemple.com"
-                            />
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Adresse Email</label>
+                            <input type="email" required className="w-full bg-gray-50 border-2 border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-black transition-all outline-none" placeholder="nom@exemple.sn" />
                         </div>
 
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                                Mot de passe
-                            </label>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Mot de passe</label>
                             <div className="relative">
                                 <input
-                                    id="password"
-                                    name="password"
                                     type={showPassword ? "text" : "password"}
-                                    autoComplete="new-password"
                                     required
-                                    className="appearance-none block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    className="w-full bg-gray-50 border-2 border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-black transition-all outline-none"
                                     placeholder="••••••••"
                                 />
                                 <button
                                     type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                    className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
                         </div>
+
+                        <div className="pt-4">
+                            <button
+                                type="submit"
+                                className="w-full bg-black text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-black/20 hover:bg-primary transition-all active:scale-95 flex items-center justify-center gap-3"
+                            >
+                                Créer l'Espace Premium <ArrowRight size={18} />
+                            </button>
+                        </div>
+                    </form>
+
+                    <div className="mt-8">
+                        <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+                            En créant un compte, vous acceptez nos <Link href="/terms" className="text-black font-black underline">Conditions Générales</Link> et notre <Link href="/privacy" className="text-black font-black underline">Politique de Confidentialité</Link>.
+                        </p>
+
+                        <p className="mt-10 text-center text-gray-400 font-bold text-xs">
+                            Déjà un compte ?{' '}
+                            <Link href="/login" className="text-primary hover:underline">Se connecter maintenant</Link>
+                        </p>
                     </div>
-
-                    <div className="flex items-center">
-                        <input
-                            id="terms"
-                            name="terms"
-                            type="checkbox"
-                            required
-                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                        />
-                        <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-                            J'accepte les <Link href="/terms" className="text-primary hover:underline">Conditions Générales</Link>
-                        </label>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors shadow-lg shadow-primary/30"
-                    >
-                        Créer mon compte
-                    </button>
-                </form>
-
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    Déjà un compte ?{' '}
-                    <Link href="/login" className="font-medium text-primary hover:text-orange-600">
-                        Se connecter
-                    </Link>
-                </p>
+                </motion.div>
             </div>
         </div>
     )

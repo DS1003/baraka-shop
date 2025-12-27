@@ -44,6 +44,8 @@ export default function Footer() {
                         <ul className="space-y-3 text-sm">
                             <li><Link href="/shop" className="hover:text-primary transition-colors flex items-center gap-2"><span>›</span> Boutique</Link></li>
                             <li><Link href="/shop?tag=deals" className="hover:text-primary transition-colors flex items-center gap-2"><span>›</span> Promotions</Link></li>
+                            <li><Link href="/track-order" className="hover:text-primary transition-colors flex items-center gap-2"><span>›</span> Suivre une commande</Link></li>
+                            <li><Link href="/stores" className="hover:text-primary transition-colors flex items-center gap-2"><span>›</span> Nos Boutiques</Link></li>
                             <li><Link href="/about" className="hover:text-primary transition-colors flex items-center gap-2"><span>›</span> À Propos</Link></li>
                             <li><Link href="/contact" className="hover:text-primary transition-colors flex items-center gap-2"><span>›</span> Contact</Link></li>
                         </ul>

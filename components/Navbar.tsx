@@ -167,7 +167,7 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Mobile Drawer Overlay */}
+            {/* Mobile Bottom Sheet Overlay - App Experience */}
             <AnimatePresence>
                 {isOpen && (
                     <>
@@ -179,81 +179,85 @@ export default function Navbar() {
                             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] lg:hidden"
                         />
                         <motion.div
-                            initial={{ x: '-100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '-100%' }}
-                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-white z-[80] shadow-2xl flex flex-col h-full lg:hidden rounded-r-[2.5rem]"
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+                            className="fixed inset-x-0 bottom-0 min-h-[60vh] max-h-[90vh] bg-white z-[80] shadow-[0_-20px_50px_rgba(0,0,0,0.2)] flex flex-col lg:hidden rounded-t-[3rem] overflow-hidden pb-10"
                         >
-                            <div className="p-8 border-b border-gray-100 bg-gray-50/50 relative">
-                                <div className="relative w-32 h-10 block">
-                                    <Image
-                                        src="https://darkslateblue-narwhal-655051.hostingersite.com/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png"
-                                        alt="Baraka Shop"
-                                        fill
-                                        className="object-contain object-left"
-                                    />
-                                </div>
+                            {/* Grab handle for sheet feel */}
+                            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-4 mb-2" />
+
+                            <div className="p-8 pb-4 relative flex items-center justify-between border-b border-gray-50">
+                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Nos Rayons</h3>
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="absolute top-8 right-8 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-900 border border-gray-100"
+                                    className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400"
                                 >
                                     <X size={20} />
                                 </button>
-                                <p className="mt-8 text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none">Explorer les univers</p>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto px-6 py-8">
-                                <div className="grid gap-2">
+                            <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
+                                <div className="grid grid-cols-2 gap-4">
                                     {[
-                                        { label: 'Informatique', icon: '💻', href: '/shop?category=laptops', count: '120+ Produits' },
-                                        { label: 'Smartphones', icon: '📱', href: '/shop?category=smartphones', count: '85+ Produits' },
-                                        { label: 'Image & Son', icon: '🔊', href: '/shop?category=tv-son', count: '64 Produits' },
-                                        { label: 'Gaming', icon: '🎮', href: '/shop?category=gaming', count: '42 Produits' },
-                                        { label: 'Connecté', icon: '⌚', href: '/shop?category=smart-home', count: '31 Produits' },
+                                        { label: 'Informatique', icon: '💻', href: '/shop?category=laptops', bg: 'bg-blue-50' },
+                                        { label: 'Smartphones', icon: '📱', href: '/shop?category=smartphones', bg: 'bg-purple-50' },
+                                        { label: 'Image & Son', icon: '🔊', href: '/shop?category=tv-son', bg: 'bg-red-50' },
+                                        { label: 'Gaming', icon: '🎮', href: '/shop?category=gaming', bg: 'bg-green-50' },
+                                        { label: 'Connecté', icon: '⌚', href: '/shop?category=smart-home', bg: 'bg-orange-50' },
+                                        { label: 'Flash Deals', icon: '⚡', href: '/shop?tag=deals', bg: 'bg-yellow-50' },
                                     ].map((item) => (
                                         <Link
                                             key={item.label}
                                             href={item.href}
                                             onClick={() => setIsOpen(false)}
-                                            className="group flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all"
+                                            className={cn("group flex flex-col p-5 rounded-3xl transition-all border border-transparent active:scale-95", item.bg)}
                                         >
-                                            <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                                {item.icon}
+                                            <div className="text-3xl mb-3">{item.icon}</div>
+                                            <div className="font-black text-gray-900 text-sm">{item.label}</div>
+                                            <div className="flex items-center gap-1 text-[10px] text-gray-500 font-bold uppercase mt-1">
+                                                Voir Tout <ChevronRight size={10} />
                                             </div>
-                                            <div className="flex-1">
-                                                <div className="font-black text-gray-900 text-[15px]">{item.label}</div>
-                                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{item.count}</div>
-                                            </div>
-                                            <ChevronRight size={18} className="text-gray-300 group-hover:text-primary transition-transform group-hover:translate-x-1" />
                                         </Link>
                                     ))}
                                 </div>
 
-                                <div className="mt-8 pt-8 border-t border-gray-100 space-y-4">
-                                    <Link href="/shop?tag=deals" onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-4 bg-orange-50 rounded-2xl group">
-                                        <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                                            <Sparkles size={20} className="text-orange-600 animate-pulse" />
+                                <div className="mt-8 space-y-4">
+                                    <Link href="/account" onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-5 bg-gray-50 rounded-3xl group border border-gray-100">
+                                        <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                                            <User size={20} className="text-gray-400" />
                                         </div>
-                                        <span className="font-black text-orange-600 uppercase text-xs tracking-widest">Offres Spéciales</span>
+                                        <div className="flex-1">
+                                            <div className="font-black text-gray-900 text-sm">Mon Compte</div>
+                                            <div className="text-[10px] text-gray-400 font-bold">Gérer mes commandes</div>
+                                        </div>
                                     </Link>
-                                    <Link href="/stores" onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-4 text-gray-600 font-bold text-sm">
-                                        <MapPin size={18} /> Nos Boutiques
+                                    <Link href="/track-order" onClick={() => setIsOpen(false)} className="flex items-center gap-4 p-5 bg-gray-50 rounded-3xl group border border-gray-100">
+                                        <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                                            <Truck size={20} className="text-gray-400" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="font-black text-gray-900 text-sm">Suivi Colis</div>
+                                            <div className="text-[10px] text-gray-400 font-bold">Où est ma commande ?</div>
+                                        </div>
                                     </Link>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Link href="/stores" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                            <MapPin size={16} className="text-gray-400" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Nos Boutiques</span>
+                                        </Link>
+                                        <Link href="/contact" onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                            <Phone size={16} className="text-gray-400" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Aide & Contact</span>
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="p-8 bg-gray-50 border-t border-gray-100">
-                                <Link href="/account" onClick={() => setIsOpen(false)} className="flex items-center gap-4 bg-black text-white p-4 rounded-2xl shadow-xl">
-                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                        <User size={20} />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-wider">Mon Profil</span>
-                                        <span className="font-bold text-sm">Se connecter</span>
-                                    </div>
-                                    <ArrowRight className="ml-auto opacity-50" size={16} />
-                                </Link>
+                                <div className="mt-10 px-4 flex flex-wrap justify-center gap-6 text-[9px] font-black uppercase tracking-[0.2em] text-gray-300">
+                                    <Link href="/faq">FAQ</Link>
+                                    <Link href="/terms">CGV</Link>
+                                    <Link href="/privacy">Confidentialité</Link>
+                                </div>
                             </div>
                         </motion.div>
                     </>
