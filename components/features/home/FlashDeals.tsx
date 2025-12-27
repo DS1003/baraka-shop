@@ -10,8 +10,12 @@ import Link from 'next/link'
 
 export default function FlashDeals() {
     const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 })
+    const [randomWidths, setRandomWidths] = useState<number[]>([])
 
     useEffect(() => {
+        // Generate random widths only on client side after mount
+        setRandomWidths(MOCK_PRODUCTS.slice(0, 5).map(() => Math.random() * 40 + 60))
+
         const target = new Date()
         target.setHours(target.getHours() + 24)
         const interval = setInterval(() => {
@@ -94,7 +98,10 @@ export default function FlashDeals() {
                                         )}
                                     </div>
                                     <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
-                                        <div className="bg-gradient-to-r from-orange-400 to-red-500 h-full rounded-full" style={{ width: `${Math.random() * 40 + 60}%` }} />
+                                        <div
+                                            className="bg-gradient-to-r from-orange-400 to-red-500 h-full rounded-full transition-all duration-1000"
+                                            style={{ width: `${randomWidths[index] || 0}%` }}
+                                        />
                                     </div>
                                     <p className="text-[10px] text-gray-500 text-right mt-1">Presque épuisé !</p>
                                 </div>
