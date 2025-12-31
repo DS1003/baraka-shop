@@ -10,174 +10,153 @@ import {
     Youtube,
     Phone,
     Mail,
-    Trophy,
     ArrowRight,
-    Smartphone
+    MapPin,
+    ShieldCheck,
+    CreditCard,
+    Globe
 } from 'lucide-react'
 
 export default function Footer() {
-    return (
-        <footer className="bg-[#f0f2f5] pt-12">
-            <div className="container px-4 mx-auto">
+    const LOGO_BARAKA = "https://darkslateblue-narwhal-655051.hostingersite.com/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png"
 
-                {/* 1. TOP FOOTER: BRANDS & NEWSLETTER (LDLC Style) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                    {/* Brands Box */}
-                    <div className="bg-white rounded-lg p-10 shadow-sm border border-gray-100 relative">
-                        <div className="flex items-center gap-4 mb-10">
-                            <h3 className="text-[14px] font-black uppercase tracking-widest text-gray-800">NOS SHOPS</h3>
-                            <span className="text-[11px] font-bold text-gray-400 italic">Ils nous ont élu !</span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-8 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all">
-                            {['Apple', 'Lego', 'Logitech', 'Razer', 'Corsair', 'Sony', 'Samsung', 'MSI'].map((b) => (
-                                <div key={b} className="h-8 relative">
-                                    <Image
-                                        src={`https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png`} // Placeholder
-                                        alt={b}
-                                        fill
-                                        className="object-contain"
-                                    />
-                                </div>
+    return (
+        <footer className="w-full bg-[#050505] text-white pt-32 pb-12 overflow-hidden relative">
+            {/* Background Decorative Element - Huge Text 2025 Style */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 select-none pointer-events-none opacity-[0.02] whitespace-nowrap">
+                <span className="text-[30vw] font-black italic tracking-tighter uppercase leading-none">
+                    BARAKA SHOP
+                </span>
+            </div>
+
+            <div className="w-full px-8 md:px-16 lg:px-24 mx-auto relative z-10">
+                {/* Header Section: Logo & Newsletter */}
+                <div className="flex flex-col lg:flex-row justify-between items-start gap-16 pb-24 border-b border-white/10">
+                    <div className="flex flex-col gap-8 max-w-sm">
+                        <Link href="/" className="relative w-72 h-16 group">
+                            <Image
+                                src={LOGO_BARAKA}
+                                alt="Baraka Shop"
+                                fill
+                                className="object-contain object-left group-hover:scale-105 transition-transform duration-500"
+                                priority
+                            />
+                        </Link>
+                        <p className="text-gray-500 text-[13px] font-medium leading-relaxed uppercase tracking-widest">
+                            L'excellence technologique au Sénégal. <br />
+                            Une expérience d'achat épurée, une expertise garantie.
+                        </p>
+                        <div className="flex gap-4">
+                            {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
+                                <a key={i} href="#" className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white hover:border-primary transition-all duration-300">
+                                    <Icon size={18} />
+                                </a>
                             ))}
                         </div>
                     </div>
 
-                    {/* Newsletter & Socials Box */}
-                    <div className="bg-white rounded-lg p-10 shadow-sm border border-gray-100 relative">
-                        <div className="flex items-center gap-4 mb-6">
-                            <h3 className="text-[14px] font-black uppercase tracking-widest text-gray-800">NOUS REJOINDRE</h3>
-                            <span className="text-[11px] font-bold text-gray-400 italic">On est drôles et super sympas !</span>
-                        </div>
+                    <div className="flex-1 w-full lg:max-w-xl">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-8">Newsletter Privée</h3>
+                        <p className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase mb-10 leading-none">
+                            Rejoignez l'élite <br /> <span className="text-primary">Technologique.</span>
+                        </p>
+                        <form className="relative group">
+                            <input
+                                type="email"
+                                placeholder="VOTRE ADRESSE EMAIL"
+                                className="w-full bg-transparent border-b-2 border-white/10 py-6 px-2 text-xl font-black tracking-tighter uppercase focus:border-primary outline-none transition-all placeholder:text-white/10"
+                            />
+                            <button className="absolute right-0 bottom-6 text-primary hover:text-white transition-colors group-hover:translate-x-2 duration-300">
+                                <ArrowRight size={32} />
+                            </button>
+                        </form>
+                    </div>
+                </div>
 
-                        <div className="flex flex-col md:flex-row gap-8">
-                            <div className="flex-1">
-                                <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4 text-center md:text-left">Newsletter Baraka</p>
-                                <form className="flex gap-2">
-                                    <input
-                                        type="email"
-                                        placeholder="Votre email"
-                                        className="flex-1 bg-gray-50 border border-gray-200 py-3 px-6 rounded-md text-[11px] font-bold tracking-widest outline-none focus:border-primary transition-all"
-                                    />
-                                    <button className="bg-primary text-white px-6 rounded-md hover:bg-black transition-colors font-black uppercase text-[10px] tracking-widest">
-                                        OK
-                                    </button>
-                                </form>
+                {/* Main Navigation Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-12 py-24 border-b border-white/10">
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-10">Univers</h4>
+                        <ul className="space-y-4">
+                            {['Informatique', 'Téléphonie', 'Gaming', 'Image & Son', 'Objets Connectés'].map(item => (
+                                <li key={item}>
+                                    <Link href="#" className="text-[12px] font-black uppercase tracking-widest hover:text-primary transition-colors">{item}</Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-10">Services</h4>
+                        <ul className="space-y-4">
+                            {['Configurateur PC', 'Montage Expert', 'SAV Baraka', 'Reprise Client', 'Financement'].map(item => (
+                                <li key={item}>
+                                    <Link href="#" className="text-[12px] font-black uppercase tracking-widest hover:text-primary transition-colors">{item}</Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-10">Aide</h4>
+                        <ul className="space-y-4">
+                            {['Suivi commande', 'Nous Contacter', 'FAQ', 'Boutiques', 'Livraison'].map(item => (
+                                <li key={item}>
+                                    <Link href="#" className="text-[12px] font-black uppercase tracking-widest hover:text-primary transition-colors">{item}</Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div className="col-span-2 hidden lg:block">
+                        <div className="bg-white/5 p-12 rounded-[2rem] border border-white/10 relative overflow-hidden group hover:border-primary/50 transition-colors">
+                            <div className="absolute top-0 right-0 p-8">
+                                <Globe size={40} className="text-primary/20 group-hover:rotate-45 transition-transform duration-1000" />
                             </div>
-                            <div className="md:border-l md:border-gray-100 md:pl-8">
-                                <p className="text-[11px] font-black uppercase tracking-widest text-gray-500 mb-4 text-center md:text-left">Sur les réseaux</p>
-                                <div className="flex gap-3 justify-center md:justify-start">
-                                    {[Facebook, Twitter, Youtube, Instagram].map((Icon, i) => (
-                                        <a key={i} href="#" className="w-10 h-10 rounded-full bg-[#1a1a1a] text-white flex items-center justify-center hover:bg-primary transition-all shadow-lg">
-                                            <Icon size={16} />
-                                        </a>
-                                    ))}
-                                </div>
-                            </div>
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-primary mb-6">Service Client</h4>
+                            <p className="text-4xl font-black italic tracking-tighter uppercase mb-4">+221 33 800 00 00</p>
+                            <p className="text-xs font-black uppercase tracking-widest text-gray-500">
+                                Disponible de 09h à 19h. Appel non surtaxé.
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* 2. MAIN NAV FOOTER (LDLC Screen Dark Style) */}
-                <div className="bg-[#002b5c] rounded-t-[2rem] p-12 lg:p-20 text-white relative overflow-hidden">
-                    {/* Use dark orange/brown if strict user branding, but screen shows dark blue. 
-                        Let's use a very dark version of the brand or keep the structure. 
-                        User said "same UI but orange". So I'll use a deep professional grey/black instead of LDLC blue to stay premium. */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]" />
-
-                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-20">
-                        {/* Column 1 */}
-                        <div>
-                            <h4 className="text-[13px] font-black uppercase tracking-[0.2em] mb-10 text-white border-b border-white/10 pb-4">QUI SOMMES NOUS ?</h4>
-                            <ul className="space-y-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                {['Notre Histoire', 'CGV / Avis clients', 'Données personnelles et Cookies', 'Gérer mes cookies', 'Mentions légales'].map(l => (
-                                    <li key={l}><Link href="#" className="hover:text-primary transition-colors">{l}</Link></li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Column 2 */}
-                        <div>
-                            <h4 className="text-[13px] font-black uppercase tracking-[0.2em] mb-10 text-white border-b border-white/10 pb-4">NOUS REJOINDRE</h4>
-                            <ul className="space-y-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                {['Vendez sur Baraka', 'Recrutement', 'L\'École Baraka', 'Marketplace'].map(l => (
-                                    <li key={l}><Link href="#" className="hover:text-primary transition-colors">{l}</Link></li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Column 3 */}
-                        <div>
-                            <h4 className="text-[13px] font-black uppercase tracking-[0.2em] mb-10 text-white border-b border-white/10 pb-4">BESOIN D'AIDE ?</h4>
-                            <ul className="space-y-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                                {['Questions fréquentes', 'Modes de livraison', 'Modes de règlement', 'Garanties et Pack Confort', 'Demander un retour'].map(l => (
-                                    <li key={l}><Link href="#" className="hover:text-primary transition-colors">{l}</Link></li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        {/* Column 4: Contact & Award */}
-                        <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                            <h4 className="text-[13px] font-black uppercase tracking-[0.2em] mb-10 text-white border-b border-white/10 pb-4 w-full">NOUS CONTACTER</h4>
-
-                            <div className="bg-primary/10 border border-primary/20 p-6 rounded-xl mb-8 flex items-center gap-4 group cursor-pointer hover:bg-primary/20 transition-all">
-                                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center">
-                                    <Phone size={20} />
-                                </div>
-                                <div>
-                                    <p className="text-[14px] font-black text-white italic">04 27 46 60 00</p>
-                                    <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Appel non surtaxé</p>
-                                </div>
-                            </div>
-
-                            <div className="relative w-full aspect-[4/3] max-w-[200px] mb-6">
-                                <div className="absolute inset-0 bg-white p-6 rounded-2xl flex flex-col items-center justify-center transform group hover:scale-105 transition-transform shadow-2xl">
-                                    <Trophy size={40} className="text-primary mb-2 shadow-sm" />
-                                    <p className="text-[10px] font-black text-black leading-tight uppercase tracking-tighter">ÉLU SERVICE CLIENT <br /> <span className="text-primary">DE L'ANNÉE 2026</span></p>
-                                </div>
-                            </div>
+                {/* Bottom Bar: Legal & Payments */}
+                <div className="flex flex-col lg:flex-row justify-between items-center gap-10 pt-16">
+                    <div className="flex flex-col gap-2 items-center lg:items-start">
+                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">
+                            © {new Date().getFullYear()} BARAKA SHOP SÉNÉGAL. LUXURY TECH EXPERIENCE.
+                        </p>
+                        <div className="flex gap-8 text-[9px] font-black text-gray-500 uppercase tracking-widest">
+                            <Link href="#" className="hover:text-white transition-colors">Mentions Légales</Link>
+                            <Link href="#" className="hover:text-white transition-colors">Confidentialité</Link>
+                            <li>Gérer les cookies</li>
                         </div>
                     </div>
 
-                    {/* Bottom Features Strip (Black Style) */}
-                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-12 mt-20 pt-12 border-t border-white/5 opacity-50">
-                        <div className="flex items-center gap-6">
-                            <span className="text-3xl font-black italic tracking-tighter text-white">12x</span>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">PAIEMENT JUSQU'EN 10/12X</span>
-                                <span className="text-[8px] font-bold text-gray-500 uppercase">Dès 250€ d'achat.</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <Smartphone size={32} />
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">LIVRAISON PARTOUT</span>
-                                <span className="text-[8px] font-bold text-gray-500 uppercase">Au Sénégal et dans la sous-région.</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <div className="w-12 h-8 relative">
-                                <Image src="https://upload.wikimedia.org/wikipedia/commons/e/ea/Mastercard-logo.svg" alt="Mastercard" fill className="object-contain" />
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">LIVRAISON ULTRA-RAPIDE</span>
-                                <span className="text-[8px] font-bold text-gray-500 uppercase">Dès le lendemain !</span>
-                            </div>
+                    <div className="flex items-center gap-12 py-4 px-10 rounded-full border border-white/5 bg-white/[0.02]">
+                        <span className="text-[9px] font-black text-gray-600 tracking-widest uppercase hidden md:block">Paiements sécurisés :</span>
+                        <div className="flex items-center gap-8 opacity-40 hover:opacity-100 transition-opacity">
+                            {['Wave', 'Orange', 'Free', 'Visa', 'Mastercard'].map(p => (
+                                <span key={p} className="text-[11px] font-black tracking-tighter italic uppercase">{p}</span>
+                            ))}
                         </div>
                     </div>
-                </div>
 
-                {/* LDLC Bottom Logo & Final Legal */}
-                <div className="py-20 flex flex-col items-center">
-                    <Link href="/" className="relative w-40 h-10 opacity-30 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
-                        <Image
-                            src="https://darkslateblue-narwhal-655051.hostingersite.com/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png"
-                            alt="Baraka Shop"
-                            fill
-                            className="object-contain"
-                        />
-                    </Link>
-                    <p className="mt-8 text-[8px] font-black text-gray-400 uppercase tracking-[0.4em]">HAUTE-TECHNOLOGIE EXPÉRIENCE</p>
+                    <button
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="text-[10px] font-black uppercase tracking-[0.4em] text-primary hover:text-white flex items-center gap-4 group"
+                    >
+                        RETOUR EN HAUT
+                        <span className="w-10 h-px bg-primary group-hover:w-16 transition-all" />
+                    </button>
                 </div>
+            </div>
+
+            {/* Extreme Bottom Decoration */}
+            <div className="mt-20 py-8 border-t border-white/5 w-full text-center">
+                <span className="text-[10px] font-black uppercase tracking-[0.8em] text-white/10 animate-pulse">Design by Baraka Creative x 2025</span>
             </div>
         </footer>
     )
