@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ChevronRight, Menu, Laptop, Smartphone, Speaker, Gamepad, Watch, Printer, Grid, ArrowRight, Sparkles } from 'lucide-react'
+import { ChevronRight, Menu, Laptop, Smartphone, Speaker, Gamepad, Watch, Printer, Grid, ArrowRight, Sparkles, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -13,9 +13,9 @@ const CATEGORIES = [
         label: 'Informatique',
         icon: Laptop,
         image: 'https://images.unsplash.com/photo-1547082299-de196ea013d6?auto=format&fit=crop&q=80&w=400',
-        color: "text-blue-600",
-        bg: "bg-blue-50",
-        gradient: "from-blue-500/20 to-cyan-500/20",
+        color: "text-orange-600",
+        bg: "bg-orange-50",
+        gradient: "from-orange-500/20 to-primary/20",
         subcategories: [
             {
                 title: 'Ordinateurs',
@@ -136,20 +136,15 @@ export default function MegaMenu() {
             {/* Trigger Button - Ultra Clean & Kinetic */}
             <button
                 className={cn(
-                    "relative flex items-center gap-3 bg-white text-black pl-5 pr-8 py-2.5 rounded-full font-bold text-xs tracking-[0.15em] uppercase transition-all duration-300 border border-transparent overflow-hidden group",
-                    isMenuOpen ? "shadow-xl ring-2 ring-white/20" : "hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] opacity-90 hover:opacity-100"
+                    "relative flex items-center gap-3 bg-primary text-white px-8 h-12 font-black text-[12px] tracking-[0.1em] uppercase transition-all duration-300 overflow-hidden group",
+                    isMenuOpen ? "bg-black" : "hover:bg-black"
                 )}
                 onMouseEnter={() => setIsMenuOpen(true)}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-                {/* Background Animation */}
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                <div className="relative z-10 w-8 h-8 rounded-full bg-black text-white flex items-center justify-center group-hover:bg-primary transition-colors duration-300">
-                    <Grid size={14} className="group-hover:rotate-90 transition-transform duration-500" />
-                </div>
-                <span className="relative z-10">Nos Rayons</span>
-                <ChevronRight size={14} className={cn("relative z-10 ml-auto transition-transform duration-300", isMenuOpen ? "rotate-90" : "group-hover:translate-x-1")} />
+                <Menu size={18} className={cn("transition-transform duration-500", isMenuOpen && "rotate-90")} />
+                <span>Nos Produits</span>
+                <ChevronDown size={14} className={cn("ml-auto transition-transform duration-300", isMenuOpen ? "rotate-180" : "opacity-50")} />
             </button>
 
             {/* Dropdown Container - Floating Glassmorphism */}

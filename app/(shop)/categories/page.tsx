@@ -12,14 +12,14 @@ const DEPARTMENTS = [
         icon: Laptop,
         img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=800',
         sub: ['Laptops Pro', 'Gaming PCs', 'Tablettes', 'Accessoires PC'],
-        color: 'from-blue-500/20 to-indigo-500/20'
+        color: 'from-orange-500/20 to-primary/20'
     },
     {
         name: 'Téléphonie',
         icon: Smartphone,
         img: 'https://images.unsplash.com/photo-1592899677712-a170135c97f5?q=80&w=800',
         sub: ['iPhone', 'Samsung Galaxy', 'Xiaomi', 'Accessoires Mobile'],
-        color: 'from-purple-500/20 to-pink-500/20'
+        color: 'from-primary/20 to-orange-500/20'
     },
     {
         name: 'Audio & Son',
@@ -40,7 +40,7 @@ const DEPARTMENTS = [
         icon: Watch,
         img: 'https://images.unsplash.com/photo-1544117518-30dd0575e7a9?q=80&w=800',
         sub: ['Smartwatches', 'Domotique', 'Bracelets Sport', 'Caméras IP'],
-        color: 'from-cyan-500/20 to-blue-500/20'
+        color: 'from-orange-500/20 to-primary/20'
     },
     {
         name: 'Photo & Vidéo',
