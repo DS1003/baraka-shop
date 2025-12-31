@@ -4,61 +4,85 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { ChevronRight, ChevronLeft } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 
-const CATEGORIES = [
-    { name: 'Tablettes', image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=400' },
-    { name: 'Casques', image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=400' },
-    { name: 'Montres', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400' },
-    { name: 'Phones', image: 'https://images.unsplash.com/photo-1592899677712-a170135c97f5?auto=format&fit=crop&q=80&w=400' },
-    { name: 'TV & Home', image: 'https://images.unsplash.com/photo-1593784991095-a20506948430?auto=format&fit=crop&q=80&w=400' },
-    { name: 'Enceintes', image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&q=80&w=400' },
-    { name: 'Laptops', image: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&q=80&w=400' },
+const UNIVERS = [
+    {
+        name: 'Apple',
+        desc: 'Premium Reseller',
+        priceLabel: 'À PARTIR DE',
+        price: '15.000F',
+        image: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9',
+        isApple: true
+    },
+    {
+        name: 'PC portables',
+        image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0'
+    },
+    {
+        name: 'Périphériques',
+        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf'
+    },
+    {
+        name: 'PC Baraka',
+        image: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7'
+    }
 ]
 
 export default function Categories() {
     return (
-        <section className="py-8 lg:py-16 overflow-hidden">
+        <section className="py-12 bg-[#f0f2f5]">
             <div className="container px-4 mx-auto">
-                <div className="flex justify-between items-end mb-6 md:mb-10">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none">Univers Populaires</h2>
-                        <p className="text-xs md:text-sm text-gray-400 mt-2 font-medium">Explorez nos sélections premium</p>
-                    </div>
-                    <div className="flex gap-2 hidden md:flex">
-                        <button className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-black hover:text-white transition-all">
-                            <ChevronLeft size={18} />
-                        </button>
-                        <button className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:bg-primary transition-all shadow-lg">
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
+                {/* Header LDLC Style */}
+                <div className="flex items-baseline gap-4 mb-8">
+                    <h2 className="text-[18px] font-black uppercase tracking-widest text-[#1a1a1a]">UNIVERS POPULAIRES</h2>
+                    <span className="text-[11px] font-bold text-gray-400 italic">Tout ce que vous aimez est là</span>
+                    <div className="flex-1 h-px bg-gray-200 ml-4" />
                 </div>
 
-                {/* Horizontal Scroll on Mobile, Grid on Desktop */}
-                <div className="flex overflow-x-auto lg:grid lg:grid-cols-7 gap-4 md:gap-6 pb-4 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
-                    {CATEGORIES.map((cat, index) => (
-                        <Link
-                            href={`/shop?category=${cat.name.toLowerCase()}`}
-                            key={cat.name}
-                            className="flex-shrink-0 w-[140px] md:w-auto"
-                        >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {UNIVERS.map((univ, i) => (
+                        <Link href={`/shop?cat=${univ.name.toLowerCase()}`} key={i}>
                             <motion.div
-                                whileTap={{ scale: 0.95 }}
-                                className="group flex flex-col items-center gap-3 cursor-pointer"
+                                whileHover={{ y: -5 }}
+                                className="bg-white rounded-lg p-8 shadow-sm border border-gray-100 h-[380px] flex flex-col items-center group transition-all hover:shadow-xl"
                             >
-                                <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] w-full aspect-[1/1] md:aspect-[4/5] flex items-center justify-center p-4 md:p-6 shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 overflow-hidden relative">
-                                    <div className="relative w-full h-full">
-                                        <Image
-                                            src={cat.image}
-                                            alt={cat.name}
-                                            fill
-                                            className="object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                    </div>
-                                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                <h3 className="text-[13px] font-black text-gray-500 uppercase tracking-[0.15em] mb-12 group-hover:text-primary transition-colors">
+                                    {univ.name}
+                                </h3>
+
+                                <div className="flex-1 w-full relative mb-6">
+                                    <Image
+                                        src={`${univ.image}?q=80&w=600&auto=format&fit=crop`}
+                                        alt={univ.name}
+                                        fill
+                                        className="object-contain transform transition-transform duration-700 group-hover:scale-110"
+                                    />
+
+                                    {univ.isApple && (
+                                        <div className="absolute top-0 left-0 flex flex-col items-start">
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className="w-8 h-8 rounded-full bg-black flex items-center justify-center">
+                                                    <Image src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" width={16} height={16} className="invert" />
+                                                </span>
+                                                <div className="flex flex-col leading-none">
+                                                    <span className="text-[11px] font-black uppercase tracking-tighter">Premium</span>
+                                                    <span className="text-[11px] font-black uppercase tracking-tighter">Reseller</span>
+                                                </div>
+                                            </div>
+                                            {univ.price && (
+                                                <div className="mt-4">
+                                                    <span className="text-[9px] font-black text-gray-400 block tracking-widest">{univ.priceLabel}</span>
+                                                    <span className="text-xl font-black text-primary italic leading-none">{univ.price}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-                                <span className="font-black text-[11px] md:text-sm text-gray-700 group-hover:text-primary transition-colors text-center uppercase tracking-wider">{cat.name}</span>
+
+                                <div className="p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <ChevronRight className="text-primary" />
+                                </div>
                             </motion.div>
                         </Link>
                     ))}
