@@ -9,17 +9,13 @@ import {
     User,
     MapPin,
     ChevronDown,
-    Menu,
-    Navigation,
-    Laptop,
-    Smartphone,
-    Gamepad2,
     Settings,
-    HelpCircle,
+    Laptop,
     Package,
-    Gift,
     Sparkles,
-    Grid
+    HelpCircle,
+    Navigation,
+    Menu
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MegaMenu from './features/navigation/MegaMenu'
@@ -111,14 +107,14 @@ export default function Navbar() {
             </div>
 
             {/* ROW 3: CATEGORY NAV BAR (The Color Bar - LDLC Style) */}
-            <nav className="bg-[#1a1a1a] text-white hidden lg:block overflow-visible relative">
-                <div className="container mx-auto px-4 flex items-center">
+            <nav className="bg-[#1a1a1a] text-white hidden lg:block overflow-visible relative h-12">
+                <div className="container mx-auto px-4 h-full flex items-center">
 
-                    {/* Mega Menu Trigger - Sidebar style on hover */}
+                    {/* Mega Menu Trigger - Integrated with the new design */}
                     <MegaMenu />
 
                     {/* Quick Nav Links */}
-                    <div className="flex items-center h-12">
+                    <div className="flex items-center h-full">
                         {[
                             { name: 'Configurateur PC', icon: Settings },
                             { name: 'Votre Portable', icon: Laptop },
@@ -135,7 +131,6 @@ export default function Navbar() {
                                     link.highlight && "text-primary"
                                 )}
                             >
-                                {link.icon && <link.icon size={14} className={link.highlight ? 'text-primary' : 'text-gray-400'} />}
                                 {link.name}
                                 {link.name === 'Promotions' && <ChevronDown size={12} className="ml-1 opacity-50" />}
                             </Link>
