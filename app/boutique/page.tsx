@@ -137,9 +137,8 @@ export default function ShopPage() {
                     {/* Product Listing Area */}
                     <div className="lg:col-span-3">
                         {/* Toolbar */}
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-8 flex flex-wrap items-center justify-between gap-6">
-                            <div className="flex items-center gap-4">
-                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Affichage :</span>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setViewMode('grid')}
@@ -154,14 +153,13 @@ export default function ShopPage() {
                                         <List className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <span className="text-xs font-bold text-[#1B1F3B] border-l border-gray-100 pl-4">{products.length} Produits trouvés</span>
+                                <span className="text-[10px] sm:text-xs font-bold text-[#1B1F3B] border-l border-gray-100 pl-4">{products.length} Produits</span>
                             </div>
 
-                            <div className="flex items-center gap-4 w-full md:w-auto">
-                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Trier par :</span>
-                                <div className="relative flex-1 md:flex-none min-w-[180px]">
+                            <div className="flex items-center gap-4 w-full sm:w-auto">
+                                <div className="relative flex-1 sm:min-w-[180px]">
                                     <select className="w-full h-11 bg-gray-50 border border-gray-100 rounded-xl px-4 text-xs font-bold text-[#1B1F3B] outline-none appearance-none focus:border-primary transition-all pr-10">
-                                        <option>Dernières Nouveautés</option>
+                                        <option>Trier par : Nouveautés</option>
                                         <option>Prix : Croissant</option>
                                         <option>Prix : Décroissant</option>
                                         <option>Mieux notés</option>
@@ -173,8 +171,8 @@ export default function ShopPage() {
 
                         {/* Product Grid */}
                         <div className={cn(
-                            "grid gap-8",
-                            viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
+                            "grid gap-4 md:gap-8 mt-8",
+                            viewMode === 'grid' ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1"
                         )}>
                             {products.map((product) => (
                                 <ProductCard key={product.id} product={product} viewMode={viewMode} />

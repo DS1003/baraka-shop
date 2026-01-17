@@ -67,34 +67,34 @@ export function CategoryCarousel() {
                     {/* Scrollable Area */}
                     <div
                         ref={scrollRef}
-                        className="flex overflow-x-auto gap-6 pb-10 scrollbar-hide snap-x"
+                        className="flex overflow-x-auto gap-4 md:gap-6 pb-6 md:pb-10 scrollbar-hide snap-x px-4 -mx-4 md:px-0 md:mx-0"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                         {categories.map((cat, idx) => (
                             <Link
                                 key={idx}
                                 href={`/category/${cat.slug}`}
-                                className="flex-shrink-0 w-[180px] md:w-[220px] snap-start group"
+                                className="flex-shrink-0 w-[140px] sm:w-[180px] md:w-[220px] snap-center md:snap-start group"
                             >
-                                <div className="flex flex-col gap-6">
-                                    <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/10 group-hover:-translate-y-2">
+                                <div className="flex flex-col gap-4 md:gap-6">
+                                    <div className="relative aspect-[4/5] w-full rounded-xl md:rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100 transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-primary/10 group-hover:-translate-y-2">
                                         <Image
                                             src={cat.image}
                                             alt={cat.name}
                                             fill
                                             className="object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-6">
-                                            <span className="text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                                Visiter <ChevronRight className="w-3 h-3 text-primary" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-4 md:p-6 text-center">
+                                            <span className="text-white text-[8px] md:text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full">
+                                                Explorer <ChevronRight className="w-3 h-3 text-primary" />
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-center">
-                                        <h3 className="font-black text-sm md:text-base text-[#1B1F3B] uppercase tracking-tight group-hover:text-primary transition-colors">
+                                        <h3 className="font-black text-xs md:text-base text-[#1B1F3B] uppercase tracking-tight group-hover:text-primary transition-colors text-center px-1">
                                             {cat.name}
                                         </h3>
-                                        <div className="w-6 h-[2px] bg-primary scale-0 group-hover:scale-100 transition-transform duration-300 mt-2" />
+                                        <div className="w-4 h-[2px] md:w-6 bg-primary scale-0 group-hover:scale-100 transition-transform duration-300 mt-1 md:mt-2" />
                                     </div>
                                 </div>
                             </Link>

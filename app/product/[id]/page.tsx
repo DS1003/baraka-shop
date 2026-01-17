@@ -255,18 +255,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     </div>
 
                     {/* 3. Detailed Tabs Section */}
-                    <div className="mt-24">
-                        <div className="flex items-center gap-12 border-b border-gray-100 mb-12">
+                    <div className="mt-12 md:mt-24">
+                        <div className="flex items-center gap-6 md:gap-12 border-b border-gray-100 mb-8 md:mb-12 overflow-x-auto scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={cn(
-                                        "pb-6 text-sm font-black uppercase tracking-[0.15em] relative transition-all flex items-center gap-3",
+                                        "pb-6 text-[10px] md:text-sm font-black uppercase tracking-[0.15em] relative transition-all flex items-center gap-3 whitespace-nowrap",
                                         activeTab === tab.id ? "text-primary" : "text-gray-300 hover:text-gray-500"
                                     )}
                                 >
-                                    <tab.icon className="w-4 h-4" />
+                                    <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                     {tab.label}
                                     {activeTab === tab.id && (
                                         <motion.div

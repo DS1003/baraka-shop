@@ -31,17 +31,17 @@ export function ShippingBar() {
     return (
         <div className="bg-white border-b border-gray-100 py-10">
             <Container>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-4">
                     {features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-5 group cursor-default">
-                            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-[#1B1F3B] group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm border border-gray-100">
-                                <feature.icon className="w-7 h-7" strokeWidth={1.5} />
+                        <div key={index} className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 md:gap-5 group cursor-default">
+                            <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center text-[#1B1F3B] group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm border border-gray-100 shrink-0">
+                                <feature.icon className="w-5 h-5 md:w-7 md:h-7" strokeWidth={1.5} />
                             </div>
                             <div className="flex flex-col">
-                                <span className="font-black text-sm text-[#1B1F3B] uppercase tracking-tight leading-tight">
+                                <span className="font-black text-[10px] md:text-sm text-[#1B1F3B] uppercase tracking-tight leading-tight">
                                     {feature.title}
                                 </span>
-                                <span className="text-[12px] text-gray-400 font-medium mt-0.5">
+                                <span className="text-[9px] md:text-[12px] text-gray-400 font-medium mt-0.5">
                                     {feature.description}
                                 </span>
                             </div>
