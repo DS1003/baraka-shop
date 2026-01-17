@@ -57,6 +57,7 @@ export function Header() {
                         </div>
 
                         <div className="flex items-center gap-6">
+                            <Link href="/login" className="hover:text-primary transition-colors border-r border-white/20 pr-6">Connexion</Link>
                             <span className="flex items-center gap-2 text-gray-400">
                                 Besoin d'aide ? <PhoneCall className="w-3 h-3 text-primary" /> <span className="text-white">+221 33 800 00 00</span>
                             </span>
@@ -162,7 +163,7 @@ export function Header() {
                         {/* Icons / Account */}
                         <div className="flex items-center gap-6 md:gap-8">
                             <HeaderAction icon={MapPin} label="Boutiques" href="/boutiques" />
-                            <HeaderAction icon={User} label="Compte" href="/account" />
+                            <HeaderAction icon={User} label="Compte" href="/login" />
 
                             {/* Dynamic Premium Cart Button */}
                             <Link href="/cart" className="relative flex items-center group bg-gray-50 hover:bg-primary/5 pl-2 pr-4 py-1.5 rounded-2xl border border-gray-100 transition-all hover:border-primary/20">
