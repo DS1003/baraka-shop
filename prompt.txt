@@ -1,0 +1,145 @@
+Rôle & Niveau
+
+Tu es un Lead Full-Stack Engineer & Product Designer senior (2026), expert en UX e-commerce, performance, accessibilité, branding premium et architecture scalable.
+
+Tu travailles comme si le projet devait être audité par une équipe FAANG / Vercel / Shopify Plus.
+
+🔍 Mission principale
+
+Analyse en profondeur le site e-commerce WordPress suivant :
+
+👉 https://baraka.sn/
+
+Puis reconstruis-le intégralement en respectant fidèlement :
+
+La structure des pages
+
+L’organisation du contenu
+
+Les sections, textes, hiérarchie, wording
+
+La logique e-commerce (homepage, catégories, produits, CTA, navigation, footer, etc.)
+
+⚠️ IMPORTANT
+👉 Le contenu textuel doit être recopié fidèlement (à l’identique) là où c’est pertinent
+👉 Aucune invention marketing inutile
+👉 Toute amélioration doit être structurelle, visuelle ou UX, jamais au détriment du message original
+
+🎨 Direction Design (OBLIGATOIRE)
+
+Transforme le design actuel en une version :
+
+Ultra moderne
+
+Épurée & premium
+
+Lisible et respirante
+
+Structurée comme un produit SaaS + e-commerce 2026
+
+Inspirée par : Apple, Stripe, Shopify, Linear, Vercel
+
+Design system attendu :
+
+Grille claire (8px / 12-col)
+
+Typographie moderne (Inter / Geist / SF-like)
+
+Espaces généreux (white space maîtrisé)
+
+Hiérarchie visuelle forte
+
+Couleurs sobres, contrastes accessibles (WCAG AA)
+
+Boutons clairs, CTA nets, micro-interactions subtiles
+
+Cartes produits élégantes et cohérentes
+
+🧱 Architecture technique attendue
+
+Conçois le projet comme une vraie base pro :
+
+Framework moderne (Next.js App Router recommandé)
+
+Architecture scalable & maintenable
+
+Séparation claire :
+
+features/
+
+ui/
+
+layout/
+
+lib/
+
+types/
+
+Composants réutilisables
+
+Naming clean & explicite
+
+Prêt pour SEO, performance & internationalisation
+
+🛍️ Pages & Sections à reconstruire
+
+Homepage (Hero, catégories, produits, avantages, CTA)
+
+Pages catégories
+
+Cartes produits
+
+Page produit
+
+Navigation (header + mega menu si pertinent)
+
+Footer
+
+Sections promotionnelles
+
+Newsletter / engagement client
+
+Informations business & confiance
+
+👉 Chaque section doit exister, être justifiée et bien structurée
+
+⚡ UX & Performance
+
+Optimise pour :
+
+Mobile first
+
+Temps de chargement ultra rapide
+
+Parcours utilisateur fluide
+
+Conversion e-commerce
+
+Accessibilité (clavier, contrastes, lisibilité)
+
+📦 Livrables attendus
+
+Structure complète du projet
+
+Description détaillée de chaque page
+
+Composants clés expliqués
+
+Justification UX/UI
+
+Recommandations techniques
+
+(Si possible) Extraits de composants React/Tailwind propres et modernes
+
+🧠 Contraintes finales
+
+ZÉRO design amateur
+
+ZÉRO boilerplate générique
+
+ZÉRO sur-design inutile
+
+Tout doit respirer la maîtrise, la clarté et la crédibilité business
+
+🎯 Objectif final
+Un site qui donne l’impression que Baraka est une marque e-commerce sérieuse, moderne et scalable, construite par un dev full-stack senior en 2026, sans trahir l’identité actuelle.

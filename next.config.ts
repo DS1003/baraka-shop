@@ -22,6 +22,26 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'cdn.worldvectorlogo.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'baraka.sn',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.ldlc.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sony.scene7.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'in.canon',
       }
     ],
   },
