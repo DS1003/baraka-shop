@@ -15,7 +15,7 @@ interface Slide {
 }
 
 const slides: Slide[] = [
-    { id: 1, image: "https://media.ldlc.com/encart/p/28885_b.jpg", title: "SOLDES", href: "/promotions" },
+    { id: 1, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1200&h=600", title: "NOS OFFRES", href: "/promotions" },
     { id: 2, image: "https://media.ldlc.com/encart/p/28828_b.jpg", title: "QUI LES VEUX ?", href: "/boutique" },
     { id: 3, image: "https://media.ldlc.com/encart/p/28829_b.jpg", title: "L'OFFRE IMMANQUABLE", href: "/promotions" },
     { id: 4, image: "https://media.ldlc.com/encart/p/22889_b.jpg", title: "TÉLÉCHARGEZ L'APPLI !", href: "/" },
