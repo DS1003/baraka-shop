@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { use } from 'react'
 import { Container } from '@/ui/Container'
 import { ProductCard } from '@/ui/ProductCard'
 import { Product } from '@/types'
@@ -48,9 +48,10 @@ const products: Product[] = [
     }
 ]
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
-    // In real app, fetch products by params.slug
-    const categoryName = params.slug.replace('-', ' ').toUpperCase();
+export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params)
+    // In real app, fetch products by slug
+    const categoryName = slug.replace('-', ' ').toUpperCase();
 
     return (
         <div className="bg-gray-50 min-h-screen py-10">

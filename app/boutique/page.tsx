@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Container } from '@/ui/Container'
 import Image from 'next/image'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
     Filter,
@@ -204,9 +205,9 @@ function ShopProductCard({ product, viewMode }: { product: any, viewMode: 'grid'
     if (viewMode === 'list') {
         return (
             <div className="group flex flex-col md:flex-row bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500">
-                <div className="relative w-full md:w-[300px] aspect-square bg-white flex items-center justify-center p-8 shrink-0">
+                <Link href={`/product/${product.id}`} className="relative w-full md:w-[300px] aspect-square bg-white flex items-center justify-center p-8 shrink-0">
                     <Image src={product.image} alt={product.name} fill className="object-contain p-8 group-hover:scale-105 transition-transform duration-500" />
-                </div>
+                </Link>
                 <div className="p-10 flex flex-col justify-center flex-1">
                     <div className="flex items-center justify-between mb-4">
                         <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{product.category}</span>
@@ -215,9 +216,11 @@ function ShopProductCard({ product, viewMode }: { product: any, viewMode: 'grid'
                             <span className="text-[10px] font-black text-gray-400">{product.rating}.0</span>
                         </div>
                     </div>
-                    <h3 className="text-xl font-black text-[#1B1F3B] mb-4 hover:text-primary transition-colors cursor-pointer leading-tight uppercase tracking-tight">
-                        {product.name}
-                    </h3>
+                    <Link href={`/product/${product.id}`}>
+                        <h3 className="text-xl font-black text-[#1B1F3B] mb-4 hover:text-primary transition-colors cursor-pointer leading-tight uppercase tracking-tight">
+                            {product.name}
+                        </h3>
+                    </Link>
                     <p className="text-gray-400 text-sm mb-6 leading-relaxed line-clamp-2">
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                     </p>
@@ -226,7 +229,10 @@ function ShopProductCard({ product, viewMode }: { product: any, viewMode: 'grid'
                             {product.oldPrice && <span className="text-gray-300 text-xs line-through font-bold">{product.oldPrice.toLocaleString()} CFA</span>}
                             <span className="text-2xl font-black text-[#1B1F3B] tracking-tighter">{product.price.toLocaleString()} <span className="text-xs">CFA</span></span>
                         </div>
-                        <button className="flex items-center gap-3 bg-[#1B1F3B] text-white px-8 h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary transition-all shadow-xl hover:shadow-primary/20">
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                            className="flex items-center gap-3 bg-[#1B1F3B] text-white px-8 h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary transition-all shadow-xl hover:shadow-primary/20"
+                        >
                             <ShoppingCart className="w-4 h-4" /> Ajouter au panier
                         </button>
                     </div>
@@ -238,7 +244,11 @@ function ShopProductCard({ product, viewMode }: { product: any, viewMode: 'grid'
     return (
         <div className="group flex flex-col h-full bg-white rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-gray-200/50 border border-gray-50 p-2">
             {/* Image Area */}
-            <div className="relative aspect-square bg-[#fff] rounded-2xl overflow-hidden flex items-center justify-center p-6 group/img border border-gray-50">
+            <div className="relative aspect-square bg-[#fff] rounded-2xl overflow-hidden group/img border border-gray-50">
+                <Link href={`/product/${product.id}`} className="absolute inset-0 z-10">
+                    <span className="sr-only">Voir {product.name}</span>
+                </Link>
+
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
                     {product.badges?.map((badge: any, idx: number) => (
@@ -250,16 +260,29 @@ function ShopProductCard({ product, viewMode }: { product: any, viewMode: 'grid'
 
                 {/* Actions */}
                 <div className="absolute top-3 right-3 flex flex-col gap-2 z-20 translate-x-12 opacity-0 group-hover/img:translate-x-0 group-hover/img:opacity-100 transition-all duration-500">
-                    <button className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100"><Heart className="w-4 h-4" /></button>
-                    <button className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100"><Eye className="w-4 h-4" /></button>
+                    <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100 z-20"
+                    >
+                        <Heart className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100 z-20"
+                    >
+                        <Eye className="w-4 h-4" />
+                    </button>
                 </div>
 
-                <div className="relative w-full h-full transition-transform duration-700 group-hover/img:scale-110">
-                    <Image src={product.image} alt={product.name} fill className="object-contain" />
+                <div className="relative w-full h-full p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110">
+                    <Image src={product.image} alt={product.name} fill className="object-contain p-6" />
                 </div>
 
                 {/* Add to Cart Overlay */}
-                <button className="absolute bottom-4 left-4 right-4 bg-primary text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transform translate-y-20 opacity-0 group-hover/img:translate-y-0 group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20">
+                <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transform translate-y-20 opacity-0 group-hover/img:translate-y-0 group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
+                >
                     <ShoppingCart className="w-3.5 h-3.5" /> Ajouter
                 </button>
             </div>
@@ -274,9 +297,11 @@ function ShopProductCard({ product, viewMode }: { product: any, viewMode: 'grid'
                     </div>
                 </div>
 
-                <h3 className="font-bold text-sm text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 min-h-[40px]">
-                    {product.name}
-                </h3>
+                <Link href={`/product/${product.id}`}>
+                    <h3 className="font-bold text-sm text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 min-h-[40px]">
+                        {product.name}
+                    </h3>
+                </Link>
 
                 <div className="mt-8 flex items-center justify-between">
                     <div className="flex flex-col">

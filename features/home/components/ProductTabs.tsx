@@ -171,7 +171,11 @@ function ProductCard({ product }: { product: Product }) {
     return (
         <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-gray-200/50 border border-gray-50">
             {/* Image Area */}
-            <div className="relative aspect-square bg-[#fff] m-2 rounded-xl overflow-hidden flex items-center justify-center p-6 group/img border border-gray-50">
+            <div className="relative aspect-square bg-[#fff] m-2 rounded-xl overflow-hidden group/img border border-gray-50 text-left">
+                <Link href={`/product/${product.id}`} className="absolute inset-0 z-10">
+                    <span className="sr-only">Voir {product.name}</span>
+                </Link>
+
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
                     {product.badges?.map((badge, idx) => (
@@ -183,21 +187,24 @@ function ProductCard({ product }: { product: Product }) {
 
                 {/* Actions */}
                 <div className="absolute top-3 right-3 flex flex-col gap-2 z-20 translate-x-12 opacity-0 group-hover/img:translate-x-0 group-hover/img:opacity-100 transition-all duration-500">
-                    <CardAction icon={Heart} />
-                    <CardAction icon={Eye} />
+                    <CardAction icon={Heart} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} />
+                    <CardAction icon={Eye} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} />
                 </div>
 
-                <div className="relative w-full h-full transition-transform duration-700 group-hover/img:scale-110">
+                <div className="relative w-full h-full p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110">
                     <Image
                         src={product.image}
                         alt={product.name}
                         fill
-                        className="object-contain"
+                        className="object-contain p-6"
                     />
                 </div>
 
                 {/* Add to Cart Overlay */}
-                <button className="absolute bottom-4 left-4 right-4 bg-primary text-white py-3 rounded-lg font-black text-[10px] uppercase tracking-[0.2em] transform translate-y-20 opacity-0 group-hover/img:translate-y-0 group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20">
+                <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-3 rounded-lg font-black text-[10px] uppercase tracking-[0.2em] transform translate-y-20 opacity-0 group-hover/img:translate-y-0 group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
+                >
                     <ShoppingCart className="w-3.5 h-3.5" /> Ajouter au panier
                 </button>
             </div>
@@ -236,9 +243,12 @@ function ProductCard({ product }: { product: Product }) {
     )
 }
 
-function CardAction({ icon: Icon }: { icon: any }) {
+function CardAction({ icon: Icon, onClick }: { icon: any, onClick?: (e: React.MouseEvent) => void }) {
     return (
-        <button className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100">
+        <button
+            onClick={onClick}
+            className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100"
+        >
             <Icon className="w-4 h-4" />
         </button>
     )
