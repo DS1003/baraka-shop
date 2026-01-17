@@ -28,42 +28,45 @@ export default function PromotionsPage() {
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/20 blur-[150px] rounded-full translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-blue-600/10 blur-[100px] rounded-full" />
 
-                <Container className="relative z-10 flex flex-col items-center text-center">
+                <Container className="relative z-10 flex flex-col items-center text-center px-6">
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-primary text-white text-[11px] font-black px-6 py-2 rounded-full uppercase tracking-[0.4em] mb-8 shadow-2xl shadow-primary/40 flex items-center gap-3"
+                        className="bg-primary text-white text-[9px] md:text-[11px] font-black px-4 md:px-6 py-2 rounded-full uppercase tracking-[0.4em] mb-6 md:mb-8 shadow-2xl shadow-primary/40 flex items-center gap-3"
                     >
-                        <Zap className="w-4 h-4 fill-current" /> Offres Limitées
+                        <Zap className="w-3.5 h-3.5 fill-current" /> Offres Limitées
                     </motion.div>
-                    <h1 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none mb-6">
+                    <h1 className="text-4xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none mb-6">
                         BARAKA <span className="text-primary italic">FLASH</span>
                     </h1>
-                    <p className="text-gray-400 max-w-xl text-lg font-medium mb-12">
+                    <p className="text-gray-400 max-w-xl text-sm md:text-lg font-medium mb-8 md:mb-12 leading-relaxed">
                         Profitez des meilleures remises High-Tech du Sénégal. Jusqu'à -50% sur une sélection de produits premium pendant 48H.
                     </p>
 
-                    <div className="flex items-center gap-12 bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-10">
+                    <div className="flex items-center gap-4 md:gap-12 bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-6 md:p-10">
                         <CountdownItem value="01" label="Jour" />
+                        <div className="w-[1px] h-8 bg-white/10 hidden md:block" />
                         <CountdownItem value="14" label="Heures" />
+                        <div className="w-[1px] h-8 bg-white/10 hidden md:block" />
                         <CountdownItem value="32" label="Minutes" />
+                        <div className="w-[1px] h-8 bg-white/10 hidden md:block" />
                         <CountdownItem value="45" label="Secondes" />
                     </div>
                 </Container>
             </div>
 
-            <section className="py-20">
-                <Container>
+            <section className="py-12 md:py-20">
+                <Container className="px-4 md:px-8">
                     {/* Top Flash Grid */}
-                    <div className="mb-24">
-                        <div className="flex items-center justify-between mb-12 px-4">
-                            <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Flash Sales du Moment</h2>
-                            <div className="flex items-center gap-2 text-primary font-black text-[11px] uppercase tracking-widest">
+                    <div className="mb-16 md:mb-24">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 md:mb-12 gap-4">
+                            <h2 className="text-2xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Flash Sales</h2>
+                            <div className="flex items-center gap-2 text-primary font-black text-[9px] md:text-[11px] uppercase tracking-widest bg-primary/5 px-4 py-2 rounded-full w-fit">
                                 <Clock className="w-4 h-4" /> Fin dans 1j : 14h : 32m
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                             {FLASH_SALES.map((sale) => (
                                 <ProductCard key={sale.id} product={sale} />
                             ))}
@@ -72,17 +75,17 @@ export default function PromotionsPage() {
 
                     {/* All Promotions */}
                     <div>
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 px-4">
-                            <div className="flex flex-col gap-2">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+                            <div className="flex flex-col gap-2 items-center md:items-start text-center md:text-left">
                                 <span className="text-primary font-black text-[11px] uppercase tracking-[0.3em]">Catalogue Promo</span>
-                                <h2 className="text-4xl font-black text-[#1B1F3B] uppercase tracking-tight">Toutes Nos Offres</h2>
+                                <h2 className="text-3xl md:text-4xl font-black text-[#1B1F3B] uppercase tracking-tight">Toutes Nos Offres</h2>
                             </div>
 
-                            <div className="flex items-center gap-4 bg-white rounded-xl p-2 border border-gray-100 shadow-sm">
-                                <button className="h-12 px-8 bg-[#1B1F3B] text-white rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                            <div className="flex items-center gap-2 bg-white rounded-xl p-2 border border-gray-100 shadow-sm w-full md:w-auto">
+                                <button className="h-11 px-4 md:h-12 md:px-8 bg-[#1B1F3B] text-white rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shrink-0">
                                     <Filter className="w-4 h-4" /> Filtrer
                                 </button>
-                                <select className="h-12 bg-transparent outline-none text-xs font-bold text-gray-500 px-4 pr-10 appearance-none border-l border-gray-100">
+                                <select className="h-11 md:h-12 bg-transparent outline-none text-[10px] md:text-xs font-bold text-gray-500 px-4 flex-1 appearance-none border-l border-gray-100">
                                     <option>Plus gros rabais</option>
                                     <option>Prix croissant</option>
                                     <option>Nouveautés</option>
@@ -90,14 +93,14 @@ export default function PromotionsPage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                             {ALL_PROMOS.map((prod) => (
                                 <ProductCard key={prod.id} product={prod} />
                             ))}
                         </div>
 
-                        <div className="mt-16 flex justify-center">
-                            <button className="h-16 px-12 bg-white border border-gray-200 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:border-primary hover:text-primary transition-all shadow-sm">
+                        <div className="mt-12 md:mt-16 flex justify-center">
+                            <button className="h-14 md:h-16 px-8 md:px-12 bg-white border border-gray-200 rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest hover:border-primary hover:text-primary transition-all shadow-sm">
                                 Charger plus d'offres
                             </button>
                         </div>

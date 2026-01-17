@@ -278,7 +278,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                             ))}
                         </div>
 
-                        <div className="bg-white rounded-[2.5rem] p-12 shadow-sm border border-gray-100 min-h-[400px]">
+                        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-12 shadow-sm border border-gray-100 min-h-[300px] md:min-h-[400px]">
                             <AnimatePresence mode="wait">
                                 {activeTab === 'description' && (
                                     <motion.div
@@ -352,7 +352,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                             <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Produits Similaires</h2>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                             {similarProducts.map((prod) => (
                                 <ProductCard key={prod.id} product={prod} />
                             ))}

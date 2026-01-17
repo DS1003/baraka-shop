@@ -58,13 +58,13 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
             {/* Editorial Header */}
-            <div className="bg-[#1B1F3B] py-20 relative overflow-hidden">
+            <div className="bg-[#1B1F3B] py-12 md:py-20 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
                     style={{ backgroundImage: `url('https://res.cloudinary.com/dgro5x4h8/image/upload/v1768669738/pattern_2_kln9c6.png')`, backgroundSize: '400px' }} />
                 <div className="absolute -bottom-1/2 -right-1/4 w-[50%] h-full bg-primary/10 blur-[120px] rounded-full" />
 
-                <Container className="relative z-10">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6">
+                <Container className="relative z-10 px-6 sm:px-8">
+                    <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6">
                         <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
                         <ChevronRight className="w-3 h-3" />
                         <span className="text-white">Rayons</span>
@@ -72,22 +72,22 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
                         <span className="text-primary">{categoryName}</span>
                     </div>
                     <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-4"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-3xl sm:text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-4 leading-none"
                     >
                         {categoryName}
                     </motion.h1>
-                    <p className="text-gray-400 max-w-2xl text-lg font-medium">
+                    <p className="text-gray-400 max-w-2xl text-sm sm:text-base md:text-lg font-medium leading-relaxed">
                         Découvrez notre sélection exclusive de {categoryName.toLowerCase()}. Performance, design et authenticité garantis.
                     </p>
                 </Container>
             </div>
 
-            <section className="py-20">
-                <Container>
+            <section className="py-12 md:py-20">
+                <Container className="px-4 sm:px-8">
                     {/* Products Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                         {products.map((product, idx) => (
                             <motion.div
                                 key={product.id}

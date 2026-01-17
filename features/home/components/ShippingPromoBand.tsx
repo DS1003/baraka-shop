@@ -10,7 +10,7 @@ export function ShippingPromoBand() {
             <Container>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Free Shipping Promo */}
-                    <div className="relative overflow-hidden rounded-[2rem] bg-[#1B1F3B] p-10 flex flex-col justify-between min-h-[220px] group">
+                    <div className="relative overflow-hidden rounded-[2rem] bg-[#1B1F3B] p-6 md:p-10 flex flex-col justify-between min-h-[220px] group">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
 
                         <div className="relative z-10 flex flex-col gap-4">
@@ -29,7 +29,7 @@ export function ShippingPromoBand() {
                     </div>
 
                     {/* Quality Guarantee Promo */}
-                    <div className="relative overflow-hidden rounded-[2rem] bg-gray-50 border border-gray-100 p-8 md:p-10 flex flex-col justify-between min-h-[220px] group">
+                    <div className="relative overflow-hidden rounded-[2rem] bg-gray-50 border border-gray-100 p-6 md:p-10 flex flex-col justify-between min-h-[220px] group">
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full -translate-x-1/2 translate-y-1/2" />
 
                         <div className="relative z-10 flex flex-col gap-4 items-center sm:items-start">
