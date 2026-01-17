@@ -67,9 +67,9 @@ export function HomeSlider() {
     }
 
     return (
-        <section className="bg-[#f2f2f2] pb-8 pt-4">
-            <Container>
-                <div className="bg-white relative rounded-t-xl md:rounded-xl overflow-hidden shadow-sm h-[220px] sm:h-[300px] md:h-[450px]">
+        <section className="bg-[#f2f2f2] pb-6 md:pb-8 pt-0 md:pt-4">
+            <Container className="px-0 md:px-6 lg:px-8">
+                <div className="bg-white relative rounded-none md:rounded-xl overflow-hidden shadow-sm h-[250px] sm:h-[300px] md:h-[450px]">
                     <AnimatePresence mode="wait">
                         <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden">
                             <motion.div
@@ -93,7 +93,7 @@ export function HomeSlider() {
                 </div>
 
                 {/* LDLC Style Bottom Tabs - Responsive Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-x border-b border-gray-200 bg-[#f8f8f8] rounded-b-xl overflow-hidden">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-x-0 md:border-x border-b border-gray-200 bg-[#f8f8f8] rounded-none md:rounded-b-xl overflow-hidden">
                     {slides.map((slide, index) => (
                         <button
                             key={slide.id}
