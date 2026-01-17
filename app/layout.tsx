@@ -19,7 +19,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className="h-full antialiased scroll-smooth">
-      <body className={cn("min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20", inter.className)}>
+      <body
+        className={cn("min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20", inter.className)}
+        suppressHydrationWarning
+      >
         <Header />
         <main className="flex-grow flex flex-col">
           {children}
