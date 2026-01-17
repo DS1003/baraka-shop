@@ -22,7 +22,7 @@ export function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
                     {/* Brand & Mission */}
                     <div className="flex flex-col gap-10">
-                        <Link href="/" className="inline-block">
+                        <a href="/" className="inline-block">
                             <div className="relative w-[300px] h-[100px]">
                                 <Image
                                     src="https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png"
@@ -31,7 +31,7 @@ export function Footer() {
                                     className="object-contain object-left"
                                 />
                             </div>
-                        </Link>
+                        </a>
                         <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
                             Votre destination premium pour l'électronique de pointe au Sénégal. Nous nous engageons à vous offrir le meilleur de la technologie avec un service d'excellence.
                         </p>
@@ -50,11 +50,11 @@ export function Footer() {
                             Navigation
                         </h3>
                         <ul className="flex flex-col gap-4 text-sm text-gray-400">
-                            <FooterLink href="/shop">Boutique</FooterLink>
+                            <FooterLink href="/boutique">Boutique</FooterLink>
                             <FooterLink href="/promotions">Nos Promotions</FooterLink>
-                            <FooterLink href="/new-arrivals">Nouveautés</FooterLink>
-                            <FooterLink href="/best-sellers">Meilleures Ventes</FooterLink>
-                            <FooterLink href="/brands">Marques Partenaires</FooterLink>
+                            <FooterLink href="/boutique">Nouveautés</FooterLink>
+                            <FooterLink href="/boutique">Meilleures Ventes</FooterLink>
+                            <FooterLink href="/marques">Marques Partenaires</FooterLink>
                         </ul>
                     </div>
 

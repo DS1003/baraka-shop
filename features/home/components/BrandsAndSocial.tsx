@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Container } from '@/ui/Container'
+import Link from 'next/link'
 import { Facebook, Youtube, Instagram, Music2, Mail, Send, ArrowRight, ShieldCheck, Globe, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -47,7 +48,11 @@ export function BrandsAndSocial() {
 
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                             {brands.map((brand, i) => (
-                                <div key={i} className="h-28 bg-white rounded-3xl border border-gray-100/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center grayscale hover:grayscale-0 transition-all duration-700 group cursor-pointer hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1">
+                                <Link
+                                    key={i}
+                                    href={`/boutique?brand=${brand.name.toLowerCase()}`}
+                                    className="h-28 bg-white rounded-3xl border border-gray-100/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center grayscale hover:grayscale-0 transition-all duration-700 group cursor-pointer hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 p-4"
+                                >
                                     {brand.logo ? (
                                         <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" className="text-gray-300 group-hover:text-black transition-colors">{brand.logo}</svg>
                                     ) : (
@@ -55,8 +60,8 @@ export function BrandsAndSocial() {
                                             {brand.customText}
                                         </span>
                                     )}
-                                    <span className="mt-3 text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Reseller</span>
-                                </div>
+                                    <span className="mt-3 text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Reseller officiel</span>
+                                </Link>
                             ))}
                         </div>
                     </div>

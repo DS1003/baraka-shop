@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -10,15 +11,16 @@ interface Slide {
     id: number
     image: string
     title: string
+    href: string
 }
 
 const slides: Slide[] = [
-    { id: 1, image: "https://media.ldlc.com/encart/p/28885_b.jpg", title: "SOLDES" },
-    { id: 2, image: "https://media.ldlc.com/encart/p/28828_b.jpg", title: "QUI LES VEUX ?" },
-    { id: 3, image: "https://media.ldlc.com/encart/p/28829_b.jpg", title: "L'OFFRE IMMANQUABLE" },
-    { id: 4, image: "https://media.ldlc.com/encart/p/22889_b.jpg", title: "TÉLÉCHARGEZ L'APPLI !" },
-    { id: 5, image: "https://media.ldlc.com/encart/p/28858_b.jpg", title: "VOTRE IPAD À TAUX 0 %" },
-    { id: 6, image: "https://media.ldlc.com/encart/p/26671_b.jpg", title: "DEMANDEZ UNE REPRISE" }
+    { id: 1, image: "https://media.ldlc.com/encart/p/28885_b.jpg", title: "SOLDES", href: "/promotions" },
+    { id: 2, image: "https://media.ldlc.com/encart/p/28828_b.jpg", title: "QUI LES VEUX ?", href: "/boutique" },
+    { id: 3, image: "https://media.ldlc.com/encart/p/28829_b.jpg", title: "L'OFFRE IMMANQUABLE", href: "/promotions" },
+    { id: 4, image: "https://media.ldlc.com/encart/p/22889_b.jpg", title: "TÉLÉCHARGEZ L'APPLI !", href: "/" },
+    { id: 5, image: "https://media.ldlc.com/encart/p/28858_b.jpg", title: "VOTRE IPAD À TAUX 0 %", href: "/boutique?brand=apple" },
+    { id: 6, image: "https://media.ldlc.com/encart/p/26671_b.jpg", title: "DEMANDEZ UNE REPRISE", href: "/contact" }
 ]
 
 const AUTOPLAY_DURATION = 5000 // 5 seconds
@@ -69,22 +71,24 @@ export function HomeSlider() {
             <Container>
                 <div className="bg-white relative rounded-t-xl overflow-hidden shadow-sm h-[300px] md:h-[450px]">
                     <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentSlide}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="absolute inset-0 w-full h-full"
-                        >
-                            <Image
-                                src={slides[currentSlide].image}
-                                alt={slides[currentSlide].title}
-                                fill
-                                className="object-cover"
-                                priority
-                            />
-                        </motion.div>
+                        <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden">
+                            <motion.div
+                                key={currentSlide}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.5 }}
+                                className="absolute inset-0 w-full h-full"
+                            >
+                                <Image
+                                    src={slides[currentSlide].image}
+                                    alt={slides[currentSlide].title}
+                                    fill
+                                    className="object-cover hover:scale-105 transition-transform duration-[2000ms]"
+                                    priority
+                                />
+                            </motion.div>
+                        </Link>
                     </AnimatePresence>
                 </div>
 

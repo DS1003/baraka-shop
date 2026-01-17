@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { ProductCard } from '@/ui/ProductCard'
 
 // Mock products for "Similar Products"
 const similarProducts = [
@@ -103,7 +104,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                         {/* 1. Left: Image Gallery (5 columns) */}
                         <div className="lg:col-span-5 flex flex-col gap-6">
-                            <div className="relative aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-12 group">
+                            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-12 group">
                                 <motion.div
                                     key={activeImg}
                                     initial={{ opacity: 0, scale: 0.9 }}
@@ -227,7 +228,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                         </button>
                                     </div>
 
-                                    <Button className="flex-1 w-full sm:w-auto h-14 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:bg-[#1B1F3B] transition-all flex items-center justify-center gap-3">
+                                    <Button
+                                        onClick={() => {
+                                            // Simulate adding to cart and redirect
+                                            const btn = document.getElementById('add-to-cart-btn');
+                                            if (btn) btn.innerHTML = 'Ajouté !';
+                                            setTimeout(() => {
+                                                window.location.href = '/cart';
+                                            }, 500);
+                                        }}
+                                        id="add-to-cart-btn"
+                                        className="flex-1 w-full sm:w-auto h-14 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:bg-[#1B1F3B] transition-all flex items-center justify-center gap-3"
+                                    >
                                         <ShoppingCart className="w-4 h-4" /> Ajouter au panier
                                     </Button>
                                 </div>
@@ -342,7 +354,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                             {similarProducts.map((prod) => (
-                                <SimilarProductCard key={prod.id} product={prod} />
+                                <ProductCard key={prod.id} product={prod} />
                             ))}
                         </div>
                     </div>
@@ -354,7 +366,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
 function ServiceBadge({ icon: Icon, label, sub }: { icon: any, label: string, sub: string }) {
     return (
-        <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:bg-white hover:border-primary transition-all duration-300 cursor-default">
+        <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-xl border border-gray-100 group hover:bg-white hover:border-primary transition-all duration-300 cursor-default">
             <Icon className="w-5 h-5 text-primary mb-2 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
             <span className="text-[9px] font-black text-[#1B1F3B] uppercase tracking-tight mb-0.5">{label}</span>
             <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{sub}</span>
@@ -362,29 +374,7 @@ function ServiceBadge({ icon: Icon, label, sub }: { icon: any, label: string, su
     )
 }
 
-function SimilarProductCard({ product }: { product: any }) {
-    return (
-        <Link href={`/product/${product.id}`} className="group flex flex-col h-full bg-white rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-gray-200/50 border border-gray-50 p-2">
-            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden flex items-center justify-center p-6 border border-gray-50">
-                <Image src={product.image} alt={product.name} fill className="object-contain p-4 transition-transform duration-700 group-hover:scale-110" />
-            </div>
-            <div className="p-6 pt-4 flex flex-col gap-2">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{product.category}</span>
-                <h3 className="font-bold text-sm text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 h-10">
-                    {product.name}
-                </h3>
-                <div className="mt-4 flex items-center justify-between">
-                    <span className="text-[#1B1F3B] font-black text-lg tracking-tight">
-                        {product.price.toLocaleString()} <span className="text-[10px] font-bold text-gray-400 uppercase">CFA</span>
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                        <Zap className="w-4 h-4 fill-current" />
-                    </div>
-                </div>
-            </div>
-        </Link>
-    )
-}
+
 
 // Icon fallbacks if LayoutGrid isn't available from lucide
 function LayoutGridIcon(props: any) {

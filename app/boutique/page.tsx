@@ -18,6 +18,7 @@ import {
     Search
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ProductCard } from '@/ui/ProductCard'
 
 // Mock categories for filters
 const categories = [
@@ -74,7 +75,7 @@ export default function ShopPage() {
                     {/* Filters Sidebar */}
                     <aside className="lg:col-span-1 flex flex-col gap-8">
                         {/* Categories Filter */}
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
                             <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 flex items-center justify-between border-b border-gray-50 pb-4">
                                 Catégories <ChevronDown className="w-4 h-4 text-gray-400" />
                             </h3>
@@ -92,7 +93,7 @@ export default function ShopPage() {
                         </div>
 
                         {/* Price Filter */}
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
                             <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 border-b border-gray-50 pb-4">
                                 Prix (CFA)
                             </h3>
@@ -115,7 +116,7 @@ export default function ShopPage() {
                         </div>
 
                         {/* Brands Filter */}
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
                             <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 border-b border-gray-50 pb-4">
                                 Marques
                             </h3>
@@ -136,7 +137,7 @@ export default function ShopPage() {
                     {/* Product Listing Area */}
                     <div className="lg:col-span-3">
                         {/* Toolbar */}
-                        <div className="bg-white rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm border border-gray-100">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-8 flex flex-wrap items-center justify-between gap-6">
                             <div className="flex items-center gap-4">
                                 <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Affichage :</span>
                                 <div className="flex items-center gap-2">
@@ -176,7 +177,7 @@ export default function ShopPage() {
                             viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
                         )}>
                             {products.map((product) => (
-                                <ShopProductCard key={product.id} product={product} viewMode={viewMode} />
+                                <ProductCard key={product.id} product={product} viewMode={viewMode} />
                             ))}
                         </div>
 
@@ -201,120 +202,4 @@ export default function ShopPage() {
     )
 }
 
-function ShopProductCard({ product, viewMode }: { product: any, viewMode: 'grid' | 'list' }) {
-    if (viewMode === 'list') {
-        return (
-            <div className="group flex flex-col md:flex-row bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500">
-                <Link href={`/product/${product.id}`} className="relative w-full md:w-[300px] aspect-square bg-white flex items-center justify-center p-8 shrink-0">
-                    <Image src={product.image} alt={product.name} fill className="object-contain p-8 group-hover:scale-105 transition-transform duration-500" />
-                </Link>
-                <div className="p-10 flex flex-col justify-center flex-1">
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{product.category}</span>
-                        <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-[10px] font-black text-gray-400">{product.rating}.0</span>
-                        </div>
-                    </div>
-                    <Link href={`/product/${product.id}`}>
-                        <h3 className="text-xl font-black text-[#1B1F3B] mb-4 hover:text-primary transition-colors cursor-pointer leading-tight uppercase tracking-tight">
-                            {product.name}
-                        </h3>
-                    </Link>
-                    <p className="text-gray-400 text-sm mb-6 leading-relaxed line-clamp-2">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                    </p>
-                    <div className="flex items-center justify-between mt-auto">
-                        <div className="flex flex-col">
-                            {product.oldPrice && <span className="text-gray-300 text-xs line-through font-bold">{product.oldPrice.toLocaleString()} CFA</span>}
-                            <span className="text-2xl font-black text-[#1B1F3B] tracking-tighter">{product.price.toLocaleString()} <span className="text-xs">CFA</span></span>
-                        </div>
-                        <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                            className="flex items-center gap-3 bg-[#1B1F3B] text-white px-8 h-14 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary transition-all shadow-xl hover:shadow-primary/20"
-                        >
-                            <ShoppingCart className="w-4 h-4" /> Ajouter au panier
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
 
-    return (
-        <div className="group flex flex-col h-full bg-white rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-gray-200/50 border border-gray-50 p-2">
-            {/* Image Area */}
-            <div className="relative aspect-square bg-[#fff] rounded-2xl overflow-hidden group/img border border-gray-50">
-                <Link href={`/product/${product.id}`} className="absolute inset-0 z-10">
-                    <span className="sr-only">Voir {product.name}</span>
-                </Link>
-
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
-                    {product.badges?.map((badge: any, idx: number) => (
-                        <span key={idx} className={cn("text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm", badge.color)}>
-                            {badge.text}
-                        </span>
-                    ))}
-                </div>
-
-                {/* Actions */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2 z-20 translate-x-12 opacity-0 group-hover/img:translate-x-0 group-hover/img:opacity-100 transition-all duration-500">
-                    <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100 z-20"
-                    >
-                        <Heart className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100 z-20"
-                    >
-                        <Eye className="w-4 h-4" />
-                    </button>
-                </div>
-
-                <div className="relative w-full h-full p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110">
-                    <Image src={product.image} alt={product.name} fill className="object-contain p-6" />
-                </div>
-
-                {/* Add to Cart Overlay */}
-                <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transform translate-y-20 opacity-0 group-hover/img:translate-y-0 group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
-                >
-                    <ShoppingCart className="w-3.5 h-3.5" /> Ajouter
-                </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 pt-4 flex flex-col gap-2 flex-1">
-                <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{product.category}</span>
-                    <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-[10px] font-bold text-gray-500">{product.rating}.0</span>
-                    </div>
-                </div>
-
-                <Link href={`/product/${product.id}`}>
-                    <h3 className="font-bold text-sm text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 min-h-[40px]">
-                        {product.name}
-                    </h3>
-                </Link>
-
-                <div className="mt-8 flex items-center justify-between">
-                    <div className="flex flex-col">
-                        {product.oldPrice && <span className="text-gray-400 text-[10px] line-through font-bold">{product.oldPrice.toLocaleString()} CFA</span>}
-                        <span className="text-[#1B1F3B] font-black text-lg tracking-tight">
-                            {product.price.toLocaleString()} <span className="text-[10px] font-bold text-gray-400 ml-0.5 uppercase">CFA</span>
-                        </span>
-                    </div>
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                        <Zap className="w-4 h-4 fill-current" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}

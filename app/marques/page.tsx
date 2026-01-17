@@ -46,7 +46,7 @@ export default function BrandsPage() {
 
             <Container className="py-20">
                 {/* Search & Stats Bar */}
-                <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-8">
                         <div className="flex flex-col">
                             <span className="text-3xl font-black text-[#1B1F3B]">24+</span>
@@ -77,7 +77,7 @@ export default function BrandsPage() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
-                            className="group bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500 flex flex-col items-center text-center"
+                            className="group bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500 flex flex-col items-center text-center"
                         >
                             <div className="relative w-32 h-32 bg-gray-50 rounded-full flex items-center justify-center mb-6 overflow-hidden p-6 group-hover:scale-110 transition-transform duration-500">
                                 <Image src={brand.logo} alt={brand.name} fill className="object-contain p-6 grayscale group-hover:grayscale-0 transition-all" />
@@ -112,7 +112,7 @@ export default function BrandsPage() {
 
 function TrustCard({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
     return (
-        <div className="bg-white rounded-[2rem] p-10 border border-gray-100 flex flex-col gap-4">
+        <div className="bg-white rounded-2xl p-10 border border-gray-100 flex flex-col gap-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                 <Icon className="w-6 h-6" />
             </div>

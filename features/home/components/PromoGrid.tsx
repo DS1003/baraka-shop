@@ -65,7 +65,7 @@ export function PromoGrid() {
                         <Link
                             key={idx}
                             href={promo.href}
-                            className={`relative overflow-hidden rounded-[2rem] min-h-[300px] p-10 flex flex-col items-start justify-between ${promo.bg} group shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500 ${promo.size}`}
+                            className={`relative overflow-hidden rounded-2xl min-h-[300px] p-10 flex flex-col items-start justify-between ${promo.bg} group shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500 ${promo.size}`}
                         >
                             <div className="relative z-10 flex flex-col gap-4 w-full">
                                 <span className="inline-block px-3 py-1 bg-white text-[#1B1F3B] text-[9px] font-black uppercase tracking-[0.2em] rounded-full w-fit shadow-sm">

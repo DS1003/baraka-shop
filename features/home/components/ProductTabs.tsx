@@ -7,6 +7,7 @@ import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, Search, ShoppingCart, Star, Eye, Zap, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ProductCard } from '@/ui/ProductCard'
 
 interface Product {
     id: string
@@ -157,7 +158,7 @@ export function ProductTabs() {
                         <ProductCard key={product.id} product={product} />
                     ))}
                     {(!products[activeTab] || products[activeTab].length === 0) && (
-                        <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-3xl">
+                        <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-2xl">
                             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Arrivage en cours...</p>
                         </div>
                     )}
@@ -167,89 +168,4 @@ export function ProductTabs() {
     )
 }
 
-function ProductCard({ product }: { product: Product }) {
-    return (
-        <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-gray-200/50 border border-gray-50">
-            {/* Image Area */}
-            <div className="relative aspect-square bg-[#fff] m-2 rounded-xl overflow-hidden group/img border border-gray-50 text-left">
-                <Link href={`/product/${product.id}`} className="absolute inset-0 z-10">
-                    <span className="sr-only">Voir {product.name}</span>
-                </Link>
 
-                {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
-                    {product.badges?.map((badge, idx) => (
-                        <span key={idx} className={cn("text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm", badge.color)}>
-                            {badge.text}
-                        </span>
-                    ))}
-                </div>
-
-                {/* Actions */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2 z-20 translate-x-12 opacity-0 group-hover/img:translate-x-0 group-hover/img:opacity-100 transition-all duration-500">
-                    <CardAction icon={Heart} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} />
-                    <CardAction icon={Eye} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} />
-                </div>
-
-                <div className="relative w-full h-full p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110">
-                    <Image
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        className="object-contain p-6"
-                    />
-                </div>
-
-                {/* Add to Cart Overlay */}
-                <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                    className="absolute bottom-4 left-4 right-4 bg-primary text-white py-3 rounded-lg font-black text-[10px] uppercase tracking-[0.2em] transform translate-y-20 opacity-0 group-hover/img:translate-y-0 group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
-                >
-                    <ShoppingCart className="w-3.5 h-3.5" /> Ajouter au panier
-                </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 pt-2 flex flex-col gap-1.5 flex-1">
-                <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{product.category}</span>
-                    <div className="flex items-center gap-0.5">
-                        <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                        <span className="text-[10px] font-bold text-gray-500">{product.rating}.0</span>
-                    </div>
-                </div>
-
-                <Link href={`/product/${product.id}`} className="font-bold text-sm text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 h-10">
-                    {product.name}
-                </Link>
-
-                <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">
-                    <div className="flex flex-col">
-                        {product.oldPrice && (
-                            <span className="text-gray-400 text-[11px] line-through font-bold">
-                                {product.oldPrice.toLocaleString()} CFA
-                            </span>
-                        )}
-                        <span className="text-[#1B1F3B] font-black text-xl tracking-tight">
-                            {product.price.toLocaleString()} <span className="text-[11px] font-bold text-gray-400 ml-0.5 uppercase">CFA</span>
-                        </span>
-                    </div>
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                        <Zap className="w-5 h-5 fill-current" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-function CardAction({ icon: Icon, onClick }: { icon: any, onClick?: (e: React.MouseEvent) => void }) {
-    return (
-        <button
-            onClick={onClick}
-            className="w-9 h-9 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100"
-        >
-            <Icon className="w-4 h-4" />
-        </button>
-    )
-}
