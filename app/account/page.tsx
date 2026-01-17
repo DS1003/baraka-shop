@@ -44,7 +44,7 @@ export default function AccountPage() {
                     {/* Sidebar / Profile Info */}
                     <div className="lg:col-span-4 flex flex-col gap-8">
                         {/* Profile Card */}
-                        <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm flex flex-col items-center text-center">
+                        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-gray-100 shadow-sm flex flex-col items-center text-center">
                             <div className="relative w-32 h-32 rounded-full overflow-hidden mb-6 border-4 border-primary/10 p-1">
                                 <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
                                     <User className="w-16 h-16" />
@@ -61,7 +61,7 @@ export default function AccountPage() {
                         </div>
 
                         {/* Navigation Menu */}
-                        <div className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm py-4">
+                        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm py-4">
                             {menuItems.map((item) => (
                                 <button
                                     key={item.id}
@@ -90,7 +90,7 @@ export default function AccountPage() {
 
                     {/* Main Content Area */}
                     <div className="lg:col-span-8">
-                        <div className="bg-white rounded-[2.5rem] p-12 border border-gray-100 shadow-sm min-h-[600px]">
+                        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-12 border border-gray-100 shadow-sm min-h-[600px]">
                             {activeTab === 'orders' && (
                                 <div className="flex flex-col gap-10">
                                     <div className="flex items-center justify-between">

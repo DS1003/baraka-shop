@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall } from 'lucide-react'
+import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, ArrowRight } from 'lucide-react'
 import { Button } from '@/ui/Button'
 import { Container } from '@/ui/Container'
 import { cn } from '@/lib/utils'
@@ -46,7 +46,7 @@ export function Header() {
         <header className="w-full flex flex-col font-sans relative">
             {/* 1. Top Bar - Black */}
             {!scrolled && (
-                <div className="bg-black text-white text-[11px] md:text-xs py-2.5 font-medium tracking-wide">
+                <div className="bg-black text-white text-[11px] md:text-xs py-2.5 font-medium tracking-wide hidden md:block">
                     <Container className="flex justify-between items-center">
                         <div className="flex items-center gap-6">
                             <Link href="/flash-sale" className="flex items-center gap-1.5 hover:text-primary transition-colors">
@@ -68,7 +68,7 @@ export function Header() {
 
             {/* 2. Main Header - White (Enhanced Sticky/Fixed Logic) */}
             <div className={cn(
-                "w-full transition-all duration-300",
+                "w-full transition-all duration-300 hidden md:block",
                 scrolled ? "h-[70px] md:h-[80px]" : "h-auto"
             )}>
                 <div className={cn(
@@ -247,15 +247,148 @@ export function Header() {
                 </Container>
             </div>
 
-            {/* Mobile Menu Bar */}
-            <div className="md:hidden bg-white border-b border-gray-100 py-3 px-4 flex items-center justify-between">
-                <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                    <Menu className="w-6 h-6" />
-                </Button>
-                <div className="flex items-center gap-4">
-                    <ShoppingCart className="w-6 h-6" />
+            {/* Mobile Header (Visible only on small screens) */}
+            <div className={cn(
+                "md:hidden bg-white border-b border-gray-100 py-3 px-4 flex items-center justify-between z-[110] transition-all duration-300",
+                scrolled ? "fixed top-0 left-0 right-0 shadow-md py-2" : "relative"
+            )}>
+                <button
+                    onClick={() => setIsMenuOpen(true)}
+                    className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
+                >
+                    <Menu className="w-6 h-6 text-[#1B1F3B]" />
+                </button>
+
+                <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+                    <div className="relative w-[120px] h-[35px]">
+                        <Image
+                            src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png"
+                            alt="Baraka Shop"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
+                </Link>
+
+                <div className="flex items-center gap-2">
+                    <Link href="/login" className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                        <User className="w-6 h-6 text-[#1B1F3B]" />
+                    </Link>
+                    <Link href="/cart" className="p-2 hover:bg-gray-50 rounded-xl transition-colors relative">
+                        <ShoppingCart className="w-6 h-6 text-[#1B1F3B]" />
+                        <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-white text-[8px] font-black flex items-center justify-center rounded-full ring-2 ring-white">2</span>
+                    </Link>
                 </div>
             </div>
+
+            {/* Mobile Search Bar (Always visible on mobile below header) */}
+            <div className="md:hidden bg-white px-4 py-3 border-b border-gray-50">
+                <div className="flex w-full h-[42px] bg-[#f4f4f4] border border-gray-200 rounded-xl overflow-hidden group">
+                    <input
+                        type="text"
+                        placeholder="Rechercher..."
+                        className="flex-1 px-4 bg-transparent outline-none text-sm font-medium"
+                    />
+                    <button className="px-4 text-gray-400">
+                        <Search className="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Menu Drawer */}
+            <AnimatePresence>
+                {isMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150]"
+                        />
+                        <motion.div
+                            initial={{ x: '-100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '-100%' }}
+                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                            className="fixed top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white z-[160] shadow-2xl flex flex-col"
+                        >
+                            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+                                <div className="relative w-[100px] h-[30px]">
+                                    <Image
+                                        src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png"
+                                        alt="Baraka"
+                                        fill
+                                        className="object-contain object-left"
+                                    />
+                                </div>
+                                <button onClick={() => setIsMenuOpen(false)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                                    <ChevronDown className="w-5 h-5 rotate-90" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto py-6">
+                                <nav className="flex flex-col gap-1 px-4">
+                                    <span className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Navigation</span>
+                                    {navigation.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className={cn(
+                                                "px-4 py-4 rounded-xl flex items-center justify-between text-sm font-black uppercase tracking-tight transition-all",
+                                                item.active ? "bg-primary/5 text-primary" : "text-[#1B1F3B] hover:bg-gray-50"
+                                            )}
+                                        >
+                                            {item.name}
+                                            {item.isNew && <span className="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full">HOT</span>}
+                                        </Link>
+                                    ))}
+                                </nav>
+
+                                <div className="mt-8 px-8 pt-8 border-t border-gray-50">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 block">Support</span>
+                                    <div className="flex flex-col gap-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-primary">
+                                                <PhoneCall className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black text-gray-400 uppercase">Service Client</span>
+                                                <span className="text-sm font-black text-[#1B1F3B]">+221 33 800 00 00</span>
+                                            </div>
+                                        </div>
+                                        <Link
+                                            href="/boutiques"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="flex items-center gap-4"
+                                        >
+                                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-primary">
+                                                <MapPin className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black text-gray-400 uppercase">Localisation</span>
+                                                <span className="text-sm font-black text-[#1B1F3B]">Nos Boutiques</span>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-gray-50">
+                                <Link
+                                    href="/login"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="w-full h-14 bg-[#1B1F3B] text-white rounded-xl flex items-center justify-center font-black text-[11px] uppercase tracking-widest gap-2 shadow-xl shadow-gray-200"
+                                >
+                                    Se connecter <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </header>
     )
 }

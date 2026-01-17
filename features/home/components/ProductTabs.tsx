@@ -110,19 +110,19 @@ export function ProductTabs() {
 
             <Container className="relative z-10">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 px-4">
-                    <div className="flex flex-col gap-3">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 mb-12 md:mb-16 px-4">
+                    <div className="flex flex-col gap-3 w-full md:w-auto">
                         <div className="flex items-center gap-3">
                             <div className="h-[2px] w-8 bg-primary rounded-full" />
-                            <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Notre Sélection</span>
+                            <span className="text-primary font-black text-[10px] md:text-[11px] uppercase tracking-[0.4em]">Notre Sélection</span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-10 gap-y-4">
+                        <div className="flex items-center gap-x-6 md:gap-x-10 overflow-x-auto pb-4 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={cn(
-                                        "text-xl md:text-3xl font-black transition-all relative uppercase tracking-tight",
+                                        "whitespace-nowrap text-base md:text-3xl font-black transition-all relative uppercase tracking-tight",
                                         activeTab === tab ? "text-[#1B1F3B]" : "text-gray-300 hover:text-gray-400"
                                     )}
                                 >
@@ -130,7 +130,7 @@ export function ProductTabs() {
                                     {activeTab === tab && (
                                         <motion.div
                                             layoutId="activeTab"
-                                            className="absolute -bottom-3 left-0 w-10 h-[4px] bg-primary rounded-full shadow-[0_4px_10px_rgba(255,140,0,0.3)]"
+                                            className="absolute -bottom-2 md:-bottom-3 left-0 w-8 md:w-10 h-[3px] md:h-[4px] bg-primary rounded-full shadow-[0_4px_10px_rgba(255,140,0,0.3)]"
                                         />
                                     )}
                                 </button>
@@ -138,7 +138,7 @@ export function ProductTabs() {
                         </div>
                     </div>
 
-                    <Link href="/boutique" className="flex items-center gap-2 group/btn">
+                    <Link href="/boutique" className="flex items-center gap-2 group/btn w-fit">
                         <span className="text-[10px] font-black uppercase tracking-widest text-[#1B1F3B] group-hover/btn:text-primary transition-colors">Voir Plus</span>
                         <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover/btn:bg-primary group-hover/btn:text-white group-hover/btn:border-primary transition-all">
                             <ArrowRight className="w-3.5 h-3.5" />
@@ -152,7 +152,7 @@ export function ProductTabs() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8"
                 >
                     {products[activeTab]?.map((product) => (
                         <ProductCard key={product.id} product={product} />

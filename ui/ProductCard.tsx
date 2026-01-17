@@ -78,64 +78,58 @@ export function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
                     ))}
                 </div>
 
-                {/* Actions */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2 z-20 translate-x-12 opacity-0 group-hover/img:translate-x-0 group-hover/img:opacity-100 transition-all duration-500">
+                {/* Actions - Always visible or easier to trigger on mobile */}
+                <div className="absolute top-2 right-2 flex flex-col gap-2 z-20 md:translate-x-12 md:opacity-0 md:group-hover/img:translate-x-0 md:group-hover/img:opacity-100 transition-all duration-500">
                     <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="w-8 h-8 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100 z-20"
+                        className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/90 text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all"
                     >
-                        <Heart className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="w-8 h-8 rounded-full bg-white text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all scale-90 hover:scale-100 z-20"
-                    >
-                        <Eye className="w-3.5 h-3.5" />
+                        <Heart className="w-3 md:w-3.5 h-3 md:h-3.5" />
                     </button>
                 </div>
 
-                <div className="relative w-full h-full p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110">
-                    <Image src={product.image} alt={product.name} fill className="object-contain p-6" />
+                <div className="relative w-full h-full p-4 md:p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110">
+                    <Image src={product.image} alt={product.name} fill className="object-contain p-4 md:p-6" />
                 </div>
 
-                {/* Add to Cart Overlay */}
+                {/* Add to Cart Overlay - Always visible or slide up on mobile */}
                 <button
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         window.location.href = '/cart';
                     }}
-                    className="absolute bottom-3 left-3 right-3 bg-primary text-white py-3 rounded-lg font-black text-[9px] uppercase tracking-[0.2em] transform translate-y-20 opacity-0 group-hover/img:translate-y-0 group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
+                    className="absolute bottom-2 left-2 right-2 bg-primary text-white py-2.5 rounded-lg font-black text-[8px] md:text-[9px] uppercase tracking-[0.15em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover/img:translate-y-0 md:group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
                 >
-                    <ShoppingCart className="w-3.5 h-3.5" /> Ajouter
+                    <ShoppingCart className="w-3 md:w-3.5 h-3 md:h-3.5" /> Ajouter
                 </button>
             </div>
 
             {/* Content */}
-            <div className="p-4 pt-4 flex flex-col gap-1.5 flex-1">
+            <div className="p-3 md:p-4 flex flex-col gap-1 md:gap-1.5 flex-1">
                 <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{product.category}</span>
+                    <span className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">{product.category}</span>
                     <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-[10px] font-bold text-gray-500">{(product.rating || 5)}.0</span>
+                        <Star className="w-2.5 md:w-3 h-2.5 md:h-3 fill-yellow-400 text-yellow-400" />
+                        <span className="text-[9px] md:text-[10px] font-bold text-gray-500">{(product.rating || 5)}.0</span>
                     </div>
                 </div>
 
                 <Link href={`/product/${product.id}`}>
-                    <h3 className="font-bold text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 min-h-[38px]">
+                    <h3 className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 min-h-[32px] md:min-h-[38px] uppercase tracking-tight">
                         {product.name}
                     </h3>
                 </Link>
 
-                <div className="mt-6 flex items-center justify-between">
+                <div className="mt-4 md:mt-6 flex items-center justify-between">
                     <div className="flex flex-col">
-                        {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-400 text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} CFA</span>}
-                        <span className="text-[#1B1F3B] font-black text-[17px] tracking-tight">
-                            {product.price.toLocaleString()} <span className="text-[10px] font-bold text-gray-400 ml-0.5 uppercase">CFA</span>
+                        {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-400 text-[8px] md:text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} CFA</span>}
+                        <span className="text-[#1B1F3B] font-black text-[14px] md:text-[17px] tracking-tight">
+                            {product.price.toLocaleString()} <span className="text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">CFA</span>
                         </span>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                        <Zap className="w-4 h-4 fill-current" />
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                        <Zap className="w-3.5 md:w-4 h-3.5 md:h-4 fill-current" />
                     </div>
                 </div>
             </div>

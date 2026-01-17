@@ -8,6 +8,13 @@ import { HeadphonePromo } from '@/features/home/components/HeadphonePromo'
 import { ShippingPromoBand } from '@/features/home/components/ShippingPromoBand'
 import { BrandsAndSocial } from '@/features/home/components/BrandsAndSocial'
 
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Baraka Shop | Accueil - Électronique Premier au Sénégal',
+  description: 'Bievenue chez Baraka Shop. Découvrez notre sélection exclusive de smartphones, ordinateurs et accessoires High-Tech au meilleur prix au Sénégal.',
+}
+
 export default function Home() {
   return (
     <>

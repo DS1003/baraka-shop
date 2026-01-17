@@ -73,9 +73,9 @@ export default function CartPage() {
                     <h1 className="text-4xl font-black text-[#1B1F3B] uppercase tracking-tighter">Mon Panier <span className="text-primary">({cartItems.length})</span></h1>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
                     {/* Items List */}
-                    <div className="lg:col-span-8 flex flex-col gap-6">
+                    <div className="lg:col-span-8 flex flex-col gap-4 md:gap-6">
                         <AnimatePresence mode="popLayout">
                             {cartItems.map((item) => (
                                 <motion.div
@@ -84,40 +84,40 @@ export default function CartPage() {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
-                                    className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 group"
+                                    className="bg-white rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center gap-4 md:gap-8 group"
                                 >
-                                    <div className="relative w-32 h-32 bg-gray-50 rounded-2xl overflow-hidden p-4 shrink-0">
-                                        <Image src={item.image} alt={item.name} fill className="object-contain p-2" />
+                                    <div className="relative w-24 h-24 md:w-32 md:h-32 bg-gray-50 rounded-xl md:rounded-2xl overflow-hidden p-2 md:p-4 shrink-0">
+                                        <Image src={item.image} alt={item.name} fill className="object-contain p-1 md:p-2" />
                                     </div>
 
-                                    <div className="flex-1 flex flex-col gap-1">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.brand}</span>
-                                        <h3 className="text-lg font-black text-[#1B1F3B] leading-tight uppercase tracking-tight group-hover:text-primary transition-colors">
+                                    <div className="flex-1 flex flex-col gap-1 text-center sm:text-left">
+                                        <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.brand}</span>
+                                        <h3 className="text-sm md:text-lg font-black text-[#1B1F3B] leading-tight uppercase tracking-tight group-hover:text-primary transition-colors">
                                             {item.name}
                                         </h3>
-                                        <div className="flex items-center gap-2 mt-2">
-                                            <div className="w-2 h-2 rounded-full bg-green-500" />
-                                            <span className="text-[10px] font-bold text-green-600 uppercase">En stock</span>
+                                        <div className="flex items-center justify-center sm:justify-start gap-2 mt-1 md:mt-2">
+                                            <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500" />
+                                            <span className="text-[9px] md:text-[10px] font-bold text-green-600 uppercase">En stock</span>
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col items-center md:items-end gap-6 shrink-0">
-                                        <div className="flex flex-col items-center md:items-end">
-                                            <span className="text-2xl font-black text-[#1B1F3B] tracking-tighter">{(item.price * item.qty).toLocaleString()} CFA</span>
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{item.price.toLocaleString()} CFA / unité</span>
+                                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-4 md:gap-6 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-gray-50">
+                                        <div className="flex flex-col items-start sm:items-end">
+                                            <span className="text-lg md:text-2xl font-black text-[#1B1F3B] tracking-tighter">{(item.price * item.qty).toLocaleString()} CFA</span>
+                                            <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden md:block">{item.price.toLocaleString()} CFA / unité</span>
                                         </div>
 
-                                        <div className="flex items-center gap-6">
-                                            <div className="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-100">
-                                                <button onClick={() => updateQty(item.id, -1)} className="w-9 h-9 flex items-center justify-center text-[#1B1F3B] hover:bg-white rounded-lg transition-all"><Minus className="w-4 h-4" /></button>
-                                                <span className="w-10 text-center font-black text-sm">{item.qty}</span>
-                                                <button onClick={() => updateQty(item.id, 1)} className="w-9 h-9 flex items-center justify-center text-[#1B1F3B] hover:bg-white rounded-lg transition-all"><Plus className="w-4 h-4" /></button>
+                                        <div className="flex items-center gap-4 md:gap-6">
+                                            <div className="flex items-center bg-gray-50 rounded-lg md:rounded-xl p-0.5 md:p-1 border border-gray-100">
+                                                <button onClick={() => updateQty(item.id, -1)} className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#1B1F3B] hover:bg-white rounded-lg transition-all"><Minus className="w-3 md:w-4 h-3 md:h-4" /></button>
+                                                <span className="w-8 md:w-10 text-center font-black text-xs md:text-sm">{item.qty}</span>
+                                                <button onClick={() => updateQty(item.id, 1)} className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center text-[#1B1F3B] hover:bg-white rounded-lg transition-all"><Plus className="w-3 md:w-4 h-3 md:h-4" /></button>
                                             </div>
                                             <button
                                                 onClick={() => removeItem(item.id)}
-                                                className="w-11 h-11 rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
+                                                className="w-10 h-10 md:w-11 md:h-11 rounded-lg md:rounded-xl bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm"
                                             >
-                                                <Trash2 className="w-5 h-5" />
+                                                <Trash2 className="w-4 md:w-5 h-4 md:h-5" />
                                             </button>
                                         </div>
                                     </div>

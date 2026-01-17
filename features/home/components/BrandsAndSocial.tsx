@@ -67,38 +67,38 @@ export function BrandsAndSocial() {
                     </div>
 
                     {/* Right Side: Community & Newsletter */}
-                    <div className="bg-[#1B1F3B] rounded-[2.5rem] p-12 flex flex-col justify-between relative overflow-hidden group/card shadow-2xl shadow-blue-900/10">
+                    <div className="bg-[#1B1F3B] rounded-[2.5rem] p-8 md:p-12 flex flex-col justify-between relative overflow-hidden group/card shadow-2xl shadow-blue-900/10">
                         {/* Decorative circles */}
                         <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover/card:bg-primary/10 transition-colors" />
 
                         <div className="relative z-10">
-                            <h3 className="text-white text-2xl font-black uppercase tracking-tight mb-4">Rejoignez la Communauté</h3>
-                            <p className="text-gray-400 text-sm mb-8 leading-relaxed max-w-sm">
+                            <h3 className="text-white text-xl md:text-2xl font-black uppercase tracking-tight mb-4 text-center sm:text-left">Rejoignez la Communauté</h3>
+                            <p className="text-gray-400 text-sm mb-8 leading-relaxed max-w-sm text-center sm:text-left mx-auto sm:mx-0">
                                 Recevez nos offres flash, actualités technologiques et codes promos exclusifs directement dans votre boîte mail.
                             </p>
 
                             {/* Newsletter Input */}
-                            <div className="relative max-w-md">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <div className="relative max-w-md mx-auto sm:mx-0">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 hidden sm:block" />
                                 <input
                                     type="email"
                                     placeholder="Votre adresse email"
-                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-xl pl-12 pr-32 text-white outline-none focus:border-primary transition-all text-sm"
+                                    className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-6 sm:pl-12 sm:pr-32 text-white outline-none focus:border-primary transition-all text-sm mb-4 sm:mb-0"
                                 />
-                                <button className="absolute right-1.5 top-1.5 h-11 px-6 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-lg hover:bg-white hover:text-black transition-all">
+                                <button className="relative sm:absolute sm:right-1.5 sm:top-1.5 w-full sm:w-auto h-12 sm:h-11 px-6 bg-primary text-white font-black text-[10px] uppercase tracking-widest rounded-lg hover:bg-white hover:text-black transition-all">
                                     S'abonner
                                 </button>
                             </div>
                         </div>
 
-                        <div className="relative z-10 mt-12 pt-12 border-t border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="flex gap-4">
+                        <div className="relative z-10 mt-12 pt-8 sm:pt-12 border-t border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                            <div className="flex justify-center sm:justify-start gap-4">
                                 <SocialIcon icon={Facebook} />
                                 <SocialIcon icon={Instagram} />
                                 <SocialIcon icon={XIcon} />
                                 <SocialIcon icon={Youtube} />
                             </div>
-                            <div className="flex flex-col items-end">
+                            <div className="flex flex-col items-center sm:items-end">
                                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1 italic">Suivez-nous @barakashop</span>
                                 <div className="flex items-center gap-2">
                                     <div className="flex -space-x-2">

@@ -15,7 +15,7 @@ interface Slide {
 }
 
 const slides: Slide[] = [
-    { id: 1, image: "https://media.ldlc.com/encart/p/28885_b.jpg", title: "SOLDES", href: "/promotions" },
+    { id: 1, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1200&h=600", title: "NOS OFFRES", href: "/promotions" },
     { id: 2, image: "https://media.ldlc.com/encart/p/28828_b.jpg", title: "QUI LES VEUX ?", href: "/boutique" },
     { id: 3, image: "https://media.ldlc.com/encart/p/28829_b.jpg", title: "L'OFFRE IMMANQUABLE", href: "/promotions" },
     { id: 4, image: "https://media.ldlc.com/encart/p/22889_b.jpg", title: "TÉLÉCHARGEZ L'APPLI !", href: "/" },
@@ -69,7 +69,7 @@ export function HomeSlider() {
     return (
         <section className="bg-[#f2f2f2] pb-8 pt-4">
             <Container>
-                <div className="bg-white relative rounded-t-xl overflow-hidden shadow-sm h-[300px] md:h-[450px]">
+                <div className="bg-white relative rounded-t-xl md:rounded-xl overflow-hidden shadow-sm h-[220px] sm:h-[300px] md:h-[450px]">
                     <AnimatePresence mode="wait">
                         <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden">
                             <motion.div
@@ -92,22 +92,22 @@ export function HomeSlider() {
                     </AnimatePresence>
                 </div>
 
-                {/* LDLC Style Bottom Tabs */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 border-x border-b border-gray-200 bg-[#f8f8f8] rounded-b-xl overflow-hidden">
+                {/* LDLC Style Bottom Tabs - Responsive Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-x border-b border-gray-200 bg-[#f8f8f8] rounded-b-xl overflow-hidden">
                     {slides.map((slide, index) => (
                         <button
                             key={slide.id}
                             onClick={() => handleTabClick(index)}
                             className={cn(
-                                "relative py-4 px-2 text-center text-[10px] md:text-[11px] font-bold uppercase transition-all duration-300 h-16 flex items-center justify-center border-r border-black/5 last:border-r-0",
+                                "relative py-3 px-2 text-center text-[9px] md:text-[11px] font-bold uppercase transition-all duration-300 h-14 md:h-16 flex items-center justify-center border-r border-b border-black/5 last:border-r-0 sm:border-b-0",
                                 currentSlide === index
                                     ? "bg-primary text-white"
                                     : "bg-[#f8f8f8] text-[#555] hover:bg-gray-100"
                             )}
                         >
-                            <span className="relative z-10 leading-tight">{slide.title}</span>
+                            <span className="relative z-10 leading-tight px-1">{slide.title}</span>
 
-                            {/* Progress Bar (at the bottom of active tab) */}
+                            {/* Progress Bar */}
                             {currentSlide === index && (
                                 <div className="absolute bottom-0 left-0 h-[3px] bg-white opacity-40 transition-all duration-100 ease-linear"
                                     style={{ width: `${progress}%` }}

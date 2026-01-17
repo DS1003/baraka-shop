@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Container } from '@/ui/Container'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     Filter,
     LayoutGrid,
@@ -54,6 +54,69 @@ const products = [
 export default function ShopPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
     const [priceRange, setPriceRange] = useState([0, 3000000])
+    const [isFilterOpen, setIsFilterOpen] = useState(false)
+
+    const FilterSidebar = ({ className }: { className?: string }) => (
+        <aside className={cn("flex flex-col gap-8", className)}>
+            {/* Categories Filter */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 flex items-center justify-between border-b border-gray-50 pb-4">
+                    Catégories <ChevronDown className="w-4 h-4 text-gray-400" />
+                </h3>
+                <div className="flex flex-col gap-3">
+                    {categories.map((cat) => (
+                        <label key={cat.name} className="flex items-center justify-between group cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <input type="checkbox" className="w-4 h-4 rounded border-gray-200 text-primary focus:ring-primary transition-all cursor-pointer" />
+                                <span className="text-sm font-bold text-gray-500 group-hover:text-[#1B1F3B] transition-colors">{cat.name}</span>
+                            </div>
+                            <span className="text-[10px] font-black text-gray-300 group-hover:text-primary transition-colors">({cat.count})</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            {/* Price Filter */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 border-b border-gray-50 pb-4">
+                    Prix (CFA)
+                </h3>
+                <div className="px-2 py-4 flex flex-col gap-6">
+                    <div className="flex items-center justify-between text-[11px] font-black text-gray-400 uppercase">
+                        <span>{priceRange[0].toLocaleString()} CFA</span>
+                        <span>{priceRange[1].toLocaleString()} CFA</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="3000000"
+                        className="w-full accent-primary h-1 bg-gray-100 rounded-full appearance-none cursor-pointer"
+                    />
+                    <button className="w-full h-11 bg-primary text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-[#1B1F3B] transition-all shadow-lg shadow-primary/20">
+                        Appliquer
+                    </button>
+                </div>
+            </div>
+
+            {/* Brands Filter */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 border-b border-gray-50 pb-4">
+                    Marques
+                </h3>
+                <div className="flex flex-col gap-3">
+                    {brands.map((brand) => (
+                        <label key={brand.name} className="flex items-center justify-between group cursor-pointer">
+                            <div className="flex items-center gap-3">
+                                <input type="checkbox" className="w-4 h-4 rounded border-gray-200 text-primary focus:ring-primary transition-all cursor-pointer" />
+                                <span className="text-sm font-bold text-gray-500 group-hover:text-[#1B1F3B] transition-colors">{brand.name}</span>
+                            </div>
+                            <span className="text-[10px] font-black text-gray-300 group-hover:text-primary transition-colors">({brand.count})</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+        </aside>
+    )
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
@@ -71,75 +134,65 @@ export default function ShopPage() {
             </div>
 
             <Container className="py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Filters Sidebar */}
-                    <aside className="lg:col-span-1 flex flex-col gap-8">
-                        {/* Categories Filter */}
-                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                            <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 flex items-center justify-between border-b border-gray-50 pb-4">
-                                Catégories <ChevronDown className="w-4 h-4 text-gray-400" />
-                            </h3>
-                            <div className="flex flex-col gap-3">
-                                {categories.map((cat) => (
-                                    <label key={cat.name} className="flex items-center justify-between group cursor-pointer">
-                                        <div className="flex items-center gap-3">
-                                            <input type="checkbox" className="w-4 h-4 rounded border-gray-200 text-primary focus:ring-primary transition-all cursor-pointer" />
-                                            <span className="text-sm font-bold text-gray-500 group-hover:text-[#1B1F3B] transition-colors">{cat.name}</span>
-                                        </div>
-                                        <span className="text-[10px] font-black text-gray-300 group-hover:text-primary transition-colors">({cat.count})</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
+                <div className="flex flex-col lg:grid lg:grid-cols-4 gap-8">
+                    {/* Mobile Filter Drawer */}
+                    <div className="lg:hidden">
+                        <button
+                            onClick={() => setIsFilterOpen(true)}
+                            className="w-full h-14 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center gap-3 font-black text-[11px] uppercase tracking-widest text-[#1B1F3B] hover:shadow-lg transition-all"
+                        >
+                            <Filter className="w-4 h-4 text-primary" /> Filtrer les produits
+                        </button>
 
-                        {/* Price Filter */}
-                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                            <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 border-b border-gray-50 pb-4">
-                                Prix (CFA)
-                            </h3>
-                            <div className="px-2 py-4 flex flex-col gap-6">
-                                {/* Placeholder for a real slider - using standard range inputs for simplicity in first iteration */}
-                                <div className="flex items-center justify-between text-[11px] font-black text-gray-400 uppercase">
-                                    <span>{priceRange[0].toLocaleString()} CFA</span>
-                                    <span>{priceRange[1].toLocaleString()} CFA</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="3000000"
-                                    className="w-full accent-primary h-1 bg-gray-100 rounded-full appearance-none cursor-pointer"
-                                />
-                                <button className="w-full h-11 bg-primary text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-[#1B1F3B] transition-all shadow-lg shadow-primary/20">
-                                    Appliquer
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Brands Filter */}
-                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-                            <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 border-b border-gray-50 pb-4">
-                                Marques
-                            </h3>
-                            <div className="flex flex-col gap-3">
-                                {brands.map((brand) => (
-                                    <label key={brand.name} className="flex items-center justify-between group cursor-pointer">
-                                        <div className="flex items-center gap-3">
-                                            <input type="checkbox" className="w-4 h-4 rounded border-gray-200 text-primary focus:ring-primary transition-all cursor-pointer" />
-                                            <span className="text-sm font-bold text-gray-500 group-hover:text-[#1B1F3B] transition-colors">{brand.name}</span>
+                        <AnimatePresence>
+                            {isFilterOpen && (
+                                <>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        onClick={() => setIsFilterOpen(false)}
+                                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200]"
+                                    />
+                                    <motion.div
+                                        initial={{ x: '100%' }}
+                                        animate={{ x: 0 }}
+                                        exit={{ x: '100%' }}
+                                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                        className="fixed top-0 right-0 bottom-0 w-[85%] max-w-[400px] bg-[#f8f9fb] z-[210] p-6 overflow-y-auto"
+                                    >
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h2 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter">Filtres</h2>
+                                            <button
+                                                onClick={() => setIsFilterOpen(false)}
+                                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm"
+                                            >
+                                                <ChevronDown className="w-6 h-6 rotate-90" />
+                                            </button>
                                         </div>
-                                        <span className="text-[10px] font-black text-gray-300 group-hover:text-primary transition-colors">({brand.count})</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    </aside>
+                                        <FilterSidebar className="flex" />
+                                        <div className="mt-8 sticky bottom-0 left-0 right-0">
+                                            <button
+                                                onClick={() => setIsFilterOpen(false)}
+                                                className="w-full h-16 bg-[#1B1F3B] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-2xl"
+                                            >
+                                                Voir les résultats
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Desktop Sidebar */}
+                    <FilterSidebar className="hidden lg:flex" />
 
                     {/* Product Listing Area */}
                     <div className="lg:col-span-3">
                         {/* Toolbar */}
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-8 flex flex-wrap items-center justify-between gap-6">
-                            <div className="flex items-center gap-4">
-                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Affichage :</span>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 md:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setViewMode('grid')}
@@ -154,14 +207,13 @@ export default function ShopPage() {
                                         <List className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <span className="text-xs font-bold text-[#1B1F3B] border-l border-gray-100 pl-4">{products.length} Produits trouvés</span>
+                                <span className="text-[10px] sm:text-xs font-bold text-[#1B1F3B] border-l border-gray-100 pl-4">{products.length} Produits</span>
                             </div>
 
-                            <div className="flex items-center gap-4 w-full md:w-auto">
-                                <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Trier par :</span>
-                                <div className="relative flex-1 md:flex-none min-w-[180px]">
+                            <div className="flex items-center gap-4 w-full sm:w-auto">
+                                <div className="relative flex-1 sm:min-w-[180px]">
                                     <select className="w-full h-11 bg-gray-50 border border-gray-100 rounded-xl px-4 text-xs font-bold text-[#1B1F3B] outline-none appearance-none focus:border-primary transition-all pr-10">
-                                        <option>Dernières Nouveautés</option>
+                                        <option>Trier par : Nouveautés</option>
                                         <option>Prix : Croissant</option>
                                         <option>Prix : Décroissant</option>
                                         <option>Mieux notés</option>
@@ -173,8 +225,8 @@ export default function ShopPage() {
 
                         {/* Product Grid */}
                         <div className={cn(
-                            "grid gap-8",
-                            viewMode === 'grid' ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
+                            "grid gap-4 md:gap-8 mt-8",
+                            viewMode === 'grid' ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1"
                         )}>
                             {products.map((product) => (
                                 <ProductCard key={product.id} product={product} viewMode={viewMode} />

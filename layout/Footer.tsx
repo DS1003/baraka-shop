@@ -7,7 +7,7 @@ import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, Youtube, ArrowRight 
 
 export function Footer() {
     return (
-        <footer className="relative bg-black text-white pt-20 pb-10 overflow-hidden">
+        <footer className="relative bg-black text-white pt-16 md:pt-20 pb-10 overflow-hidden">
             {/* Background Pattern */}
             <div
                 className="absolute inset-0 opacity-[0.4] pointer-events-none"
@@ -17,21 +17,21 @@ export function Footer() {
                     backgroundRepeat: 'no-repeat'
                 }}
             />
-            <Container className="relative z-10">
+            <Container className="relative z-10 px-6 sm:px-8">
                 {/* Main Content */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 lg:gap-12 mb-16 md:mb-20">
                     {/* Brand & Mission */}
-                    <div className="flex flex-col gap-10">
-                        <a href="/" className="inline-block">
-                            <div className="relative w-[300px] h-[100px]">
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left gap-8 md:gap-10">
+                        <Link href="/" className="inline-block">
+                            <div className="relative w-[240px] md:w-[300px] h-[80px] md:h-[100px]">
                                 <Image
                                     src="https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png"
                                     alt="Baraka Shop"
                                     fill
-                                    className="object-contain object-left"
+                                    className="object-contain md:object-left"
                                 />
                             </div>
-                        </a>
+                        </Link>
                         <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
                             Votre destination premium pour l'électronique de pointe au Sénégal. Nous nous engageons à vous offrir le meilleur de la technologie avec un service d'excellence.
                         </p>
@@ -44,8 +44,8 @@ export function Footer() {
                     </div>
 
                     {/* Quick Access */}
-                    <div>
-                        <h3 className="text-lg font-bold mb-8 flex items-center gap-2">
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left">
+                        <h3 className="text-lg font-bold mb-6 md:mb-8 flex items-center gap-2">
                             <span className="w-8 h-[2px] bg-primary"></span>
                             Navigation
                         </h3>
@@ -59,8 +59,8 @@ export function Footer() {
                     </div>
 
                     {/* Customer Support */}
-                    <div>
-                        <h3 className="text-lg font-bold mb-8 flex items-center gap-2">
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left">
+                        <h3 className="text-lg font-bold mb-6 md:mb-8 flex items-center gap-2">
                             <span className="w-8 h-[2px] bg-primary"></span>
                             Aide & Support
                         </h3>
@@ -74,12 +74,12 @@ export function Footer() {
                     </div>
 
                     {/* Contact Info */}
-                    <div>
-                        <h3 className="text-lg font-bold mb-8 flex items-center gap-2">
+                    <div className="flex flex-col items-center md:items-start text-center md:text-left">
+                        <h3 className="text-lg font-bold mb-6 md:mb-8 flex items-center gap-2">
                             <span className="w-8 h-[2px] bg-primary"></span>
                             Contactez-nous
                         </h3>
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-6 w-full max-w-xs md:max-w-none">
                             <ContactItem
                                 icon={MapPin}
                                 title="Adresse"
@@ -100,12 +100,12 @@ export function Footer() {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <p className="text-xs text-gray-500">
+                <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <p className="text-[10px] md:text-xs text-gray-500 text-center md:text-left">
                         © {new Date().getFullYear()} <span className="text-white font-medium">Baraka Shop</span>. Tous droits réservés.
                     </p>
-                    <div className="flex items-center gap-6">
-                        <Image src="/payment-methods.png" alt="Paiement" width={300} height={40} className="grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" />
+                    <div className="flex items-center justify-center gap-6">
+                        <Image src="/payment-methods.png" alt="Paiement" width={300} height={40} className="grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all w-full max-w-[200px] md:max-w-[300px]" />
                     </div>
                 </div>
             </Container>
