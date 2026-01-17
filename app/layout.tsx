@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
 import './globals.css'
+import { Header } from '@/layout/Header'
+import { Footer } from '@/layout/Footer'
+import { cn } from '@/lib/utils'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Baraka Shop | Boutique en ligne',
-  description: 'Votre boutique en ligne de confiance au Sénégal.',
+  title: 'Baraka Shop - Électronique Premier au Sénégal',
+  description: 'Votre destination de confiance pour l\'électronique haut de gamme au Sénégal. Smartphones, Ordinateurs, Caméras et plus.',
 }
 
 export default function RootLayout({
@@ -17,10 +18,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr">
-      <body className={inter.className}>
-        <Navbar />
-        <main className="min-h-screen">
+    <html lang="fr" className="h-full antialiased scroll-smooth">
+      <body className={cn("min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20", inter.className)}>
+        <Header />
+        <main className="flex-grow flex flex-col">
           {children}
         </main>
         <Footer />
