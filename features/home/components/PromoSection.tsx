@@ -11,7 +11,7 @@ export function PromoSection() {
         <section className="py-16">
             <Container>
                 <div className="relative overflow-hidden rounded-3xl bg-black text-white">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-50" />
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1546435770-bb7b8f4475a5?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-50" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
 
                     <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center p-8 md:p-16 lg:p-20">

@@ -147,82 +147,95 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         </div>
 
                         {/* 2. Right: Product Info (7 columns) */}
-                        <div className="lg:col-span-7 flex flex-col">
-                            {/* Brand & Stats */}
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                    <span className="bg-[#1B1F3B] text-white text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest">{product.brand}</span>
-                                    <div className="flex items-center gap-1 border-l border-gray-200 pl-3">
-                                        <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                                        <span className="text-xs font-black text-[#1B1F3B]">{product.rating}</span>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase">({product.reviewsCount} Avis)</span>
-                                    </div>
+                        <div className="lg:col-span-7 flex flex-col pt-2">
+                            {/* Product Name */}
+                            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-[#1B1F3B] uppercase tracking-tight leading-tight mb-4">
+                                {product.name}
+                            </h1>
+
+                            {/* Short Description */}
+                            <p className="text-gray-500 text-sm md:text-base leading-relaxed mb-6 font-medium">
+                                {product.description}
+                            </p>
+
+                            {/* Brand Tag */}
+                            <div className="flex items-center gap-3 mb-6">
+                                <span className="bg-[#1B1F3B] text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-sm">
+                                    {product.brand}
+                                </span>
+                            </div>
+
+                            {/* Rating + Actions */}
+                            <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
+                                <div className="flex items-center gap-2">
+                                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-sm font-black text-[#1B1F3B]">{product.rating}</span>
+                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide border-l border-gray-200 ml-2 pl-2">
+                                        {product.reviewsCount} Avis clients
+                                    </span>
                                 </div>
-                                <div className="flex items-center gap-4 text-gray-400">
-                                    <button className="hover:text-primary transition-colors flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight">
-                                        <Heart className="w-4 h-4" /> Wishlist
+                                <div className="flex items-center gap-6 text-gray-500">
+                                    <button className="group hover:text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                                        <Heart className="w-4 h-4 group-hover:fill-primary transition-colors" />
+                                        <span>Liste de souhaits</span>
                                     </button>
-                                    <button className="hover:text-primary transition-colors flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight">
-                                        <Share2 className="w-4 h-4" /> Partager
+                                    <button className="group hover:text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                                        <Share2 className="w-4 h-4" />
+                                        <span>Partager</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <h1 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-[0.95] mb-6">
-                                {product.name}
-                            </h1>
-
-                            {/* Price Section */}
-                            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm mb-8">
-                                <div className="flex flex-col gap-1 mb-6">
-                                    <div className="flex items-baseline gap-4">
-                                        <span className="text-4xl font-black text-[#1B1F3B] tracking-tighter">
-                                            {product.price.toLocaleString()} <span className="text-sm uppercase font-bold text-gray-400">CFA</span>
-                                        </span>
-                                        {product.oldPrice && (
-                                            <span className="text-xl font-bold text-gray-300 line-through tracking-tighter">
-                                                {product.oldPrice.toLocaleString()} CFA
+                            {/* Main Purchase Card */}
+                            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] relative">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-baseline gap-4">
+                                            <span className="text-3xl md:text-4xl font-black text-[#1B1F3B] tracking-tighter">
+                                                {product.price.toLocaleString()} <span className="text-sm uppercase font-bold text-gray-400">CFA</span>
                                             </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded text-[9px] font-black uppercase tracking-widest border border-green-100">
-                                            <CheckCircle2 className="w-3 h-3" /> En Stock
+                                            {product.oldPrice && (
+                                                <span className="text-lg font-bold text-gray-300 line-through tracking-tighter">
+                                                    {product.oldPrice.toLocaleString()} CFA
+                                                </span>
+                                            )}
                                         </div>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SKU: {product.sku}</span>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-100">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                En Stock
+                                            </div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-l border-gray-100 pl-3">SKU: {product.sku}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <p className="text-gray-500 text-sm leading-relaxed mb-8 border-t border-gray-50 pt-6">
-                                    {product.description}
-                                </p>
-
-                                {/* Features List */}
-                                <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 mb-8">
+                                {/* Quick Features */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 py-8 border-y border-gray-50">
                                     {product.features.map((feat, i) => (
-                                        <li key={i} className="flex items-start gap-3">
-                                            <div className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                                                <Zap className="w-2.5 h-2.5 text-primary fill-current" />
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                                <Zap className="w-3 h-3 text-primary fill-current" />
                                             </div>
                                             <span className="text-xs font-bold text-gray-600 leading-tight">{feat}</span>
-                                        </li>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
 
-                                {/* Actions */}
-                                <div className="flex flex-col sm:flex-row items-center gap-6">
+                                {/* Cart Actions */}
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
                                     {/* Qty Selector */}
-                                    <div className="flex items-center bg-gray-50 rounded-xl p-1.5 border border-gray-100">
+                                    <div className="flex items-center bg-gray-50 rounded-2xl p-1.5 border border-gray-100 shadow-inner">
                                         <button
                                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            className="w-10 h-10 rounded-lg flex items-center justify-center text-[#1B1F3B] hover:bg-white hover:shadow-sm transition-all"
+                                            className="w-11 h-11 rounded-xl flex items-center justify-center text-[#1B1F3B] hover:bg-white hover:shadow-md transition-all active:scale-90"
                                         >
                                             <Minus className="w-4 h-4" />
                                         </button>
-                                        <span className="w-12 text-center font-black text-sm">{quantity}</span>
+                                        <span className="w-14 text-center font-black text-lg">{quantity}</span>
                                         <button
                                             onClick={() => setQuantity(quantity + 1)}
-                                            className="w-10 h-10 rounded-lg flex items-center justify-center text-[#1B1F3B] hover:bg-white hover:shadow-sm transition-all"
+                                            className="w-11 h-11 rounded-xl flex items-center justify-center text-[#1B1F3B] hover:bg-white hover:shadow-md transition-all active:scale-90"
                                         >
                                             <Plus className="w-4 h-4" />
                                         </button>
@@ -230,7 +243,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                                     <Button
                                         onClick={() => {
-                                            // Simulate adding to cart and redirect
                                             const btn = document.getElementById('add-to-cart-btn');
                                             if (btn) btn.innerHTML = 'Ajouté !';
                                             setTimeout(() => {
@@ -238,18 +250,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                             }, 500);
                                         }}
                                         id="add-to-cart-btn"
-                                        className="flex-1 w-full sm:w-auto h-14 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:bg-[#1B1F3B] transition-all flex items-center justify-center gap-3"
+                                        className="flex-1 w-full h-14 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-[0_15px_30px_rgba(249,115,22,0.3)] hover:bg-[#1B1F3B] hover:shadow-none transition-all flex items-center justify-center gap-3"
                                     >
-                                        <ShoppingCart className="w-4 h-4" /> Ajouter au panier
+                                        <ShoppingCart className="w-5 h-5" />
+                                        Ajouter au panier
                                     </Button>
                                 </div>
-                            </div>
-
-                            {/* Service Badges */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <ServiceBadge icon={Truck} label="Livraison Express" sub="Dakar & Régions" />
-                                <ServiceBadge icon={ShieldCheck} label="Garantie Officielle" sub="12 Mois Inclus" />
-                                <ServiceBadge icon={RotateCcw} label="Retours Faciles" sub="Sous 7 Jours" />
                             </div>
                         </div>
                     </div>
@@ -288,7 +294,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                                         exit={{ opacity: 0, x: -20 }}
                                         className="prose prose-sm max-w-none text-gray-500 leading-relaxed font-medium"
                                     >
-                                        <h3 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-6">L'ordinateur portable pro le plus performant au monde.</h3>
+                                        <div className="flex justify-center mb-10">
+                                            <div className="relative w-20 h-20 opacity-20 grayscale brightness-0">
+                                                <Image
+                                                    src="https://cdn.freebiesupply.com/images/large/2x/apple-logo-transparent.png"
+                                                    alt={product.brand}
+                                                    fill
+                                                    className="object-contain"
+                                                />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-6 text-center">L'ordinateur portable pro le plus performant au monde.</h3>
                                         <p className="mb-6">Le MacBook Pro propulsera votre créativité vers de nouveaux sommets. Avec les puces M3, l'ordinateur portable pro le plus populaire repousse encore les limites avec jusqu'à 128 Go de mémoire unifiée. Son magnifique écran Liquid Retina XDR est devenu encore meilleur avec une luminosité de pointe atteignant 1600 nits. Et son autonomie de batterie record vous permet de tenir toute la journée.</p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12">
                                             <div className="space-y-4">

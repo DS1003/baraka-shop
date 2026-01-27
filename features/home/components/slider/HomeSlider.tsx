@@ -15,7 +15,7 @@ interface Slide {
 }
 
 const slides: Slide[] = [
-    { id: 1, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1200&h=600", title: "NOS OFFRES", href: "/promotions" },
+    { id: 1, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2000&auto=format&fit=crop", title: "NOS OFFRES", href: "/promotions" },
     { id: 2, image: "https://media.ldlc.com/encart/p/28828_b.jpg", title: "QUI LES VEUX ?", href: "/boutique" },
     { id: 3, image: "https://media.ldlc.com/encart/p/28829_b.jpg", title: "L'OFFRE IMMANQUABLE", href: "/promotions" },
     { id: 4, image: "https://media.ldlc.com/encart/p/22889_b.jpg", title: "TÉLÉCHARGEZ L'APPLI !", href: "/" },
@@ -69,14 +69,14 @@ export function HomeSlider() {
     return (
         <section className="bg-[#f2f2f2] pb-6 md:pb-8 pt-0 md:pt-4">
             <Container className="px-0 md:px-6 lg:px-8">
-                <div className="bg-white relative rounded-none md:rounded-xl overflow-hidden shadow-sm h-[250px] sm:h-[300px] md:h-[450px]">
+                <div className="bg-white relative rounded-none md:rounded-xl overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[450px]">
                     <AnimatePresence mode="wait">
-                        <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden">
+                        <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden bg-gray-50">
                             <motion.div
                                 key={currentSlide}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.5 }}
                                 className="absolute inset-0 w-full h-full"
                             >
@@ -84,16 +84,30 @@ export function HomeSlider() {
                                     src={slides[currentSlide].image}
                                     alt={slides[currentSlide].title}
                                     fill
-                                    className="object-cover hover:scale-105 transition-transform duration-[2000ms]"
+                                    className="object-contain md:object-cover hover:scale-105 transition-transform duration-[2000ms]"
                                     priority
                                 />
                             </motion.div>
                         </Link>
                     </AnimatePresence>
+
+                    {/* Mobile Navigation Dots */}
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 md:hidden z-20">
+                        {slides.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={() => handleTabClick(index)}
+                                className={cn(
+                                    "w-2 h-2 rounded-full transition-all duration-300",
+                                    currentSlide === index ? "bg-primary w-6" : "bg-white/50"
+                                )}
+                            />
+                        ))}
+                    </div>
                 </div>
 
-                {/* LDLC Style Bottom Tabs - Responsive Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-x-0 md:border-x border-b border-gray-200 bg-[#f8f8f8] rounded-none md:rounded-b-xl overflow-hidden">
+                {/* LDLC Style Bottom Tabs - Responsive Grid - Hidden on Mobile */}
+                <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-x-0 md:border-x border-b border-gray-200 bg-[#f8f8f8] rounded-none md:rounded-b-xl overflow-hidden">
                     {slides.map((slide, index) => (
                         <button
                             key={slide.id}

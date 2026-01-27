@@ -42,6 +42,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'in.canon',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.freebiesupply.com',
       }
     ],
   },

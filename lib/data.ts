@@ -106,3 +106,84 @@ export const CATEGORIES = [
     { id: 'accessories', name: 'Accessoires', image: 'https://images.unsplash.com/photo-1629131726692-1accd0c53ce0?auto=format&fit=crop&q=80&w=300' },
     { id: 'cameras', name: 'Photo & Vidéo', image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=300' },
 ];
+
+export const MENU_CATEGORIES = [
+    {
+        id: 'informatique',
+        title: "INFORMATIQUE",
+        image: "https://media.ldlc.com/encart/p/28885_b.jpg",
+        subcategories: [
+            { label: "RESEAUX", links: ["SWITCH", "MODEM & ROUTEUR", "CLE ET CARTE WIFI", "CARTE RESEAU ET CPL", "ACCESSOIRES RESEAUX", "ACCESS POINT & REPETITEUR"] },
+            { label: "PC PORTABLE", links: ["ORDINATEURS PORTABLE", "MACBOOK", "ORDINATEUR RECONDITIONNE", "CHARGEUR ORDINATEUR PORTABLE", "BATTERIE ORDINATEUR PORTABLE", "ACCESSOIRES ORDINATEUR PORTABLE", "SACS & SACOCHES"] },
+            { label: "PIECES", links: ["ECRAN ORDINATEUR PORTABLE", "BARETTE ORDINATEUR"] },
+            { label: "ORDINATEURS DE BUREAU", links: ["SERVEUR", "DESKTOP RECONDITIONNE", "DESKTOP"] },
+            { label: "PERIPHERIQUES", links: ["WEBCAM", "REGULATEUR DE TENSION", "ONDELEUR", "IMPRIMANTE", "ECRAN PC", "CLAVIER & SOURIS ORIGINAL", "ACCESSOIRES STREAMING"] },
+        ]
+    },
+    {
+        id: 'image-son',
+        title: "IMAGE & SON",
+        image: "https://media.ldlc.com/encart/p/28829_b.jpg",
+        subcategories: [
+            { label: "PHOTO", links: ["TRIPIED MICRO", "TRIPIED CAMERA", "OBJECTIF", "MICROPHONE", "APPAREIL PHOTO", "ACCESSOIRES PHOTO", "STABILISATEUR", "LED CAMERA"] },
+            { label: "TELEVISION", links: ["TELECOMMANDE", "SUPPORT MURAL", "CONNECTIQUE TV", "CASQUE AUDIO HIFI", "TELEVISION 2EME", "TELEVISION ORIGINAL"] },
+            { label: "PROJECTION", links: ["VIDEO PROJECTEUR", "SUPPORT VIDEO PROJECTEUR", "POINTEUR LASER", "ECRAN DE PROJECTION"] },
+            { label: "SON NUMERIQUE", links: ["RADIO", "ENCEINTE BLUETOOTH", "DICTAPHONE", "CASQUES", "AIRPODS", "ECOUTEUR", "AIRPODS ORIGINAL"] },
+            { label: "HOME CINEMA", links: ["HOME CINEMA", "BARRE DE SON", "BAFFLE", "ACCESSOIRES HOME CINEMA"] },
+        ]
+    },
+    {
+        id: 'consommables',
+        title: "CONSOMMABLES",
+        image: "https://media.ldlc.com/encart/p/22889_b.jpg",
+        subcategories: [
+            { label: "STOCKAGE", links: ["DISQUE DUR", "CLE USB", "CARTE MEMOIRE", "LECTEUR CARTE", "CABLE DISQUE DUR", "BOITIER DISQUE DUR"] },
+            { label: "IMPRESSION", links: ["TONER ORIGINAL", "TONER H2", "TONER 2EME", "BOITE TONER 2EME", "CARTOUCHE"] }
+        ]
+    },
+    {
+        id: 'telephone',
+        title: "TELEPHONE & TABLETTE",
+        image: "https://media.ldlc.com/encart/p/28828_b.jpg",
+        subcategories: [
+            { label: "SMARTPHONES", links: ["IPHONE", "SAMSUNG GALAXY", "GOOGLE PIXEL", "REDMI", "INFINIX", "TECNO"] },
+            { label: "TABLETTES", links: ["IPAD PRO", "IPAD AIR", "GALAXY TAB", "SURFACE"] },
+            { label: "ACCESSOIRES", links: ["COQUES", "PROTECTION ECRAN", "CHARGEURS", "POWERBANK"] }
+        ]
+    },
+    {
+        id: 'jeux',
+        title: "JEUX & LOISIRS",
+        image: "https://media.ldlc.com/encart/p/26671_b.jpg",
+        subcategories: [
+            { label: "CONSOLES", links: ["PS5", "XBOX SERIES", "NINTENDO SWITCH", "PS4"] },
+            { label: "JEUX VIDEO", links: ["JEUX PS5", "JEUX XBOX", "JEUX SWITCH"] },
+            { label: "ACCESSOIRES", links: ["MANNETTES", "CASQUES GAMING", "CHAISE GAMER"] }
+        ]
+    },
+    {
+        id: 'electromenager',
+        title: "ELECTROMENAGER",
+        image: "https://media.ldlc.com/encart/p/28858_b.jpg",
+        subcategories: [
+            { label: "CUISINE", links: ["REFRIGERATEURS", "MICRO-ONDES", "FOURS", "MIXEUR"] },
+            { label: "ENTRETIEN", links: ["ASPIRATEURS", "FER A REPASSER", "MACHINE A LAVER"] }
+        ]
+    },
+    {
+        id: 'coiffure',
+        title: "SALON DE COIFFURE",
+        image: "https://media.ldlc.com/encart/p/28885_b.jpg",
+        subcategories: [
+            { label: "MATERIEL", links: ["TONDEUSES", "SECHE-CHEVEUX", "LISSEURS"] }
+        ]
+    },
+    {
+        id: 'connectique',
+        title: "CONNECTIQUE",
+        image: "https://media.ldlc.com/encart/p/28829_b.jpg",
+        subcategories: [
+            { label: "CABLES", links: ["HDMI", "USB-C", "CHARGEURS", "ADAPTATEURS"] }
+        ]
+    }
+]

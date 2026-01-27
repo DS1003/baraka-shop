@@ -11,98 +11,11 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const categories = [
-    {
-        id: 'informatique',
-        title: "INFORMATIQUE",
-        icon: Laptop,
-        image: "https://media.ldlc.com/encart/p/28885_b.jpg",
-        subcategories: [
-            { label: "RESEAUX", links: ["SWITCH", "MODEM & ROUTEUR", "CLE ET CARTE WIFI", "CARTE RESEAU ET CPL", "ACCESSOIRES RESEAUX", "ACCESS POINT & REPETITEUR"] },
-            { label: "PC PORTABLE", links: ["ORDINATEURS PORTABLE", "MACBOOK", "ORDINATEUR RECONDITIONNE", "CHARGEUR ORDINATEUR PORTABLE", "BATTERIE ORDINATEUR PORTABLE", "ACCESSOIRES ORDINATEUR PORTABLE", "SACS & SACOCHES"] },
-            { label: "PIECES", links: ["ECRAN ORDINATEUR PORTABLE", "BARETTE ORDINATEUR"] },
-            { label: "ORDINATEURS DE BUREAU", links: ["SERVEUR", "DESKTOP RECONDITIONNE", "DESKTOP"] },
-            { label: "PERIPHERIQUES", links: ["WEBCAM", "REGULATEUR DE TENSION", "ONDELEUR", "IMPRIMANTE", "ECRAN PC", "CLAVIER & SOURIS ORIGINAL", "ACCESSOIRES STREAMING"] },
-        ]
-    },
-    {
-        id: 'image-son',
-        title: "IMAGE & SON",
-        icon: Tv,
-        image: "https://media.ldlc.com/encart/p/28829_b.jpg",
-        subcategories: [
-            { label: "PHOTO", links: ["TRIPIED MICRO", "TRIPIED CAMERA", "OBJECTIF", "MICROPHONE", "APPAREIL PHOTO", "ACCESSOIRES PHOTO", "STABILISATEUR", "LED CAMERA"] },
-            { label: "TELEVISION", links: ["TELECOMMANDE", "SUPPORT MURAL", "CONNECTIQUE TV", "CASQUE AUDIO HIFI", "TELEVISION 2EME", "TELEVISION ORIGINAL"] },
-            { label: "PROJECTION", links: ["VIDEO PROJECTEUR", "SUPPORT VIDEO PROJECTEUR", "POINTEUR LASER", "ECRAN DE PROJECTION"] },
-            { label: "SON NUMERIQUE", links: ["RADIO", "ENCEINTE BLUETOOTH", "DICTAPHONE", "CASQUES", "AIRPODS", "ECOUTEUR", "AIRPODS ORIGINAL"] },
-            { label: "HOME CINEMA", links: ["HOME CINEMA", "BARRE DE SON", "BAFFLE", "ACCESSOIRES HOME CINEMA"] },
-        ]
-    },
-    {
-        id: 'consommables',
-        title: "CONSOMMABLES",
-        icon: HardDrive,
-        image: "https://media.ldlc.com/encart/p/22889_b.jpg",
-        subcategories: [
-            { label: "STOCKAGE", links: ["DISQUE DUR", "CLE USB", "CARTE MEMOIRE", "LECTEUR CARTE", "CABLE DISQUE DUR", "BOITIER DISQUE DUR"] },
-            { label: "IMPRESSION", links: ["TONER ORIGINAL", "TONER H2", "TONER 2EME", "BOITE TONER 2EME", "CARTOUCHE"] }
-        ]
-    },
-    {
-        id: 'telephone',
-        title: "TELEPHONE & TABLETTE",
-        icon: Smartphone,
-        image: "https://media.ldlc.com/encart/p/28828_b.jpg",
-        subcategories: [
-            { label: "SMARTPHONES", links: ["IPHONE", "SAMSUNG GALAXY", "GOOGLE PIXEL", "REDMI", "INFINIX", "TECNO"] },
-            { label: "TABLETTES", links: ["IPAD PRO", "IPAD AIR", "GALAXY TAB", "SURFACE"] },
-            { label: "ACCESSOIRES", links: ["COQUES", "PROTECTION ECRAN", "CHARGEURS", "POWERBANK"] }
-        ]
-    },
-    {
-        id: 'jeux',
-        title: "JEUX & LOISIRS",
-        icon: Gamepad2,
-        image: "https://media.ldlc.com/encart/p/26671_b.jpg",
-        subcategories: [
-            { label: "CONSOLES", links: ["PS5", "XBOX SERIES", "NINTENDO SWITCH", "PS4"] },
-            { label: "JEUX VIDEO", links: ["JEUX PS5", "JEUX XBOX", "JEUX SWITCH"] },
-            { label: "ACCESSOIRES", links: ["MANNETTES", "CASQUES GAMING", "CHAISE GAMER"] }
-        ]
-    },
-    {
-        id: 'electromenager',
-        title: "ELECTROMENAGER",
-        icon: WashingMachine,
-        image: "https://media.ldlc.com/encart/p/28858_b.jpg",
-        subcategories: [
-            { label: "CUISINE", links: ["REFRIGERATEURS", "MICRO-ONDES", "FOURS", "MIXEUR"] },
-            { label: "ENTRETIEN", links: ["ASPIRATEURS", "FER A REPASSER", "MACHINE A LAVER"] }
-        ]
-    },
-    {
-        id: 'coiffure',
-        title: "SALON DE COIFFURE",
-        icon: Scissors,
-        image: "https://media.ldlc.com/encart/p/28885_b.jpg",
-        subcategories: [
-            { label: "MATERIEL", links: ["TONDEUSES", "SECHE-CHEVEUX", "LISSEURS"] }
-        ]
-    },
-    {
-        id: 'connectique',
-        title: "CONNECTIQUE",
-        icon: Cable,
-        image: "https://media.ldlc.com/encart/p/28829_b.jpg",
-        subcategories: [
-            { label: "CABLES", links: ["HDMI", "USB-C", "CHARGEURS", "ADAPTATEURS"] }
-        ]
-    }
-]
+import { MENU_CATEGORIES } from '@/lib/data'
 
 export function MegaMenu() {
-    const [activeTab, setActiveTab] = useState(categories[0].id)
-    const activeCategory = categories.find(c => c.id === activeTab) || categories[0]
+    const [activeTab, setActiveTab] = useState(MENU_CATEGORIES[0].id)
+    const activeCategory = MENU_CATEGORIES.find(c => c.id === activeTab) || MENU_CATEGORIES[0]
 
     return (
         <motion.div
@@ -114,7 +27,7 @@ export function MegaMenu() {
         >
             {/* Left Column: Categories List (LDLC Style Sidebar) */}
             <div className="w-[280px] bg-white border-r border-gray-100 flex flex-col pt-2">
-                {categories.map((cat) => (
+                {MENU_CATEGORIES.map((cat) => (
                     <button
                         key={cat.id}
                         onMouseEnter={() => setActiveTab(cat.id)}

@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
-import Image from 'next/image'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Search, ShoppingCart, Star, Eye, Zap, ArrowRight } from 'lucide-react'
+import { ArrowRight, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProductCard } from '@/ui/ProductCard'
 
@@ -60,6 +59,15 @@ const products: Record<string, Product[]> = {
             rating: 5,
             image: 'https://in.canon/media/image/2022/11/01/c8c8ab88ead148e9b64490fdd764bcf4_EOS+R6+Mark+II+RF24-105mm+f4-7.1+IS+STM+front+slant.png',
             badges: [{ text: 'PRO', color: 'bg-[#1B1F3B]' }]
+        },
+        {
+            id: '8',
+            name: 'ROG Strix G16 (2024)',
+            category: 'Gaming',
+            price: 1450000,
+            rating: 5,
+            image: 'https://media.ldlc.com/r705/ld/products/00/06/21/20/LD0006212015.jpg',
+            badges: [{ text: 'HOT', color: 'bg-red-500' }]
         }
     ],
     'Meilleures Ventes': [
@@ -92,80 +100,189 @@ const products: Record<string, Product[]> = {
             image: 'https://media.ldlc.com/encart/p/28829_b.jpg',
             badges: [{ text: 'FLASH', color: 'bg-primary' }]
         }
-    ]
+    ],
+    'Promotions': []
 }
 
 const tabs = ['Nouveautés', 'Meilleures Ventes', 'Promotions']
 
 export function ProductTabs() {
     const [activeTab, setActiveTab] = useState('Nouveautés')
+    const [currentIndex, setCurrentIndex] = useState(0)
+    const [direction, setDirection] = useState(0)
+    const [isMobile, setIsMobile] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    const activeProducts = products[activeTab] || []
+
+    const chunkSize = isMobile ? 2 : 4
+    const productChunks = activeProducts.reduce((resultArray: any[][], item, index) => {
+        const chunkIndex = Math.floor(index / chunkSize);
+        if (!resultArray[chunkIndex]) {
+            resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+    }, []);
+
+    const slideNext = () => {
+        if (productChunks.length <= 1) return
+        setDirection(1)
+        setCurrentIndex((prev) => (prev + 1) % productChunks.length)
+    }
+
+    const slidePrev = () => {
+        if (productChunks.length <= 1) return
+        setDirection(-1)
+        setCurrentIndex((prev) => (prev - 1 + productChunks.length) % productChunks.length)
+    }
+
+    const variants = {
+        enter: (direction: number) => ({
+            x: direction > 0 ? 500 : -500,
+            opacity: 0
+        }),
+        center: {
+            zIndex: 1,
+            x: 0,
+            opacity: 1
+        },
+        exit: (direction: number) => ({
+            zIndex: 0,
+            x: direction < 0 ? 500 : -500,
+            opacity: 0
+        })
+    }
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab)
+        setCurrentIndex(0)
+    }
 
     return (
-        <section className="py-24 bg-[#f8f9fb] relative overflow-hidden">
-            {/* Background Decorations */}
+        <section className="py-16 md:py-24 bg-[#f8f9fb] relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none"
                 style={{ backgroundImage: `url('https://res.cloudinary.com/dgro5x4h8/image/upload/v1768669738/pattern_2_kln9c6.png')`, backgroundSize: '400px' }} />
             <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute -bottom-[10%] -right-[10%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
 
             <Container className="relative z-10">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 mb-12 md:mb-16 px-4">
-                    <div className="flex flex-col gap-3 w-full md:w-auto">
-                        <div className="flex items-center gap-3">
-                            <div className="h-[2px] w-8 bg-primary rounded-full" />
-                            <span className="text-primary font-black text-[10px] md:text-[11px] uppercase tracking-[0.4em]">Notre Sélection</span>
+                {/* Header Style from Screenshot */}
+                <div className="flex flex-col gap-4 md:gap-6 mb-12 md:mb-16">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 px-4">
+                        <div className="flex flex-col gap-2 w-full md:w-auto">
+                            <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.5em] mb-1">Exploration</span>
+                            <div className="flex items-center gap-x-6 md:gap-x-10 overflow-x-auto overflow-y-hidden pt-2 pb-6 md:pb-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+                                {tabs.map((tab) => {
+                                    const words = tab.split(' ');
+                                    return (
+                                        <button
+                                            key={tab}
+                                            onClick={() => handleTabChange(tab)}
+                                            className={cn(
+                                                "whitespace-nowrap text-xl md:text-3xl font-extrabold transition-all relative uppercase tracking-tight py-1",
+                                                activeTab === tab ? "text-[#1B1F3B]" : "text-gray-300 hover:text-[#1B1F3B]/40"
+                                            )}
+                                        >
+                                            {words[0]} {words[1] && <span className="text-primary italic font-black ml-1.5">{words[1]}</span>}
+                                            {activeTab === tab && (
+                                                <motion.div
+                                                    layoutId="activeTabUnderline"
+                                                    className="absolute -bottom-1 md:-bottom-1.5 left-0 w-full h-[2px] md:h-[3px] bg-primary rounded-full shadow-[0_2px_10px_rgba(255,140,0,0.3)]"
+                                                />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-x-6 md:gap-x-10 overflow-x-auto pb-4 md:pb-0 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-                            {tabs.map((tab) => (
+
+                        {/* Cluster Buttons from Screenshot */}
+                        <div className="flex items-center gap-3 self-stretch md:self-end justify-end">
+                            <div className="flex gap-2">
                                 <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={cn(
-                                        "whitespace-nowrap text-base md:text-3xl font-black transition-all relative uppercase tracking-tight",
-                                        activeTab === tab ? "text-[#1B1F3B]" : "text-gray-300 hover:text-gray-400"
-                                    )}
+                                    onClick={slidePrev}
+                                    disabled={productChunks.length <= 1}
+                                    className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
                                 >
-                                    {tab}
-                                    {activeTab === tab && (
-                                        <motion.div
-                                            layoutId="activeTab"
-                                            className="absolute -bottom-2 md:-bottom-3 left-0 w-8 md:w-10 h-[3px] md:h-[4px] bg-primary rounded-full shadow-[0_4px_10px_rgba(255,140,0,0.3)]"
-                                        />
-                                    )}
+                                    <ChevronLeft className="w-5 h-5" />
                                 </button>
-                            ))}
+                                <button
+                                    onClick={slideNext}
+                                    disabled={productChunks.length <= 1}
+                                    className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <Link
+                                href="/boutique"
+                                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
+                            >
+                                <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                            </Link>
                         </div>
                     </div>
-
-                    <Link href="/boutique" className="flex items-center gap-2 group/btn w-fit">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[#1B1F3B] group-hover/btn:text-primary transition-colors">Voir Plus</span>
-                        <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover/btn:bg-primary group-hover/btn:text-white group-hover/btn:border-primary transition-all">
-                            <ArrowRight className="w-3.5 h-3.5" />
-                        </div>
-                    </Link>
                 </div>
 
-                {/* Grid */}
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8"
-                >
-                    {products[activeTab]?.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                {/* Carousel Content */}
+                <div className="relative h-[320px] md:h-[450px] mb-12">
+                    <AnimatePresence initial={false} custom={direction} mode="wait">
+                        {productChunks.length > 0 ? (
+                            <motion.div
+                                key={`${activeTab}-${currentIndex}`}
+                                custom={direction}
+                                variants={variants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{
+                                    x: { type: "spring", stiffness: 200, damping: 25 },
+                                    opacity: { duration: 0.3 }
+                                }}
+                                className={cn(
+                                    "absolute inset-0 px-2 grid gap-4 md:gap-8",
+                                    isMobile ? "grid-cols-2" : "grid-cols-4"
+                                )}
+                            >
+                                {productChunks[currentIndex].map((product) => (
+                                    <ProductCard key={product.id} product={product} />
+                                ))}
+                            </motion.div>
+                        ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-3xl w-full">
+                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[10px] md:text-xs">Arrivage en cours...</p>
+                                </div>
+                            </div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* Subtle Pagination */}
+                <div className="flex justify-center gap-2">
+                    {productChunks.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => {
+                                setDirection(idx > currentIndex ? 1 : -1)
+                                setCurrentIndex(idx)
+                            }}
+                            className={cn(
+                                "h-1 rounded-full transition-all duration-500",
+                                currentIndex === idx ? "w-8 bg-primary" : "w-1 bg-gray-200"
+                            )}
+                        />
                     ))}
-                    {(!products[activeTab] || products[activeTab].length === 0) && (
-                        <div className="col-span-full py-20 text-center border-2 border-dashed border-gray-100 rounded-2xl">
-                            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Arrivage en cours...</p>
-                        </div>
-                    )}
-                </motion.div>
+                </div>
             </Container>
         </section>
     )
 }
-
-

@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { Container } from '@/ui/Container'
 import { ProductCard } from '@/ui/ProductCard'
 import { Product } from '@/types'
@@ -56,9 +58,13 @@ export function FeaturedProducts() {
                         <h2 className="text-3xl font-bold tracking-tight mb-2">Meilleures Ventes</h2>
                         <p className="text-muted-foreground">Les produits préférés de nos clients cette semaine.</p>
                     </div>
-                    <a href="/shop" className="hidden md:block text-sm font-semibold text-primary hover:underline">
-                        Voir tout les produits &rarr;
-                    </a>
+                    <Link
+                        href="/shop"
+                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-[#ea580c] text-white flex items-center justify-center shadow-[0_10px_20px_-5px_rgba(249,115,22,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(249,115,22,0.6)] transition-all duration-300 hover:-translate-y-1 active:scale-95 group/plus border border-white/10"
+                        title="Voir tout les produits"
+                    >
+                        <Plus className="w-6 h-6 transition-transform duration-500 group-hover/plus:rotate-90" strokeWidth={3} />
+                    </Link>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

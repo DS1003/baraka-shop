@@ -48,7 +48,7 @@ export function HeadphonePromo() {
                             <div className="absolute w-[50%] aspect-square rounded-full border border-white/10" />
 
                             <Image
-                                src="https://images.unsplash.com/photo-1546435770-a3e426da473b?auto=format&fit=crop&q=80&w=800&h=800"
+                                src="https://sony.scene7.com/is/image/sonyglobalsolutions/360-RA-category-icon-20221202?$S7Product$&fmt=png-alpha"
                                 alt="Premium Headphones"
                                 fill
                                 className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-transform duration-700 group-hover:scale-110 z-10"
