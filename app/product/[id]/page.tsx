@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, use } from 'react'
+import React, { useState, use, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
@@ -18,8 +18,10 @@ import {
     ShoppingCart,
     Zap,
     ChevronRight,
+    ChevronLeft,
     MessageSquare,
-    Info
+    Info,
+    LayoutGrid
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -38,6 +40,57 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     const [activeImg, setActiveImg] = useState(0)
     const [quantity, setQuantity] = useState(1)
     const [activeTab, setActiveTab] = useState('description')
+
+    // Carousel state for Similar Products
+    const [currentIndexSimilar, setCurrentIndexSimilar] = useState(0)
+    const [directionSimilar, setDirectionSimilar] = useState(0)
+    const [isMobile, setIsMobile] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    const chunkSize = isMobile ? 2 : 4
+    const similarProductChunks = similarProducts.reduce((resultArray: any[][], item, index) => {
+        const chunkIndex = Math.floor(index / chunkSize);
+        if (!resultArray[chunkIndex]) {
+            resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+    }, []);
+
+    const slideNextSimilar = () => {
+        if (similarProductChunks.length <= 1) return
+        setDirectionSimilar(1)
+        setCurrentIndexSimilar((prev) => (prev + 1) % similarProductChunks.length)
+    }
+
+    const slidePrevSimilar = () => {
+        if (similarProductChunks.length <= 1) return
+        setDirectionSimilar(-1)
+        setCurrentIndexSimilar((prev) => (prev - 1 + similarProductChunks.length) % similarProductChunks.length)
+    }
+
+    const carouselVariants = {
+        enter: (direction: number) => ({
+            x: direction > 0 ? 500 : -500,
+            opacity: 0
+        }),
+        center: {
+            zIndex: 1,
+            x: 0,
+            opacity: 1
+        },
+        exit: (direction: number) => ({
+            zIndex: 0,
+            x: direction < 0 ? 500 : -500,
+            opacity: 0
+        })
+    }
 
     // Mock detailed product data
     const product = {
@@ -77,7 +130,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
     const tabs = [
         { id: 'description', label: 'Description', icon: Info },
-        { id: 'specs', label: 'Spécifications', icon: LayoutGridIcon },
+        { id: 'specs', label: 'Spécifications', icon: LayoutGrid },
         { id: 'reviews', label: 'Avis Clients', icon: MessageSquare },
     ]
 
@@ -360,17 +413,89 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                     {/* 4. Similar Products Section */}
                     <div className="mt-32">
-                        <div className="flex flex-col gap-2 mb-12">
-                            <div className="flex items-center gap-3">
-                                <div className="h-[2px] w-8 bg-primary rounded-full" />
-                                <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Recommendations</span>
+                        <div className="flex flex-col md:flex-row md:items-end justify-between items-center gap-6 mb-12">
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-[2px] w-8 bg-primary rounded-full" />
+                                    <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Recommendations</span>
+                                </div>
+                                <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Produits <span className="text-primary italic">Similaires</span></h2>
                             </div>
-                            <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Produits Similaires</h2>
+
+                            {/* Cluster Buttons */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={slidePrevSimilar}
+                                        disabled={similarProductChunks.length <= 1}
+                                        className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={slideNextSimilar}
+                                        disabled={similarProductChunks.length <= 1}
+                                        className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <Link
+                                    href="/boutique"
+                                    className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
+                                >
+                                    <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                                </Link>
+                            </div>
                         </div>
 
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                            {similarProducts.map((prod) => (
-                                <ProductCard key={prod.id} product={prod} />
+                        <div className="relative h-[320px] md:h-[450px] mb-12">
+                            <AnimatePresence initial={false} custom={directionSimilar} mode="wait">
+                                {similarProductChunks.length > 0 ? (
+                                    <motion.div
+                                        key={`similar-${currentIndexSimilar}`}
+                                        custom={directionSimilar}
+                                        variants={carouselVariants}
+                                        initial="enter"
+                                        animate="center"
+                                        exit="exit"
+                                        transition={{
+                                            x: { type: "spring", stiffness: 200, damping: 25 },
+                                            opacity: { duration: 0.3 }
+                                        }}
+                                        className={cn(
+                                            "absolute inset-0 px-2 grid gap-4 md:gap-8",
+                                            isMobile ? "grid-cols-2" : "grid-cols-4"
+                                        )}
+                                    >
+                                        {similarProductChunks[currentIndexSimilar].map((prod) => (
+                                            <ProductCard key={prod.id} product={prod} />
+                                        ))}
+                                    </motion.div>
+                                ) : (
+                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                                        {similarProducts.map((prod) => (
+                                            <ProductCard key={prod.id} product={prod} />
+                                        ))}
+                                    </div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Subtle Pagination */}
+                        <div className="flex justify-center gap-2">
+                            {similarProductChunks.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => {
+                                        setDirectionSimilar(idx > currentIndexSimilar ? 1 : -1)
+                                        setCurrentIndexSimilar(idx)
+                                    }}
+                                    className={cn(
+                                        "h-1 rounded-full transition-all duration-500",
+                                        currentIndexSimilar === idx ? "w-8 bg-primary" : "w-1 bg-gray-200"
+                                    )}
+                                />
                             ))}
                         </div>
                     </div>

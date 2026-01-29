@@ -97,9 +97,9 @@ export function Footer() {
                     {/* Bottom Bar */}
                     <div className="w-full pt-12 border-t border-white/5 flex flex-col items-center gap-8">
                         <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-                            <Image src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" width={80} height={20} className="opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
-                            <Image src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" width={50} height={20} className="opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
-                            <Image src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" width={40} height={20} className="opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
+                            <Image src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" width={80} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
+                            <Image src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" width={50} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
+                            <Image src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" width={40} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
                         </div>
                         <p className="text-[10px] md:text-xs text-gray-600 tracking-widest uppercase font-bold">
                             © {new Date().getFullYear()} <span className="text-gray-400">Baraka Shop Senegal</span>. Crafted for Excellence.

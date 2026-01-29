@@ -46,6 +46,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'cdn.freebiesupply.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.freepnglogos.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'logos-world.net',
       }
     ],
   },

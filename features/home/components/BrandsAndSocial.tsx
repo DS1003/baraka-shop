@@ -3,7 +3,9 @@
 import React from 'react'
 import { Container } from '@/ui/Container'
 import Link from 'next/link'
-import { Facebook, Youtube, Instagram, Music2, Mail, Send, ArrowRight, ShieldCheck, Globe, Star } from 'lucide-react'
+import Image from 'next/image'
+import { Facebook, Youtube, Instagram, Music2, Mail, Send, ArrowRight, ShieldCheck, Globe, Star, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 const XIcon = () => (
@@ -13,61 +15,173 @@ const XIcon = () => (
 )
 
 const brands = [
-    { name: "Apple", logo: <path d="M17.05 20.28c-.96.95-2.06 1.72-3.3 1.72-1.25 0-1.63-.77-3.14-.77-1.5 0-1.95.74-3.14.77-1.16.03-2.15-.84-3.15-1.74-2.18-1.96-3.83-5.59-3.83-8.8 0-3.3 2.1-5.06 4.14-5.06 1.08 0 2 1.25 3.03 1.25s1.95-1.24 3.04-1.24c1.1 0 2.22.61 2.92 1.58-2.6 1.51-2.19 5.31.63 6.31-.76 1.91-1.78 3.92-3.23 5.98zM13.25 1.5c.34 2.25-1.6 4.45-3.5 4.4 0-1.9 1.7-4.13 3.5-4.4z" /> },
-    { name: "Samsung", logo: null, customText: "SAMSUNG", color: "text-[#034EA2]" },
-    { name: "Sony", logo: null, customText: "SONY", color: "text-black" },
-    { name: "Dell", logo: null, customText: "DELL", color: "text-[#007DB8]" },
-    { name: "HP", logo: null, customText: "hp", color: "text-[#0096D6]" },
-    { name: "LG", logo: null, customText: "LG", color: "text-[#A50034]" },
+    { name: "Apple", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" },
+    { name: "Samsung", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Samsung_old_logo_before_year_2015.svg/1280px-Samsung_old_logo_before_year_2015.svg.png" },
+    { name: "Sony", logo: "https://www.freepnglogos.com/uploads/sony-png-logo/brand-sony-png-logo-5.png" },
+    { name: "Dell", logo: "https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg" },
+    { name: "HP", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" },
+    { name: "LG", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/LG_logo_%282014%29.svg/1280px-LG_logo_%282014%29.svg.png" },
 ]
 
 export function BrandsAndSocial() {
+    const [currentIndex, setCurrentIndex] = React.useState(0)
+    const [direction, setDirection] = React.useState(0)
+    const [isMobile, setIsMobile] = React.useState(false)
+
+    React.useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768)
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    const chunkSize = isMobile ? 2 : 3
+    const brandChunks = brands.reduce((resultArray: any[][], item, index) => {
+        const chunkIndex = Math.floor(index / chunkSize);
+        if (!resultArray[chunkIndex]) {
+            resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+    }, []);
+
+    const slideNext = () => {
+        if (brandChunks.length <= 1) return
+        setDirection(1)
+        setCurrentIndex((prev) => (prev + 1) % brandChunks.length)
+    }
+
+    const slidePrev = () => {
+        if (brandChunks.length <= 1) return
+        setDirection(-1)
+        setCurrentIndex((prev) => (prev - 1 + brandChunks.length) % brandChunks.length)
+    }
+
+    const variants = {
+        enter: (direction: number) => ({
+            x: direction > 0 ? 300 : -300,
+            opacity: 0
+        }),
+        center: {
+            zIndex: 1,
+            x: 0,
+            opacity: 1
+        },
+        exit: (direction: number) => ({
+            zIndex: 0,
+            x: direction < 0 ? 300 : -300,
+            opacity: 0
+        })
+    }
+
     return (
-        <section className="bg-[#fafafa] py-20 border-t border-gray-100">
+        <section className="bg-[#fafafa] py-20 border-t border-gray-100 relative overflow-hidden">
             <Container>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Left Side: Premium Brands */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+                    {/* Left Side: Premium Brands Carousel */}
                     <div className="flex flex-col gap-10">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
+                        <div className="flex flex-col gap-6 px-2">
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-3">
                                     <div className="h-[2px] w-8 bg-primary rounded-full" />
                                     <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Partenaires</span>
                                 </div>
-                                <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Nos Marques Officielles</h2>
+
+                                <div className="flex flex-row items-center justify-between gap-4">
+                                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight leading-tight">Nos Marques <span className="text-primary italic">Officielles</span></h2>
+
+                                    {/* Cluster Buttons - Now aligned with H2 on mobile too */}
+                                    <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                                        <div className="flex gap-1.5 md:gap-2">
+                                            <button
+                                                onClick={slidePrev}
+                                                disabled={brandChunks.length <= 1}
+                                                className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
+                                            >
+                                                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+                                            </button>
+                                            <button
+                                                onClick={slideNext}
+                                                disabled={brandChunks.length <= 1}
+                                                className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
+                                            >
+                                                <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                                            </button>
+                                        </div>
+                                        <Link
+                                            href="/marques"
+                                            className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
+                                        >
+                                            <Plus className="w-5 h-5 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                                        </Link>
+                                    </div>
+                                </div>
+
                                 <p className="text-gray-400 text-sm max-w-sm leading-relaxed">Nous collaborons avec les leaders mondiaux pour vous garantir l'excellence technologique.</p>
                             </div>
-
-                            <a href="/marques" className="flex items-center gap-2 group/btn">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-[#1B1F3B] group-hover/btn:text-primary transition-colors">Voir Plus</span>
-                                <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover/btn:bg-primary group-hover/btn:text-white group-hover/btn:border-primary transition-all">
-                                    <ArrowRight className="w-3.5 h-3.5" />
-                                </div>
-                            </a>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                            {brands.map((brand, i) => (
-                                <Link
-                                    key={i}
-                                    href={`/boutique?brand=${brand.name.toLowerCase()}`}
-                                    className="h-28 bg-white rounded-3xl border border-gray-100/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center grayscale hover:grayscale-0 transition-all duration-700 group cursor-pointer hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 p-4"
-                                >
-                                    {brand.logo ? (
-                                        <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" className="text-gray-300 group-hover:text-black transition-colors">{brand.logo}</svg>
-                                    ) : (
-                                        <span className={cn("font-black text-2xl italic tracking-tighter opacity-20 group-hover:opacity-100 transition-opacity", brand.color)}>
-                                            {brand.customText}
-                                        </span>
+                        <div className="relative h-56 md:h-64 mt-4">
+                            <AnimatePresence initial={false} custom={direction} mode="wait">
+                                <motion.div
+                                    key={currentIndex}
+                                    custom={direction}
+                                    variants={variants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{
+                                        x: { type: "spring", stiffness: 200, damping: 25 },
+                                        opacity: { duration: 0.2 }
+                                    }}
+                                    className={cn(
+                                        "absolute inset-0 grid gap-6",
+                                        isMobile ? "grid-cols-2" : "grid-cols-3"
                                     )}
-                                    <span className="mt-3 text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Reseller officiel</span>
-                                </Link>
+                                >
+                                    {brandChunks[currentIndex]?.map((brand) => (
+                                        <Link
+                                            key={brand.name}
+                                            href={`/boutique?brand=${brand.name.toLowerCase()}`}
+                                            className="h-24 md:h-28 bg-white rounded-3xl border border-gray-100/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 p-6"
+                                        >
+                                            <div className="relative w-full h-full flex items-center justify-center">
+                                                <div className="relative h-10 w-full">
+                                                    <Image
+                                                        src={brand.logo}
+                                                        alt={brand.name}
+                                                        fill
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <span className="mt-2 text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Reseller officiel</span>
+                                        </Link>
+                                    ))}
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Pagination dots for Brands */}
+                        <div className="flex justify-center md:justify-start gap-2">
+                            {brandChunks.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => {
+                                        setDirection(idx > currentIndex ? 1 : -1)
+                                        setCurrentIndex(idx)
+                                    }}
+                                    className={cn(
+                                        "h-1 rounded-full transition-all duration-500",
+                                        currentIndex === idx ? "w-8 bg-primary" : "w-1 bg-gray-200"
+                                    )}
+                                />
                             ))}
                         </div>
                     </div>
 
                     {/* Right Side: Community & Newsletter */}
-                    <div className="bg-[#1B1F3B] rounded-[2.5rem] p-8 md:p-12 flex flex-col justify-between relative overflow-hidden group/card shadow-2xl shadow-blue-900/10">
+                    <div className="bg-[#1B1F3B] rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between relative overflow-hidden group/card shadow-2xl shadow-blue-900/10 min-h-max lg:h-full">
                         {/* Decorative circles */}
                         <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover/card:bg-primary/10 transition-colors" />
 

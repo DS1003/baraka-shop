@@ -13,15 +13,15 @@ export function ShippingPromoBand() {
                     <div className="relative overflow-hidden rounded-[2rem] bg-[#1B1F3B] p-6 md:p-10 flex flex-col justify-between min-h-[220px] group">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
 
-                        <div className="relative z-10 flex flex-col gap-4">
+                        <div className="relative z-10 flex flex-col gap-4 items-center md:items-start text-center md:text-left">
                             <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                                 <Truck className="w-6 h-6" />
                             </div>
                             <h3 className="text-white text-2xl font-black uppercase tracking-tight">Livraison Express Gratuite</h3>
                         </div>
 
-                        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-                            <p className="text-gray-400 text-sm max-w-[200px] text-center sm:text-left">Sur toutes les commandes de plus de <span className="text-white font-bold">500.000 CFA</span></p>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 mt-6">
+                            <p className="text-gray-400 text-sm max-w-[200px] text-center md:text-left">Sur toutes les commandes de plus de <span className="text-white font-bold">500.000 CFA</span></p>
                             <div className="px-6 py-2 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                                 Code: EXPRESS24
                             </div>
