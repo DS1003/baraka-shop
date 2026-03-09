@@ -6,8 +6,11 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Check, ShoppingBag, ArrowRight, Printer, Share2, MapPin } from 'lucide-react'
 import { Button } from '@/ui/Button'
+import { useSearchParams } from 'next/navigation'
 
 export default function OrderSuccessPage() {
+    const searchParams = useSearchParams()
+    const orderId = searchParams.get('orderId') || '#BK-' + Math.floor(Math.random() * 1000000)
     return (
         <main className="min-h-screen bg-[#f8f9fb] py-12 flex items-center justify-center">
             <Container className="max-w-3xl">
@@ -35,7 +38,7 @@ export default function OrderSuccessPage() {
                     </h1>
 
                     <p className="text-gray-400 text-lg font-medium max-w-md mx-auto mb-12 relative z-10 leading-relaxed">
-                        Félicitations ! Votre commande <span className="text-[#1B1F3B] font-black">#BK-89241</span> a été validée. Préparez-vous à recevoir votre technologie.
+                        Félicitations ! Votre commande <span className="text-[#1B1F3B] font-black uppercase tracking-widest">{orderId}</span> a été validée. Préparez-vous à recevoir votre technologie.
                     </p>
 
                     {/* Quick Order Info */}
@@ -52,11 +55,17 @@ export default function OrderSuccessPage() {
                                 <ArrowRight className="w-4 h-4 mr-2 rotate-180" /> Continuer mes achats
                             </Button>
                         </Link>
-                        <Link href="/account" className="w-full sm:w-auto">
-                            <Button className="w-full h-16 px-10 bg-white border border-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-gray-50 transition-all shadow-xl shadow-gray-100 flex items-center gap-3">
-                                Suivre ma commande <Share2 className="w-4 h-4 text-primary" />
+
+                        <a
+                            href={`https://wa.me/221338000000?text=Bonjour,%20je%20viens%20de%20passer%20la%20commande%20${orderId}%20sur%20Baraka%20Shop`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto"
+                        >
+                            <Button className="w-full h-16 px-10 bg-[#25D366] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-[#075E54] transition-all shadow-xl shadow-green-200 flex items-center gap-3">
+                                Support WhatsApp <Share2 className="w-4 h-4" />
                             </Button>
-                        </Link>
+                        </a>
                     </div>
 
                     {/* Support Notice */}

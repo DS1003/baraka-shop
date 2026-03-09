@@ -13,6 +13,8 @@ import { useSession } from 'next-auth/react'
 import { useCart } from '@/context/CartContext'
 import { useRouter } from 'next/navigation'
 import { getProductsAction } from '@/lib/actions/product-actions'
+import { CartToast } from '@/components/CartToast'
+import { MiniCart } from '@/components/MiniCart'
 
 const SUGGESTIONS = [
     { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000 CFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
@@ -34,9 +36,10 @@ export function Header() {
     const router = useRouter()
     const { data: session, status } = useSession()
     const isLoggedIn = status === "authenticated"
-    const { itemCount, subtotal } = useCart()
+    const { itemCount, subtotal, lastAddedItem, isToastVisible, hideToast } = useCart()
 
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [isCartOpen, setIsCartOpen] = useState(false) // Pour le MiniCart futur
     const [showMegaMenu, setShowMegaMenu] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -228,7 +231,10 @@ export function Header() {
                                 label={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "Admin" : "Compte") : "Connexion"}
                                 href={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "/admin" : "/account") : "/login"}
                             />
-                            <Link href="/cart" className="relative flex items-center group bg-gray-50 hover:bg-primary/5 pl-2 pr-4 py-1.5 rounded-2xl border border-gray-100 transition-all hover:border-primary/20">
+                            <div
+                                onClick={() => setIsCartOpen(true)}
+                                className="relative flex items-center group bg-gray-50 hover:bg-primary/5 pl-2 pr-4 py-1.5 rounded-2xl border border-gray-100 transition-all hover:border-primary/20 cursor-pointer"
+                            >
                                 <div className="relative flex flex-col items-center">
                                     <div className="relative p-1.5 transition-all duration-300">
                                         <ShoppingCart className="w-7 h-7 text-[#1B1F3B] group-hover:text-primary transition-all duration-300 group-hover:scale-110" strokeWidth={1.5} />
@@ -241,7 +247,7 @@ export function Header() {
                                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Panier</span>
                                     <span className="text-[12px] font-black text-[#1B1F3B] group-hover:text-primary transition-colors">{subtotal.toLocaleString()} CFA</span>
                                 </div>
-                            </Link>
+                            </div>
                         </div>
                     </Container>
                 </div>
@@ -318,7 +324,11 @@ export function Header() {
                     </Link>
                     <Link href="/cart" className="p-2 hover:bg-gray-50 rounded-xl transition-colors relative">
                         <ShoppingCart className="w-6 h-6 text-[#1B1F3B]" />
-                        <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-white text-[8px] font-black flex items-center justify-center rounded-full ring-2 ring-white">2</span>
+                        {itemCount > 0 && (
+                            <span className="absolute top-1 right-1 w-4 h-4 bg-primary text-white text-[8px] font-black flex items-center justify-center rounded-full ring-2 ring-white">
+                                {itemCount}
+                            </span>
+                        )}
                     </Link>
                 </div>
             </div>
@@ -512,6 +522,21 @@ export function Header() {
                     </>
                 )}
             </AnimatePresence>
+
+            {/* Notification d'ajout au panier */}
+            <CartToast
+                product={lastAddedItem}
+                isVisible={isToastVisible}
+                onClose={hideToast}
+                itemCount={itemCount}
+                subtotal={subtotal}
+            />
+
+            {/* Mini Cart Side Panel */}
+            <MiniCart
+                isOpen={isCartOpen}
+                onClose={() => setIsCartOpen(false)}
+            />
         </header>
     )
 }

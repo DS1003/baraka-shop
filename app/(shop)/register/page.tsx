@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { signIn } from 'next-auth/react';
 import {
     User,
     Mail,
@@ -14,9 +15,11 @@ import {
     Eye,
     EyeOff,
     ArrowRight,
-    CheckCircle2
+    CheckCircle2,
+    Shield
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 export default function RegisterPage() {
     const [formData, setFormData] = useState({
@@ -53,8 +56,16 @@ export default function RegisterPage() {
                 setError(data.message || "Une erreur est survenue");
             } else {
                 setIsSuccess(true);
+                // Auto-login
+                const loginRes = await signIn('credentials', {
+                    redirect: false,
+                    email: formData.email,
+                    password: formData.password,
+                });
+
                 setTimeout(() => {
-                    router.push('/login');
+                    router.push('/boutique');
+                    router.refresh();
                 }, 2000);
             }
         } catch (err) {
@@ -163,7 +174,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-[#1B1F3B] mb-2 px-1">Mot de passe</label>
+                            <label className="block text-sm font-bold text-[#1B1F3B] mb-2 px-1 text-xs">Mot de passe</label>
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-[#1B1F3B]" size={20} />
                                 <input
@@ -183,6 +194,35 @@ export default function RegisterPage() {
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
+
+                            {/* Password Strength Indicator */}
+                            {formData.password && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="mt-3 px-1"
+                                >
+                                    <div className="flex gap-1.5 h-1.5">
+                                        {[1, 2, 3, 4].map((step) => {
+                                            const strength = formData.password.length > 8 ? 4 : formData.password.length > 5 ? 3 : formData.password.length > 3 ? 2 : 1;
+                                            return (
+                                                <div
+                                                    key={step}
+                                                    className={cn(
+                                                        "flex-1 rounded-full transition-all duration-500",
+                                                        step <= strength
+                                                            ? (strength <= 2 ? "bg-red-400" : strength === 3 ? "bg-yellow-400" : "bg-green-500")
+                                                            : "bg-gray-100"
+                                                    )}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-2 block">
+                                        {formData.password.length > 8 ? "Sécurisé" : formData.password.length > 5 ? "Normal" : "Trop court"}
+                                    </span>
+                                </motion.div>
+                            )}
                         </div>
 
                         <button

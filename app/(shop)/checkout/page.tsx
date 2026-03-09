@@ -11,11 +11,13 @@ import {
     ShieldCheck,
     CheckCircle2,
     ArrowLeft,
+    ArrowRight,
     Wallet,
     Home,
-    Smartphone
+    Smartphone,
+    X
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/ui/Button'
 import { cn } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
@@ -28,6 +30,7 @@ export default function CheckoutPage() {
     const { cartItems, subtotal, clearCart } = useCart()
     const router = useRouter()
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'wave' | 'card'>('cash')
+    const [step, setStep] = useState(1) // 1: Address, 2: Payment, 3: Confirm
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState('')
 
@@ -72,7 +75,7 @@ export default function CheckoutPage() {
             const result = await createOrder(orderData)
             if (result.success) {
                 clearCart()
-                router.push('/order-success')
+                router.push(`/order-success?orderId=${result.orderId}`)
             } else {
                 setError(result.error || 'Une erreur est survenue.')
             }
@@ -101,8 +104,7 @@ export default function CheckoutPage() {
     return (
         <main className="bg-[#f8f9fb] min-h-screen py-12">
             <Container>
-                {/* Breadcrumbs */}
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-12">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-8">
                     <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
                     <ChevronRight className="w-3 h-3" />
                     <Link href="/cart" className="hover:text-primary transition-colors">Panier</Link>
@@ -110,93 +112,242 @@ export default function CheckoutPage() {
                     <span className="text-[#1B1F3B]">Paiement & Livraison</span>
                 </div>
 
+                {/* Visual Stepper */}
+                <div className="max-w-2xl mx-auto mb-16 px-4">
+                    <div className="flex items-center justify-between relative">
+                        {/* Progress Line */}
+                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0" />
+                        <motion.div
+                            className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 z-0"
+                            initial={{ width: '0%' }}
+                            animate={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
+                            transition={{ duration: 0.5 }}
+                        />
+
+                        {/* Step Circles */}
+                        {[
+                            { id: 1, label: 'Livraison', icon: Home },
+                            { id: 2, label: 'Paiement', icon: CreditCard },
+                            { id: 3, label: 'Confirmation', icon: ShieldCheck }
+                        ].map((s) => (
+                            <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
+                                <motion.button
+                                    onClick={() => s.id < step && setStep(s.id)}
+                                    animate={{
+                                        backgroundColor: step >= s.id ? '#F97316' : '#F1F5F9',
+                                        color: step >= s.id ? '#FFFFFF' : '#94A3B8',
+                                        scale: step === s.id ? 1.2 : 1
+                                    }}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors cursor-default"
+                                >
+                                    {step > s.id ? <CheckCircle2 className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                                </motion.button>
+                                <span className={cn(
+                                    "text-[10px] font-black uppercase tracking-widest",
+                                    step >= s.id ? "text-[#1B1F3B]" : "text-gray-400"
+                                )}>
+                                    {s.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     {/* Checkout Form */}
-                    <div className="lg:col-span-7 flex flex-col gap-10">
-                        <section className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-4 mb-10">
-                                <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
-                                    <Home className="w-6 h-6" />
-                                </div>
-                                <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">Adresse de Livraison</h2>
-                            </div>
+                    <div className="lg:col-span-7">
+                        <AnimatePresence mode="wait">
+                            {step === 1 && (
+                                <motion.section
+                                    key="address"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                >
+                                    <div className="flex items-center gap-4 mb-10">
+                                        <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
+                                            <Home className="w-6 h-6" />
+                                        </div>
+                                        <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">Adresse de Livraison</h2>
+                                    </div>
 
-                            <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FormInput
-                                    label="Prénom"
-                                    placeholder="Moussa"
-                                    value={formData.firstName}
-                                    onChange={(val) => setFormData({ ...formData, firstName: val })}
-                                />
-                                <FormInput
-                                    label="Nom"
-                                    placeholder="Diop"
-                                    value={formData.lastName}
-                                    onChange={(val) => setFormData({ ...formData, lastName: val })}
-                                />
-                                <div className="md:col-span-2">
-                                    <FormInput
-                                        label="Adresse complète"
-                                        placeholder="123 Avenue Blaise Diagne, Plateau"
-                                        value={formData.address}
-                                        onChange={(val) => setFormData({ ...formData, address: val })}
-                                    />
-                                </div>
-                                <FormInput
-                                    label="Ville"
-                                    placeholder="Dakar"
-                                    value={formData.city}
-                                    onChange={(val) => setFormData({ ...formData, city: val })}
-                                />
-                                <FormInput
-                                    label="Quartier"
-                                    placeholder="Médina"
-                                    value={formData.area}
-                                    onChange={(val) => setFormData({ ...formData, area: val })}
-                                />
-                                <div className="md:col-span-2">
-                                    <FormInput
-                                        label="Téléphone"
-                                        placeholder="+221 77 000 00 00"
-                                        value={formData.phone}
-                                        onChange={(val) => setFormData({ ...formData, phone: val })}
-                                    />
-                                </div>
-                            </form>
-                        </section>
+                                    <form className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                                        <FormInput
+                                            label="Prénom"
+                                            placeholder="Moussa"
+                                            value={formData.firstName}
+                                            onChange={(val) => setFormData({ ...formData, firstName: val })}
+                                        />
+                                        <FormInput
+                                            label="Nom"
+                                            placeholder="Diop"
+                                            value={formData.lastName}
+                                            onChange={(val) => setFormData({ ...formData, lastName: val })}
+                                        />
+                                        <div className="md:col-span-2">
+                                            <FormInput
+                                                label="Adresse complète"
+                                                placeholder="123 Avenue Blaise Diagne, Plateau"
+                                                value={formData.address}
+                                                onChange={(val) => setFormData({ ...formData, address: val })}
+                                            />
+                                        </div>
+                                        <FormInput
+                                            label="Ville"
+                                            placeholder="Dakar"
+                                            value={formData.city}
+                                            onChange={(val) => setFormData({ ...formData, city: val })}
+                                        />
+                                        <FormInput
+                                            label="Quartier"
+                                            placeholder="Médina"
+                                            value={formData.area}
+                                            onChange={(val) => setFormData({ ...formData, area: val })}
+                                        />
+                                        <div className="md:col-span-2">
+                                            <FormInput
+                                                label="Téléphone"
+                                                placeholder="+221 77 000 00 00"
+                                                value={formData.phone}
+                                                onChange={(val) => setFormData({ ...formData, phone: val })}
+                                            />
+                                        </div>
+                                    </form>
 
-                        <section className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-4 mb-10">
-                                <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
-                                    <CreditCard className="w-6 h-6" />
-                                </div>
-                                <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">Mode de Paiement</h2>
-                            </div>
+                                    <Button
+                                        onClick={() => setStep(2)}
+                                        className="w-full h-16 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
+                                    >
+                                        Continuer vers le paiement <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+                                </motion.section>
+                            )}
 
-                            <div className="grid grid-cols-1 gap-4">
-                                <PaymentOption
-                                    active={paymentMethod === 'cash'}
-                                    onClick={() => setPaymentMethod('cash')}
-                                    icon={Truck}
-                                    title="Paiement à la livraison"
-                                    desc="Payez en espèces dès réception de votre commande."
-                                />
-                                <PaymentOption
-                                    active={paymentMethod === 'wave'}
-                                    onClick={() => setPaymentMethod('wave')}
-                                    icon={Smartphone}
-                                    title="Wave / Orange Money"
-                                    desc="Paiement mobile ultra-sécurisé via Wave ou Orange Money."
-                                />
-                                <PaymentOption
-                                    active={paymentMethod === 'card'}
-                                    onClick={() => setPaymentMethod('card')}
-                                    icon={Wallet}
-                                    title="Carte Bancaire"
-                                    desc="Visa, Mastercard via tunnel de paiement sécurisé."
-                                />
-                            </div>
-                        </section>
+                            {step === 2 && (
+                                <motion.section
+                                    key="payment"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                >
+                                    <div className="flex items-center gap-4 mb-10">
+                                        <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
+                                            <CreditCard className="w-6 h-6" />
+                                        </div>
+                                        <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">Mode de Paiement</h2>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 mb-10">
+                                        <PaymentOption
+                                            active={paymentMethod === 'cash'}
+                                            onClick={() => setPaymentMethod('cash')}
+                                            icon={Truck}
+                                            title="Paiement à la livraison"
+                                            desc="Payez en espèces dès réception de votre commande."
+                                        />
+                                        <PaymentOption
+                                            active={paymentMethod === 'wave'}
+                                            onClick={() => setPaymentMethod('wave')}
+                                            icon={Smartphone}
+                                            title="Wave / Orange Money"
+                                            desc="Paiement mobile ultra-sécurisé via Wave ou Orange Money."
+                                        />
+                                        <PaymentOption
+                                            active={paymentMethod === 'card'}
+                                            onClick={() => setPaymentMethod('card')}
+                                            icon={Wallet}
+                                            title="Carte Bancaire"
+                                            desc="Visa, Mastercard via tunnel de paiement sécurisé."
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <Button
+                                            onClick={() => setStep(1)}
+                                            className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" /> Retour
+                                        </Button>
+                                        <Button
+                                            onClick={() => setStep(3)}
+                                            className="flex-[2] h-14 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
+                                        >
+                                            Vérifier la commande <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </Button>
+                                    </div>
+                                </motion.section>
+                            )}
+
+                            {step === 3 && (
+                                <motion.section
+                                    key="confirm"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                >
+                                    <div className="flex items-center gap-4 mb-10">
+                                        <div className="w-12 h-12 rounded-2xl bg-green-500 flex items-center justify-center text-white">
+                                            <ShieldCheck className="w-6 h-6" />
+                                        </div>
+                                        <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">Dernière étape</h2>
+                                    </div>
+
+                                    <div className="space-y-8 mb-10">
+                                        <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                                            <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-primary shrink-0">
+                                                <Home className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Livraison à</p>
+                                                <p className="text-sm font-black text-[#1B1F3B]">{formData.firstName} {formData.lastName}</p>
+                                                <p className="text-xs text-gray-500 font-medium">{formData.address}, {formData.area}, {formData.city}</p>
+                                                <p className="text-xs text-gray-500 font-medium">Tél: {formData.phone}</p>
+                                            </div>
+                                            <button onClick={() => setStep(1)} className="ml-auto text-[10px] font-black text-primary uppercase hover:underline">Modifier</button>
+                                        </div>
+
+                                        <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                                            <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-primary shrink-0">
+                                                <CreditCard className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Mode de paiement</p>
+                                                <p className="text-sm font-black text-[#1B1F3B] uppercase">
+                                                    {paymentMethod === 'cash' ? 'Espèces à la livraison' : paymentMethod === 'wave' ? 'Wave / Orange Money' : 'Carte Bancaire'}
+                                                </p>
+                                            </div>
+                                            <button onClick={() => setStep(2)} className="ml-auto text-[10px] font-black text-primary uppercase hover:underline">Modifier</button>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 bg-amber-50 rounded-3xl border border-amber-100 flex items-start gap-4 text-amber-700">
+                                        <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                                        <p className="text-xs font-medium leading-relaxed">
+                                            En cliquant sur "Confirmer la commande", vous acceptez nos conditions générales de vente. Votre commande sera traitée immédiatement par nos équipes.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex gap-4 mt-10">
+                                        <Button
+                                            onClick={() => setStep(2)}
+                                            className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" /> Retour
+                                        </Button>
+                                        <Button
+                                            onClick={handleCheckout}
+                                            disabled={isSubmitting}
+                                            className="flex-[2] h-14 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-primary/20 hover:bg-[#1B1F3B] transition-all flex items-center justify-center gap-3 group"
+                                        >
+                                            {isSubmitting ? 'Traitement...' : 'Confirmer la commande'} <CheckCircle2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        </Button>
+                                    </div>
+                                </motion.section>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Order Summary Sidebar */}
@@ -237,8 +388,21 @@ export default function CheckoutPage() {
                                 </div>
 
                                 {error && (
-                                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold text-center">
-                                        {error}
+                                    <div className="mb-6 flex flex-col items-center gap-3 w-full">
+                                        <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold text-center leading-relaxed">
+                                            {error}
+                                        </div>
+                                        {error.includes("ne sont plus disponibles") && (
+                                            <Button
+                                                onClick={() => {
+                                                    clearCart();
+                                                    router.push('/');
+                                                }}
+                                                className="bg-red-600 hover:bg-red-700 text-white h-12 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors w-full"
+                                            >
+                                                Vider le panier obsolète
+                                            </Button>
+                                        )}
                                     </div>
                                 )}
 

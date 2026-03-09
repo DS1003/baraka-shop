@@ -19,12 +19,19 @@ interface CartContextType {
     clearCart: () => void;
     itemCount: number;
     subtotal: number;
+    // Ajouts pour l'optimisation
+    lastAddedItem: CartItem | null;
+    isToastVisible: boolean;
+    showToast: (product: any) => void;
+    hideToast: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [lastAddedItem, setLastAddedItem] = useState<CartItem | null>(null);
+    const [isToastVisible, setIsToastVisible] = useState(false);
 
     // Load cart from localStorage on mount
     useEffect(() => {
@@ -43,6 +50,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('baraka-cart', JSON.stringify(cartItems));
     }, [cartItems]);
 
+    const showToast = (product: any) => {
+        setLastAddedItem({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            qty: 1,
+            image: product.image || (product.images && product.images[0]) || '/placeholder.png',
+            brand: product.brand?.name || product.brand || 'Baraka'
+        });
+        setIsToastVisible(true);
+    };
+
+    const hideToast = () => setIsToastVisible(false);
+
     const addToCart = (product: any, qty: number = 1) => {
         setCartItems(prev => {
             const existing = prev.find(item => item.id === product.id);
@@ -56,10 +77,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 name: product.name,
                 price: product.price,
                 qty: qty,
-                image: product.image || (product.images && product.images[0]),
+                image: product.image || (product.images && product.images[0]) || '/placeholder.png',
                 brand: product.brand?.name || product.brand || 'Baraka'
             }];
         });
+
+        // Déclencher le toast
+        showToast(product);
     };
 
     const removeFromCart = (id: string) => {
@@ -88,7 +112,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             updateQty,
             clearCart,
             itemCount,
-            subtotal
+            subtotal,
+            lastAddedItem,
+            isToastVisible,
+            showToast,
+            hideToast
         }}>
             {children}
         </CartContext.Provider>

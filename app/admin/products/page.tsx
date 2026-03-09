@@ -183,11 +183,19 @@ export default function ProductsPage() {
         if (confirm(message)) {
             setIsDeletingBulk(true);
             try {
+                let res;
                 if (isGlobalSelected) {
-                    await deleteAllProducts();
-                    await clearImportJobs(); // Nettoie aussi les jobs coincés
+                    res = await deleteAllProducts();
+                    if (res?.success !== false) {
+                        await clearImportJobs(); // Nettoie aussi les jobs coincés
+                    }
                 } else {
-                    await deleteBulkProducts(selectedIds);
+                    res = await deleteBulkProducts(selectedIds);
+                }
+
+                if (res && res.success === false) {
+                    toast.error(res.message || "Erreur lors de la suppression.");
+                    return;
                 }
 
                 if (isGlobalSelected) {

@@ -38,6 +38,29 @@ export async function createOrder(data: CreateOrderData) {
     try {
         // Create the order in a transaction
         const order = await prisma.$transaction(async (tx) => {
+            // Vérifier que tous les produits existent encore
+            const productIds = data.items.map(item => item.productId);
+            const uniqueProductIds = Array.from(new Set(productIds));
+            const foundProducts = await tx.product.findMany({
+                where: { id: { in: uniqueProductIds } },
+                select: { id: true, stock: true, name: true }
+            });
+
+            if (foundProducts.length !== uniqueProductIds.length) {
+                throw new Error("Certains produits de votre panier ne sont plus disponibles ou ont été supprimés du catalogue.");
+            }
+
+            // Vérifier le stock
+            const missingStock = data.items.find(item => {
+                const p = foundProducts.find(fp => fp.id === item.productId);
+                return !p || p.stock < item.quantity;
+            });
+
+            if (missingStock) {
+                const guiltyProduct = foundProducts.find(fp => fp.id === missingStock.productId);
+                throw new Error(`Stock insuffisant pour le produit: ${guiltyProduct?.name || 'Inconnu'}`);
+            }
+
             const newOrder = await tx.order.create({
                 data: {
                     userId: session.user.id!,
@@ -54,16 +77,21 @@ export async function createOrder(data: CreateOrderData) {
                 }
             });
 
-            // Update user profile if address was provided and empty?
-            // Optional enhancement.
+            // Update stock
+            for (const item of data.items) {
+                await tx.product.update({
+                    where: { id: item.productId },
+                    data: { stock: { decrement: item.quantity } }
+                });
+            }
 
             return newOrder;
         });
 
         revalidatePath('/account');
         return { success: true, orderId: order.id };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Order creation error:", error);
-        return { success: false, error: "Erreur lors de la création de la commande." };
+        return { success: false, error: "Erreur lors de la création de la commande: " + (error?.message || String(error)) };
     }
 }

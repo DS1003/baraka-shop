@@ -598,3 +598,17 @@ export async function getAdminNotifications() {
         { id: 3, type: 'USER', title: 'Nouveau client : Amadou Fall', time: 'il y a 45 min', read: true },
     ];
 }
+
+export async function bulkUpdateOrderStatuses(orderIds: string[], status: string) {
+    try {
+        await prisma.order.updateMany({
+            where: { id: { in: orderIds } },
+            data: { status }
+        });
+        revalidatePath('/admin/orders');
+        return { success: true };
+    } catch (error) {
+        console.error("Bulk update order statuses error:", error);
+        return { success: false };
+    }
+}
