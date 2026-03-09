@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProductCard } from '@/ui/ProductCard'
+import { getProductsAction } from '@/lib/actions/product-actions'
 
 interface Product {
     id: string
@@ -106,11 +107,17 @@ const products: Record<string, Product[]> = {
 
 const tabs = ['Nouveautés', 'Meilleures Ventes', 'Promotions']
 
-export function ProductTabs() {
+export function ProductTabs({ initialData }: { initialData?: Record<string, any[]> }) {
     const [activeTab, setActiveTab] = useState('Nouveautés')
     const [currentIndex, setCurrentIndex] = useState(0)
     const [direction, setDirection] = useState(0)
     const [isMobile, setIsMobile] = useState(false)
+    const [allProducts, setAllProducts] = useState<Record<string, any[]>>(initialData || {
+        'Nouveautés': [],
+        'Meilleures Ventes': [],
+        'Promotions': []
+    })
+    const [loading, setLoading] = useState(!initialData)
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -119,7 +126,26 @@ export function ProductTabs() {
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
 
-    const activeProducts = products[activeTab] || []
+    useEffect(() => {
+        if (initialData) return
+
+        const fetchAll = async () => {
+            setLoading(true)
+            const [newArrivals, topRated] = await Promise.all([
+                getProductsAction({ sort: 'newest', limit: 8 }),
+                getProductsAction({ sort: 'top_rated', limit: 8 }),
+            ])
+            setAllProducts({
+                'Nouveautés': newArrivals.products,
+                'Meilleures Ventes': topRated.products,
+                'Promotions': newArrivals.products.filter((p: any) => p.oldPrice && p.oldPrice > p.price)
+            })
+            setLoading(false)
+        }
+        fetchAll()
+    }, [initialData])
+
+    const activeProducts = allProducts[activeTab] || []
 
     const chunkSize = isMobile ? 2 : 4
     const productChunks = activeProducts.reduce((resultArray: any[][], item, index) => {
@@ -252,8 +278,12 @@ export function ProductTabs() {
                                     isMobile ? "grid-cols-2" : "grid-cols-4"
                                 )}
                             >
-                                {productChunks[currentIndex].map((product) => (
-                                    <ProductCard key={product.id} product={product} />
+                                {productChunks[currentIndex].map((product, idx) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product}
+                                        priority={activeTab === 'Nouveautés' && currentIndex === 0 && idx < 4}
+                                    />
                                 ))}
                             </motion.div>
                         ) : (

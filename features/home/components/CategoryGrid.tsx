@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 
 const categories = [
     { name: 'Ordinateurs & Tablettes', icon: Laptop, href: '/category/computers', color: 'bg-blue-50 text-blue-600' },
-    { name: 'Photo & Caméras', icon: Camera, href: '/category/cameras', color: 'bg-indigo-50 text-indigo-600' },
+    { name: 'Photo & Caméras', icon: Camera, href: '/category/cameras', color: 'bg-orange-50 text-orange-600' },
     { name: 'Téléphones', icon: Smartphone, href: '/category/phones', color: 'bg-orange-50 text-orange-600' },
     { name: 'TV & Home Cinema', icon: Tv, href: '/category/tv', color: 'bg-rose-50 text-rose-600' },
     { name: 'Jeux Vidéo', icon: Gamepad2, href: '/category/gaming', color: 'bg-purple-50 text-purple-600' },

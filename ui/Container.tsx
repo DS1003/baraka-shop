@@ -10,6 +10,7 @@ export function Container({ className, ...props }: ContainerProps) {
                 className
             )}
             {...props}
+            suppressHydrationWarning
         />
     )
 }

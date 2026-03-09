@@ -1,0 +1,2 @@
+[2026-03-06T23:10:55.814Z] CALL getAdminProducts. query="", page=1, filters={}
+[2026-03-06T23:10:56.407Z] SUCCESS. products=12, total=4500

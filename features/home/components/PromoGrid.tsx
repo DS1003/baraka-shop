@@ -17,7 +17,7 @@ const promos = [
         bg: "bg-[#F8FAFC]",
         border: "border-slate-100",
         size: "md:col-span-2",
-        href: "/category/jeux"
+        href: "/boutique?category=jeux"
     },
     {
         badge: "Tendance",
@@ -28,7 +28,7 @@ const promos = [
         bg: "bg-[#FFFBF5]",
         border: "border-orange-100/50",
         size: "md:col-span-2",
-        href: "/category/informatique"
+        href: "/boutique?category=informatique"
     },
     {
         badge: "Vente Flash",
@@ -36,9 +36,9 @@ const promos = [
         subtitle: "Derniers modèles arrivés",
         image: "https://media.ldlc.com/encart/p/28828_b.jpg",
         bg: "bg-[#F5F7FF]",
-        border: "border-indigo-100/50",
+        border: "border-orange-100/50",
         size: "md:col-span-2 lg:col-span-1",
-        href: "/category/smartphones"
+        href: "/boutique?category=smartphones"
     },
     {
         badge: "Promo",
@@ -48,7 +48,7 @@ const promos = [
         bg: "bg-[#FFF5F9]",
         border: "border-pink-100/50",
         size: "md:col-span-2 lg:col-span-1",
-        href: "/category/informatique"
+        href: "/boutique?category=connectique"
     },
     {
         badge: "Nouveau",
@@ -58,7 +58,7 @@ const promos = [
         bg: "bg-[#F5FFF9]",
         border: "border-emerald-100/50",
         size: "md:col-span-2 lg:col-span-2",
-        href: "/category/image-son"
+        href: "/boutique?category=image-son"
     }
 ]
 

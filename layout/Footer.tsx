@@ -101,7 +101,7 @@ export function Footer() {
                             <Image src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" width={50} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
                             <Image src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" width={40} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
                         </div>
-                        <p className="text-[10px] md:text-xs text-gray-600 tracking-widest uppercase font-bold">
+                        <p className="text-[10px] md:text-xs text-gray-600 tracking-widest uppercase font-bold" suppressHydrationWarning={true}>
                             © {new Date().getFullYear()} <span className="text-gray-400">Baraka Shop Senegal</span>. Crafted for Excellence.
                         </p>
                     </div>

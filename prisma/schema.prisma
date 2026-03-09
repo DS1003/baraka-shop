@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -22,13 +21,13 @@ enum OrderStatus {
 
 model User {
   id            String    @id @default(uuid())
-  name          String?
+  username      String?   @unique
   email         String    @unique
   password      String
   role          Role      @default(USER)
   image         String?
   address       String?
-  phone         String?
+  phone         String?   @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -38,32 +37,79 @@ model User {
 }
 
 model Product {
-  id          String    @id @default(uuid())
-  name        String
-  slug        String    @unique
-  description String
-  price       Float
-  oldPrice    Float?
-  stock       Int       @default(0)
-  images      String[]
-  category    Category  @relation(fields: [categoryId], references: [id])
-  categoryId  String
-  isFeatured  Boolean   @default(false)
-  isNew       Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String       @id @default(uuid())
+  name          String
+  slug          String       @unique
+  description   String
+  price         Float
+  oldPrice      Float?
+  stock         Int          @default(0)
+  images        String[]
+  category      Category     @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id])
+  subCategoryId String?
+  thirdLevelCategory   ThirdLevelCategory? @relation(fields: [thirdLevelCategoryId], references: [id])
+  thirdLevelCategoryId String?
+  brand         Brand?       @relation(fields: [brandId], references: [id])
+  brandId       String?
+  isFeatured    Boolean      @default(false)
+  isNew         Boolean      @default(false)
+  metadata      Json?        @default("{}")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   reviews     Review[]
   orderItems  OrderItem[]
   favoritedBy User[]    @relation("Wishlist")
+
+  @@index([name])
+  @@index([slug])
+  @@index([categoryId])
+  @@index([subCategoryId])
+  @@index([thirdLevelCategoryId])
+  @@index([brandId])
+  @@index([stock])
 }
 
 model Category {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  slug        String    @unique
-  image       String?
-  products    Product[]
+  id            String        @id @default(uuid())
+  name          String        @unique
+  slug          String        @unique
+  image         String?
+  subCategories SubCategory[]
+  products      Product[]
+}
+
+model SubCategory {
+  id         String    @id @default(uuid())
+  name       String
+  slug       String    @unique
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId String
+  thirdLevelCategories ThirdLevelCategory[]
+  products   Product[]
+
+  @@unique([name, categoryId])
+}
+
+model ThirdLevelCategory {
+  id            String      @id @default(uuid())
+  name          String
+  slug          String      @unique
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
+  subCategoryId String
+  products      Product[]
+
+  @@unique([name, subCategoryId])
+}
+
+model Brand {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  slug     String    @unique
+  image    String?
+  products Product[]
 }
 
 model Order {
@@ -98,3 +144,41 @@ model Review {
   productId String
   createdAt DateTime @default(now())
 }
+
+model ImportJob {
+  id            String   @id @default(uuid())
+  status        String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED, CANCELLED
+  progress      Int      @default(0)
+  totalItems    Int      @default(0)
+  processedItems Int      @default(0)
+  error         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Media {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  publicId  String   @unique
+  format    String?
+  size      Int?
+  type      String   @default("image") // image, video, raw
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model MediaJob {
+  id             String   @id @default(uuid())
+  status         String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  progress       Int      @default(0)
+  totalItems     Int      @default(0)
+  processedItems Int      @default(0)
+  matchedCount   Int      @default(0)
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Header } from '@/layout/Header'
-import { Footer } from '@/layout/Footer'
 import { cn } from '@/lib/utils'
+import { Providers } from '@/components/providers'
+import { ScrollToTop } from '@/ui/ScrollToTop'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -48,16 +48,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr" className="h-full antialiased scroll-smooth">
+    <html lang="fr" className="h-full antialiased scroll-smooth" suppressHydrationWarning>
+      <head />
       <body
         className={cn("min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20", inter.className)}
         suppressHydrationWarning
       >
-        <Header />
-        <main className="flex-grow flex flex-col">
+        <Providers>
           {children}
-        </main>
-        <Footer />
+          <ScrollToTop />
+        </Providers>
       </body>
     </html>
   )

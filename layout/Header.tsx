@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, ArrowRight, X } from 'lucide-react'
@@ -9,6 +9,10 @@ import { cn } from '@/lib/utils'
 import { MegaMenu } from '@/features/home/components/MegaMenu'
 import { AnimatePresence, motion } from 'framer-motion'
 import { MENU_CATEGORIES } from '@/lib/data'
+import { useSession } from 'next-auth/react'
+import { useCart } from '@/context/CartContext'
+import { useRouter } from 'next/navigation'
+import { getProductsAction } from '@/lib/actions/product-actions'
 
 const SUGGESTIONS = [
     { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000 CFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
@@ -19,19 +23,46 @@ const SUGGESTIONS = [
 
 const navigation = [
     { name: 'Boutique', href: '/boutique', active: true },
-    { name: 'Laptops', href: '/category/laptops' },
-    { name: 'Smartphone', href: '/category/smartphones', hasMegaMenu: true },
-    { name: 'Headphones', href: '/category/headphones' },
-    { name: 'Camera', href: '/category/cameras' },
+    { name: 'Laptops', href: '/boutique?q=ORDINATEURS%20PORTABLE' },
+    { name: 'Smartphone', href: '/category/telephone', hasMegaMenu: true },
+    { name: 'Headphones', href: '/boutique?q=CASQUES' },
+    { name: 'Camera', href: '/boutique?q=APPAREIL%20PHOTO' },
     { name: 'Promotions', href: '/promotions', isNew: true },
 ]
 
 export function Header() {
+    const router = useRouter()
+    const { data: session, status } = useSession()
+    const isLoggedIn = status === "authenticated"
+    const { itemCount, subtotal } = useCart()
+
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [showMegaMenu, setShowMegaMenu] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [isSearchFocused, setIsSearchFocused] = useState(false)
     const [scrolled, setScrolled] = useState(false)
+    const [searchSuggestions, setSearchSuggestions] = useState<any[]>([])
+
+    const handleSearch = (e?: React.FormEvent) => {
+        if (e) e.preventDefault()
+        if (searchQuery.trim()) {
+            router.push(`/boutique?q=${encodeURIComponent(searchQuery.trim())}`)
+            setIsSearchFocused(false)
+        }
+    }
+
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (searchQuery.length >= 2) {
+                const result = await getProductsAction({ query: searchQuery, limit: 5 })
+                setSearchSuggestions(result.products)
+            } else {
+                setSearchSuggestions([])
+            }
+        }
+        const timer = setTimeout(fetchSuggestions, 300)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     // Mobile Menu Stack: [{ title: string, items: any[], type: 'main' | 'category' | 'subcategory' }]
     const [menuStack, setMenuStack] = useState<any[]>([{ title: 'Menu', type: 'main' }])
@@ -76,15 +107,20 @@ export function Header() {
                 <div className="bg-black text-white text-[11px] md:text-xs py-2.5 font-medium tracking-wide hidden md:block">
                     <Container className="flex justify-between items-center">
                         <div className="flex items-center gap-6">
-                            <Link href="/flash-sale" className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                            <Link href="/promotions" className="flex items-center gap-1.5 hover:text-primary transition-colors">
                                 <Zap className="w-3.5 h-3.5 text-yellow-400 fill-current" />
                                 <span>Flash Sale</span>
                             </Link>
-                            <Link href="/track-order" className="hidden sm:block hover:text-primary transition-colors border-l border-white/20 pl-6">Track Order</Link>
+                            <Link href="/contact" className="hidden sm:block hover:text-primary transition-colors border-l border-white/20 pl-6">Nous Contacter</Link>
                         </div>
 
                         <div className="flex items-center gap-6">
-                            <Link href="/login" className="hover:text-primary transition-colors border-r border-white/20 pr-6">Connexion</Link>
+                            <Link
+                                href={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "/admin" : "/account") : "/login"}
+                                className="hover:text-primary transition-colors border-r border-white/20 pr-6 uppercase font-black"
+                            >
+                                {isLoggedIn ? (session?.user as any)?.username || "Mon Compte" : "Connexion"}
+                            </Link>
                             <span className="flex items-center gap-2 text-gray-400">
                                 Besoin d'aide ? <PhoneCall className="w-3 h-3 text-primary" /> <span className="text-white">+221 33 800 00 00</span>
                             </span>
@@ -103,7 +139,7 @@ export function Header() {
                     scrolled ? "fixed top-0 left-0 right-0 shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2.5 backdrop-blur-xl bg-white/95" : "relative"
                 )}>
                     <Container className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <a href="/" className="flex-shrink-0">
+                        <Link href="/" className="flex-shrink-0">
                             <motion.div
                                 animate={{
                                     scale: scrolled ? 0.85 : 1,
@@ -120,10 +156,10 @@ export function Header() {
                                     priority
                                 />
                             </motion.div>
-                        </a>
+                        </Link>
 
                         <div className="flex-1 w-full max-w-2xl px-4 relative">
-                            <div className={cn(
+                            <form onSubmit={handleSearch} className={cn(
                                 "flex w-full h-[46px] bg-[#f4f4f4] border border-gray-200 rounded-lg overflow-hidden transition-all focus-within:bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
                                 scrolled && "h-[40px]"
                             )}>
@@ -133,12 +169,13 @@ export function Header() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onFocus={() => setIsSearchFocused(true)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                     className="flex-1 px-6 h-full bg-transparent outline-none text-sm placeholder:text-gray-400 font-medium"
                                 />
-                                <button className="bg-primary hover:bg-primary/90 text-white w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
+                                <button type="submit" className="bg-primary hover:bg-primary/90 text-white w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
                                     <Search className="w-5 h-5" />
                                 </button>
-                            </div>
+                            </form>
 
                             <AnimatePresence>
                                 {isSearchFocused && searchQuery.length >= 2 && (
@@ -153,7 +190,7 @@ export function Header() {
                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Résultats pour "{searchQuery}"</span>
                                             </div>
                                             <div className="max-h-[400px] overflow-y-auto">
-                                                {SUGGESTIONS.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((item) => (
+                                                {searchSuggestions.map((item: any) => (
                                                     <Link
                                                         key={item.id}
                                                         href={`/product/${item.id}`}
@@ -161,17 +198,22 @@ export function Header() {
                                                         onClick={() => setIsSearchFocused(false)}
                                                     >
                                                         <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
-                                                            <Image src={item.image} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" />
+                                                            <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" />
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="text-sm font-bold text-[#1B1F3B] group-hover:text-primary transition-colors">{item.name}</span>
-                                                            <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category}</span>
+                                                            <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category?.name || item.category}</span>
                                                         </div>
-                                                        <span className="ml-auto text-sm font-black text-[#1B1F3B]">{item.price}</span>
+                                                        <span className="ml-auto text-sm font-black text-[#1B1F3B]">{item.price.toLocaleString()} CFA</span>
                                                     </Link>
                                                 ))}
+                                                {searchSuggestions.length === 0 && (
+                                                    <div className="p-8 text-center text-gray-400 text-xs font-medium italic">
+                                                        Aucun produit trouvé...
+                                                    </div>
+                                                )}
                                             </div>
-                                            <Link href="/search" className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"> Voir tous les résultats </Link>
+                                            <Link href={`/boutique?q=${searchQuery}`} className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"> Voir tous les résultats </Link>
                                         </motion.div>
                                         <div className="fixed inset-0 z-[105] bg-black/5" onClick={() => setIsSearchFocused(false)} />
                                     </>
@@ -181,19 +223,23 @@ export function Header() {
 
                         <div className="flex items-center gap-6 md:gap-8">
                             <HeaderAction icon={MapPin} label="Boutiques" href="/boutiques" />
-                            <HeaderAction icon={User} label="Compte" href="/login" />
+                            <HeaderAction
+                                icon={User}
+                                label={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "Admin" : "Compte") : "Connexion"}
+                                href={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "/admin" : "/account") : "/login"}
+                            />
                             <Link href="/cart" className="relative flex items-center group bg-gray-50 hover:bg-primary/5 pl-2 pr-4 py-1.5 rounded-2xl border border-gray-100 transition-all hover:border-primary/20">
                                 <div className="relative flex flex-col items-center">
                                     <div className="relative p-1.5 transition-all duration-300">
                                         <ShoppingCart className="w-7 h-7 text-[#1B1F3B] group-hover:text-primary transition-all duration-300 group-hover:scale-110" strokeWidth={1.5} />
                                         <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full ring-2 ring-white shadow-lg shadow-primary/30">
-                                            2
+                                            {itemCount}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="hidden lg:flex flex-col ml-3 pl-3 border-l border-gray-200">
                                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Panier</span>
-                                    <span className="text-[12px] font-black text-[#1B1F3B] group-hover:text-primary transition-colors">1.250.000 CFA</span>
+                                    <span className="text-[12px] font-black text-[#1B1F3B] group-hover:text-primary transition-colors">{subtotal.toLocaleString()} CFA</span>
                                 </div>
                             </Link>
                         </div>
@@ -248,7 +294,7 @@ export function Header() {
 
                     {/* Right Link */}
                     <div className="ml-auto flex items-center gap-6">
-                        <Link href="/vendre" className="text-xs font-black text-white uppercase border border-white/20 px-4 py-1.5 rounded-md hover:bg-primary hover:border-primary transition-all">Vendre sur Baraka</Link>
+                        <Link href="/contact" className="text-xs font-black text-white uppercase border border-white/20 px-4 py-1.5 rounded-md hover:bg-primary hover:border-primary transition-all">Vendre sur Baraka</Link>
                     </div>
                 </Container>
             </div>
@@ -377,7 +423,7 @@ export function Header() {
                                                             <span className="bg-red-500 text-white text-[8px] px-2 py-0.5 rounded-full font-black">HOT</span>
                                                         </Link>
                                                         <Link href="/boutiques" onClick={resetMenu} className="text-sm font-black text-[#1B1F3B] uppercase hover:text-primary transition-colors">Nos Boutiques</Link>
-                                                        <Link href="/vendre" onClick={resetMenu} className="text-sm font-black text-primary uppercase flex items-center gap-2 group">
+                                                        <Link href="/contact" onClick={resetMenu} className="text-sm font-black text-primary uppercase flex items-center gap-2 group">
                                                             Vendre sur Baraka <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                                                         </Link>
                                                     </div>
@@ -429,7 +475,7 @@ export function Header() {
                                                             key={link}
                                                         >
                                                             <Link
-                                                                href={`/category/${link.toLowerCase().replace(/ /g, '-')}`}
+                                                                href={`/boutique?q=${encodeURIComponent(link)}`}
                                                                 onClick={resetMenu}
                                                                 className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl transition-all group"
                                                             >
@@ -447,14 +493,14 @@ export function Header() {
                             </div>
 
                             {/* Drawer Footer - Refined & Standard */}
-                            <div className="p-8 bg-white border-t border-gray-50">
+                            <div className="p-8 bg-white border-t border-gray-100">
                                 <Link
-                                    href="/login"
+                                    href={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "/admin" : "/account") : "/login"}
                                     onClick={resetMenu}
-                                    className="w-full h-[60px] bg-[#1B1F3B] text-white rounded-xl flex items-center justify-between px-6 font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-[#1B1F3B]/20 hover:bg-[#252a50] transition-all group"
+                                    className="w-full h-[60px] bg-[#1E293B] text-white rounded-2xl flex items-center justify-between px-6 font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-primary transition-all group"
                                 >
-                                    <span>Espace Client</span>
-                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-primary transition-colors">
+                                    <span>{isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "Administration" : "Mon Compte") : "Espace Client"}</span>
+                                    <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-primary transition-colors">
                                         <User className="w-4 h-4" />
                                     </div>
                                 </Link>

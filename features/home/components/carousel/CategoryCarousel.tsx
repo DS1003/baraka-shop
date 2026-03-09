@@ -8,18 +8,25 @@ import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ChevronRight, ChevronLeft, Plus } from 'lucide-react'
 
-const categories = [
-    { name: 'Informatique', image: 'https://media.ldlc.com/encart/p/28885_b.jpg', slug: 'informatique' },
-    { name: 'Smartphones', image: 'https://media.ldlc.com/encart/p/28828_b.jpg', slug: 'smartphones' },
-    { name: 'Audio & Son', image: 'https://media.ldlc.com/encart/p/28829_b.jpg', slug: 'image-son' },
-    { name: 'Consommables', image: 'https://media.ldlc.com/encart/p/22889_b.jpg', slug: 'consommables' },
-    { name: 'Jeux Vidéo', image: 'https://media.ldlc.com/encart/p/26671_b.jpg', slug: 'jeux' },
-    { name: 'Électroménager', image: 'https://media.ldlc.com/encart/p/28858_b.jpg', slug: 'electromenager' },
-]
+import { getCategoriesAction } from '@/lib/actions/product-actions'
 
-export function CategoryCarousel() {
+export function CategoryCarousel({ initialCategories }: { initialCategories?: any[] }) {
     const scrollRef = useRef<HTMLDivElement>(null)
     const [pageCount, setPageCount] = useState(1)
+    const [categories, setCategories] = useState<any[]>(initialCategories || [])
+    const [loading, setLoading] = useState(!initialCategories)
+
+    useEffect(() => {
+        if (initialCategories) return
+
+        const fetchCats = async () => {
+            setLoading(true)
+            const result = await getCategoriesAction()
+            setCategories(result)
+            setLoading(false)
+        }
+        fetchCats()
+    }, [initialCategories])
 
     useEffect(() => {
         const calculatePages = () => {
@@ -31,7 +38,7 @@ export function CategoryCarousel() {
         calculatePages()
         window.addEventListener('resize', calculatePages)
         return () => window.removeEventListener('resize', calculatePages)
-    }, [])
+    }, [categories])
 
     return (
         <section className="py-20 bg-white">
@@ -92,6 +99,7 @@ export function CategoryCarousel() {
                                             alt={cat.name}
                                             fill
                                             className="object-cover transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-110"
+                                            priority={idx < 4}
                                         />
 
                                         {/* Subtle Reflection Overlay */}

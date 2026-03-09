@@ -6,35 +6,48 @@ import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { Loader2 } from 'lucide-react'
 
-interface Slide {
-    id: number
-    image: string
-    title: string
-    href: string
-}
-
-const slides: Slide[] = [
-    { id: 1, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2000&auto=format&fit=crop", title: "NOS OFFRES", href: "/promotions" },
-    { id: 2, image: "https://media.ldlc.com/encart/p/28828_b.jpg", title: "QUI LES VEUX ?", href: "/boutique" },
-    { id: 3, image: "https://media.ldlc.com/encart/p/28829_b.jpg", title: "L'OFFRE IMMANQUABLE", href: "/promotions" },
-    { id: 4, image: "https://media.ldlc.com/encart/p/22889_b.jpg", title: "TÉLÉCHARGEZ L'APPLI !", href: "/" },
-    { id: 5, image: "https://media.ldlc.com/encart/p/28858_b.jpg", title: "VOTRE IPAD À TAUX 0 %", href: "/boutique?brand=apple" },
-    { id: 6, image: "https://media.ldlc.com/encart/p/26671_b.jpg", title: "DEMANDEZ UNE REPRISE", href: "/contact" }
-]
+import { getCategoriesAction } from '@/lib/actions/product-actions'
 
 const AUTOPLAY_DURATION = 5000 // 5 seconds
 
-export function HomeSlider() {
+export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
+    const [slides, setSlides] = useState<any[]>(initialSlides || [])
     const [currentSlide, setCurrentSlide] = useState(0)
     const [progress, setProgress] = useState(0)
+    const [loading, setLoading] = useState(!initialSlides)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
     const startTimeRef = useRef<number>(Date.now())
 
     useEffect(() => {
-        startTimer()
+        if (initialSlides) return
+
+        const fetchSlides = async () => {
+            setLoading(true)
+            const result = await getCategoriesAction()
+            const formattedSlides = result.slice(0, 6).map((cat: any) => ({
+                id: cat.id,
+                image: cat.image || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+                title: cat.name,
+                href: `/boutique?category=${cat.slug}`
+            }))
+            if (formattedSlides.length === 0) {
+                setSlides([{ id: 1, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e", title: "Bienvenue", href: "/boutique" }])
+            } else {
+                setSlides(formattedSlides)
+            }
+            setLoading(false)
+        }
+        fetchSlides()
+    }, [initialSlides])
+
+    useEffect(() => {
+        if (slides.length > 0) {
+            startTimer()
+        }
         return () => stopTimer()
-    }, [currentSlide])
+    }, [currentSlide, slides])
 
     const startTimer = () => {
         stopTimer()
@@ -59,11 +72,24 @@ export function HomeSlider() {
     }
 
     const nextSlide = () => {
+        if (slides.length === 0) return
         setCurrentSlide((prev) => (prev + 1) % slides.length)
     }
 
     const handleTabClick = (index: number) => {
         setCurrentSlide(index)
+    }
+
+    if (loading || slides.length === 0) {
+        return (
+            <section className="bg-[#f2f2f2] pb-6 md:pb-8 pt-0 md:pt-4">
+                <Container className="px-0 md:px-6 lg:px-8">
+                    <div className="bg-white relative rounded-none md:rounded-xl overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[450px] flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                </Container>
+            </section>
+        )
     }
 
     return (

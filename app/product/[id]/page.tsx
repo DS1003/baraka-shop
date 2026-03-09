@@ -1,541 +1,75 @@
-'use client'
-
-import React, { useState, use, useEffect } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
+import React from 'react'
 import { Container } from '@/ui/Container'
-import { Button } from '@/ui/Button'
-import {
-    Star,
-    Truck,
-    ShieldCheck,
-    RotateCcw,
-    Heart,
-    Share2,
-    Plus,
-    Minus,
-    CheckCircle2,
-    ShoppingCart,
-    Zap,
-    ChevronRight,
-    ChevronLeft,
-    MessageSquare,
-    Info,
-    LayoutGrid
-} from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
-import { ProductCard } from '@/ui/ProductCard'
+import Link from 'next/link'
+import { ChevronRight } from 'lucide-react'
+import { getProductByIdAction, getSimilarProductsAction, getProductsAction } from '@/lib/actions/product-actions'
+import { ProductClient } from './ProductClient'
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 
-// Mock products for "Similar Products"
-const similarProducts = [
-    { id: '2', name: 'iPhone 15 Pro Max 256GB Natural Titanium', category: 'Smartphones', price: 850000, oldPrice: 900000, rating: 5, image: "https://media.ldlc.com/r705/ld/products/00/06/06/39/LD0006063994.jpg", badges: [{ text: 'NEW', color: 'bg-green-500' }] },
-    { id: '3', name: 'Sony WH-1000XM5 Wireless Headphones', category: 'Audio & Son', price: 250000, rating: 4, image: "https://sony.scene7.com/is/image/sonyglobalsolutions/360-RA-category-icon-20221202?$S7Product$&fmt=png-alpha" },
-    { id: '4', name: 'Canon EOS R6 Mark II Mirrorless Camera', category: 'Image & Son', price: 1800000, oldPrice: 1950000, rating: 5, image: 'https://in.canon/media/image/2022/11/01/c8c8ab88ead148e9b64490fdd764bcf4_EOS+R6+Mark+II+RF24-105mm+f4-7.1+IS+STM+front+slant.png' },
-    { id: '1', name: 'MacBook Pro M3 Max 14" - Space Black', category: 'Informatique', price: 2500000, oldPrice: 2800000, rating: 5, image: 'https://media.ldlc.com/r705/ld/products/00/06/22/20/LD0006222055.jpg', badges: [{ text: '-15%', color: 'bg-primary' }] },
-]
+export async function generateStaticParams() {
+    const { products } = await getProductsAction({ limit: 50 })
+    return products.map((product: any) => ({
+        id: product.id,
+    }))
+}
 
-export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params)
-    const [activeImg, setActiveImg] = useState(0)
-    const [quantity, setQuantity] = useState(1)
-    const [activeTab, setActiveTab] = useState('description')
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params
+    const product = await getProductByIdAction(id)
 
-    // Carousel state for Similar Products
-    const [currentIndexSimilar, setCurrentIndexSimilar] = useState(0)
-    const [directionSimilar, setDirectionSimilar] = useState(0)
-    const [isMobile, setIsMobile] = useState(false)
-
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768)
-        checkMobile()
-        window.addEventListener('resize', checkMobile)
-        return () => window.removeEventListener('resize', checkMobile)
-    }, [])
-
-    const chunkSize = isMobile ? 2 : 4
-    const similarProductChunks = similarProducts.reduce((resultArray: any[][], item, index) => {
-        const chunkIndex = Math.floor(index / chunkSize);
-        if (!resultArray[chunkIndex]) {
-            resultArray[chunkIndex] = [];
+    if (!product) {
+        return {
+            title: 'Produit non trouvé | Baraka Shop'
         }
-        resultArray[chunkIndex].push(item);
-        return resultArray;
-    }, []);
-
-    const slideNextSimilar = () => {
-        if (similarProductChunks.length <= 1) return
-        setDirectionSimilar(1)
-        setCurrentIndexSimilar((prev) => (prev + 1) % similarProductChunks.length)
     }
 
-    const slidePrevSimilar = () => {
-        if (similarProductChunks.length <= 1) return
-        setDirectionSimilar(-1)
-        setCurrentIndexSimilar((prev) => (prev - 1 + similarProductChunks.length) % similarProductChunks.length)
+    return {
+        title: `${product.name} | Baraka Shop`,
+        description: product.description?.substring(0, 160),
+        openGraph: {
+            title: product.name,
+            description: product.description?.substring(0, 160),
+            images: product.images?.[0] ? [{ url: product.images[0] }] : []
+        }
+    }
+}
+
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+
+    // Fetch data server-side
+    const product = await getProductByIdAction(id)
+
+    if (!product) {
+        notFound()
     }
 
-    const carouselVariants = {
-        enter: (direction: number) => ({
-            x: direction > 0 ? 500 : -500,
-            opacity: 0
-        }),
-        center: {
-            zIndex: 1,
-            x: 0,
-            opacity: 1
-        },
-        exit: (direction: number) => ({
-            zIndex: 0,
-            x: direction < 0 ? 500 : -500,
-            opacity: 0
-        })
-    }
-
-    // Mock detailed product data
-    const product = {
-        id: id,
-        name: "MacBook Pro M3 Max 14\" - Space Black",
-        brand: "Apple",
-        category: "Informatique",
-        sku: "MBP-M3-14-SB",
-        price: 2500000,
-        oldPrice: 2800000,
-        rating: 4.9,
-        reviewsCount: 42,
-        stock: "In Stock",
-        images: [
-            'https://media.ldlc.com/r705/ld/products/00/06/22/20/LD0006222055.jpg',
-            'https://media.ldlc.com/r705/ld/products/00/06/06/39/LD0006063994.jpg', // Placeholder thumbnails
-            'https://media.ldlc.com/encart/p/28885_b.jpg',
-            'https://media.ldlc.com/encart/p/28828_b.jpg',
-        ],
-        description: "Le MacBook Pro 14 pouces s'envole avec les puces M3, M3 Pro et M3 Max. Conçues selon une technologie de gravure en 3 nanomètres et dotées d'une toute nouvelle architecture GPU, ce sont les puces les plus avancées jamais conçues pour un ordinateur personnel. Chaque puce offre plus de performances et de capacités pour les pros.",
-        features: [
-            "Puce Apple M3 Max avec CPU 14 cœurs et GPU 30 cœurs",
-            "Écran Liquid Retina XDR de 14,2 pouces",
-            "36 Go de mémoire unifiée",
-            "Disque SSD de 1 To",
-            "Jusqu'à 18 heures d'autonomie",
-        ],
-        specs: [
-            { label: "Processeur", value: "Apple M3 Max (14 cœurs)" },
-            { label: "Mémoire Vive", value: "36 Go RAM" },
-            { label: "Stockage", value: "1 To SSD" },
-            { label: "Écran", value: "14.2\" Liquid Retina XDR (3024 x 1964)" },
-            { label: "Système", value: "macOS Sonoma" },
-            { label: "Garantie", value: "12 Mois Officiel" },
-        ]
-    }
-
-    const tabs = [
-        { id: 'description', label: 'Description', icon: Info },
-        { id: 'specs', label: 'Spécifications', icon: LayoutGrid },
-        { id: 'reviews', label: 'Avis Clients', icon: MessageSquare },
-    ]
+    // Fetch similar products based on the same category
+    const similarProducts = await getSimilarProductsAction(id, product.categoryId, 8)
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
             {/* Breadcrumbs */}
             <div className="bg-white border-b border-gray-100 py-4">
                 <Container>
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 overflow-x-auto whitespace-nowrap scrollbar-hide">
                         <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
-                        <ChevronRight className="w-3 h-3" />
+                        <ChevronRight className="w-3 h-3 flex-shrink-0" />
                         <Link href="/boutique" className="hover:text-primary transition-colors">Boutique</Link>
-                        <ChevronRight className="w-3 h-3" />
-                        <Link href={`/category/${product.category.toLowerCase()}`} className="hover:text-primary transition-colors">{product.category}</Link>
-                        <ChevronRight className="w-3 h-3" />
+                        <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                        <Link href={`/boutique?category=${product.category?.slug}`} className="hover:text-primary transition-colors">{product.category?.name}</Link>
+                        <ChevronRight className="w-3 h-3 flex-shrink-0" />
                         <span className="text-[#1B1F3B] truncate max-w-[200px]">{product.name}</span>
                     </div>
                 </Container>
             </div>
 
-            <section className="py-12">
-                <Container>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-
-                        {/* 1. Left: Image Gallery (5 columns) */}
-                        <div className="lg:col-span-5 flex flex-col gap-6">
-                            <div className="relative aspect-square bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-12 group">
-                                <motion.div
-                                    key={activeImg}
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.4 }}
-                                    className="relative w-full h-full"
-                                >
-                                    <Image
-                                        src={product.images[activeImg]}
-                                        alt={product.name}
-                                        fill
-                                        className="object-contain"
-                                        priority
-                                    />
-                                </motion.div>
-
-                                {/* Badge Overlay */}
-                                <div className="absolute top-8 left-8 flex flex-col gap-3">
-                                    <span className="bg-primary text-white text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg shadow-primary/20 uppercase tracking-widest">
-                                        Promotion
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Thumbnails */}
-                            <div className="grid grid-cols-4 gap-4">
-                                {product.images.map((img, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setActiveImg(idx)}
-                                        className={cn(
-                                            "relative aspect-square bg-white rounded-2xl overflow-hidden border-2 transition-all p-2",
-                                            activeImg === idx ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
-                                        )}
-                                    >
-                                        <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-2" />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* 2. Right: Product Info (7 columns) */}
-                        <div className="lg:col-span-7 flex flex-col pt-2">
-                            {/* Product Name */}
-                            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-[#1B1F3B] uppercase tracking-tight leading-tight mb-4">
-                                {product.name}
-                            </h1>
-
-                            {/* Short Description */}
-                            <p className="text-gray-500 text-sm md:text-base leading-relaxed mb-6 font-medium">
-                                {product.description}
-                            </p>
-
-                            {/* Brand Tag */}
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className="bg-[#1B1F3B] text-white text-[10px] font-black px-4 py-1.5 rounded-lg uppercase tracking-widest shadow-sm">
-                                    {product.brand}
-                                </span>
-                            </div>
-
-                            {/* Rating + Actions */}
-                            <div className="flex items-center justify-between mb-8 pb-8 border-b border-gray-100">
-                                <div className="flex items-center gap-2">
-                                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                    <span className="text-sm font-black text-[#1B1F3B]">{product.rating}</span>
-                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide border-l border-gray-200 ml-2 pl-2">
-                                        {product.reviewsCount} Avis clients
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-6 text-gray-500">
-                                    <button className="group hover:text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                                        <Heart className="w-4 h-4 group-hover:fill-primary transition-colors" />
-                                        <span>Liste de souhaits</span>
-                                    </button>
-                                    <button className="group hover:text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                                        <Share2 className="w-4 h-4" />
-                                        <span>Partager</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Main Purchase Card */}
-                            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] relative">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex items-baseline gap-4">
-                                            <span className="text-3xl md:text-4xl font-black text-[#1B1F3B] tracking-tighter">
-                                                {product.price.toLocaleString()} <span className="text-sm uppercase font-bold text-gray-400">CFA</span>
-                                            </span>
-                                            {product.oldPrice && (
-                                                <span className="text-lg font-bold text-gray-300 line-through tracking-tighter">
-                                                    {product.oldPrice.toLocaleString()} CFA
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-3 mt-1">
-                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-100">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                                En Stock
-                                            </div>
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-l border-gray-100 pl-3">SKU: {product.sku}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Quick Features */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 py-8 border-y border-gray-50">
-                                    {product.features.map((feat, i) => (
-                                        <div key={i} className="flex items-center gap-3">
-                                            <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                                <Zap className="w-3 h-3 text-primary fill-current" />
-                                            </div>
-                                            <span className="text-xs font-bold text-gray-600 leading-tight">{feat}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Cart Actions */}
-                                <div className="flex flex-col sm:flex-row items-center gap-4">
-                                    {/* Qty Selector */}
-                                    <div className="flex items-center bg-gray-50 rounded-2xl p-1.5 border border-gray-100 shadow-inner">
-                                        <button
-                                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                            className="w-11 h-11 rounded-xl flex items-center justify-center text-[#1B1F3B] hover:bg-white hover:shadow-md transition-all active:scale-90"
-                                        >
-                                            <Minus className="w-4 h-4" />
-                                        </button>
-                                        <span className="w-14 text-center font-black text-lg">{quantity}</span>
-                                        <button
-                                            onClick={() => setQuantity(quantity + 1)}
-                                            className="w-11 h-11 rounded-xl flex items-center justify-center text-[#1B1F3B] hover:bg-white hover:shadow-md transition-all active:scale-90"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    <Button
-                                        onClick={() => {
-                                            const btn = document.getElementById('add-to-cart-btn');
-                                            if (btn) btn.innerHTML = 'Ajouté !';
-                                            setTimeout(() => {
-                                                window.location.href = '/cart';
-                                            }, 500);
-                                        }}
-                                        id="add-to-cart-btn"
-                                        className="flex-1 w-full h-14 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-[0_15px_30px_rgba(249,115,22,0.3)] hover:bg-[#1B1F3B] hover:shadow-none transition-all flex items-center justify-center gap-3"
-                                    >
-                                        <ShoppingCart className="w-5 h-5" />
-                                        Ajouter au panier
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 3. Detailed Tabs Section */}
-                    <div className="mt-12 md:mt-24">
-                        <div className="flex items-center gap-6 md:gap-12 border-b border-gray-100 mb-8 md:mb-12 overflow-x-auto scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={cn(
-                                        "pb-6 text-[10px] md:text-sm font-black uppercase tracking-[0.15em] relative transition-all flex items-center gap-3 whitespace-nowrap",
-                                        activeTab === tab.id ? "text-primary" : "text-gray-300 hover:text-gray-500"
-                                    )}
-                                >
-                                    <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                    {tab.label}
-                                    {activeTab === tab.id && (
-                                        <motion.div
-                                            layoutId="activeTabDetails"
-                                            className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-full"
-                                        />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-12 shadow-sm border border-gray-100 min-h-[300px] md:min-h-[400px]">
-                            <AnimatePresence mode="wait">
-                                {activeTab === 'description' && (
-                                    <motion.div
-                                        key="desc"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="prose prose-sm max-w-none text-gray-500 leading-relaxed font-medium"
-                                    >
-                                        <div className="flex justify-center mb-10">
-                                            <div className="relative w-20 h-20 opacity-20 grayscale brightness-0">
-                                                <Image
-                                                    src="https://cdn.freebiesupply.com/images/large/2x/apple-logo-transparent.png"
-                                                    alt={product.brand}
-                                                    fill
-                                                    className="object-contain"
-                                                />
-                                            </div>
-                                        </div>
-                                        <h3 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-6 text-center">L'ordinateur portable pro le plus performant au monde.</h3>
-                                        <p className="mb-6">Le MacBook Pro propulsera votre créativité vers de nouveaux sommets. Avec les puces M3, l'ordinateur portable pro le plus populaire repousse encore les limites avec jusqu'à 128 Go de mémoire unifiée. Son magnifique écran Liquid Retina XDR est devenu encore meilleur avec une luminosité de pointe atteignant 1600 nits. Et son autonomie de batterie record vous permet de tenir toute la journée.</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12">
-                                            <div className="space-y-4">
-                                                <h4 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest">Performances Extrêmes</h4>
-                                                <p>La puce M3 Max intègre plus de 92 milliards de transistors. Elle dispose d'un GPU à 30 ou 40 cœurs avec accélération matérielle du ray tracing.</p>
-                                            </div>
-                                            <div className="space-y-4">
-                                                <h4 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest">Affichage XDR</h4>
-                                                <p>Contraste extrême et couleurs éclatantes. L'écran est étalonné en usine pour offrir les meilleurs rendus HDR et SDR.</p>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {activeTab === 'specs' && (
-                                    <motion.div
-                                        key="specs"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-4"
-                                    >
-                                        {product.specs.map((spec, i) => (
-                                            <div key={i} className="flex items-center justify-between py-4 border-b border-gray-50 last:border-0 md:last:border-b">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{spec.label}</span>
-                                                <span className="text-sm font-bold text-[#1B1F3B]">{spec.value}</span>
-                                            </div>
-                                        ))}
-                                    </motion.div>
-                                )}
-
-                                {activeTab === 'reviews' && (
-                                    <motion.div
-                                        key="reviews"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="flex flex-col items-center justify-center text-center py-20"
-                                    >
-                                        <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 mb-6">
-                                            <MessageSquare className="w-8 h-8" />
-                                        </div>
-                                        <h4 className="text-xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-2">Pas encore d'avis sur ce produit</h4>
-                                        <p className="text-gray-400 text-sm mb-8">Soyez le premier à donner votre avis et aidez nos futurs clients !</p>
-                                        <Button variant="outline" className="rounded-xl px-10 h-14 font-black text-[10px] uppercase tracking-widest">
-                                            Écrire un avis
-                                        </Button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-
-                    {/* 4. Similar Products Section */}
-                    <div className="mt-32">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between items-center gap-6 mb-12">
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-[2px] w-8 bg-primary rounded-full" />
-                                    <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Recommendations</span>
-                                </div>
-                                <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Produits <span className="text-primary italic">Similaires</span></h2>
-                            </div>
-
-                            {/* Cluster Buttons */}
-                            <div className="flex items-center gap-3">
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={slidePrevSimilar}
-                                        disabled={similarProductChunks.length <= 1}
-                                        className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                        onClick={slideNextSimilar}
-                                        disabled={similarProductChunks.length <= 1}
-                                        className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
-                                    >
-                                        <ChevronRight className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <Link
-                                    href="/boutique"
-                                    className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
-                                >
-                                    <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div className="relative h-[320px] md:h-[450px] mb-12">
-                            <AnimatePresence initial={false} custom={directionSimilar} mode="wait">
-                                {similarProductChunks.length > 0 ? (
-                                    <motion.div
-                                        key={`similar-${currentIndexSimilar}`}
-                                        custom={directionSimilar}
-                                        variants={carouselVariants}
-                                        initial="enter"
-                                        animate="center"
-                                        exit="exit"
-                                        transition={{
-                                            x: { type: "spring", stiffness: 200, damping: 25 },
-                                            opacity: { duration: 0.3 }
-                                        }}
-                                        className={cn(
-                                            "absolute inset-0 px-2 grid gap-4 md:gap-8",
-                                            isMobile ? "grid-cols-2" : "grid-cols-4"
-                                        )}
-                                    >
-                                        {similarProductChunks[currentIndexSimilar].map((prod) => (
-                                            <ProductCard key={prod.id} product={prod} />
-                                        ))}
-                                    </motion.div>
-                                ) : (
-                                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                                        {similarProducts.map((prod) => (
-                                            <ProductCard key={prod.id} product={prod} />
-                                        ))}
-                                    </div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Subtle Pagination */}
-                        <div className="flex justify-center gap-2">
-                            {similarProductChunks.map((_, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => {
-                                        setDirectionSimilar(idx > currentIndexSimilar ? 1 : -1)
-                                        setCurrentIndexSimilar(idx)
-                                    }}
-                                    className={cn(
-                                        "h-1 rounded-full transition-all duration-500",
-                                        currentIndexSimilar === idx ? "w-8 bg-primary" : "w-1 bg-gray-200"
-                                    )}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </Container>
-            </section>
+            {/* Client Side Interactive Area */}
+            <ProductClient
+                product={product}
+                similarProducts={similarProducts}
+            />
         </main>
-    )
-}
-
-function ServiceBadge({ icon: Icon, label, sub }: { icon: any, label: string, sub: string }) {
-    return (
-        <div className="flex flex-col items-center text-center p-4 bg-gray-50 rounded-xl border border-gray-100 group hover:bg-white hover:border-primary transition-all duration-300 cursor-default">
-            <Icon className="w-5 h-5 text-primary mb-2 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-            <span className="text-[9px] font-black text-[#1B1F3B] uppercase tracking-tight mb-0.5">{label}</span>
-            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">{sub}</span>
-        </div>
-    )
-}
-
-
-
-// Icon fallbacks if LayoutGrid isn't available from lucide
-function LayoutGridIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <rect width="7" height="7" x="3" y="3" rx="1" />
-            <rect width="7" height="7" x="14" y="3" rx="1" />
-            <rect width="7" height="7" x="14" y="14" rx="1" />
-            <rect width="7" height="7" x="3" y="14" rx="1" />
-        </svg>
     )
 }

@@ -1,59 +1,51 @@
-'use client'
-
-import React, { use } from 'react'
+import React from 'react'
 import { Container } from '@/ui/Container'
 import { ProductCard } from '@/ui/ProductCard'
-import { motion } from 'framer-motion'
+import * as motion from 'framer-motion/client'
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Search } from 'lucide-react'
+import { getCategoryBySlugAction, getProductsAction, getCategoriesAction } from '@/lib/actions/product-actions'
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 
-// Mock Data
-const products = [
-    {
-        id: '1',
-        name: 'Apple iPhone 15 Pro Max 256GB Titane Naturel',
-        price: 890000,
-        oldPrice: 950000,
-        rating: 5,
-        reviews: 24,
-        image: 'https://media.ldlc.com/r705/ld/products/00/06/06/39/LD0006063994.jpg',
-        category: 'Smartphone',
-        isNew: true
-    },
-    {
-        id: '2',
-        name: 'Samsung Galaxy S24 Ultra 512GB Gris',
-        price: 825000,
-        oldPrice: 850000,
-        rating: 4.8,
-        reviews: 18,
-        image: 'https://media.ldlc.com/r705/ld/products/00/06/22/20/LD0006222055.jpg',
-        category: 'Smartphone',
-        isSale: true
-    },
-    {
-        id: '3',
-        name: 'Apple iPhone 14 Pro 128GB',
-        price: 750000,
-        rating: 4.5,
-        reviews: 40,
-        image: 'https://media.ldlc.com/r705/ld/products/00/06/06/39/LD0006063994.jpg',
-        category: 'Smartphone'
-    },
-    {
-        id: '4',
-        name: 'Sony WH-1000XM5 Wireless Headphones',
-        price: 250000,
-        rating: 4.6,
-        reviews: 55,
-        image: 'https://sony.scene7.com/is/image/sonyglobalsolutions/360-RA-category-icon-20221202?$S7Product$&fmt=png-alpha',
-        category: 'Audio'
+export async function generateStaticParams() {
+    const categories = await getCategoriesAction()
+    return categories.map((cat: any) => ({
+        slug: cat.slug,
+    }))
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params
+    const category = await getCategoryBySlugAction(slug)
+
+    if (!category) {
+        return { title: 'Catégorie non trouvée | Baraka Shop' }
     }
-]
 
-export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = use(params)
-    const categoryName = slug.replace('-', ' ').toUpperCase();
+    return {
+        title: `${category.name} | Baraka Shop - Rayons Spécialisés`,
+        description: `Explorez notre sélection de ${category.name} chez Baraka Shop. High-Tech de premier choix au Sénégal.`
+    }
+}
+
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params
+
+    // Fetch individual category details
+    const category = await getCategoryBySlugAction(slug)
+
+    if (!category) {
+        notFound()
+    }
+
+    // Fetch products for this category
+    const result = await getProductsAction({
+        category: slug,
+        limit: 20
+    })
+
+    const categoryName = category.name
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
@@ -86,24 +78,49 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
 
             <section className="py-12 md:py-20">
                 <Container className="px-4 sm:px-8">
-                    {/* Products Grid */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                        {products.map((product, idx) => (
-                            <motion.div
-                                key={product.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
+                    {result.products.length === 0 ? (
+                        <div className="bg-white rounded-[2.5rem] p-12 md:p-20 text-center shadow-sm border border-gray-100">
+                            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Search className="w-10 h-10 text-gray-300" />
+                            </div>
+                            <h3 className="text-xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-2">Aucun produit dans ce rayon</h3>
+                            <p className="text-gray-400 text-sm max-w-xs mx-auto">Nous renouvelons actuellement notre stock. Revenez très bientôt !</p>
+                            <Link
+                                href="/boutique"
+                                className="inline-block mt-8 px-10 py-4 bg-[#1B1F3B] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg"
                             >
-                                <ProductCard product={product} />
-                            </motion.div>
-                        ))}
-                    </div>
+                                Voir toute la boutique
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                            {result.products.map((product: any, idx: number) => (
+                                <motion.div
+                                    key={product.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                >
+                                    <ProductCard product={product} />
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
 
-                    {/* Load More Fallback */}
+                    {result.pagination.pages > 1 && (
+                        <div className="mt-20 flex flex-col items-center gap-6">
+                            <Link
+                                href={`/boutique?category=${slug}`}
+                                className="px-10 py-5 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-[#1B1F3B] hover:shadow-xl hover:-translate-y-1 transition-all"
+                            >
+                                Voir tous les produits {categoryName}
+                            </Link>
+                        </div>
+                    )}
+
                     <div className="mt-20 flex flex-col items-center gap-6">
                         <div className="w-12 h-[2px] bg-gray-100" />
-                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Fin de la sélection</p>
+                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">Baraka Shop Selection</p>
                     </div>
                 </Container>
             </section>
