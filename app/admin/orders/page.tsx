@@ -24,7 +24,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { getAdminOrders, updateOrderStatus } from '@/lib/actions/admin-actions';
-import { OrderStatus } from '@prisma/client';
+
 
 const statusConfig: any = {
     PENDING: { label: 'En attente', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', icon: Clock },
@@ -55,7 +55,7 @@ export default function OrdersPage() {
         loadOrders();
     }, []);
 
-    const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
+    const handleStatusUpdate = async (orderId: string, newStatus: string) => {
         const res = await updateOrderStatus(orderId, newStatus);
         if (res.success) {
             setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
@@ -201,7 +201,7 @@ export default function OrdersPage() {
                                                         {/* Status Update Quick Menu */}
                                                         <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 opacity-0 group-hover/more:opacity-100 pointer-events-none group-hover/more:pointer-events-auto transition-all p-2 z-50">
                                                             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest p-2 mb-1 border-b border-slate-50">Modifier Statut</p>
-                                                            {(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'] as OrderStatus[]).map(s => (
+                                                            {(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).map(s => (
                                                                 <button
                                                                     key={s}
                                                                     onClick={() => handleStatusUpdate(order.id, s)}

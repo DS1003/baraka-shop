@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { OrderStatus } from '@prisma/client';
+
 import { revalidatePath } from 'next/cache';
 
 export async function getDashboardStats() {
@@ -172,7 +172,7 @@ export async function getAdminProducts(
     }
 }
 
-export async function getAdminOrders(status?: OrderStatus) {
+export async function getAdminOrders(status?: string) {
     try {
         const orders = await prisma.order.findMany({
             where: status ? { status } : {},
@@ -207,7 +207,7 @@ export async function getAdminCategories() {
     }
 }
 
-export async function updateOrderStatus(orderId: string, status: OrderStatus) {
+export async function updateOrderStatus(orderId: string, status: string) {
     try {
         await prisma.order.update({
             where: { id: orderId },
