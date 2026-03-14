@@ -87,7 +87,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                 </div>
 
                 {/* Actions - Always visible or easier to trigger on mobile */}
-                <div className="absolute top-2 right-2 flex flex-col gap-2 z-20 md:translate-x-12 md:opacity-0 md:group-hover/img:translate-x-0 md:group-hover/img:opacity-100 transition-all duration-500">
+                <div className="absolute top-2 right-2 flex flex-col gap-2 z-20 md:translate-x-12 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100 transition-all duration-500">
                     <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/90 text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all"
@@ -107,7 +107,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                         e.stopPropagation();
                         addToCart(product);
                     }}
-                    className="absolute bottom-2 left-2 right-2 bg-primary text-white py-2.5 rounded-lg font-black text-[8px] md:text-[9px] uppercase tracking-[0.15em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover/img:translate-y-0 md:group-hover/img:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
+                    className="absolute bottom-2 left-2 right-2 bg-primary text-white py-2.5 rounded-lg font-black text-[8px] md:text-[9px] uppercase tracking-[0.15em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-20"
                 >
                     <ShoppingCart className="w-3 md:w-3.5 h-3 md:h-3.5" /> Ajouter
                 </button>
