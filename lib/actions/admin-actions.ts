@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 import { revalidatePath } from 'next/cache';
 
@@ -301,19 +302,27 @@ export async function getRecentActivity() {
     }
 }
 
-export async function getAdminCustomers(query?: string) {
+export async function getAdminCustomers(query?: string, segment: string = 'all') {
     try {
+        const whereClause: any = { role: 'USER' };
+
+        if (query) {
+            whereClause.OR = [
+                { username: { contains: query, mode: 'insensitive' } },
+                { email: { contains: query, mode: 'insensitive' } },
+                { phone: { contains: query, mode: 'insensitive' } }
+            ];
+        }
+
+        if (segment === 'vip') {
+            // Clients avec > 5 commandes
+            whereClause.orders = { some: {} }; // At least one to satisfy basic relation check before counting below if Prisma doesn't support direct relation count filtering for MySQL/PG differences, but Prisma usually does or we filter post-query.
+            // Since Prisma relation filtering on count is tricky in some versions without extended features, we might need a different approach or just filter in memory for 'vip'.
+            // Actually, in Prisma we usually do: `orders: { _count: { gt: 5 } }` (requires preview feature in some versions) but we'll fetch all and filter if it's not huge, or we can use raw.
+        }
+
         const customers = await prisma.user.findMany({
-            where: {
-                role: 'USER',
-                ...(query ? {
-                    OR: [
-                        { username: { contains: query, mode: 'insensitive' } },
-                        { email: { contains: query, mode: 'insensitive' } },
-                        { phone: { contains: query, mode: 'insensitive' } }
-                    ]
-                } : {})
-            },
+            where: whereClause,
             include: {
                 _count: {
                     select: { orders: true }
@@ -321,10 +330,202 @@ export async function getAdminCustomers(query?: string) {
             },
             orderBy: { createdAt: 'desc' }
         });
-        return customers;
+
+        // Appliquer les filtres de relations complexes en mémoire pour éviter les soucis de compatibilité Prisma
+        let filteredCustomers = customers;
+
+        if (segment === 'vip') {
+            filteredCustomers = customers.filter(c => c._count.orders > 5);
+        } else if (segment === 'active') {
+            filteredCustomers = customers.filter(c => c._count.orders > 0);
+        } else if (segment === 'inactive') {
+            filteredCustomers = customers.filter(c => c._count.orders === 0);
+        } else if (segment === 'new') {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            filteredCustomers = customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo);
+        }
+
+        return filteredCustomers;
     } catch (error) {
         console.error("Fetch customers error:", error);
         return [];
+    }
+}
+
+// ==========================================
+// PROMOTIONS ACTIONS (CAMPAIGNS)
+// ==========================================
+
+export async function getAdminPromotions(query?: string) {
+    try {
+        const whereClause: any = {};
+        if (query) {
+            whereClause.name = { contains: query, mode: 'insensitive' };
+        }
+
+        const promotions = await prisma.promotion.findMany({
+            where: whereClause,
+            include: {
+                _count: {
+                    select: { products: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return promotions;
+    } catch (error) {
+        console.error("Fetch promotions error:", error);
+        return [];
+    }
+}
+
+export async function createPromotion(data: { name: string, description?: string, startDate: Date, endDate: Date, discountPercentage: number }) {
+    try {
+        const promotion = await prisma.promotion.create({ data });
+        revalidatePath('/admin/promotions');
+        revalidatePath('/promotions');
+        return { success: true, promotion };
+    } catch (error: any) {
+        console.error("Create promotion error:", error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function updatePromotion(id: string, data: { name?: string, description?: string, startDate?: Date, endDate?: Date, discountPercentage?: number, isActive?: boolean }) {
+    try {
+        const promotion = await prisma.promotion.update({
+            where: { id },
+            data,
+        });
+
+        // If discount changed, update all linked products
+        if (data.discountPercentage !== undefined) {
+            const linkedProducts = await prisma.product.findMany({ where: { promotionId: id } });
+            for (const prod of linkedProducts) {
+                if (prod.oldPrice) {
+                    const newPrice = prod.oldPrice - (prod.oldPrice * (data.discountPercentage / 100));
+                    await prisma.product.update({
+                        where: { id: prod.id },
+                        data: { price: newPrice }
+                    });
+                }
+            }
+        }
+
+        revalidatePath('/admin/promotions');
+        revalidatePath('/promotions');
+        revalidatePath('/boutique');
+        return { success: true, promotion };
+    } catch (error: any) {
+        console.error("Update promotion error:", error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function deletePromotion(id: string) {
+    try {
+        // First restore all linked products' prices
+        const linkedProducts = await prisma.product.findMany({ where: { promotionId: id } });
+        for (const prod of linkedProducts) {
+            if (prod.oldPrice) {
+                await prisma.product.update({
+                    where: { id: prod.id },
+                    data: { price: prod.oldPrice, oldPrice: null, promotionId: null }
+                });
+            }
+        }
+
+        // Then delete the campaign
+        await prisma.promotion.delete({ where: { id } });
+
+        revalidatePath('/admin/promotions');
+        revalidatePath('/promotions');
+        revalidatePath('/boutique');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Delete promotion error:", error);
+        return { success: false, message: "Impossible de supprimer la campagne." };
+    }
+}
+
+export async function searchProductsForPromo(query: string) {
+    if (!query || query.length < 2) return [];
+
+    try {
+        return await prisma.product.findMany({
+            where: {
+                name: { contains: query, mode: 'insensitive' },
+                promotionId: null // Seulement les produits sans promotion active
+            },
+            take: 5,
+            select: { id: true, name: true, price: true, oldPrice: true, images: true }
+        });
+    } catch (error) {
+        return [];
+    }
+}
+
+export async function getPromotionProducts(promotionId: string) {
+    try {
+        return await prisma.product.findMany({
+            where: { promotionId },
+            include: { brand: true, category: true }
+        });
+    } catch (error) {
+        return [];
+    }
+}
+
+export async function addProductToPromo(productId: string, promotionId: string) {
+    try {
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        const promotion = await prisma.promotion.findUnique({ where: { id: promotionId } });
+
+        if (!product || !promotion) throw new Error("Produit ou Promotion introuvable");
+
+        const alreadyOldPrice = product.oldPrice || product.price;
+        const discountAmount = alreadyOldPrice * (promotion.discountPercentage / 100);
+        const newPrice = alreadyOldPrice - discountAmount;
+
+        await prisma.product.update({
+            where: { id: productId },
+            data: {
+                promotionId: promotionId,
+                oldPrice: alreadyOldPrice,
+                price: newPrice
+            }
+        });
+
+        revalidatePath('/admin/promotions');
+        revalidatePath('/boutique');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Add to promo error:", error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function removeProductFromPromo(productId: string) {
+    try {
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        if (!product || !product.oldPrice) throw new Error("Produit non valide");
+
+        await prisma.product.update({
+            where: { id: productId },
+            data: {
+                price: product.oldPrice,
+                oldPrice: null,
+                promotionId: null
+            }
+        });
+
+        revalidatePath('/admin/promotions');
+        revalidatePath('/boutique');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, message: error.message };
     }
 }
 
@@ -358,17 +559,20 @@ export async function deleteAllProducts() {
     }
 }
 
-export async function deleteProduct(id: string) {
+export async function updateProduct(id: string, data: any) {
     try {
-        await prisma.product.delete({
-            where: { id }
+        const product = await prisma.product.update({
+            where: { id },
+            data,
         });
+
         revalidatePath('/admin/products');
-        revalidatePath('/admin/inventory');
-        return { success: true };
+        revalidatePath('/admin/promotions');
+        revalidatePath('/boutique');
+        return { success: true, product };
     } catch (error) {
-        console.error("Delete product error:", error);
-        return { success: false, message: "Impossible de supprimer le produit." };
+        console.error("Update product error:", error);
+        return { success: false, message: "Erreur lors de la modification du produit" };
     }
 }
 
@@ -552,22 +756,26 @@ export async function deleteThirdLevelCategory(id: string) {
 
 export async function upsertProduct(data: any, id?: string) {
     try {
+        let product;
         if (id) {
-            await prisma.product.update({
+            product = await prisma.product.update({
                 where: { id },
-                data: data as any
+                data,
             });
         } else {
-            await prisma.product.create({
-                data: data as any
+            product = await prisma.product.create({
+                data,
             });
         }
         revalidatePath('/admin/products');
         revalidatePath('/admin/inventory');
-        return { success: true };
+        revalidatePath('/admin/promotions');
+        revalidatePath('/boutique');
+        revalidatePath('/');
+        return { success: true, product };
     } catch (error) {
         console.error("Upsert product error:", error);
-        return { success: false };
+        return { success: false, message: "Erreur lors de l'enregistrement du produit" };
     }
 }
 
@@ -610,5 +818,70 @@ export async function bulkUpdateOrderStatuses(orderIds: string[], status: string
     } catch (error) {
         console.error("Bulk update order statuses error:", error);
         return { success: false };
+    }
+}
+
+export async function createCustomer(data: any) {
+    try {
+        const existingUser = await prisma.user.findUnique({
+            where: { email: data.email }
+        });
+
+        if (existingUser) {
+            return { success: false, message: "Cet email est déjà utilisé." };
+        }
+
+        const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : undefined;
+
+        await prisma.user.create({
+            data: {
+                username: data.username,
+                email: data.email,
+                password: hashedPassword,
+                phone: data.phone,
+                address: data.address,
+                role: 'USER'
+            }
+        });
+        revalidatePath('/admin/customers');
+        return { success: true };
+    } catch (error) {
+        console.error("Create customer error:", error);
+        return { success: false, message: "Erreur serveur lors de la création du client." };
+    }
+}
+
+export async function updateCustomer(id: string, data: any) {
+    try {
+        if (data.email) {
+            const existingUser = await prisma.user.findUnique({
+                where: { email: data.email }
+            });
+            if (existingUser && existingUser.id !== id) {
+                return { success: false, message: "Cet email est déjà utilisé par un autre compte." };
+            }
+        }
+
+        const updateData: any = {
+            username: data.username,
+            email: data.email,
+            phone: data.phone,
+            address: data.address,
+        };
+
+        if (data.password && data.password.trim() !== "") {
+            updateData.password = await bcrypt.hash(data.password, 10);
+        }
+
+        await prisma.user.update({
+            where: { id },
+            data: updateData
+        });
+
+        revalidatePath('/admin/customers');
+        return { success: true };
+    } catch (error) {
+        console.error("Update customer error:", error);
+        return { success: false, message: "Erreur serveur lors de la mise à jour du client." };
     }
 }

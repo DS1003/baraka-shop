@@ -59,7 +59,21 @@ export async function getProductsAction(options: {
         }
 
         if (onSale) {
-            where.oldPrice = { not: null };
+            const now = new Date();
+            where.AND = [
+                { oldPrice: { not: null } },
+                {
+                    OR: [
+                        { promotionId: null },
+                        {
+                            promotion: {
+                                startDate: { lte: now },
+                                endDate: { gte: now }
+                            }
+                        }
+                    ]
+                }
+            ];
         }
 
         if (minPrice !== undefined || maxPrice !== undefined) {
