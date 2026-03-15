@@ -64,6 +64,27 @@ export async function getDashboardStats() {
     }
 }
 
+export async function getCategoryStats() {
+    try {
+        const [l1, l2, l3, products] = await Promise.all([
+            prisma.category.count(),
+            (prisma as any).subCategory.count(),
+            (prisma as any).thirdLevelCategory.count(),
+            prisma.product.count()
+        ]);
+
+        return {
+            l1,
+            l2,
+            l3,
+            products
+        };
+    } catch (error) {
+        console.error("Category stats error:", error);
+        return { l1: 0, l2: 0, l3: 0, products: 0 };
+    }
+}
+
 export async function getAdminProducts(
     query?: string,
     page = 1,
@@ -195,8 +216,12 @@ export async function getAdminCategories() {
     try {
         const categories = await prisma.category.findMany({
             include: {
+                subCategories: {
+                    select: { name: true, id: true },
+                    take: 5
+                },
                 _count: {
-                    select: { products: true }
+                    select: { products: true, subCategories: true }
                 }
             }
         });
