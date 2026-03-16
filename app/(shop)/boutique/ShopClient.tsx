@@ -305,20 +305,53 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                                 </button>
 
                                 <div className="flex items-center gap-2">
-                                    {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
-                                        <button
-                                            key={page}
-                                            onClick={() => updateFilters({ page })}
-                                            className={cn(
-                                                "w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all border",
-                                                page === pagination.currentPage
-                                                    ? "bg-[#1B1F3B] text-white border-[#1B1F3B] shadow-xl shadow-[#1B1F3B]/20 scale-110"
-                                                    : "bg-white text-gray-500 border-gray-100 hover:border-primary/30 hover:text-primary shadow-sm"
-                                            )}
-                                        >
-                                            {page}
-                                        </button>
-                                    ))}
+                                    {(() => {
+                                        const totalPages = pagination.pages;
+                                        const currentPage = pagination.currentPage;
+                                        const pages: (number | string)[] = [];
+                                        
+                                        if (totalPages <= 7) {
+                                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                        } else {
+                                            pages.push(1);
+                                            
+                                            if (currentPage > 4) {
+                                                pages.push('...');
+                                            }
+                                            
+                                            const start = Math.max(2, currentPage - 2);
+                                            const end = Math.min(totalPages - 1, currentPage + 2);
+                                            
+                                            for (let i = start; i <= end; i++) {
+                                                if (!pages.includes(i)) pages.push(i);
+                                            }
+                                            
+                                            if (currentPage < totalPages - 3) {
+                                                pages.push('...');
+                                            }
+                                            
+                                            if (!pages.includes(totalPages)) pages.push(totalPages);
+                                        }
+
+                                        return pages.map((page, i) => (
+                                            typeof page === 'string' ? (
+                                                <span key={`dots-${i}`} className="w-10 h-10 flex items-center justify-center text-gray-300 font-bold">...</span>
+                                            ) : (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => updateFilters({ page })}
+                                                    className={cn(
+                                                        "w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all border",
+                                                        page === currentPage
+                                                            ? "bg-[#1B1F3B] text-white border-[#1B1F3B] shadow-xl shadow-[#1B1F3B]/20 scale-110"
+                                                            : "bg-white text-gray-500 border-gray-100 hover:border-primary/30 hover:text-primary shadow-sm"
+                                                    )}
+                                                >
+                                                    {page}
+                                                </button>
+                                            )
+                                        ));
+                                    })()}
                                 </div>
 
                                 <button
