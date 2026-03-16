@@ -25,7 +25,8 @@ import {
     Activity,
     CreditCard,
     ShieldCheck,
-    Tag
+    Tag,
+    Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -48,6 +49,7 @@ const sidebarGroups = [
             { icon: Box, label: 'Produits', href: '/admin/products' },
             { icon: Layers, label: 'Catégories', href: '/admin/categories' },
             { icon: Tag, label: 'Marques', href: '/admin/brands' },
+            { icon: Zap, label: 'Promotions', href: '/admin/promotions' },
             { icon: ImageIcon, label: 'Médiathèque', href: '/admin/media' },
         ]
     },

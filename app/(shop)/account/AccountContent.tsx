@@ -41,7 +41,14 @@ export default function AccountContent({ user }: { user: any }) {
         setIsUpdating(true);
         setMessage({ type: '', text: '' });
 
-        const result = await updateProfile(profileData);
+        // Nettoyer les espaces superflus avant l'envoi
+        const cleanedData = {
+            username: profileData.username.trim(),
+            phone: profileData.phone.trim(),
+            address: profileData.address.trim()
+        };
+
+        const result = await updateProfile(cleanedData);
 
         if (result.success) {
             setMessage({ type: 'success', text: 'Profil mis à jour avec succès' });
