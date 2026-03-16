@@ -240,6 +240,34 @@ export async function getCategoryBySlugAction(slug: string) {
     }
 }
 
+export async function getMegaMenuAction() {
+    try {
+        const cacheKey = 'megamenu:all';
+        const cached = await getCache<any>(cacheKey);
+        if (cached) {
+            console.log('[Redis] Cache Hit for Mega Menu');
+            return cached;
+        }
+
+        const categories = await prisma.category.findMany({
+            include: {
+                subCategories: {
+                    include: {
+                        thirdLevelCategories: true
+                    }
+                }
+            },
+            orderBy: { name: 'asc' }
+        });
+
+        await setCache(cacheKey, categories, 3600); // 1h cache
+        return categories;
+    } catch (error) {
+        console.error('[Get Mega Menu Action Error]:', error);
+        return [];
+    }
+}
+
 
 
 interface ImportProduct {
