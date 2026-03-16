@@ -572,6 +572,20 @@ export async function deleteBulkProducts(ids: string[]) {
     }
 }
 
+export async function deleteProduct(id: string) {
+    try {
+        await prisma.product.delete({
+            where: { id }
+        });
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/inventory');
+        return { success: true };
+    } catch (error) {
+        console.error("Delete product error:", error);
+        return { success: false, message: "Impossible de supprimer le produit." };
+    }
+}
+
 export async function deleteAllProducts() {
     try {
         await prisma.product.deleteMany({});
