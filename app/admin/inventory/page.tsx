@@ -17,65 +17,94 @@ import {
     Download,
     PackageCheck,
     Truck,
-    ArrowRight
+    ArrowRight,
+    X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { getAdminProducts, updateProductStock } from '@/lib/actions/admin-actions';
+import { getAdminProducts, updateProductStock, getAdminCategories, getAdminBrands } from '@/lib/actions/admin-actions';
+import { createPortal } from 'react-dom';
 
 export default function InventoryPage() {
     const [inventory, setInventory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-    const [changedIds, setChangedIds] = useState<Set<string>>(new Set());
+    const [totalProducts, setTotalProducts] = useState(0);
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(10);
+    
+    // Filters state
+    const [categories, setCategories] = useState<any[]>([]);
+    const [brands, setBrands] = useState<any[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedBrand, setSelectedBrand] = useState('');
+    const [stockStatus, setStockStatus] = useState<string>('');
+    
+    // Modal state
+    const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+    const [adjustingProduct, setAdjustingProduct] = useState<any>(null);
+    const [adjustValue, setAdjustValue] = useState<number>(0);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        async function loadInitialData() {
+            try {
+                const [cats, brs] = await Promise.all([
+                    getAdminCategories(),
+                    getAdminBrands()
+                ]);
+                setCategories(cats);
+                setBrands(brs);
+            } catch (err) {
+                console.error("Initial load error:", err);
+            }
+        }
+        loadInitialData();
+    }, []);
 
     useEffect(() => {
         async function loadInventory() {
             setLoading(true);
             try {
-                const data = await getAdminProducts('', 1, 1000); // Admin inventory needs large set
+                const filters: any = {};
+                if (selectedCategory) filters.categoryId = selectedCategory;
+                if (selectedBrand) filters.brandId = selectedBrand;
+                if (stockStatus) filters.stockStatus = stockStatus;
+
+                const data = await getAdminProducts(searchQuery, page, pageSize, filters);
                 setInventory(data.products);
+                setTotalProducts(data.total);
             } catch (err) {
-                console.error(err);
+                console.error("Load inventory error:", err);
             } finally {
                 setLoading(false);
             }
         }
         loadInventory();
-    }, []);
+    }, [searchQuery, page, selectedCategory, selectedBrand, stockStatus, pageSize]);
 
-    const handleStockChange = (id: string, newStock: number) => {
-        setInventory(prev => prev.map(item =>
-            item.id === id ? { ...item, stock: Math.max(0, newStock) } : item
-        ));
-        setChangedIds(prev => new Set(prev).add(id));
-    };
-
-    const saveChanges = async () => {
+    const handleAdjustConfirm = async () => {
+        if (!adjustingProduct) return;
         setIsSaving(true);
         try {
-            for (const id of changedIds) {
-                const item = inventory.find(i => i.id === id);
-                if (item) {
-                    await updateProductStock(id, item.stock);
-                }
+            const res = await updateProductStock(adjustingProduct.id, adjustValue);
+            if (res.success) {
+                setInventory(prev => prev.map(item =>
+                    item.id === adjustingProduct.id ? { ...item, stock: adjustValue } : item
+                ));
+                setIsAdjustModalOpen(false);
             }
-            setChangedIds(new Set());
         } catch (err) {
-            console.error(err);
+            console.error("Adjust confirm error:", err);
         } finally {
             setIsSaving(false);
         }
     };
 
-    const filteredInventory = inventory.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.brand?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    const totalStock = inventory.reduce((acc, i) => acc + i.stock, 0);
-    const totalValue = inventory.reduce((acc, i) => acc + (i.price * i.stock), 0);
+    const totalStock = inventory.reduce((acc, i) => acc + (i.stock || 0), 0);
+    const totalValue = inventory.reduce((acc, i) => acc + ((i.price || 0) * (i.stock || 0)), 0);
     const criticalRupture = inventory.filter(i => i.stock === 0).length;
 
     return (
@@ -97,17 +126,17 @@ export default function InventoryPage() {
                         <span>Historique</span>
                     </button>
                     <button
-                        onClick={saveChanges}
-                        disabled={changedIds.size === 0 || isSaving}
-                        className={cn(
-                            "flex items-center gap-3 px-6 py-3 rounded-xl font-bold text-[13px] transition-all shadow-lg active:scale-95 disabled:opacity-50",
-                            changedIds.size > 0
-                                ? "bg-orange-600 text-white hover:bg-orange-700 shadow-orange-100"
-                                : "bg-slate-100 text-slate-400"
-                        )}
+                        onClick={() => {
+                            setSearchQuery('');
+                            setPage(1);
+                            setSelectedCategory('');
+                            setSelectedBrand('');
+                            setStockStatus('');
+                        }}
+                        className="flex items-center gap-2.5 px-5 py-3 bg-slate-900 text-white rounded-xl font-bold text-[13px] hover:bg-slate-800 transition-all shadow-lg active:scale-95"
                     >
-                        {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                        <span>{isSaving ? 'SYNCHRONISATION...' : `SAUVEGARDER (${changedIds.size})`}</span>
+                        <RefreshCw size={18} />
+                        <span>Réinitialiser</span>
                     </button>
                 </div>
             </div>
@@ -115,7 +144,7 @@ export default function InventoryPage() {
             {/* Strategic KPI Grid */}
             {!loading && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <InventoryStatCard label="VALEUR STOCK" value={`${Math.round(totalValue / 1000000).toLocaleString()}M F`} icon={TrendingUp} color="text-orange-600" bg="bg-orange-50" trend="+0%" />
+                    <InventoryStatCard label="VALEUR STOCK" value={`${Math.round(totalValue / 1000).toLocaleString()}k F`} icon={TrendingUp} color="text-orange-600" bg="bg-orange-50" trend="+0%" />
                     <InventoryStatCard label="UNITÉS TOTALES" value={totalStock.toLocaleString()} icon={Box} color="text-slate-600" bg="bg-slate-50" />
                     <InventoryStatCard label="RUPTURE CRITIQUE" value={criticalRupture} icon={AlertTriangle} color="text-rose-600" bg="bg-rose-50" isWarning={criticalRupture > 0} />
                     <InventoryStatCard label="SANTÉ STOCK" value="98%" icon={PackageCheck} color="text-emerald-600" bg="bg-emerald-50" />
@@ -123,17 +152,39 @@ export default function InventoryPage() {
             )}
 
             {/* Technical Tools Bar */}
-            <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-                <div className="relative flex-1 w-full max-w-xl group">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                <div className="relative col-span-1 md:col-span-2 group">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={18} />
                     <input
                         type="text"
-                        placeholder="Rechercher par nom de produit ou marque..."
+                        placeholder="Rechercher par nom de produit..."
                         className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                     />
                 </div>
+                
+                <select 
+                    value={selectedCategory}
+                    onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
+                    className="px-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold text-slate-600 focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm appearance-none cursor-pointer"
+                >
+                    <option value="">Tous les Rayons</option>
+                    {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                </select>
+
+                <select 
+                    value={stockStatus}
+                    onChange={(e) => { setStockStatus(e.target.value); setPage(1); }}
+                    className="px-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold text-slate-600 focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm appearance-none cursor-pointer"
+                >
+                    <option value="">Tous les États</option>
+                    <option value="in_stock">En Stock</option>
+                    <option value="low_stock">Alerte Stock</option>
+                    <option value="out_of_stock">Rupture</option>
+                </select>
             </div>
 
             {/* Technical Inventory Table */}
@@ -147,15 +198,15 @@ export default function InventoryPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50/50 text-center">
+                                <tr className="bg-slate-50/50">
                                     <th className="px-10 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-left">Produit</th>
-                                    <th className="px-10 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Disponibilité</th>
-                                    <th className="px-10 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Ajustement</th>
-                                    <th className="px-10 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Indicateur</th>
+                                    <th className="px-10 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Stock</th>
+                                    <th className="px-10 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Indicateur</th>
+                                    <th className="px-10 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {filteredInventory.map((item) => {
+                                {inventory.map((item) => {
                                     const isOut = item.stock === 0;
                                     const isLow = item.stock < 10 && item.stock > 0;
 
@@ -183,30 +234,6 @@ export default function InventoryPage() {
                                                     <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">UNITÉS</span>
                                                 </div>
                                             </td>
-                                            <td className="px-10 py-6">
-                                                <div className="flex justify-center">
-                                                    <div className="inline-flex items-center bg-slate-50 border border-slate-200 p-1 rounded-[16px] shadow-inner">
-                                                        <button
-                                                            onClick={() => handleStockChange(item.id, item.stock - 1)}
-                                                            className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 transition-all active:scale-90"
-                                                        >
-                                                            <Minus size={14} strokeWidth={3} />
-                                                        </button>
-                                                        <input
-                                                            type="number"
-                                                            value={item.stock}
-                                                            onChange={(e) => handleStockChange(item.id, parseInt(e.target.value) || 0)}
-                                                            className="w-16 bg-transparent text-center font-black text-[14px] text-slate-900 focus:outline-none tabular-nums"
-                                                        />
-                                                        <button
-                                                            onClick={() => handleStockChange(item.id, item.stock + 1)}
-                                                            className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-emerald-500 transition-all active:scale-90"
-                                                        >
-                                                            <Plus size={14} strokeWidth={3} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </td>
                                             <td className="px-10 py-6 text-center">
                                                 <div className="flex justify-center">
                                                     <div className={cn(
@@ -224,6 +251,18 @@ export default function InventoryPage() {
                                                     </div>
                                                 </div>
                                             </td>
+                                            <td className="px-10 py-6 text-right">
+                                                <button
+                                                    onClick={() => {
+                                                        setAdjustingProduct(item);
+                                                        setAdjustValue(item.stock);
+                                                        setIsAdjustModalOpen(true);
+                                                    }}
+                                                    className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg active:scale-95"
+                                                >
+                                                    Ajust
+                                                </button>
+                                            </td>
                                         </tr>
                                     );
                                 })}
@@ -232,6 +271,145 @@ export default function InventoryPage() {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && totalProducts > pageSize && (
+                <div className="flex items-center justify-center gap-2 pt-8">
+                    <button
+                        onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                        disabled={page === 1}
+                        className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:border-orange-500 transition-all disabled:opacity-50"
+                    >
+                        <ArrowUpDown size={18} className="rotate-90" />
+                    </button>
+                    
+                    {(() => {
+                        const totalPages = Math.ceil(totalProducts / pageSize);
+                        const pages = [];
+                        const window = 2; // Show 2 pages before and after
+                        
+                        for (let i = 1; i <= totalPages; i++) {
+                            if (
+                                i === 1 || 
+                                i === totalPages || 
+                                (i >= page - window && i <= page + window)
+                            ) {
+                                pages.push(
+                                    <button
+                                        key={i}
+                                        onClick={() => setPage(i)}
+                                        className={cn(
+                                            "w-12 h-12 flex items-center justify-center rounded-xl font-bold text-[14px] transition-all",
+                                            i === page
+                                                ? "bg-orange-600 text-white shadow-lg shadow-orange-100"
+                                                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                                        )}
+                                    >
+                                        {i}
+                                    </button>
+                                );
+                            } else if (
+                                i === page - window - 1 || 
+                                i === page + window + 1
+                            ) {
+                                pages.push(
+                                    <span key={`ellipsis-${i}`} className="w-8 text-center text-slate-300 font-bold">...</span>
+                                );
+                            }
+                        }
+                        return pages;
+                    })()}
+
+                    <button
+                        onClick={() => setPage(prev => Math.min(Math.ceil(totalProducts / pageSize), prev + 1))}
+                        disabled={page === Math.ceil(totalProducts / pageSize)}
+                        className="w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-orange-600 hover:border-orange-500 transition-all disabled:opacity-50"
+                    >
+                        <ArrowUpDown size={18} className="-rotate-90" />
+                    </button>
+                </div>
+            )}
+
+            {/* Ajust Modal */}
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {isAdjustModalOpen && (
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+                            <motion.div 
+                                initial={{ opacity: 0 }} 
+                                animate={{ opacity: 1 }} 
+                                exit={{ opacity: 0 }} 
+                                onClick={() => setIsAdjustModalOpen(false)} 
+                                className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" 
+                            />
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }} 
+                                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                                exit={{ opacity: 0, scale: 0.95, y: 20 }} 
+                                className="bg-white w-full max-w-md rounded-[40px] shadow-2xl relative z-10 overflow-hidden text-slate-900"
+                            >
+                                <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                                    <div>
+                                        <h3 className="text-[20px] font-bold tracking-tight">Ajustement Stock</h3>
+                                        <p className="text-[11px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">{adjustingProduct?.name}</p>
+                                    </div>
+                                    <button onClick={() => setIsAdjustModalOpen(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100/50 text-slate-400 hover:text-rose-600 transition-colors">
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                                
+                                <div className="p-8 space-y-8">
+                                    <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-[32px] border border-slate-100">
+                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-2">Quantité Actuelle</span>
+                                        <div className="text-[48px] font-black text-slate-900 leading-none tracking-tighter tabular-nums">
+                                            {adjustValue}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[1, 5, 10].map(v => (
+                                            <button 
+                                                key={v}
+                                                onClick={() => setAdjustValue(prev => prev + v)}
+                                                className="py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[14px] hover:bg-emerald-100 transition-all border border-emerald-100"
+                                            >
+                                                +{v}
+                                            </button>
+                                        ))}
+                                        {[-1, -5, -10].map(v => (
+                                            <button 
+                                                key={v}
+                                                onClick={() => setAdjustValue(prev => Math.max(0, prev + v))}
+                                                className="py-3 bg-rose-50 text-rose-600 rounded-2xl font-black text-[14px] hover:bg-rose-100 transition-all border border-rose-100"
+                                            >
+                                                {v}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex gap-4 pt-4">
+                                        <button 
+                                            onClick={() => setIsAdjustModalOpen(false)} 
+                                            className="flex-1 py-4 border border-slate-200 rounded-[20px] font-bold text-[13px] text-slate-500 hover:bg-slate-50 transition-all"
+                                        >
+                                            Annuler
+                                        </button>
+                                        <button 
+                                            onClick={handleAdjustConfirm}
+                                            disabled={isSaving}
+                                            className="flex-[2] py-4 bg-slate-900 text-white rounded-[20px] font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-orange-600 shadow-xl transition-all shadow-orange-100/20 disabled:opacity-50"
+                                        >
+                                            {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                                            Confirmer
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </div>
     );
 }
