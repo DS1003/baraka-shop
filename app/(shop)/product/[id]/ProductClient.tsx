@@ -114,6 +114,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 fill
                                 className="object-contain"
                                 priority
+                                unoptimized
                             />
                         </motion.div>
                         {product.oldPrice && (
@@ -135,7 +136,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                     activeImg === idx ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
                                 )}
                             >
-                                <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-2" />
+                                <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-2" unoptimized />
                             </button>
                         ))}
                     </div>

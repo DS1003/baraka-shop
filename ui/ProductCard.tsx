@@ -24,7 +24,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
         return (
             <div className="group flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500">
                 <Link href={`/product/${product.id}`} className="relative w-full md:w-[260px] aspect-square bg-white flex items-center justify-center p-8 shrink-0">
-                    <Image src={displayImage} alt={product.name} fill className="object-contain p-8 group-hover:scale-105 transition-transform duration-500" priority={priority} />
+                    <Image src={displayImage} alt={product.name} fill className="object-contain p-8 group-hover:scale-105 transition-transform duration-500" priority={priority} unoptimized />
                 </Link>
                 <div className="p-8 flex flex-col justify-center flex-1">
                     <div className="flex items-center justify-between mb-3">
@@ -97,7 +97,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                 </div>
 
                 <div className="relative w-full h-full p-4 md:p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110">
-                    <Image src={displayImage} alt={product.name} fill className="object-contain p-4 md:p-6" priority={priority} />
+                    <Image src={displayImage} alt={product.name} fill className="object-contain p-4 md:p-6" priority={priority} unoptimized />
                 </div>
 
                 {/* Add to Cart Overlay - Always visible or slide up on mobile */}

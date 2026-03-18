@@ -12,7 +12,7 @@ import { MENU_CATEGORIES } from '@/lib/data'
 import { useSession } from 'next-auth/react'
 import { useCart } from '@/context/CartContext'
 import { useRouter } from 'next/navigation'
-import { getProductsAction } from '@/lib/actions/product-actions'
+import { getProductsAction, getMegaMenuAction } from '@/lib/actions/product-actions'
 import { CartToast } from '@/components/CartToast'
 import { MiniCart } from '@/components/MiniCart'
 
@@ -45,6 +45,15 @@ export function Header() {
     const [isSearchFocused, setIsSearchFocused] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([])
+    const [categories, setCategories] = useState<any[]>([])
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const data = await getMegaMenuAction();
+            setCategories(data);
+        }
+        fetchCategories();
+    }, [])
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault()
@@ -157,6 +166,7 @@ export function Header() {
                                     fill
                                     className="object-contain object-left"
                                     priority
+                                    unoptimized
                                 />
                             </motion.div>
                         </Link>
@@ -201,7 +211,7 @@ export function Header() {
                                                         onClick={() => setIsSearchFocused(false)}
                                                     >
                                                         <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
-                                                            <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" />
+                                                            <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" unoptimized />
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="text-sm font-bold text-[#1B1F3B] group-hover:text-primary transition-colors">{item.name}</span>
@@ -269,7 +279,7 @@ export function Header() {
                         <AnimatePresence>
                             {showMegaMenu && (
                                 <div className="absolute top-full left-0 mt-[1px]" onMouseEnter={() => setShowMegaMenu(true)} onMouseLeave={() => setShowMegaMenu(false)}>
-                                    <MegaMenu />
+                                    <MegaMenu categories={categories} />
                                 </div>
                             )}
                         </AnimatePresence>
@@ -315,7 +325,7 @@ export function Header() {
                 </button>
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2">
                     <div className="relative w-[120px] h-[35px]">
-                        <Image src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" alt="Baraka Shop" fill className="object-contain" priority />
+                        <Image src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" alt="Baraka Shop" fill className="object-contain" priority unoptimized />
                     </div>
                 </Link>
                 <div className="flex items-center gap-2">
@@ -377,7 +387,7 @@ export function Header() {
                                     </motion.button>
                                 ) : (
                                     <div className="relative w-[110px] h-[35px]">
-                                        <Image src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" alt="Baraka" fill className="object-contain object-left" />
+                                        <Image src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" alt="Baraka" fill className="object-contain object-left" unoptimized />
                                     </div>
                                 )}
 
@@ -405,20 +415,20 @@ export function Header() {
                                             <div className="py-2 flex flex-col h-full">
                                                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] mb-6 block">Catégories</span>
                                                 <div className="space-y-3">
-                                                    {MENU_CATEGORIES.map((cat, idx) => (
+                                                    {categories.map((cat, idx) => (
                                                         <motion.button
                                                             initial={{ opacity: 0, y: 10 }}
                                                             animate={{ opacity: 1, y: 0 }}
                                                             transition={{ delay: idx * 0.05 }}
                                                             key={cat.id}
-                                                            onClick={() => handlePushMenu(cat.title, 'category', cat)}
+                                                            onClick={() => handlePushMenu(cat.name, 'category', cat)}
                                                             className="w-full flex items-center justify-between p-4 bg-[#fcfcfc] border border-gray-50 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-black/5 transition-all text-left group"
                                                         >
                                                             <div className="flex items-center gap-4">
                                                                 <div className="relative w-11 h-11 bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm group-hover:scale-110 transition-transform">
-                                                                    <Image src={cat.image} alt={cat.title} fill className="object-cover" />
+                                                                    <Image src={cat.image || '/placeholder.png'} alt={cat.name} fill className="object-cover" unoptimized={cat.image?.startsWith('http')} />
                                                                 </div>
-                                                                <span className="text-sm font-black text-[#1B1F3B] uppercase tracking-tight">{cat.title}</span>
+                                                                <span className="text-sm font-black text-[#1B1F3B] uppercase tracking-tight">{cat.name}</span>
                                                             </div>
                                                             <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary transition-colors" />
                                                         </motion.button>
@@ -444,16 +454,16 @@ export function Header() {
                                         {currentMenu.type === 'category' && (
                                             <div className="py-2">
                                                 <div className="space-y-2">
-                                                    {currentMenu.data.subcategories.map((sub: any, idx: number) => (
+                                                    {currentMenu.data.subCategories?.map((sub: any, idx: number) => (
                                                         <motion.button
                                                             initial={{ opacity: 0, x: 10 }}
                                                             animate={{ opacity: 1, x: 0 }}
                                                             transition={{ delay: idx * 0.04 }}
-                                                            key={idx}
-                                                            onClick={() => handlePushMenu(sub.label, 'subcategory', sub)}
+                                                            key={sub.id}
+                                                            onClick={() => handlePushMenu(sub.name, 'subcategory', sub)}
                                                             className="w-full flex items-center justify-between p-5 rounded-2xl border-b border-gray-50 hover:bg-gray-50 transition-colors text-left"
                                                         >
-                                                            <span className="text-sm font-bold text-[#1B1F3B] uppercase tracking-wide">{sub.label}</span>
+                                                            <span className="text-sm font-bold text-[#1B1F3B] uppercase tracking-wide">{sub.name}</span>
                                                             <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90" />
                                                         </motion.button>
                                                     ))}
@@ -467,7 +477,7 @@ export function Header() {
                                                             onClick={resetMenu}
                                                             className="w-full flex items-center justify-center p-5 mt-8 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-primary transition-colors shadow-lg shadow-black/10"
                                                         >
-                                                            Voir tout {currentMenu.data.title}
+                                                            Voir tout {currentMenu.data.name}
                                                         </Link>
                                                     </motion.div>
                                                 </div>
@@ -477,20 +487,20 @@ export function Header() {
                                         {currentMenu.type === 'subcategory' && (
                                             <div className="py-2">
                                                 <div className="space-y-1">
-                                                    {currentMenu.data.links.map((link: string, idx: number) => (
+                                                    {currentMenu.data.thirdLevelCategories?.map((third: any, idx: number) => (
                                                         <motion.div
                                                             initial={{ opacity: 0, y: 5 }}
                                                             animate={{ opacity: 1, y: 0 }}
                                                             transition={{ delay: idx * 0.03 }}
-                                                            key={link}
+                                                            key={third.id}
                                                         >
                                                             <Link
-                                                                href={`/boutique?q=${encodeURIComponent(link)}`}
+                                                                href={`/boutique?category=${currentMenu.data.category?.slug || ''}&sub=${currentMenu.data.slug}&third=${third.slug}`}
                                                                 onClick={resetMenu}
                                                                 className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl transition-all group"
                                                             >
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-gray-200 group-hover:bg-primary transition-all group-hover:scale-150" />
-                                                                <span className="text-sm font-medium text-gray-500 group-hover:text-[#1B1F3B] transition-colors uppercase">{link}</span>
+                                                                <span className="text-sm font-medium text-gray-500 group-hover:text-[#1B1F3B] transition-colors uppercase">{third.name}</span>
                                                                 <ChevronDown className="w-3.5 h-3.5 text-gray-300 -rotate-90 ml-auto opacity-0 group-hover:opacity-100 transition-all translate-x-1" />
                                                             </Link>
                                                         </motion.div>

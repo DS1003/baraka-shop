@@ -13,9 +13,15 @@ import { cn } from '@/lib/utils'
 
 import { MENU_CATEGORIES } from '@/lib/data'
 
-export function MegaMenu() {
-    const [activeTab, setActiveTab] = useState(MENU_CATEGORIES[0].id)
-    const activeCategory = MENU_CATEGORIES.find(c => c.id === activeTab) || MENU_CATEGORIES[0]
+interface MegaMenuProps {
+    categories: any[];
+}
+
+export function MegaMenu({ categories }: MegaMenuProps) {
+    const [activeTab, setActiveTab] = useState(categories[0]?.id || '')
+    const activeCategory = categories.find(c => c.id === activeTab) || categories[0]
+
+    if (!categories || categories.length === 0) return null;
 
     return (
         <motion.div
@@ -26,11 +32,11 @@ export function MegaMenu() {
             className="absolute top-full left-0 w-screen max-w-[1240px] h-[600px] bg-white text-black shadow-2xl border border-gray-100 rounded-b-2xl overflow-hidden z-50 flex"
         >
             {/* Left Column: Categories List (LDLC Style Sidebar) */}
-            <div className="w-[280px] bg-white border-r border-gray-100 flex flex-col pt-2">
-                {MENU_CATEGORIES.map((cat) => (
+            <div className="w-[280px] bg-white border-r border-gray-100 flex flex-col pt-2 overflow-y-auto custom-scrollbar">
+                {categories.map((cat) => (
                     <Link
                         key={cat.id}
-                        href={`/category/${cat.id}`}
+                        href={`/boutique?category=${cat.slug}`}
                         onMouseEnter={() => setActiveTab(cat.id)}
                         className={cn(
                             "flex items-center justify-between px-6 py-3.5 text-left transition-all border-b border-gray-50 last:border-0",
@@ -43,17 +49,11 @@ export function MegaMenu() {
                             "text-[12px] font-black tracking-tight uppercase",
                             activeTab === cat.id ? "text-primary ml-[-4px]" : "text-[#1B1F3B]"
                         )}>
-                            {cat.title}
+                            {cat.name}
                         </span>
                         <ChevronRight className={cn("w-3.5 h-3.5", activeTab === cat.id ? "text-primary opacity-100" : "text-gray-300 opacity-60")} />
                     </Link>
                 ))}
-
-                {/* Divers & Autres Category (Simple list items) */}
-                <div className="mt-2 border-t border-gray-100">
-                    <Link href="/category/divers" className="block w-full text-left px-6 py-3.5 text-[12px] font-black uppercase text-[#1B1F3B] hover:bg-gray-50 hover:text-primary transition-colors">DIVERS</Link>
-                    <Link href="/category/objets-connectes" className="block w-full text-left px-6 py-3.5 text-[12px] font-black uppercase text-[#1B1F3B] hover:bg-gray-50 hover:text-primary transition-colors">OBJETS CONNECTES</Link>
-                </div>
             </div>
 
             {/* Right Content: Sub-categories + Image Grid */}
@@ -69,22 +69,22 @@ export function MegaMenu() {
                     >
                         {/* Sub-categories Grid (LDLC Style Columns) */}
                         <div className="flex-1 grid grid-cols-3 gap-x-8 gap-y-10 overflow-y-auto pr-8 custom-scrollbar">
-                            {activeCategory.subcategories.map((sub, idx) => (
-                                <div key={idx} className="flex flex-col gap-4">
+                            {activeCategory?.subCategories?.map((sub: any, idx: number) => (
+                                <div key={sub.id} className="flex flex-col gap-4">
                                     <Link
-                                        href={`/boutique?q=${encodeURIComponent(sub.label)}`}
+                                        href={`/boutique?category=${activeCategory.slug}&sub=${sub.slug}`}
                                         className="text-[12px] font-black uppercase text-[#1B1F3B] tracking-wider pb-2 border-b border-gray-200 hover:text-primary transition-colors"
                                     >
-                                        {sub.label}
+                                        {sub.name}
                                     </Link>
                                     <ul className="flex flex-col gap-2.5">
-                                        {sub.links.map((link) => (
-                                            <li key={link}>
+                                        {sub.thirdLevelCategories?.map((third: any) => (
+                                            <li key={third.id}>
                                                 <Link
-                                                    href={`/boutique?q=${encodeURIComponent(link)}`}
+                                                    href={`/boutique?category=${activeCategory.slug}&sub=${sub.slug}&third=${third.slug}`}
                                                     className="text-[13px] text-gray-500 hover:text-primary transition-colors uppercase font-medium"
                                                 >
-                                                    {link}
+                                                    {third.name}
                                                 </Link>
                                             </li>
                                         ))}
@@ -95,23 +95,26 @@ export function MegaMenu() {
 
                         {/* Visual Banner (Right Side) */}
                         <div className="w-[280px] shrink-0">
-                            <Link href={`/category/${activeCategory.id}`} className="block relative h-[350px] w-full rounded-xl overflow-hidden shadow-lg group">
-                                <Image
-                                    src={activeCategory.image}
-                                    alt={activeCategory.title}
-                                    fill
-                                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
-                                    <span className="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-2">En vedette</span>
-                                    <h5 className="text-white font-black text-xl leading-tight uppercase">
-                                        {activeCategory.title}
-                                    </h5>
-                                    <div className="mt-4 flex items-center gap-2 text-white/80 text-xs font-bold uppercase transition-all group-hover:gap-4 group-hover:text-white">
-                                        Découvrir <ChevronRight className="w-4 h-4" />
+                            {activeCategory && (
+                                <Link href={`/boutique?category=${activeCategory.slug}`} className="block relative h-[350px] w-full rounded-xl overflow-hidden shadow-lg group">
+                                    <Image
+                                        src={activeCategory.image || '/placeholder.png'}
+                                        alt={activeCategory.name}
+                                        fill
+                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                        unoptimized={activeCategory.image?.startsWith('http')}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                                        <span className="text-primary font-black text-[10px] uppercase tracking-[0.2em] mb-2">En vedette</span>
+                                        <h5 className="text-white font-black text-xl leading-tight uppercase">
+                                            {activeCategory.name}
+                                        </h5>
+                                        <div className="mt-4 flex items-center gap-2 text-white/80 text-xs font-bold uppercase transition-all group-hover:gap-4 group-hover:text-white">
+                                            Découvrir <ChevronRight className="w-4 h-4" />
+                                        </div>
                                     </div>
-                                </div>
-                            </Link>
+                                </Link>
+                            )}
 
                             <Link href="/promotions" className="block mt-6 p-5 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-primary/30 hover:shadow-lg transition-all group/flash">
                                 <div className="flex items-center gap-3 mb-3">

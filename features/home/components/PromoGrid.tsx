@@ -227,6 +227,7 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
                         className="object-contain drop-shadow-[0_25px_25px_rgba(0,0,0,0.12)] select-none"
                         sizes="(max-width: 768px) 100vw, 50vw"
                         priority
+                        unoptimized
                     />
                 </div>
             </div>
