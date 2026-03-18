@@ -43,7 +43,7 @@ export default function CategoriesPage() {
                             className="group bg-white rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500"
                         >
                             <div className="relative h-48 md:h-64 overflow-hidden">
-                                <Image src={cat.image} alt={cat.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                                <Image src={cat.image} alt={cat.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized={cat.image.startsWith('http')} />
                                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all duration-500" />
                                 <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8">
                                     <span className="bg-primary text-white text-[9px] md:text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">

@@ -8,9 +8,11 @@ const redisClientSingleton = () => {
         maxRetriesPerRequest: null, // ioredis recommends null for better handling with retryStrategy
         tls: url.startsWith('rediss://') ? {} : undefined,
         retryStrategy: (times) => {
-            const delay = Math.min(times * 200, 10000);
+            if (times > 3) return null; // Stop retrying after 3 failures
+            const delay = Math.min(times * 1000, 5000);
             return delay;
         },
+        connectTimeout: 5000,
         enableReadyCheck: false,
         reconnectOnError: (err) => {
             const targetError = 'READONLY';
@@ -22,8 +24,9 @@ const redisClientSingleton = () => {
     });
 
     client.on('error', (err) => {
-        console.warn('[Redis] Connection Error:', err.message);
-        console.warn('[Redis] Make sure your Redis server is running (e.g., docker run -d -p 6379:6379 redis:alpine)');
+        // Just log once and be quiet
+        if (client.listenerCount('error') > 1) return; 
+        console.log(`[Redis] Status: Offline (${err.message})`);
     });
 
     return client;
