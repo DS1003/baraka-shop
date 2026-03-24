@@ -14,7 +14,7 @@ async function main() {
         connectionString: process.env.DATABASE_URL,
         ssl: { rejectUnauthorized: false }
     });
-    const adapter = new AdapterPg(pool);
+    const adapter = new AdapterPg(pool as any);
     const prisma = new PrismaClient({ adapter });
 
     try {
