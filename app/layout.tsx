@@ -42,6 +42,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { OrientationBlocker } from '@/components/OrientationBlocker'
+
 export default function RootLayout({
   children,
 }: {
@@ -55,6 +57,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <OrientationBlocker />
           {children}
           <ScrollToTop />
         </Providers>
