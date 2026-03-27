@@ -1,6 +1,5 @@
 'use client'
 
-import { PhoneIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export function OrientationBlocker() {
@@ -31,7 +30,17 @@ export function OrientationBlocker() {
             <div className="relative mb-8">
                 <div className="absolute -inset-4 rounded-full bg-primary/10 animate-ping duration-[2000ms]" />
                 <div className="relative rounded-2xl bg-primary/20 p-4">
-                    <PhoneIcon className="h-12 w-12 text-primary rotate-90 animate-infinite-rotate" />
+                    <svg 
+                        viewBox="0 0 24 24" 
+                        className="h-12 w-12 text-primary animate-infinite-rotate"
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path 
+                            fill="currentColor" 
+                            d="M9 1H3a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2m0 14H3V3h6zm12-2h-8v2h8v6H9v-1H6v1a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2m2-3l-4-2l1.91-.91A7.52 7.52 0 0 0 14 2.5V1a9 9 0 0 1 9 9"
+                        />
+                    </svg>
                 </div>
             </div>
 
@@ -51,9 +60,9 @@ export function OrientationBlocker() {
 
             <style jsx global>{`
                 @keyframes infinite-rotate {
-                    0% { transform: rotate(90deg); }
-                    50% { transform: rotate(0deg); }
-                    100% { transform: rotate(90deg); }
+                    0% { transform: scale(1) rotate(0deg); }
+                    50% { transform: scale(1.1) rotate(-90deg); }
+                    100% { transform: scale(1) rotate(0deg); }
                 }
                 .animate-infinite-rotate {
                     animation: infinite-rotate 3s ease-in-out infinite;
