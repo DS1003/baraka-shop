@@ -924,3 +924,4 @@ export async function updateCustomer(id: string, data: any) {
         return { success: false, message: "Erreur serveur lors de la mise à jour du client." };
     }
 }
+

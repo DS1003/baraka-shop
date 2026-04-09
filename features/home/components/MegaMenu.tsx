@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import {
     ChevronRight, Laptop, Smartphone, Headphones, Camera,
     Zap, Tablet, Monitor, Cpu, Mouse, Tv, Speaker, HardDrive, Gamepad2,
@@ -15,13 +16,21 @@ import { MENU_CATEGORIES } from '@/lib/data'
 
 interface MegaMenuProps {
     categories: any[];
+    onClose: () => void;
 }
 
-export function MegaMenu({ categories }: MegaMenuProps) {
+export function MegaMenu({ categories, onClose }: MegaMenuProps) {
+    const router = useRouter()
     const [activeTab, setActiveTab] = useState(categories[0]?.id || '')
     const activeCategory = categories.find(c => c.id === activeTab) || categories[0]
 
     if (!categories || categories.length === 0) return null;
+
+    const handleLinkClick = (href: string) => {
+        onClose();
+        // Utilisation de window.location pour forcer un rechargement complet comme demandé
+        window.location.href = href;
+    }
 
     return (
         <motion.div
@@ -29,17 +38,17 @@ export function MegaMenu({ categories }: MegaMenuProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full left-0 w-screen max-w-[1240px] h-[600px] bg-white text-black shadow-2xl border border-gray-100 rounded-b-2xl overflow-hidden z-50 flex"
+            className="w-full max-w-[1500px] h-[600px] mx-auto bg-white text-black shadow-2xl border border-gray-100 rounded-b-2xl overflow-hidden z-50 flex relative"
         >
             {/* Left Column: Categories List (LDLC Style Sidebar) */}
             <div className="w-[280px] bg-white border-r border-gray-100 flex flex-col pt-2 overflow-y-auto custom-scrollbar">
                 {categories.map((cat) => (
-                    <Link
+                    <div
                         key={cat.id}
-                        href={`/boutique?category=${cat.slug}`}
                         onMouseEnter={() => setActiveTab(cat.id)}
+                        onClick={() => handleLinkClick(`/boutique?category=${cat.slug}`)}
                         className={cn(
-                            "flex items-center justify-between px-6 py-3.5 text-left transition-all border-b border-gray-50 last:border-0",
+                            "flex items-center justify-between px-6 py-3.5 text-left transition-all border-b border-gray-50 last:border-0 cursor-pointer",
                             activeTab === cat.id
                                 ? "bg-gray-50 text-primary border-l-4 border-l-primary"
                                 : "text-[#1B1F3B] hover:bg-gray-50/50"
@@ -52,7 +61,7 @@ export function MegaMenu({ categories }: MegaMenuProps) {
                             {cat.name}
                         </span>
                         <ChevronRight className={cn("w-3.5 h-3.5", activeTab === cat.id ? "text-primary opacity-100" : "text-gray-300 opacity-60")} />
-                    </Link>
+                    </div>
                 ))}
             </div>
 
@@ -71,21 +80,21 @@ export function MegaMenu({ categories }: MegaMenuProps) {
                         <div className="flex-1 grid grid-cols-3 gap-x-8 gap-y-10 overflow-y-auto pr-8 custom-scrollbar">
                             {activeCategory?.subCategories?.map((sub: any, idx: number) => (
                                 <div key={sub.id} className="flex flex-col gap-4">
-                                    <Link
-                                        href={`/boutique?category=${activeCategory.slug}&sub=${sub.slug}`}
-                                        className="text-[12px] font-black uppercase text-[#1B1F3B] tracking-wider pb-2 border-b border-gray-200 hover:text-primary transition-colors"
+                                    <div
+                                        onClick={() => handleLinkClick(`/boutique?category=${activeCategory.slug}&sub=${sub.slug}`)}
+                                        className="text-[12px] font-black uppercase text-[#1B1F3B] tracking-wider pb-2 border-b border-gray-200 hover:text-primary transition-colors cursor-pointer"
                                     >
                                         {sub.name}
-                                    </Link>
+                                    </div>
                                     <ul className="flex flex-col gap-2.5">
                                         {sub.thirdLevelCategories?.map((third: any) => (
                                             <li key={third.id}>
-                                                <Link
-                                                    href={`/boutique?category=${activeCategory.slug}&sub=${sub.slug}&third=${third.slug}`}
-                                                    className="text-[13px] text-gray-500 hover:text-primary transition-colors uppercase font-medium"
+                                                <div
+                                                    onClick={() => handleLinkClick(`/boutique?category=${activeCategory.slug}&sub=${sub.slug}&third=${third.slug}`)}
+                                                    className="text-[13px] text-gray-500 hover:text-primary transition-colors uppercase font-medium cursor-pointer"
                                                 >
                                                     {third.name}
-                                                </Link>
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>
@@ -96,7 +105,7 @@ export function MegaMenu({ categories }: MegaMenuProps) {
                         {/* Visual Banner (Right Side) */}
                         <div className="w-[280px] shrink-0">
                             {activeCategory && (
-                                <Link href={`/boutique?category=${activeCategory.slug}`} className="block relative h-[350px] w-full rounded-xl overflow-hidden shadow-lg group">
+                                <div onClick={() => handleLinkClick(`/boutique?category=${activeCategory.slug}`)} className="block relative h-[350px] w-full rounded-xl overflow-hidden shadow-lg group cursor-pointer">
                                     <Image
                                         src={activeCategory.image || '/placeholder.png'}
                                         alt={activeCategory.name}
@@ -113,7 +122,7 @@ export function MegaMenu({ categories }: MegaMenuProps) {
                                             Découvrir <ChevronRight className="w-4 h-4" />
                                         </div>
                                     </div>
-                                </Link>
+                                </div>
                             )}
 
                             <Link href="/promotions" className="block mt-6 p-5 bg-white border border-gray-100 rounded-xl shadow-sm hover:border-primary/30 hover:shadow-lg transition-all group/flash">

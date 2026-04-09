@@ -147,7 +147,7 @@ export function Header() {
                 scrolled ? "h-[70px] md:h-[80px]" : "h-auto"
             )}>
                 <div className={cn(
-                    "bg-white py-4 border-b border-gray-100 transition-all duration-300 z-[100] w-full",
+                    "bg-white py-2 border-b border-gray-100 transition-all duration-300 z-[100] w-full",
                     scrolled ? "fixed top-0 left-0 right-0 shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2.5 backdrop-blur-xl bg-white/95" : "relative"
                 )}>
                     <Container className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -158,7 +158,7 @@ export function Header() {
                                     y: scrolled ? -2 : 0
                                 }}
                                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                className="relative w-[160px] h-[45px] md:w-[190px] md:h-[50px]"
+                                className="relative w-[180px] h-[50px] md:w-[240px] md:h-[65px]"
                             >
                                 <Image
                                     src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png"
@@ -268,22 +268,21 @@ export function Header() {
                 <Container className="relative flex items-center h-[55px]">
                     <div
                         className="h-full flex items-center mr-8 pr-8 border-r border-white/10 cursor-pointer group relative"
-                        onMouseEnter={() => setShowMegaMenu(true)}
-                        onMouseLeave={() => setShowMegaMenu(false)}
+                        onClick={() => setShowMegaMenu(!showMegaMenu)}
                     >
-                        <div className="flex items-center gap-3 bg-primary text-white px-6 h-[40px] rounded-lg font-bold text-xs uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                            <Menu className="w-4 h-4" />
+                        <div className="flex items-center gap-4 bg-primary text-white px-8 h-[48px] rounded-full font-black text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 scale-105 origin-left">
+                            <Menu className="w-5 h-5" />
                             <span>Catégories</span>
-                            <ChevronDown className="w-3.5 h-3.5 opacity-70 group-hover:rotate-180 transition-transform" />
+                            <ChevronDown className="w-4 h-4 opacity-70 group-hover:rotate-180 transition-transform" />
                         </div>
-                        <AnimatePresence>
-                            {showMegaMenu && (
-                                <div className="absolute top-full left-0 mt-[1px]" onMouseEnter={() => setShowMegaMenu(true)} onMouseLeave={() => setShowMegaMenu(false)}>
-                                    <MegaMenu categories={categories} />
-                                </div>
-                            )}
-                        </AnimatePresence>
                     </div>
+                    <AnimatePresence>
+                        {showMegaMenu && (
+                            <div className="absolute top-full left-0 w-full px-4 md:px-6 lg:px-8 z-[120]">
+                                <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
+                            </div>
+                        )}
+                    </AnimatePresence>
 
                     <nav className="flex items-center gap-10">
                         {navigation.map((item) => (
@@ -324,7 +323,7 @@ export function Header() {
                     <Menu className="w-6 h-6 text-[#1B1F3B]" />
                 </button>
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2">
-                    <div className="relative w-[120px] h-[35px]">
+                    <div className="relative w-[150px] h-[45px]">
                         <Image src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" alt="Baraka Shop" fill className="object-contain" priority unoptimized />
                     </div>
                 </Link>

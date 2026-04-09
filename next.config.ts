@@ -59,6 +59,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'logos-world.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.pngmart.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.pngall.com',
       }
     ],
   },

@@ -126,7 +126,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 export function useCart() {
     const context = useContext(CartContext);
     if (!context) {
-        throw new Error('useCart must be used within a CartProvider');
+        // En cas de rendu côté serveur (SSR) ou s'il manque le Provider, 
+        // on retourne un contexte factice pour éviter de faire planter l'application.
+        return {
+            cartItems: [],
+            addToCart: () => { },
+            removeFromCart: () => { },
+            updateQty: () => { },
+            clearCart: () => { },
+            itemCount: 0,
+            subtotal: 0,
+            lastAddedItem: null,
+            isToastVisible: false,
+            showToast: () => { },
+            hideToast: () => { },
+        } as CartContextType;
     }
     return context;
 }

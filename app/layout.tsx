@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { Providers } from '@/components/providers'
-import { ScrollToTop } from '@/ui/ScrollToTop'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -42,6 +41,9 @@ export const metadata: Metadata = {
   },
 }
 
+import { ScrollToTop } from '@/ui/ScrollToTop'
+import { WhatsAppButton } from '@/ui/WhatsAppButton'
+
 import { OrientationBlocker } from '@/components/OrientationBlocker'
 
 export default function RootLayout({
@@ -59,6 +61,7 @@ export default function RootLayout({
         <Providers>
           <OrientationBlocker />
           {children}
+          <WhatsAppButton />
           <ScrollToTop />
         </Providers>
       </body>

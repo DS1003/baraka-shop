@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
     CreditCard,
@@ -20,7 +20,9 @@ import {
     LayoutGrid,
     MoreHorizontal,
     Loader2,
-    PieChart as PieChartIcon
+    PieChart as PieChartIcon,
+    Radio,
+    RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getDashboardStats, getCategoryRevenue, getRecentActivity } from '@/lib/actions/admin-actions';
@@ -40,6 +42,8 @@ import {
     Legend
 } from 'recharts';
 
+const DASHBOARD_POLL_INTERVAL = 30_000; // 30 seconds
+
 export default function AdminDashboard() {
     const [chartMode, setChartMode] = useState<'revenues' | 'orders' | 'basket'>('revenues');
     const [stats, setStats] = useState<any>(null);
@@ -47,28 +51,45 @@ export default function AdminDashboard() {
     const [categoryRevenue, setCategoryRevenue] = useState<any[]>([]);
     const [recentActivities, setRecentActivities] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isLive, setIsLive] = useState(false);
+    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+    const isFirstLoadRef = useRef(true);
 
-    useEffect(() => {
-        async function loadData() {
+    const loadData = useCallback(async () => {
+        if (isFirstLoadRef.current) {
             setLoading(true);
-            try {
-                const [dashStats, catRev, activities] = await Promise.all([
-                    getDashboardStats(),
-                    getCategoryRevenue(),
-                    getRecentActivity()
-                ]);
-                setStats(dashStats.stats);
-                setRevenueHistory(dashStats.revenueHistory);
-                setCategoryRevenue(catRev);
-                setRecentActivities(activities);
-            } catch (err) {
-                console.error("Failed to load dashboard data", err);
-            } finally {
-                setLoading(false);
-            }
         }
-        loadData();
+        try {
+            const [dashStats, catRev, activities] = await Promise.all([
+                getDashboardStats(),
+                getCategoryRevenue(),
+                getRecentActivity()
+            ]);
+            setStats(dashStats.stats);
+            setRevenueHistory(dashStats.revenueHistory);
+            setCategoryRevenue(catRev);
+            setRecentActivities(activities);
+            setIsLive(true);
+            setLastRefresh(new Date());
+        } catch (err) {
+            console.error("Failed to load dashboard data", err);
+            setIsLive(false);
+        } finally {
+            setLoading(false);
+            isFirstLoadRef.current = false;
+        }
     }, []);
+
+    // Initial load
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    // Polling interval
+    useEffect(() => {
+        const timer = setInterval(loadData, DASHBOARD_POLL_INTERVAL);
+        return () => clearInterval(timer);
+    }, [loadData]);
 
     if (loading) {
         return (

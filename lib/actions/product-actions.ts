@@ -361,7 +361,7 @@ async function getEntityIds(products: ImportProduct[]) {
                 create: {
                     name: subName,
                     categoryId,
-                    slug: slugify(`${catName}-${subName}`) || `sub-${Math.random().toString(36).substring(2, 7)}`
+                    slug: slugify(`${catName}-${subName}-${Math.random().toString(36).substring(2, 5)}`) || `sub-${Math.random().toString(36).substring(2, 7)}`
                 }
             });
             id = sub.id;
@@ -391,7 +391,7 @@ async function getEntityIds(products: ImportProduct[]) {
                 create: {
                     name: thirdName,
                     subCategoryId: subCatId,
-                    slug: slugify(`${catName}-${subName}-${thirdName}`) || `third-${Math.random().toString(36).substring(2, 7)}`
+                    slug: slugify(`${catName}-${subName}-${thirdName}-${Math.random().toString(36).substring(2, 5)}`) || `third-${Math.random().toString(36).substring(2, 7)}`
                 }
             });
             id = third.id;
