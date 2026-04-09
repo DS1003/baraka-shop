@@ -36,6 +36,21 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
     const [activeImg, setActiveImg] = useState(0)
     const [quantity, setQuantity] = useState(1)
     const [activeTab, setActiveTab] = useState('description')
+    const [showStickyBar, setShowStickyBar] = useState(false)
+ 
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollThreshold = 600
+            if (window.scrollY > scrollThreshold) {
+                setShowStickyBar(true)
+            } else {
+                setShowStickyBar(false)
+            }
+        }
+
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
 
     const [currentIndexSimilar, setCurrentIndexSimilar] = useState(0)
     const [directionSimilar, setDirectionSimilar] = useState(0)
@@ -470,6 +485,60 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     </div>
                 </div>
             )}
+            {/* Sticky Buy Bar */}
+            <AnimatePresence>
+                {showStickyBar && (
+                    <motion.div
+                        initial={{ y: 100 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: 100 }}
+                        className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] py-4"
+                    >
+                        <Container>
+                            <div className="flex items-center justify-between gap-8">
+                                <div className="hidden lg:flex flex-col gap-1 max-w-md">
+                                    <h4 className="font-black text-[#1B1F3B] text-sm uppercase tracking-tight line-clamp-1">{product.name}</h4>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex gap-0.5">
+                                            {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
+                                        </div>
+                                        <span className="text-[10px] font-bold text-gray-400">{(product.rating || 5)}.0</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-8 ml-auto">
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prix Total</span>
+                                        <span className="text-xl md:text-2xl font-black text-[#1B1F3B] tracking-tighter">
+                                            {(product.price * quantity).toLocaleString()} <span className="text-[10px] text-primary italic lowercase">cfa</span>
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => addToCart(product, quantity)}
+                                            className="h-12 px-6 md:px-8 bg-primary text-white hover:bg-[#1B1F3B] rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                                        >
+                                            <ShoppingCart className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Ajouter</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                addToCart(product, quantity);
+                                                window.location.href = '/checkout';
+                                            }}
+                                            className="h-12 px-6 md:px-8 bg-white text-[#1B1F3B] border-2 border-primary hover:bg-primary/5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2"
+                                        >
+                                            <Zap className="w-4 h-4 text-primary fill-primary" />
+                                            <span className="hidden sm:inline">Achat Rapide</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Container>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </Container>
     )
 }
