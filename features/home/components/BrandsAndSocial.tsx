@@ -35,7 +35,7 @@ export function BrandsAndSocial() {
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
 
-    const chunkSize = isMobile ? 2 : 3
+    const chunkSize = isMobile ? 4 : 6
     const brandChunks = brands.reduce((resultArray: any[][], item, index) => {
         const chunkIndex = Math.floor(index / chunkSize);
         if (!resultArray[chunkIndex]) {
@@ -90,38 +90,38 @@ export function BrandsAndSocial() {
                                 <div className="flex flex-row items-center justify-between gap-4">
                                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight leading-tight">Nos Marques <span className="text-primary italic">Officielles</span></h2>
 
-                                    {/* Cluster Buttons - Now aligned with H2 on mobile too */}
-                                    <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                                        <div className="flex gap-1.5 md:gap-2">
-                                            <button
-                                                onClick={slidePrev}
-                                                disabled={brandChunks.length <= 1}
-                                                className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
-                                            >
-                                                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-                                            </button>
-                                            <button
-                                                onClick={slideNext}
-                                                disabled={brandChunks.length <= 1}
-                                                className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
-                                            >
-                                                <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-                                            </button>
+                                    {/* Cluster Buttons - Hidden if all visible */}
+                                    {brandChunks.length > 1 && (
+                                        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                                            <div className="flex gap-1.5 md:gap-2">
+                                                <button
+                                                    onClick={slidePrev}
+                                                    className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                                                >
+                                                    <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={slideNext}
+                                                    className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                                                >
+                                                    <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <Link
-                                            href="/marques"
-                                            className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
-                                        >
-                                            <Plus className="w-5 h-5 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
-                                        </Link>
-                                    </div>
+                                    )}
+                                    <Link
+                                        href="/marques"
+                                        className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
+                                    >
+                                        <Plus className="w-5 h-5 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                                    </Link>
                                 </div>
 
                                 <p className="text-gray-400 text-sm max-w-sm leading-relaxed">Nous collaborons avec les leaders mondiaux pour vous garantir l'excellence technologique.</p>
                             </div>
                         </div>
 
-                        <div className="relative h-56 md:h-64 mt-4">
+                        <div className="relative min-h-[230px] md:min-h-[250px] mt-4">
                             <AnimatePresence initial={false} custom={direction} mode="wait">
                                 <motion.div
                                     key={currentIndex}
@@ -135,7 +135,7 @@ export function BrandsAndSocial() {
                                         opacity: { duration: 0.2 }
                                     }}
                                     className={cn(
-                                        "absolute inset-0 grid gap-6",
+                                        "absolute inset-0 grid gap-6 grid-rows-2",
                                         isMobile ? "grid-cols-2" : "grid-cols-3"
                                     )}
                                 >
