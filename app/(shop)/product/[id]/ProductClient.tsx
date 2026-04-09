@@ -99,8 +99,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
     ]
 
     return (
-        <Container className="py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <Container className="py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Image Gallery */}
                 <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-6">
                     <div className="relative aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-8 md:p-12 group/main-img">
@@ -147,16 +147,16 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                 {/* Product Info */}
                 <div className="lg:col-span-12 xl:col-span-7 flex flex-col pt-2">
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
                         <span className="text-primary font-black text-[10px] uppercase tracking-[0.3em]">Premium Quality</span>
                         <div className="h-px flex-1 bg-gray-100" />
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-[1.1] mb-6">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-[1.1] mb-3">
                         {product.name}
                     </h1>
 
-                    <div className="flex items-center gap-4 mb-8">
+                    <div className="flex items-center gap-4 mb-4">
                         <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
                              <div className="w-2 h-2 rounded-full bg-primary" />
                              <span className="text-[11px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
@@ -166,7 +166,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-8 mb-10 pb-10 border-b border-gray-100/60">
+                    <div className="flex items-center gap-8 mb-6 pb-6 border-b border-gray-100/60">
                         <div className="flex items-center gap-2">
                             <div className="flex gap-0.5">
                                 {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
@@ -187,8 +187,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     </div>
 
                     {/* Description Courte */}
-                    <div className="mb-12">
-                        <div className="space-y-4 max-w-2xl">
+                    <div className="mb-6">
+                        <div className="space-y-2 max-w-2xl">
                             <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Description courte</h3>
                             <p className="text-gray-500 text-[16px] leading-relaxed font-medium">
                                 {product.description || "Découvrez l'élégance et la technologie de pointe combinées dans ce produit d'exception, sélectionné par Baraka Shop pour son rapport qualité-prix imbattable."}
@@ -196,8 +196,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
                     </div>
 
-                    <div className="bg-[#1B1F3B] rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/10 mb-6">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+                    <div className="bg-[#1B1F3B] rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/10 mb-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex flex-col gap-1">
                                 <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Prix de vente officiel</span>
                                 <div className="flex items-baseline gap-4">
@@ -225,7 +225,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                             </div>
                         </div>
 
-                        <div className="h-px bg-white/5 my-8" />
+                        <div className="h-px bg-white/5 my-4" />
 
                         <div className="flex flex-col sm:flex-row items-center gap-6">
                             <div className="flex items-center bg-white/5 rounded-2xl p-2 border border-white/10 w-full sm:w-auto">
@@ -299,8 +299,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
             </div>
 
             {/* Content Tabs */}
-            <div className="mt-24">
-                <div className="flex items-center gap-8 md:gap-14 border-b border-gray-100 mb-12 overflow-x-auto scrollbar-hide px-4">
+            <div className="mt-12">
+                <div className="flex items-center gap-8 md:gap-14 border-b border-gray-100 mb-6 overflow-x-auto scrollbar-hide px-4">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
@@ -426,8 +426,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
             {/* Similar Products */}
             {similarProducts.length > 0 && (
-                <div className="mt-32">
-                    <div className="flex items-end justify-between mb-12">
+                <div className="mt-16">
+                    <div className="flex items-end justify-between mb-8">
                         <div className="flex flex-col gap-2">
                             <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Découverte</span>
                             <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Produits <span className="text-primary italic">Similaires</span></h2>

@@ -28,7 +28,19 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                 </Link>
                 <div className="p-8 flex flex-col justify-center flex-1">
                     <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{categoryName}</span>
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{categoryName}</span>
+                            {product.stock > 0 ? (
+                                <span className="bg-green-50 text-green-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-green-100 flex items-center gap-1">
+                                    <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                                    En Stock
+                                </span>
+                            ) : (
+                                <span className="bg-red-50 text-red-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-100 flex items-center gap-1">
+                                    Rupture
+                                </span>
+                            )}
+                        </div>
                         <div className="flex items-center gap-1">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-[10px] font-black text-gray-400">{product.rating || 5}.0</span>
@@ -73,14 +85,22 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-20">
+                    {product.stock > 0 ? (
+                        <span className="bg-green-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm flex items-center gap-1">
+                            <div className="w-1 h-1 rounded-full bg-white animate-pulse" />
+                            En Stock
+                        </span>
+                    ) : (
+                        <span className="bg-red-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Rupture</span>
+                    )}
                     {product.isNew && (
-                        <span className="bg-green-500 text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Nouveau</span>
+                        <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Nouveau</span>
                     )}
                     {product.isSale && (
-                        <span className="bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Promo</span>
+                        <span className="bg-orange-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Promo</span>
                     )}
                     {product.badges?.map((badge: any, idx: number) => (
-                        <span key={idx} className={cn("text-white text-[9px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm", badge.color)}>
+                        <span key={idx} className={cn("text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm backdrop-blur-sm", badge.color)}>
                             {badge.text}
                         </span>
                     ))}
