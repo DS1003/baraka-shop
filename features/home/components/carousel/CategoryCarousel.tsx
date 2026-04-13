@@ -122,7 +122,7 @@ export function CategoryCarousel({ initialCategories }: { initialCategories?: an
                             >
                                 <Link
                                     href={`/category/${category.slug}`}
-                                    className="group relative flex flex-col h-[180px] md:h-[220px] bg-white rounded-xl border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:border-primary/20 hover:-translate-y-1 p-3 md:p-5 overflow-hidden"
+                                    className="group relative flex flex-col h-[220px] md:h-[280px] bg-white rounded-xl border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:border-primary/20 hover:-translate-y-1 p-3 md:p-5 overflow-hidden"
                                 >
                                     {/* Card Header */}
                                     <div className="relative z-10 flex flex-col items-center text-center">
@@ -136,7 +136,7 @@ export function CategoryCarousel({ initialCategories }: { initialCategories?: an
 
                                     {/* Product Image */}
                                     <div className="relative flex-1 flex items-center justify-center my-1 md:my-2">
-                                        <div className="relative w-full h-[70px] md:h-[90px] transform transition-all duration-500 group-hover:scale-110">
+                                        <div className="relative w-full h-[110px] md:h-[150px] transform transition-all duration-500 group-hover:scale-110">
                                             <Image
                                                 src={image}
                                                 alt={category.name}

@@ -40,6 +40,7 @@ import {
     upsertProduct,
     getAdminCategories,
     getAdminBrands as getBrands,
+    getAdminStores,
     getSubCategories,
     getThirdLevelCategories,
     deleteAllProducts
@@ -86,6 +87,7 @@ export default function ProductsPage() {
     const [subCategories, setSubCategories] = useState<any[]>([]);
     const [thirdCategories, setThirdCategories] = useState<any[]>([]);
     const [brands, setBrands] = useState<any[]>([]);
+    const [stores, setStores] = useState<any[]>([]);
 
     const [filterSubCategories, setFilterSubCategories] = useState<any[]>([]);
     const [filterThirdCategories, setFilterThirdCategories] = useState<any[]>([]);
@@ -120,9 +122,14 @@ export default function ProductsPage() {
 
     useEffect(() => {
         const loadMetadata = async () => {
-            const [cats, brs] = await Promise.all([getAdminCategories(), getBrands()]);
+            const [cats, brs, sts] = await Promise.all([
+                getAdminCategories(), 
+                getBrands(),
+                getAdminStores()
+            ]);
             setCategories(cats);
             setBrands(brs);
+            setStores(sts);
         };
         loadMetadata();
     }, []);
@@ -254,6 +261,7 @@ export default function ProductsPage() {
             subCategoryId: formData.get('subCategoryId') as string || null,
             thirdLevelCategoryId: formData.get('thirdLevelCategoryId') as string || null,
             brandId: formData.get('brandId') as string || null,
+            storeId: formData.get('storeId') as string || null,
             images: formImages
         };
 
@@ -475,6 +483,7 @@ export default function ProductsPage() {
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N1</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N2</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N3</th>
+                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Boutique</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Prix</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Stock</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Status</th>
@@ -573,6 +582,15 @@ export default function ProductsPage() {
                                             {p.thirdLevelCategory ? (
                                                 <span className="inline-flex px-3 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 text-[10px] font-bold uppercase tracking-tight">
                                                     {p.thirdLevelCategory.name}
+                                                </span>
+                                            ) : (
+                                                <span className="text-slate-300">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-4 border-b border-slate-50">
+                                            {p.store ? (
+                                                <span className="inline-flex px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-tight">
+                                                    {p.store.name}
                                                 </span>
                                             ) : (
                                                 <span className="text-slate-300">-</span>
@@ -938,6 +956,18 @@ export default function ProductsPage() {
                                             >
                                                 <option value="">Aucune</option>
                                                 {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Boutique (Vendor)</label>
+                                            <select
+                                                name="storeId"
+                                                defaultValue={editingProduct?.storeId}
+                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
+                                            >
+                                                <option value="">Aucune (Baraka General)</option>
+                                                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                             </select>
                                         </div>
                                     </div>

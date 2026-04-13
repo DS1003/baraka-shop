@@ -59,6 +59,9 @@ model Product {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
+  store         Store?       @relation(fields: [storeId], references: [id])
+  storeId       String?
+
   promotion     Promotion?   @relation(fields: [promotionId], references: [id], onDelete: SetNull)
   promotionId   String?
 
@@ -72,6 +75,7 @@ model Product {
   @@index([subCategoryId])
   @@index([thirdLevelCategoryId])
   @@index([brandId])
+  @@index([storeId])
   @@index([stock])
 }
 
@@ -197,5 +201,16 @@ model Promotion {
   updatedAt          DateTime  @updatedAt
 
   products           Product[]
+}
+
+model Store {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  logo        String?
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 

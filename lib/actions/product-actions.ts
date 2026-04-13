@@ -11,6 +11,7 @@ export async function getProductsAction(options: {
     query?: string;
     category?: string;
     brand?: string;
+    store?: string;
     minPrice?: number;
     maxPrice?: number;
     sort?: string;
@@ -22,6 +23,7 @@ export async function getProductsAction(options: {
         query,
         category,
         brand,
+        store,
         minPrice,
         maxPrice,
         sort = 'newest',
@@ -56,6 +58,10 @@ export async function getProductsAction(options: {
 
         if (brand) {
             where.brand = { slug: brand };
+        }
+
+        if (store) {
+            where.store = { slug: store };
         }
 
         if (onSale) {
@@ -490,6 +496,7 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                     thirdLevelCategoryId: thirdId || null,
                     brandId: bId || null,
                     images: p.images ? (Array.isArray(p.images) ? p.images : p.images.split(',').map(img => img.trim())) : [],
+                    storeId: p.metadata?.storeId || null,
                     metadata: {
                         ...(p.metadata || {}),
                         importedAt: new Date().toISOString()

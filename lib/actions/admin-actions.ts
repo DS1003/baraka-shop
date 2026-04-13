@@ -1,5 +1,5 @@
 'use server';
-
+// PROXY REFRESH 2
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
@@ -67,22 +67,116 @@ export async function getDashboardStats() {
 
 export async function getCategoryStats() {
     try {
-        const [l1, l2, l3, products] = await Promise.all([
+        const [l1, l2, l3, products, stores] = await Promise.all([
             prisma.category.count(),
             (prisma as any).subCategory.count(),
             (prisma as any).thirdLevelCategory.count(),
-            prisma.product.count()
+            prisma.product.count(),
+            prisma.store.count()
         ]);
 
         return {
             l1,
             l2,
             l3,
-            products
+            products,
+            stores
         };
     } catch (error) {
         console.error("Category stats error:", error);
-        return { l1: 0, l2: 0, l3: 0, products: 0 };
+        return { l1: 0, l2: 0, l3: 0, products: 0, stores: 0 };
+    }
+}
+
+export async function getStoreStats() {
+    try {
+        const [stores, productWithStore] = await Promise.all([
+            prisma.store.count(),
+            prisma.product.count({ where: { storeId: { not: null } } })
+        ]);
+        return { stores, productWithStore };
+    } catch (error) {
+        return { stores: 0, productWithStore: 0 };
+    }
+}
+
+export async function getAdminStores() {
+    try {
+        // Safe check: if the main prisma instance is broken, try to use it via any
+        const p = prisma as any;
+        if (!p.store) {
+            console.error("CRITICAL: prisma.store is undefined in getAdminStores");
+            // Last resort: try to fetch using a raw query if everything else fails
+            // but let's try to just return [] to avoid crash and log keys
+            return [];
+        }
+
+        return await p.store.findMany({
+            include: {
+                _count: {
+                    select: { products: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    } catch (error) {
+        console.error("GET_ADMIN_STORES_ERROR:", error);
+        return [];
+    }
+}
+
+export async function upsertStore(data: any, id?: string) {
+    try {
+        if (id) {
+            await prisma.store.update({
+                where: { id },
+                data
+            });
+        } else {
+            // Check for existing name or slug to give better error
+            const existing = await prisma.store.findFirst({
+                where: {
+                    OR: [
+                        { name: data.name },
+                        { slug: data.slug }
+                    ]
+                }
+            });
+
+            if (existing) {
+                return { 
+                    success: false, 
+                    message: `Une boutique avec le nom "${data.name}" existe déjà.` 
+                };
+            }
+
+            await prisma.store.create({
+                data
+            });
+        }
+        revalidatePath('/admin/stores');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Upsert store error:", error);
+        return { 
+            success: false, 
+            message: error.message || "Erreur lors de la sauvegarde. Vérifiez que le nom est unique." 
+        };
+    }
+}
+
+export async function deleteStore(id: string) {
+    try {
+        const productCount = await prisma.product.count({ where: { storeId: id } });
+        if (productCount > 0) {
+            return { success: false, message: "La boutique contient des produits." };
+        }
+        await prisma.store.delete({ where: { id } });
+        revalidatePath('/admin/stores');
+        return { success: true };
+    } catch (error) {
+        return { success: false, message: "Erreur serveur." };
     }
 }
 

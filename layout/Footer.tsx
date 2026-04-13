@@ -25,7 +25,7 @@ export function Footer() {
                     {/* Brand Section */}
                     <div className="mb-16 md:mb-20 flex flex-col items-center max-w-2xl px-4">
                         <Link href="/" className="mb-8 block">
-                            <div className="relative w-[240px] md:w-[320px] h-[80px] md:h-[110px]">
+                            <div className="relative w-[380px] md:w-[550px] h-[130px] md:h-[180px]">
                                 <Image
                                     src="https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png"
                                     alt="Baraka Shop"

@@ -96,6 +96,33 @@ export function PromoGrid() {
     return (
         <section className="py-12 md:py-24 overflow-hidden bg-white">
             <Container>
+                {/* Header with Navigation - Visible on both, but nav buttons hidden on desktop */}
+                <div className="flex items-center justify-between mb-10 px-2 md:px-0">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-[2px] bg-primary rounded-full" />
+                            <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
+                        </div>
+                        <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
+                            Nos <span className="text-primary italic">Incontournables</span>
+                        </h2>
+                    </div>
+                    <div className="flex md:hidden gap-2.5">
+                        <button
+                            onClick={slidePrev}
+                            className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={slideNext}
+                            className="w-12 h-12 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                        >
+                            <ChevronRight className="w-5 h-5 text-primary" />
+                        </button>
+                    </div>
+                </div>
+
                 {/* Desktop Grid */}
                 <div className="hidden md:grid grid-cols-4 gap-8">
                     {promos.map((promo, idx) => (
@@ -105,28 +132,6 @@ export function PromoGrid() {
 
                 {/* Mobile Carousel */}
                 <div className="md:hidden relative px-1">
-                    {/* Header with Navigation */}
-                    <div className="flex items-center justify-between mb-10 px-2">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">Baraka Selection</span>
-                            <h2 className="text-3xl font-bold text-[#1B1F3B] tracking-tight">Nos <span className="text-primary italic font-serif">Incontournables</span></h2>
-                        </div>
-                        <div className="flex gap-2.5">
-                            <button
-                                onClick={slidePrev}
-                                className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={slideNext}
-                                className="w-12 h-12 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
-                            >
-                                <ChevronRight className="w-5 h-5 text-primary" />
-                            </button>
-                        </div>
-                    </div>
-
                     <div className="relative h-[560px] w-full mb-10">
                         <AnimatePresence initial={false} custom={direction}>
                             <motion.div

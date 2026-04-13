@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, ArrowRight, X } from 'lucide-react'
@@ -13,6 +13,7 @@ import { useSession } from 'next-auth/react'
 import { useCart } from '@/context/CartContext'
 import { useRouter } from 'next/navigation'
 import { getProductsAction, getMegaMenuAction } from '@/lib/actions/product-actions'
+import { getStoresAction } from '@/lib/actions/store-actions'
 import { CartToast } from '@/components/CartToast'
 import { MiniCart } from '@/components/MiniCart'
 
@@ -23,10 +24,17 @@ const SUGGESTIONS = [
     { id: 4, name: "Canon EOS R6 Mark II", category: "IMAGE & SON", price: "1 800 000 CFA", image: "https://media.ldlc.com/encart/p/22889_b.jpg" },
 ]
 
-const navigation = [
+interface NavigationItem {
+    name: string;
+    href: string;
+    active?: boolean;
+    hasMegaMenu?: boolean;
+    isNew?: boolean;
+}
+
+const navigation: NavigationItem[] = [
     { name: 'Boutique', href: '/boutique', active: true },
     { name: 'Laptops', href: '/boutique?q=ORDINATEURS%20PORTABLE' },
-    { name: 'Smartphone', href: '/category/telephone', hasMegaMenu: true },
     { name: 'Headphones', href: '/boutique?q=CASQUES' },
     { name: 'Camera', href: '/boutique?q=APPAREIL%20PHOTO' },
     { name: 'Promotions', href: '/promotions', isNew: true },
@@ -46,13 +54,34 @@ export function Header() {
     const [scrolled, setScrolled] = useState(false)
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([])
     const [categories, setCategories] = useState<any[]>([])
+    const [stores, setStores] = useState<any[]>([])
+    const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+    const handleMenuEnter = () => {
+        if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
+        setShowMegaMenu(true)
+    }
+
+    const handleMenuLeave = () => {
+        menuTimeoutRef.current = setTimeout(() => {
+            setShowMegaMenu(false)
+        }, 1000) // 1 second delay as requested
+    }
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            const data = await getMegaMenuAction();
-            setCategories(data);
+        const fetchData = async () => {
+            try {
+                const [categoriesData, storesRes] = await Promise.all([
+                    getMegaMenuAction(),
+                    fetch('/api/admin/stores').then(r => r.json())
+                ]);
+                setCategories(categoriesData);
+                setStores(storesRes.stores || []);
+            } catch (err) {
+                console.error('Header fetch error:', err);
+            }
         }
-        fetchCategories();
+        fetchData();
     }, [])
 
     const handleSearch = (e?: React.FormEvent) => {
@@ -161,7 +190,7 @@ export function Header() {
                                 className="relative w-[180px] h-[50px] md:w-[240px] md:h-[65px]"
                             >
                                 <Image
-                                    src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png"
+                                    src="/logo.png"
                                     alt="Baraka Shop"
                                     fill
                                     className="object-contain object-left"
@@ -268,23 +297,31 @@ export function Header() {
                 <Container className="relative flex items-center h-[55px]">
                     <div
                         className="h-full flex items-center mr-8 pr-8 border-r border-white/10 cursor-pointer group relative"
+                        onMouseEnter={handleMenuEnter}
+                        onMouseLeave={handleMenuLeave}
                         onClick={() => setShowMegaMenu(!showMegaMenu)}
                     >
-                        <div className="flex items-center gap-4 bg-primary text-white px-8 h-[48px] rounded-full font-black text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 scale-105 origin-left">
-                            <Menu className="w-5 h-5" />
-                            <span>Catégories</span>
+                        <div className="flex items-center justify-between bg-primary text-white px-6 w-[240px] h-[48px] rounded-full font-black text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                            <div className="flex items-center gap-3">
+                                <Menu className="w-5 h-5" />
+                                <span>Catégories</span>
+                            </div>
                             <ChevronDown className="w-4 h-4 opacity-70 group-hover:rotate-180 transition-transform" />
                         </div>
                     </div>
                     <AnimatePresence>
                         {showMegaMenu && (
-                            <div className="absolute top-full left-0 w-full px-4 md:px-6 lg:px-8 z-[120]">
+                            <div
+                                className="absolute top-full left-0 w-full px-4 md:px-6 lg:px-8 z-[120]"
+                                onMouseEnter={handleMenuEnter}
+                                onMouseLeave={handleMenuLeave}
+                            >
                                 <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
                             </div>
                         )}
                     </AnimatePresence>
 
-                    <nav className="flex items-center gap-10">
+                    <nav className="flex items-center gap-5">
                         {navigation.map((item) => (
                             <div
                                 key={item.name}
@@ -307,9 +344,38 @@ export function Header() {
                         ))}
                     </nav>
 
-                    {/* Right Link */}
-                    <div className="ml-auto flex items-center gap-6">
-                        <Link href="/contact" className="text-xs font-black text-white uppercase border border-white/20 px-4 py-1.5 rounded-md hover:bg-primary hover:border-primary transition-all">Vendre sur Baraka</Link>
+                    {/* Right Link - Dynamic Stores */}
+                    <div className="ml-auto flex items-center gap-2">
+                        {stores.length > 0 ? (
+                            <div className="flex items-center gap-1.5">
+                                {stores.map((store) => (
+                                    <Link
+                                        key={store.id}
+                                        href={`/store/${store.slug}`}
+                                        className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 hover:bg-white hover:text-primary transition-all"
+                                        title={store.name}
+                                    >
+                                        {store.logo && (
+                                            <div className="relative w-6 h-6 rounded-full overflow-hidden bg-white/10 group-hover:bg-white/20 transition-all">
+                                                <Image
+                                                    src={store.logo}
+                                                    alt={store.name}
+                                                    fill
+                                                    className="object-contain p-1"
+                                                />
+                                            </div>
+                                        )}
+                                        <span className="text-xs font-bold text-gray-300 group-hover:text-primary uppercase tracking-tighter">
+                                            {store.name}
+                                        </span>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <Link href="/contact" className="text-xs font-black text-white uppercase border border-white/20 px-4 py-1.5 rounded-md hover:bg-primary hover:border-primary transition-all">
+                                Vendre sur Baraka
+                            </Link>
+                        )}
                     </div>
                 </Container>
             </div>
@@ -323,8 +389,8 @@ export function Header() {
                     <Menu className="w-6 h-6 text-[#1B1F3B]" />
                 </button>
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2">
-                    <div className="relative w-[150px] h-[45px]">
-                        <Image src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" alt="Baraka Shop" fill className="object-contain" priority unoptimized />
+                    <div className="relative w-[210px] h-[60px]">
+                        <Image src="/logo.png" alt="Baraka Shop" fill className="object-contain" priority unoptimized />
                     </div>
                 </Link>
                 <div className="flex items-center gap-2">
@@ -386,7 +452,7 @@ export function Header() {
                                     </motion.button>
                                 ) : (
                                     <div className="relative w-[110px] h-[35px]">
-                                        <Image src="https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" alt="Baraka" fill className="object-contain object-left" unoptimized />
+                                        <Image src="/logo.png" alt="Baraka" fill className="object-contain object-left" unoptimized />
                                     </div>
                                 )}
 

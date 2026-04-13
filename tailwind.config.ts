@@ -57,7 +57,7 @@ const config: Config = {
                     200: '#fed7aa',
                     300: '#fdba74',
                     400: '#fb923c',
-                    500: '#f97316', // Primary Brand Color
+                    500: '#F58320', // Primary Brand Color
                     600: '#ea580c',
                     700: '#c2410c',
                     800: '#9a3412',
