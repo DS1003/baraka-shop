@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Container } from '@/ui/Container'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -15,7 +15,11 @@ import {
     Wallet,
     Home,
     Smartphone,
-    X
+    X,
+    MapPin,
+    Store,
+    ChevronDown,
+    Search
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/ui/Button'
@@ -24,15 +28,22 @@ import { useCart } from '@/context/CartContext'
 import { useSession } from 'next-auth/react'
 import { createOrder } from '@/lib/actions/order-actions'
 import { useRouter } from 'next/navigation'
+import { DELIVERY_REGIONS, type DeliveryZone } from '@/lib/delivery-zones'
 
 export default function CheckoutPage() {
     const { data: session } = useSession()
     const { cartItems, subtotal, clearCart } = useCart()
     const router = useRouter()
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'wave' | 'card'>('cash')
-    const [step, setStep] = useState(1) // 1: Address, 2: Payment, 3: Confirm
+    const [step, setStep] = useState(1) // 1: Delivery Method, 2: Address/Zone, 3: Payment, 4: Confirm
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState('')
+
+    // Delivery state
+    const [deliveryMethod, setDeliveryMethod] = useState<'livraison' | 'retrait'>('livraison')
+    const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(null)
+    const [expandedRegion, setExpandedRegion] = useState<string | null>(null)
+    const [zoneSearch, setZoneSearch] = useState('')
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -43,8 +54,18 @@ export default function CheckoutPage() {
         phone: (session?.user as any)?.phone || ''
     })
 
-    const shipping = subtotal > 500000 || subtotal === 0 ? 0 : 5000
+    const shipping = deliveryMethod === 'retrait' ? 0 : (selectedZone?.price ?? 0)
     const total = subtotal + shipping
+
+    // Filtered regions based on search
+    const filteredRegions = useMemo(() => {
+        if (!zoneSearch.trim()) return DELIVERY_REGIONS
+        const q = zoneSearch.toLowerCase()
+        return DELIVERY_REGIONS.map(region => ({
+            ...region,
+            zones: region.zones.filter(z => z.name.toLowerCase().includes(q))
+        })).filter(r => r.zones.length > 0)
+    }, [zoneSearch])
 
     const handleCheckout = async () => {
         if (!session) {
@@ -52,9 +73,20 @@ export default function CheckoutPage() {
             return
         }
 
-        if (!formData.firstName || !formData.lastName || !formData.address || !formData.phone) {
-            setError('Veuillez remplir tous les champs obligatoires.')
-            return
+        if (deliveryMethod === 'livraison') {
+            if (!selectedZone) {
+                setError('Veuillez sélectionner votre zone de livraison.')
+                return
+            }
+            if (!formData.firstName || !formData.lastName || !formData.address || !formData.phone) {
+                setError('Veuillez remplir tous les champs obligatoires.')
+                return
+            }
+        } else {
+            if (!formData.firstName || !formData.lastName || !formData.phone) {
+                setError('Veuillez remplir votre nom et téléphone.')
+                return
+            }
         }
 
         setIsSubmitting(true)
@@ -68,6 +100,9 @@ export default function CheckoutPage() {
             })),
             total,
             paymentMethod,
+            deliveryMethod,
+            deliveryZone: selectedZone?.name,
+            shippingCost: shipping,
             shippingDetails: formData
         }
 
@@ -113,22 +148,23 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Visual Stepper */}
-                <div className="max-w-2xl mx-auto mb-16 px-4">
+                <div className="max-w-3xl mx-auto mb-16 px-4">
                     <div className="flex items-center justify-between relative">
                         {/* Progress Line */}
                         <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0" />
                         <motion.div
                             className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 z-0"
                             initial={{ width: '0%' }}
-                            animate={{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }}
+                            animate={{ width: step === 1 ? '0%' : step === 2 ? '33%' : step === 3 ? '66%' : '100%' }}
                             transition={{ duration: 0.5 }}
                         />
 
                         {/* Step Circles */}
                         {[
-                            { id: 1, label: 'Livraison', icon: Home },
-                            { id: 2, label: 'Paiement', icon: CreditCard },
-                            { id: 3, label: 'Confirmation', icon: ShieldCheck }
+                            { id: 1, label: 'Mode', icon: Truck },
+                            { id: 2, label: 'Adresse', icon: Home },
+                            { id: 3, label: 'Paiement', icon: CreditCard },
+                            { id: 4, label: 'Confirmation', icon: ShieldCheck }
                         ].map((s) => (
                             <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
                                 <motion.button
@@ -157,7 +193,281 @@ export default function CheckoutPage() {
                     {/* Checkout Form */}
                     <div className="lg:col-span-7">
                         <AnimatePresence mode="wait">
+                            {/* STEP 1: Delivery Method Selection */}
                             {step === 1 && (
+                                <motion.section
+                                    key="delivery-method"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                >
+                                    <div className="flex items-center gap-4 mb-10">
+                                        <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
+                                            <Truck className="w-6 h-6" />
+                                        </div>
+                                        <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">Mode de Réception</h2>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                                        {/* Livraison Option */}
+                                        <button
+                                            onClick={() => setDeliveryMethod('livraison')}
+                                            className={cn(
+                                                "relative flex flex-col items-center gap-5 p-8 rounded-3xl border-2 transition-all text-center group overflow-hidden",
+                                                deliveryMethod === 'livraison'
+                                                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                                                    : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-md"
+                                            )}
+                                        >
+                                            {deliveryMethod === 'livraison' && (
+                                                <motion.div
+                                                    layoutId="delivery-check"
+                                                    className="absolute top-4 right-4 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                </motion.div>
+                                            )}
+                                            <div className={cn(
+                                                "w-20 h-20 rounded-3xl flex items-center justify-center transition-all",
+                                                deliveryMethod === 'livraison'
+                                                    ? "bg-primary text-white shadow-lg shadow-primary/30"
+                                                    : "bg-gray-50 text-gray-400 group-hover:bg-gray-100"
+                                            )}>
+                                                <Truck className="w-9 h-9" />
+                                            </div>
+                                            <div>
+                                                <p className={cn(
+                                                    "text-sm font-black uppercase tracking-widest mb-1",
+                                                    deliveryMethod === 'livraison' ? "text-primary" : "text-[#1B1F3B]"
+                                                )}>Livraison à Domicile</p>
+                                                <p className="text-xs text-gray-400 font-medium">
+                                                    Recevez votre commande directement chez vous
+                                                </p>
+                                            </div>
+                                        </button>
+
+                                        {/* Retrait en boutique Option */}
+                                        <button
+                                            onClick={() => {
+                                                setDeliveryMethod('retrait')
+                                                setSelectedZone(null)
+                                            }}
+                                            className={cn(
+                                                "relative flex flex-col items-center gap-5 p-8 rounded-3xl border-2 transition-all text-center group overflow-hidden",
+                                                deliveryMethod === 'retrait'
+                                                    ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                                                    : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-md"
+                                            )}
+                                        >
+                                            {deliveryMethod === 'retrait' && (
+                                                <motion.div
+                                                    layoutId="delivery-check"
+                                                    className="absolute top-4 right-4 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                </motion.div>
+                                            )}
+                                            <div className={cn(
+                                                "w-20 h-20 rounded-3xl flex items-center justify-center transition-all",
+                                                deliveryMethod === 'retrait'
+                                                    ? "bg-primary text-white shadow-lg shadow-primary/30"
+                                                    : "bg-gray-50 text-gray-400 group-hover:bg-gray-100"
+                                            )}>
+                                                <Store className="w-9 h-9" />
+                                            </div>
+                                            <div>
+                                                <p className={cn(
+                                                    "text-sm font-black uppercase tracking-widest mb-1",
+                                                    deliveryMethod === 'retrait' ? "text-primary" : "text-[#1B1F3B]"
+                                                )}>Retrait en Boutique</p>
+                                                <p className="text-xs text-gray-400 font-medium">
+                                                    Venez récupérer gratuitement en magasin
+                                                </p>
+                                            </div>
+                                            {deliveryMethod === 'retrait' && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="mt-2 px-4 py-2 bg-green-50 rounded-xl border border-green-100"
+                                                >
+                                                    <span className="text-xs font-black text-green-600 uppercase tracking-widest">Gratuit !</span>
+                                                </motion.div>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    {/* Zone Selection — Only show for livraison */}
+                                    <AnimatePresence>
+                                        {deliveryMethod === 'livraison' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="mb-10">
+                                                    <div className="flex items-center gap-3 mb-6">
+                                                        <MapPin className="w-5 h-5 text-primary" />
+                                                        <h3 className="text-sm font-black uppercase tracking-widest text-[#1B1F3B]">
+                                                            Choisissez votre zone de livraison
+                                                        </h3>
+                                                    </div>
+
+                                                    {/* Zone Search */}
+                                                    <div className="relative mb-6">
+                                                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                        <input
+                                                            type="text"
+                                                            value={zoneSearch}
+                                                            onChange={(e) => setZoneSearch(e.target.value)}
+                                                            placeholder="Rechercher votre quartier..."
+                                                            className="w-full h-14 bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-6 text-sm font-bold outline-none focus:bg-white focus:border-primary transition-all"
+                                                        />
+                                                        {zoneSearch && (
+                                                            <button
+                                                                onClick={() => setZoneSearch('')}
+                                                                className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-300 transition"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Selected Zone Badge */}
+                                                    {selectedZone && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: -10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-2xl mb-6"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center">
+                                                                    <MapPin className="w-5 h-5" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm font-black text-[#1B1F3B]">{selectedZone.name}</p>
+                                                                    <p className="text-xs font-bold text-primary">{selectedZone.price.toLocaleString()} F CFA</p>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => setSelectedZone(null)}
+                                                                className="text-[10px] font-black text-red-500 uppercase hover:underline"
+                                                            >
+                                                                Changer
+                                                            </button>
+                                                        </motion.div>
+                                                    )}
+
+                                                    {/* Regions Accordion */}
+                                                    <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                                                        {filteredRegions.map((region) => (
+                                                            <div
+                                                                key={region.id}
+                                                                className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden"
+                                                            >
+                                                                <button
+                                                                    onClick={() => setExpandedRegion(
+                                                                        expandedRegion === region.id ? null : region.id
+                                                                    )}
+                                                                    className="w-full flex items-center justify-between p-5 hover:bg-gray-100/50 transition-colors"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className="text-lg">{region.emoji}</span>
+                                                                        <span className="text-xs font-black uppercase tracking-widest text-[#1B1F3B]">
+                                                                            {region.label}
+                                                                        </span>
+                                                                        <span className="text-[10px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-100">
+                                                                            {region.zones.length} zones
+                                                                        </span>
+                                                                    </div>
+                                                                    <ChevronDown className={cn(
+                                                                        "w-4 h-4 text-gray-400 transition-transform duration-200",
+                                                                        expandedRegion === region.id && "rotate-180"
+                                                                    )} />
+                                                                </button>
+
+                                                                <AnimatePresence>
+                                                                    {expandedRegion === region.id && (
+                                                                        <motion.div
+                                                                            initial={{ height: 0, opacity: 0 }}
+                                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                                            exit={{ height: 0, opacity: 0 }}
+                                                                            transition={{ duration: 0.2 }}
+                                                                            className="overflow-hidden"
+                                                                        >
+                                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 pt-0">
+                                                                                {region.zones.map((zone) => {
+                                                                                    const isSelected = selectedZone?.name === zone.name
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={zone.name}
+                                                                                            onClick={() => setSelectedZone(zone)}
+                                                                                            className={cn(
+                                                                                                "flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all",
+                                                                                                isSelected
+                                                                                                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                                                                                                    : "bg-white border border-gray-100 hover:border-primary/30 hover:bg-primary/5"
+                                                                                            )}
+                                                                                        >
+                                                                                            <span className={cn(
+                                                                                                "text-xs font-bold truncate pr-2",
+                                                                                                isSelected ? "text-white" : "text-[#1B1F3B]"
+                                                                                            )}>
+                                                                                                {zone.name}
+                                                                                            </span>
+                                                                                            <span className={cn(
+                                                                                                "text-[10px] font-black uppercase tracking-wide shrink-0",
+                                                                                                isSelected ? "text-white/80" : "text-primary"
+                                                                                            )}>
+                                                                                                {zone.price.toLocaleString()}F
+                                                                                            </span>
+                                                                                        </button>
+                                                                                    )
+                                                                                })}
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </div>
+                                                        ))}
+
+                                                        {filteredRegions.length === 0 && (
+                                                            <div className="text-center py-10 text-gray-400">
+                                                                <MapPin className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                                                                <p className="text-xs font-bold uppercase tracking-widest">Aucune zone trouvée pour "{zoneSearch}"</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    <Button
+                                        onClick={() => {
+                                            if (deliveryMethod === 'livraison' && !selectedZone) {
+                                                setError('Veuillez d\'abord sélectionner votre zone de livraison.')
+                                                return
+                                            }
+                                            setError('')
+                                            setStep(2)
+                                        }}
+                                        className="w-full h-16 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
+                                    >
+                                        Continuer <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </Button>
+
+                                    {error && step === 1 && (
+                                        <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center">
+                                            {error}
+                                        </div>
+                                    )}
+                                </motion.section>
+                            )}
+
+                            {/* STEP 2: Address */}
+                            {step === 2 && (
                                 <motion.section
                                     key="address"
                                     initial={{ opacity: 0, x: -20 }}
@@ -169,8 +479,37 @@ export default function CheckoutPage() {
                                         <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
                                             <Home className="w-6 h-6" />
                                         </div>
-                                        <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">Adresse de Livraison</h2>
+                                        <h2 className="text-xl font-black uppercase tracking-widest text-[#1B1F3B]">
+                                            {deliveryMethod === 'livraison' ? 'Adresse de Livraison' : 'Informations de Contact'}
+                                        </h2>
                                     </div>
+
+                                    {/* Display chosen delivery info */}
+                                    {deliveryMethod === 'livraison' && selectedZone && (
+                                        <div className="flex items-center gap-4 p-5 bg-primary/5 rounded-2xl border border-primary/10 mb-8">
+                                            <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
+                                                <MapPin className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-0.5">Zone de livraison</p>
+                                                <p className="text-sm font-bold text-[#1B1F3B]">{selectedZone.name}</p>
+                                            </div>
+                                            <span className="text-sm font-black text-primary">{selectedZone.price.toLocaleString()} F</span>
+                                        </div>
+                                    )}
+
+                                    {deliveryMethod === 'retrait' && (
+                                        <div className="flex items-center gap-4 p-5 bg-green-50 rounded-2xl border border-green-100 mb-8">
+                                            <div className="w-10 h-10 rounded-xl bg-green-500 text-white flex items-center justify-center shrink-0">
+                                                <Store className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-0.5">Retrait en boutique</p>
+                                                <p className="text-sm font-bold text-green-700">Baraka Shop — Dakar</p>
+                                            </div>
+                                            <span className="text-sm font-black text-green-600 ml-auto uppercase">Gratuit</span>
+                                        </div>
+                                    )}
 
                                     <form className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                                         <FormInput
@@ -185,26 +524,32 @@ export default function CheckoutPage() {
                                             value={formData.lastName}
                                             onChange={(val) => setFormData({ ...formData, lastName: val })}
                                         />
-                                        <div className="md:col-span-2">
-                                            <FormInput
-                                                label="Adresse complète"
-                                                placeholder="123 Avenue Blaise Diagne, Plateau"
-                                                value={formData.address}
-                                                onChange={(val) => setFormData({ ...formData, address: val })}
-                                            />
-                                        </div>
-                                        <FormInput
-                                            label="Ville"
-                                            placeholder="Dakar"
-                                            value={formData.city}
-                                            onChange={(val) => setFormData({ ...formData, city: val })}
-                                        />
-                                        <FormInput
-                                            label="Quartier"
-                                            placeholder="Médina"
-                                            value={formData.area}
-                                            onChange={(val) => setFormData({ ...formData, area: val })}
-                                        />
+                                        {deliveryMethod === 'livraison' && (
+                                            <div className="md:col-span-2">
+                                                <FormInput
+                                                    label="Adresse complète"
+                                                    placeholder="123 Avenue Blaise Diagne, Plateau"
+                                                    value={formData.address}
+                                                    onChange={(val) => setFormData({ ...formData, address: val })}
+                                                />
+                                            </div>
+                                        )}
+                                        {deliveryMethod === 'livraison' && (
+                                            <>
+                                                <FormInput
+                                                    label="Ville"
+                                                    placeholder="Dakar"
+                                                    value={formData.city}
+                                                    onChange={(val) => setFormData({ ...formData, city: val })}
+                                                />
+                                                <FormInput
+                                                    label="Quartier"
+                                                    placeholder="Médina"
+                                                    value={formData.area}
+                                                    onChange={(val) => setFormData({ ...formData, area: val })}
+                                                />
+                                            </>
+                                        )}
                                         <div className="md:col-span-2">
                                             <FormInput
                                                 label="Téléphone"
@@ -215,16 +560,25 @@ export default function CheckoutPage() {
                                         </div>
                                     </form>
 
-                                    <Button
-                                        onClick={() => setStep(2)}
-                                        className="w-full h-16 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
-                                    >
-                                        Continuer vers le paiement <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </Button>
+                                    <div className="flex gap-4">
+                                        <Button
+                                            onClick={() => setStep(1)}
+                                            className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" /> Retour
+                                        </Button>
+                                        <Button
+                                            onClick={() => setStep(3)}
+                                            className="flex-[2] h-16 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
+                                        >
+                                            Continuer vers le paiement <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </Button>
+                                    </div>
                                 </motion.section>
                             )}
 
-                            {step === 2 && (
+                            {/* STEP 3: Payment */}
+                            {step === 3 && (
                                 <motion.section
                                     key="payment"
                                     initial={{ opacity: 0, x: -20 }}
@@ -244,8 +598,8 @@ export default function CheckoutPage() {
                                             active={paymentMethod === 'cash'}
                                             onClick={() => setPaymentMethod('cash')}
                                             icon={Truck}
-                                            title="Paiement à la livraison"
-                                            desc="Payez en espèces dès réception de votre commande."
+                                            title={deliveryMethod === 'livraison' ? "Paiement à la livraison" : "Paiement au retrait"}
+                                            desc={deliveryMethod === 'livraison' ? "Payez en espèces dès réception de votre commande." : "Payez en espèces lors du retrait en boutique."}
                                         />
                                         <PaymentOption
                                             active={paymentMethod === 'wave'}
@@ -265,13 +619,13 @@ export default function CheckoutPage() {
 
                                     <div className="flex gap-4">
                                         <Button
-                                            onClick={() => setStep(1)}
+                                            onClick={() => setStep(2)}
                                             className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
                                         >
                                             <ArrowLeft className="w-4 h-4" /> Retour
                                         </Button>
                                         <Button
-                                            onClick={() => setStep(3)}
+                                            onClick={() => setStep(4)}
                                             className="flex-[2] h-14 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
                                         >
                                             Vérifier la commande <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -280,7 +634,8 @@ export default function CheckoutPage() {
                                 </motion.section>
                             )}
 
-                            {step === 3 && (
+                            {/* STEP 4: Confirmation */}
+                            {step === 4 && (
                                 <motion.section
                                     key="confirm"
                                     initial={{ opacity: 0, x: -20 }}
@@ -296,19 +651,47 @@ export default function CheckoutPage() {
                                     </div>
 
                                     <div className="space-y-8 mb-10">
+                                        {/* Delivery Method Summary */}
+                                        <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
+                                            <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-primary shrink-0">
+                                                {deliveryMethod === 'livraison' ? <Truck className="w-4 h-4" /> : <Store className="w-4 h-4" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Mode de réception</p>
+                                                <p className="text-sm font-black text-[#1B1F3B] uppercase">
+                                                    {deliveryMethod === 'livraison' ? 'Livraison à domicile' : 'Retrait en boutique'}
+                                                </p>
+                                                {deliveryMethod === 'livraison' && selectedZone && (
+                                                    <p className="text-xs text-primary font-bold mt-1">
+                                                        🗺️ {selectedZone.name} — {selectedZone.price.toLocaleString()} F CFA
+                                                    </p>
+                                                )}
+                                                {deliveryMethod === 'retrait' && (
+                                                    <p className="text-xs text-green-600 font-bold mt-1">✅ Gratuit</p>
+                                                )}
+                                            </div>
+                                            <button onClick={() => setStep(1)} className="ml-auto text-[10px] font-black text-primary uppercase hover:underline">Modifier</button>
+                                        </div>
+
+                                        {/* Address Summary */}
                                         <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
                                             <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-primary shrink-0">
                                                 <Home className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Livraison à</p>
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                                                    {deliveryMethod === 'livraison' ? 'Livraison à' : 'Contact'}
+                                                </p>
                                                 <p className="text-sm font-black text-[#1B1F3B]">{formData.firstName} {formData.lastName}</p>
-                                                <p className="text-xs text-gray-500 font-medium">{formData.address}, {formData.area}, {formData.city}</p>
+                                                {deliveryMethod === 'livraison' && (
+                                                    <p className="text-xs text-gray-500 font-medium">{formData.address}, {formData.area}, {formData.city}</p>
+                                                )}
                                                 <p className="text-xs text-gray-500 font-medium">Tél: {formData.phone}</p>
                                             </div>
-                                            <button onClick={() => setStep(1)} className="ml-auto text-[10px] font-black text-primary uppercase hover:underline">Modifier</button>
+                                            <button onClick={() => setStep(2)} className="ml-auto text-[10px] font-black text-primary uppercase hover:underline">Modifier</button>
                                         </div>
 
+                                        {/* Payment Summary */}
                                         <div className="flex items-start gap-4 p-6 bg-gray-50 rounded-3xl border border-gray-100">
                                             <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-primary shrink-0">
                                                 <CreditCard className="w-4 h-4" />
@@ -316,10 +699,10 @@ export default function CheckoutPage() {
                                             <div>
                                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Mode de paiement</p>
                                                 <p className="text-sm font-black text-[#1B1F3B] uppercase">
-                                                    {paymentMethod === 'cash' ? 'Espèces à la livraison' : paymentMethod === 'wave' ? 'Wave / Orange Money' : 'Carte Bancaire'}
+                                                    {paymentMethod === 'cash' ? (deliveryMethod === 'livraison' ? 'Espèces à la livraison' : 'Espèces au retrait') : paymentMethod === 'wave' ? 'Wave / Orange Money' : 'Carte Bancaire'}
                                                 </p>
                                             </div>
-                                            <button onClick={() => setStep(2)} className="ml-auto text-[10px] font-black text-primary uppercase hover:underline">Modifier</button>
+                                            <button onClick={() => setStep(3)} className="ml-auto text-[10px] font-black text-primary uppercase hover:underline">Modifier</button>
                                         </div>
                                     </div>
 
@@ -332,7 +715,7 @@ export default function CheckoutPage() {
 
                                     <div className="flex gap-4 mt-10">
                                         <Button
-                                            onClick={() => setStep(2)}
+                                            onClick={() => setStep(3)}
                                             className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
                                         >
                                             <ArrowLeft className="w-4 h-4" /> Retour
@@ -377,8 +760,20 @@ export default function CheckoutPage() {
                                         <span>{subtotal.toLocaleString()} CFA</span>
                                     </div>
                                     <div className="flex justify-between text-xs font-bold text-green-400">
-                                        <span>Livraison</span>
-                                        <span className="uppercase">{shipping === 0 ? 'Gratuite' : `${shipping.toLocaleString()} CFA`}</span>
+                                        <span className="flex items-center gap-2">
+                                            {deliveryMethod === 'livraison' ? (
+                                                <>
+                                                    <Truck className="w-3 h-3" />
+                                                    Livraison {selectedZone ? `(${selectedZone.name})` : ''}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Store className="w-3 h-3" />
+                                                    Retrait en boutique
+                                                </>
+                                            )}
+                                        </span>
+                                        <span className="uppercase">{shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} CFA`}</span>
                                     </div>
                                     <div className="h-px bg-white/10 my-2" />
                                     <div className="flex justify-between items-end">
@@ -387,7 +782,7 @@ export default function CheckoutPage() {
                                     </div>
                                 </div>
 
-                                {error && (
+                                {error && step !== 1 && (
                                     <div className="mb-6 flex flex-col items-center gap-3 w-full">
                                         <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold text-center leading-relaxed">
                                             {error}

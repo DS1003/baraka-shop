@@ -14,6 +14,9 @@ interface CreateOrderData {
     items: OrderItemData[];
     total: number;
     paymentMethod: string;
+    deliveryMethod: 'livraison' | 'retrait';
+    deliveryZone?: string;
+    shippingCost: number;
     shippingDetails: {
         firstName: string;
         lastName: string;
@@ -66,6 +69,9 @@ export async function createOrder(data: CreateOrderData) {
                     userId: session.user.id!,
                     total: data.total,
                     paymentMethod: data.paymentMethod,
+                    deliveryMethod: data.deliveryMethod,
+                    deliveryZone: data.deliveryZone || null,
+                    shippingCost: data.shippingCost,
                     status: 'PENDING',
                     items: {
                         create: data.items.map(item => ({

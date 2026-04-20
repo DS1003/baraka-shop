@@ -180,6 +180,17 @@ export default function OrdersPage() {
                     <div style="text-align: right;">
                         <div class="title">Modalité de paiement</div>
                         <div style="font-size: 16px; font-weight: 800; color: #F97316;">${order.paymentMethod === 'cash' ? 'Paiement à la livraison' : order.paymentMethod.toUpperCase()}</div>
+                        <div style="margin-top: 16px;">
+                            <div class="title">Mode de réception</div>
+                            <div style="font-size: 14px; font-weight: 800; color: #1B1F3B;">
+                                ${order.deliveryMethod === 'retrait' ? '🏪 Retrait en boutique' : '🚚 Livraison à domicile'}
+                            </div>
+                            ${order.deliveryMethod === 'livraison' && order.deliveryZone ? `
+                                <div style="font-size: 13px; font-weight: 700; color: #F97316; margin-top: 4px;">
+                                    Zone: ${order.deliveryZone} — ${(order.shippingCost || 0).toLocaleString()} F CFA
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
                 <table>
@@ -541,6 +552,34 @@ export default function OrdersPage() {
                                                 <p className="text-[13px] font-medium uppercase">{selectedOrder.paymentMethod === 'cash' ? 'Payé à la livraison' : selectedOrder.paymentMethod}</p>
                                             </div>
                                         </div>
+                                        <div className="flex items-start gap-2 text-slate-600">
+                                            <MapPin size={14} className="mt-0.5 text-slate-400 shrink-0" />
+                                            <div>
+                                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Mode de réception</p>
+                                                <p className="text-[13px] font-medium uppercase">
+                                                    {selectedOrder.deliveryMethod === 'retrait' ? '🏪 Retrait en boutique' : '🚚 Livraison à domicile'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {selectedOrder.deliveryMethod === 'livraison' && selectedOrder.deliveryZone && (
+                                            <div className="flex items-start gap-2 text-slate-600">
+                                                <MapPin size={14} className="mt-0.5 text-orange-500 shrink-0" />
+                                                <div>
+                                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Zone de livraison</p>
+                                                    <p className="text-[13px] font-bold text-orange-600">{selectedOrder.deliveryZone}</p>
+                                                    {selectedOrder.shippingCost != null && (
+                                                        <p className="text-[11px] font-black text-emerald-600 mt-0.5">
+                                                            Frais: {selectedOrder.shippingCost.toLocaleString()} F CFA
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {selectedOrder.deliveryMethod === 'retrait' && (
+                                            <div className="px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100 text-[11px] font-black text-emerald-600 uppercase tracking-widest w-fit">
+                                                Livraison gratuite
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -18,15 +18,13 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/ui/Button'
-import { cn } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
 
 export default function CartPage() {
     const { cartItems, removeFromCart, updateQty, subtotal } = useCart()
     const [promoCode, setPromoCode] = useState('')
 
-    const shipping = subtotal > 500000 || subtotal === 0 ? 0 : 5000
-    const total = subtotal + shipping
+    const total = subtotal
 
     if (cartItems.length === 0) {
         return (
@@ -131,7 +129,7 @@ export default function CartPage() {
                                     </div>
                                     <div className="flex items-center justify-between text-sm font-bold text-gray-400">
                                         <span>Livraison</span>
-                                        <span className={cn("text-white", shipping === 0 && "text-green-400")}>{shipping === 0 ? 'Gratuit' : shipping.toLocaleString() + ' CFA'}</span>
+                                        <span className="text-amber-400 text-xs uppercase tracking-wider">Calculé au checkout</span>
                                     </div>
                                     <div className="w-full h-px bg-white/10" />
                                     <div className="flex items-center justify-between">

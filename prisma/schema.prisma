@@ -120,15 +120,18 @@ model Brand {
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  user          User        @relation(fields: [userId], references: [id])
-  userId        String
-  status        OrderStatus @default(PENDING)
-  total         Float
-  paymentMethod String?
-  items         OrderItem[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id             String      @id @default(uuid())
+  user           User        @relation(fields: [userId], references: [id])
+  userId         String
+  status         OrderStatus @default(PENDING)
+  total          Float
+  paymentMethod  String?
+  deliveryMethod String?     // "livraison" or "retrait"
+  deliveryZone   String?     // Zone name chosen by customer
+  shippingCost   Float?      @default(0)
+  items          OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model OrderItem {
