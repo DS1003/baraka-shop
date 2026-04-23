@@ -95,7 +95,7 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
     return (
         <section className="pb-6 md:pb-8 pt-0 md:pt-4">
             <Container className="px-0 md:px-6 lg:px-8">
-                <div className="bg-white relative rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[450px]">
+                <div className="bg-white relative rounded-xl md:rounded-[1rem] overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[450px]">
                     <AnimatePresence mode="wait">
                         <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden bg-gray-50">
                             <motion.div
