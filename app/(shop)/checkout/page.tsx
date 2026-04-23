@@ -360,43 +360,43 @@ export default function CheckoutPage() {
                                                     )}
 
                                                     {/* Regions Accordion */}
-                                                    <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-                                                        {filteredRegions.map((region) => (
-                                                            <div
-                                                                key={region.id}
-                                                                className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden"
-                                                            >
-                                                                <button
-                                                                    onClick={() => setExpandedRegion(
-                                                                        expandedRegion === region.id ? null : region.id
+                                                    <div className="flex flex-col gap-3 max-h-[500px] overflow-y-auto pr-1">
+                                                        {filteredRegions.map((region) => {
+                                                            const isExpanded = expandedRegion === region.id
+                                                            return (
+                                                                <div
+                                                                    key={region.id}
+                                                                    className={cn(
+                                                                        "rounded-2xl border transition-all",
+                                                                        isExpanded
+                                                                            ? "bg-white border-primary/30 shadow-lg"
+                                                                            : "bg-[#fafafa] border-gray-100 hover:border-gray-200"
                                                                     )}
-                                                                    className="w-full flex items-center justify-between p-5 hover:bg-gray-100/50 transition-colors"
                                                                 >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className="text-lg">{region.emoji}</span>
-                                                                        <span className="text-xs font-black uppercase tracking-widest text-[#1B1F3B]">
-                                                                            {region.label}
-                                                                        </span>
-                                                                        <span className="text-[10px] font-bold text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-100">
-                                                                            {region.zones.length} zones
-                                                                        </span>
-                                                                    </div>
-                                                                    <ChevronDown className={cn(
-                                                                        "w-4 h-4 text-gray-400 transition-transform duration-200",
-                                                                        expandedRegion === region.id && "rotate-180"
-                                                                    )} />
-                                                                </button>
+                                                                    {/* Region Header */}
+                                                                    <button
+                                                                        onClick={() => setExpandedRegion(isExpanded ? null : region.id)}
+                                                                        className="w-full flex items-center gap-4 p-4 cursor-pointer"
+                                                                    >
+                                                                        <span className="text-xl shrink-0">{region.emoji}</span>
+                                                                        <div className="flex-1 text-left">
+                                                                            <p className="text-xs font-black uppercase tracking-wider text-[#1B1F3B]">
+                                                                                {region.label}
+                                                                            </p>
+                                                                            <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                                                                {region.zones.length} quartier{region.zones.length > 1 ? 's' : ''}
+                                                                            </p>
+                                                                        </div>
+                                                                        <ChevronDown className={cn(
+                                                                            "w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200",
+                                                                            isExpanded && "rotate-180 text-primary"
+                                                                        )} />
+                                                                    </button>
 
-                                                                <AnimatePresence>
-                                                                    {expandedRegion === region.id && (
-                                                                        <motion.div
-                                                                            initial={{ height: 0, opacity: 0 }}
-                                                                            animate={{ height: 'auto', opacity: 1 }}
-                                                                            exit={{ height: 0, opacity: 0 }}
-                                                                            transition={{ duration: 0.2 }}
-                                                                            className="overflow-hidden"
-                                                                        >
-                                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4 pt-0">
+                                                                    {/* Zone Cards Grid */}
+                                                                    {isExpanded && (
+                                                                        <div className="px-4 pb-4">
+                                                                            <div className="flex flex-wrap gap-2">
                                                                                 {region.zones.map((zone) => {
                                                                                     const isSelected = selectedZone?.name === zone.name
                                                                                     return (
@@ -404,21 +404,22 @@ export default function CheckoutPage() {
                                                                                             key={zone.name}
                                                                                             onClick={() => setSelectedZone(zone)}
                                                                                             className={cn(
-                                                                                                "flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all",
+                                                                                                "flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all min-w-0",
+                                                                                                "basis-[calc(50%-0.25rem)] shrink-0 grow-0",
                                                                                                 isSelected
-                                                                                                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                                                                                                    : "bg-white border border-gray-100 hover:border-primary/30 hover:bg-primary/5"
+                                                                                                    ? "bg-primary text-white shadow-md shadow-primary/20 border-2 border-primary"
+                                                                                                    : "bg-white border-2 border-gray-100 hover:border-primary/30 hover:shadow-sm"
                                                                                             )}
                                                                                         >
                                                                                             <span className={cn(
-                                                                                                "text-xs font-bold truncate pr-2",
+                                                                                                "text-xs font-bold truncate",
                                                                                                 isSelected ? "text-white" : "text-[#1B1F3B]"
                                                                                             )}>
                                                                                                 {zone.name}
                                                                                             </span>
                                                                                             <span className={cn(
-                                                                                                "text-[10px] font-black uppercase tracking-wide shrink-0",
-                                                                                                isSelected ? "text-white/80" : "text-primary"
+                                                                                                "text-[10px] font-black shrink-0 whitespace-nowrap",
+                                                                                                isSelected ? "text-white/90" : "text-primary"
                                                                                             )}>
                                                                                                 {zone.price.toLocaleString()}F
                                                                                             </span>
@@ -426,16 +427,16 @@ export default function CheckoutPage() {
                                                                                     )
                                                                                 })}
                                                                             </div>
-                                                                        </motion.div>
+                                                                        </div>
                                                                     )}
-                                                                </AnimatePresence>
-                                                            </div>
-                                                        ))}
+                                                                </div>
+                                                            )
+                                                        })}
 
                                                         {filteredRegions.length === 0 && (
                                                             <div className="text-center py-10 text-gray-400">
                                                                 <MapPin className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                                                                <p className="text-xs font-bold uppercase tracking-widest">Aucune zone trouvée pour "{zoneSearch}"</p>
+                                                                <p className="text-xs font-bold uppercase tracking-widest">Aucune zone trouvée pour &quot;{zoneSearch}&quot;</p>
                                                             </div>
                                                         )}
                                                     </div>

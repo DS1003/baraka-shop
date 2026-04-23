@@ -66,9 +66,7 @@ export function Header() {
 
     const handleMenuLeave = () => {
         if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
-        menuTimeoutRef.current = setTimeout(() => {
-            setShowMegaMenu(false)
-        }, 300) // Standard delay before closing
+        setShowMegaMenu(false)
     }
 
     useEffect(() => {
@@ -367,7 +365,7 @@ export function Header() {
                                                 />
                                             </div>
                                         )}
-                                        <span className="text-xs font-bold text-gray-300 group-hover:text-primary uppercase tracking-tighter">
+                                        <span className="text-sm font-bold text-gray-300 group-hover:text-primary uppercase tracking-tight">
                                             {store.name}
                                         </span>
                                     </Link>
