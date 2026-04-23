@@ -41,6 +41,8 @@ model Product {
   name          String
   slug          String       @unique
   description   String
+  shortDescription String?
+  features      Json?        @default("[]")
   price         Float
   oldPrice      Float?
   stock         Int          @default(0)

@@ -262,7 +262,13 @@ export default function ProductsPage() {
             thirdLevelCategoryId: formData.get('thirdLevelCategoryId') as string || null,
             brandId: formData.get('brandId') as string || null,
             storeId: formData.get('storeId') as string || null,
-            images: formImages
+            images: formImages,
+            shortDescription: formData.get('shortDescription') as string || null,
+            features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
+            metadata: (() => {
+                const raw = formData.get('metadata') as string;
+                try { return JSON.parse(raw); } catch { return { info: raw }; }
+            })()
         };
 
         const res = await upsertProduct(data, editingProduct?.id);
@@ -796,12 +802,28 @@ export default function ProductsPage() {
                                             </div>
                                         </div>
 
+                                        {detailProduct.shortDescription && (
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description Courte</p>
+                                                <p className="text-[13px] text-slate-600 font-medium italic">{detailProduct.shortDescription}</p>
+                                            </div>
+                                        )}
+
                                         <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-wrap">Description</p>
-                                            <p className="text-[14px] text-slate-500 font-medium leading-relaxed max-h-[150px] overflow-y-auto pr-4 scrollbar-thin">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-wrap">Description Détaillée</p>
+                                            <p className="text-[14px] text-slate-500 font-medium leading-relaxed max-h-[100px] overflow-y-auto pr-4 scrollbar-thin">
                                                 {detailProduct.description || 'Aucune description fournie.'}
                                             </p>
                                         </div>
+
+                                        {Array.isArray(detailProduct.features) && detailProduct.features.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Caractéristiques</p>
+                                                <ul className="list-disc list-inside text-[13px] text-slate-600 font-medium space-y-1">
+                                                    {detailProduct.features.map((f: string, i: number) => <li key={i}>{f}</li>)}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -1036,8 +1058,20 @@ export default function ProductsPage() {
                                         <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
                                         Contenu Détaillé
                                     </h4>
+                                    
                                     <div className="space-y-2">
-                                        <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description</label>
+                                        <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Courte</label>
+                                        <textarea
+                                            name="shortDescription"
+                                            defaultValue={editingProduct?.shortDescription}
+                                            rows={2}
+                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed"
+                                            placeholder="Résumé accrocheur pour le haut de page..."
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Détaillée</label>
                                         <textarea
                                             name="description"
                                             defaultValue={editingProduct?.description}
@@ -1045,6 +1079,29 @@ export default function ProductsPage() {
                                             className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed"
                                             placeholder="Décrivez les caractéristiques, matières, coupes..."
                                         />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Caractéristiques (1 par ligne)</label>
+                                            <textarea
+                                                name="features"
+                                                defaultValue={Array.isArray(editingProduct?.features) ? editingProduct.features.join('\n') : ""}
+                                                rows={6}
+                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[13px]"
+                                                placeholder="Ex: Coton 100%&#10;Lavage 30°C&#10;Coupe ajustée"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Fiche Technique (JSON)</label>
+                                            <textarea
+                                                name="metadata"
+                                                defaultValue={editingProduct?.metadata ? JSON.stringify(editingProduct.metadata, null, 2) : ""}
+                                                rows={6}
+                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[13px]"
+                                                placeholder='{"Ecran": "15 pouces", "RAM": "16GB"}'
+                                            />
+                                        </div>
                                     </div>
                                 </section>
 

@@ -37,7 +37,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
     const [quantity, setQuantity] = useState(1)
     const [activeTab, setActiveTab] = useState('description')
     const [showStickyBar, setShowStickyBar] = useState(false)
- 
+
     useEffect(() => {
         const handleScroll = () => {
             const scrollThreshold = 600
@@ -108,7 +108,6 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
     const tabs = [
         { id: 'description', label: 'Description', icon: Info },
-        { id: 'features', label: 'Caractéristiques', icon: Zap },
         { id: 'specs', label: 'Fiche Technique', icon: LayoutGrid },
         { id: 'reviews', label: 'Avis Clients', icon: MessageSquare },
     ]
@@ -167,14 +166,21 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         <div className="h-px flex-1 bg-gray-100" />
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-[1.1] mb-3">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-[1.1] mb-4">
                         {product.name}
                     </h1>
 
+                    {/* Description Courte */}
+                    <div className="mb-6 max-w-2xl">
+                        <p className="text-gray-500 text-[16px] leading-relaxed font-medium">
+                            {product.shortDescription || product.description?.substring(0, 160) + "..." || "Découvrez l'élégance et la technologie de pointe combinées dans ce produit d'exception, sélectionné par Baraka Shop pour son rapport qualité-prix imbattable."}
+                        </p>
+                    </div>
+
                     <div className="flex items-center gap-4 mb-4">
                         <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
-                             <div className="w-2 h-2 rounded-full bg-primary" />
-                             <span className="text-[11px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <span className="text-[11px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
                         </div>
                         <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
                             {product.category?.name || product.category}
@@ -184,7 +190,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     <div className="flex items-center gap-8 mb-6 pb-6 border-b border-gray-100/60">
                         <div className="flex items-center gap-2">
                             <div className="flex gap-0.5">
-                                {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+                                {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
                             </div>
                             <span className="text-sm font-black text-[#1B1F3B] ml-1">{product.rating || 5}.0</span>
                         </div>
@@ -201,15 +207,6 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
                     </div>
 
-                    {/* Description Courte */}
-                    <div className="mb-6">
-                        <div className="space-y-2 max-w-2xl">
-                            <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Description courte</h3>
-                            <p className="text-gray-500 text-[16px] leading-relaxed font-medium">
-                                {product.description || "Découvrez l'élégance et la technologie de pointe combinées dans ce produit d'exception, sélectionné par Baraka Shop pour son rapport qualité-prix imbattable."}
-                            </p>
-                        </div>
-                    </div>
 
                     <div className="bg-[#1B1F3B] rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/10 mb-4">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -301,14 +298,14 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     </div>
 
                     <div className="flex items-center justify-center gap-8 py-4">
-                         <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                             <ShieldCheck size={14} className="text-primary" />
-                             Garantie 1 an
-                         </div>
-                         <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                             <Globe size={14} className="text-primary" />
-                             SAV Local
-                         </div>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            <ShieldCheck size={14} className="text-primary" />
+                            Garantie 1 an
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            <Globe size={14} className="text-primary" />
+                            SAV Local
+                        </div>
                     </div>
                 </div>
             </div>
@@ -345,9 +342,22 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="max-w-4xl"
+                                className="max-w-none"
                             >
-                                <h3 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight mb-8">Description Détaillée</h3>
+                                {product.brand?.image && (
+                                    <div className="flex justify-center mb-10">
+                                        <div className="relative w-48 h-20">
+                                            <Image 
+                                                src={product.brand.image} 
+                                                alt={product.brand.name} 
+                                                fill 
+                                                className="object-contain filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500" 
+                                                unoptimized
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                <h3 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight mb-8 text-center">Description Détaillée</h3>
                                 <p className="text-gray-500 text-lg leading-relaxed font-medium mb-12">
                                     {product.description || "Une description complète pour ce produit sera bientôt disponible."}
                                 </p>
@@ -355,14 +365,14 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 <div className="pt-12 border-t border-gray-100">
                                     <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-8">Caractéristiques principales</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                                        {[
+                                        {(Array.isArray(product.features) && product.features.length > 0 ? product.features : [
                                             "Qualité Premium Certifiée",
                                             "Garantie Baraka Shop 12 mois",
                                             "Performance & Durabilité",
                                             "Design Minimaliste & Moderne",
                                             "Service Après-Vente Local",
                                             "Authenticité Garantie"
-                                        ].map((feature, i) => (
+                                        ]).map((feature: any, i: number) => (
                                             <div key={i} className="flex items-center gap-4 group">
                                                 <div className="w-10 h-10 rounded-2xl bg-green-50 flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all">
                                                     <Zap size={16} fill="currentColor" />
@@ -376,27 +386,27 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         )}
 
                         {activeTab === 'features' && (
-                             <motion.div
-                                 key="features-tab"
-                                 initial={{ opacity: 0, y: 20 }}
-                                 animate={{ opacity: 1, y: 0 }}
-                                 exit={{ opacity: 0, y: -20 }}
-                                 className="grid grid-cols-1 md:grid-cols-3 gap-8"
-                             >
-                                 {[
-                                     { title: "Performance", desc: "Optimisé pour des résultats exceptionnels dans toutes les conditions." },
-                                     { title: "Mobilité", desc: "Design ultra-fin et léger pour vous accompagner partout sans compromis." },
-                                     { title: "Garantie", desc: "Support technique dédié et garantie complète pièce et main d'œuvre." }
-                                 ].map((feat, i) => (
-                                     <div key={i} className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 hover:scale-105 transition-transform">
-                                         <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6">
-                                             <Zap size={24} fill="currentColor" />
-                                         </div>
-                                         <h4 className="text-lg font-black text-[#1B1F3B] uppercase tracking-tight mb-4">{feat.title}</h4>
-                                         <p className="text-gray-500 text-sm leading-relaxed">{feat.desc}</p>
-                                     </div>
-                                 ))}
-                             </motion.div>
+                            <motion.div
+                                key="features-tab"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="grid grid-cols-1 md:grid-cols-3 gap-8"
+                            >
+                                {[
+                                    { title: "Performance", desc: "Optimisé pour des résultats exceptionnels dans toutes les conditions." },
+                                    { title: "Mobilité", desc: "Design ultra-fin et léger pour vous accompagner partout sans compromis." },
+                                    { title: "Garantie", desc: "Support technique dédié et garantie complète pièce et main d'œuvre." }
+                                ].map((feat, i) => (
+                                    <div key={i} className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 hover:scale-105 transition-transform">
+                                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6">
+                                            <Zap size={24} fill="currentColor" />
+                                        </div>
+                                        <h4 className="text-lg font-black text-[#1B1F3B] uppercase tracking-tight mb-4">{feat.title}</h4>
+                                        <p className="text-gray-500 text-sm leading-relaxed">{feat.desc}</p>
+                                    </div>
+                                ))}
+                            </motion.div>
                         )}
 
                         {activeTab === 'specs' && (
@@ -500,7 +510,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                     <h4 className="font-black text-[#1B1F3B] text-sm uppercase tracking-tight line-clamp-1">{product.name}</h4>
                                     <div className="flex items-center gap-2">
                                         <div className="flex gap-0.5">
-                                            {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
+                                            {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
                                         </div>
                                         <span className="text-[10px] font-bold text-gray-400">{(product.rating || 5)}.0</span>
                                     </div>

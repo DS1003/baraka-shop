@@ -889,15 +889,39 @@ export async function deleteThirdLevelCategory(id: string) {
 
 export async function upsertProduct(data: any, id?: string) {
     try {
+        const { 
+            categoryId, subCategoryId, thirdLevelCategoryId, brandId, storeId, promotionId,
+            ...rest 
+        } = data;
+
+        const prismaData: any = { ...rest };
+
+        if (categoryId) prismaData.category = { connect: { id: categoryId } };
+        
+        if (subCategoryId) prismaData.subCategory = { connect: { id: subCategoryId } };
+        else if (subCategoryId === null) prismaData.subCategory = { disconnect: true };
+
+        if (thirdLevelCategoryId) prismaData.thirdLevelCategory = { connect: { id: thirdLevelCategoryId } };
+        else if (thirdLevelCategoryId === null) prismaData.thirdLevelCategory = { disconnect: true };
+
+        if (brandId) prismaData.brand = { connect: { id: brandId } };
+        else if (brandId === null) prismaData.brand = { disconnect: true };
+
+        if (storeId) prismaData.store = { connect: { id: storeId } };
+        else if (storeId === null) prismaData.store = { disconnect: true };
+
+        if (promotionId) prismaData.promotion = { connect: { id: promotionId } };
+        else if (promotionId === null) prismaData.promotion = { disconnect: true };
+
         let product;
         if (id) {
             product = await prisma.product.update({
                 where: { id },
-                data,
+                data: prismaData,
             });
         } else {
             product = await prisma.product.create({
-                data,
+                data: prismaData,
             });
         }
         revalidatePath('/admin/products');

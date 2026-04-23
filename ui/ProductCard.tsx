@@ -52,7 +52,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                         </h3>
                     </Link>
                     <p className="text-gray-400 text-xs mb-6 leading-relaxed line-clamp-2">
-                        {product.description || "Découvrez la performance et l'élégance de ce produit d'exception chez Baraka Shop."}
+                        {product.shortDescription || product.description || "Découvrez la performance et l'élégance de ce produit d'exception chez Baraka Shop."}
                     </p>
                     <div className="flex items-center justify-between mt-auto">
                         <div className="flex flex-col">
