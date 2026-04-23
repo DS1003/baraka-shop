@@ -75,9 +75,8 @@ export function BrandsAndSocial() {
     }
 
     return (
-        <section className="bg-[#fafafa] py-20 border-t border-gray-100 relative overflow-hidden">
-            <Container>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+        <section className="py-2 relative overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
                     {/* Left Side: Premium Brands Carousel */}
                     <div className="flex flex-col gap-10">
                         <div className="flex flex-col gap-6 px-2">
@@ -224,7 +223,6 @@ export function BrandsAndSocial() {
                         </div>
                     </div>
                 </div>
-            </Container>
         </section>
     )
 }

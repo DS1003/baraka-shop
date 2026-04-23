@@ -6,9 +6,8 @@ import { Ticket, Truck, CreditCard, RotateCcw } from 'lucide-react'
 
 export function ShippingPromoBand() {
     return (
-        <section className="py-12 bg-white">
-            <Container>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section className="py-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Free Shipping Promo */}
                     <div className="relative overflow-hidden rounded-[2rem] bg-[#1B1F3B] p-6 md:p-10 flex flex-col justify-between min-h-[220px] group">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
@@ -47,7 +46,6 @@ export function ShippingPromoBand() {
                         </div>
                     </div>
                 </div>
-            </Container>
         </section>
     )
 }

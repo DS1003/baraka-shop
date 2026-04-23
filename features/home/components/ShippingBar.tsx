@@ -29,9 +29,8 @@ const features = [
 
 export function ShippingBar() {
     return (
-        <div className="bg-white border-b border-gray-100 py-10">
-            <Container>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-4">
+        <div className="bg-white rounded-3xl md:rounded-[3rem] border border-gray-100 py-10 px-8 shadow-sm">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-4">
                     {features.map((feature, index) => (
                         <div key={index} className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 md:gap-5 group cursor-default">
                             <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 flex items-center justify-center text-[#1B1F3B] group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm border border-gray-100 shrink-0">
@@ -47,8 +46,7 @@ export function ShippingBar() {
                             </div>
                         </div>
                     ))}
-                </div>
-            </Container>
+            </div>
         </div>
     )
 }

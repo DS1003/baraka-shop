@@ -94,11 +94,8 @@ export function PromoGrid() {
     }
 
     return (
-        <section className="py-12 md:py-24 overflow-hidden bg-white">
-            <Container>
-                {/* Header with Navigation - Visible on both, but nav buttons hidden on desktop */}
-                <div className="flex items-center justify-between mb-10 px-2 md:px-0">
-                    <div className="flex flex-col gap-1">
+        <section className="py-2 overflow-hidden">
+            <div className="flex items-center justify-between mb-10 px-2 md:px-0">
                         <div className="flex items-center gap-2 mb-1">
                             <div className="w-8 h-[2px] bg-primary rounded-full" />
                             <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
@@ -121,7 +118,6 @@ export function PromoGrid() {
                             <ChevronRight className="w-5 h-5 text-primary" />
                         </button>
                     </div>
-                </div>
 
                 {/* Desktop Grid */}
                 <div className="hidden md:grid grid-cols-4 gap-8">
@@ -167,7 +163,6 @@ export function PromoGrid() {
                         ))}
                     </div>
                 </div>
-            </Container>
         </section>
     )
 }

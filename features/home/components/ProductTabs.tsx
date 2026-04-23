@@ -192,13 +192,13 @@ export function ProductTabs({ initialData }: { initialData?: Record<string, any[
     }
 
     return (
-        <section className="py-16 md:py-24 bg-[#f8f9fb] relative overflow-hidden">
+        <section className="py-2 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none"
                 style={{ backgroundImage: `url('https://res.cloudinary.com/dgro5x4h8/image/upload/v1768669738/pattern_2_kln9c6.png')`, backgroundSize: '400px' }} />
             <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute -bottom-[10%] -right-[10%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-            <Container className="relative z-10">
+            <div className="relative z-10">
                 {/* Header Style from Screenshot */}
                 <div className="flex flex-col gap-4 md:gap-6 mb-12 md:mb-16">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 px-4">
@@ -312,7 +312,7 @@ export function ProductTabs({ initialData }: { initialData?: Record<string, any[
                         />
                     ))}
                 </div>
-            </Container>
+            </div>
         </section>
     )
 }

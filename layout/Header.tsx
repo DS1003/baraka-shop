@@ -24,6 +24,47 @@ const SUGGESTIONS = [
     { id: 4, name: "Canon EOS R6 Mark II", category: "IMAGE & SON", price: "1 800 000 CFA", image: "https://media.ldlc.com/encart/p/22889_b.jpg" },
 ]
 
+const CLEAN_IMAGES: Record<string, string> = {
+    'BATTERIE': '/categories/batterie.png',
+    'CABLE': '/categories/cable.png',
+    'CHARGEUR': '/categories/chargeur.png',
+    'CONNECTIQUE': '/categories/connectique.png',
+    'CONSOMMABLES': '/categories/consommables.png',
+    'ELECTRONIQUE': '/categories/electronique.png',
+    'GÉNÉRAL': '/categories/general.png',
+    'GÉNERAL': '/categories/general.png',
+    'IMAGE & SON': '/categories/image-son.png',
+    'INFORMATIQUE': '/categories/informatique.png',
+    'TELEPHONE & TABLETTE': '/categories/chargeur.png',
+    'RESEAUX': '/categories/connectique.png',
+    'SECURITE': '/categories/electronique.png',
+    'ELECTROMENAGER': '/categories/chargeur.png',
+    'BUREAUTIQUE': '/categories/consommables.png',
+    'MULTIMEDIA': '/categories/cable.png',
+    'CONSOLES & JEUX': '/categories/electronique.png',
+    'DEFAULT': '/categories/batterie.png'
+};
+
+const SUBTITLES: Record<string, string> = {
+    'INFORMATIQUE': 'MacBook, PC & Portables',
+    'TELEPHONE & TABLETTE': 'iPhone, Galaxy & iPad',
+    'IMAGE & SON': 'TV, Casques & Caméras',
+    'CONSOLES & JEUX': 'PS5, Xbox & Gaming',
+    'RESEAUX': 'Routeurs & Wifi 7',
+    'SECURITE': 'Caméras & Alarmes',
+    'ELECTROMENAGER': 'Maison Intelligente',
+    'BUREAUTIQUE': 'Imprimantes & Impression',
+    'MULTIMEDIA': 'Streaming & Cinéma',
+    'BATTERIE': 'Externes & Internes',
+    'CABLE': 'HDMI, USB & Réseau',
+    'CHARGEUR': 'Secteur & Induction',
+    'CONNECTIQUE': 'Adaptateurs & Hubs',
+    'CONSOMMABLES': 'Encre & Papier',
+    'ELECTRONIQUE': 'Composants & Gadgets',
+    'GÉNÉRAL': 'Univers High-Tech',
+    'GÉNERAL': 'Univers High-Tech'
+};
+
 interface NavigationItem {
     name: string;
     href: string;
@@ -480,24 +521,46 @@ export function Header() {
                                             <div className="py-2 flex flex-col h-full">
                                                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] mb-6 block">Catégories</span>
                                                 <div className="space-y-3">
-                                                    {categories.map((cat, idx) => (
-                                                        <motion.button
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: idx * 0.05 }}
-                                                            key={cat.id}
-                                                            onClick={() => handlePushMenu(cat.name, 'category', cat)}
-                                                            className="w-full flex items-center justify-between p-4 bg-[#fcfcfc] border border-gray-50 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-black/5 transition-all text-left group"
-                                                        >
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="relative w-11 h-11 bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm group-hover:scale-110 transition-transform">
-                                                                    <Image src={cat.image || '/placeholder.png'} alt={cat.name} fill className="object-cover" unoptimized={cat.image?.startsWith('http')} />
-                                                                </div>
-                                                                <span className="text-sm font-black text-[#1B1F3B] uppercase tracking-tight">{cat.name}</span>
-                                                            </div>
-                                                            <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary transition-colors" />
-                                                        </motion.button>
-                                                    ))}
+                                                    {(() => {
+                                                        let cats = [...categories];
+                                                        cats = cats.filter(c => c.name.toUpperCase() !== 'CABLE');
+                                                        let finalDisplay = cats.slice(0, 8);
+                                                        const informatiqueCat = cats.find(c => c.name.toUpperCase() === 'INFORMATIQUE');
+                                                        if (informatiqueCat && !finalDisplay.find(c => c.id === informatiqueCat.id)) {
+                                                            finalDisplay[finalDisplay.length - 1] = informatiqueCat;
+                                                        }
+                                                        
+                                                        return finalDisplay.map((cat, idx) => {
+                                                            const catKey = cat.name.trim().toUpperCase();
+                                                            const icon = CLEAN_IMAGES[catKey] || CLEAN_IMAGES['DEFAULT'];
+                                                            
+                                                            return (
+                                                                <motion.div
+                                                                    initial={{ opacity: 0, y: 10 }}
+                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                    transition={{ delay: idx * 0.05 }}
+                                                                    key={cat.id}
+                                                                >
+                                                                    <Link
+                                                                        href={`/category/${cat.slug}`}
+                                                                        onClick={resetMenu}
+                                                                        className="w-full flex items-center justify-between p-4 bg-[#fcfcfc] border border-gray-50 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-black/5 transition-all text-left group"
+                                                                    >
+                                                                        <div className="flex items-center gap-4">
+                                                                            <div className="relative w-11 h-11 bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm group-hover:scale-110 transition-transform">
+                                                                                <Image src={icon} alt={cat.name} fill className="object-contain p-2" unoptimized />
+                                                                            </div>
+                                                                            <div className="flex flex-col">
+                                                                                <span className="text-sm font-black text-[#1B1F3B] uppercase tracking-tight">{cat.name}</span>
+                                                                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{SUBTITLES[catKey] || 'Découvrir'}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary transition-colors" />
+                                                                    </Link>
+                                                                </motion.div>
+                                                            );
+                                                        });
+                                                    })()}
                                                 </div>
 
                                                 <div className="mt-12 pt-8 border-t border-gray-50 mb-10">

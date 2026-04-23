@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: 'Bievenue chez Baraka Shop. Découvrez notre sélection exclusive de smartphones, ordinateurs et accessoires High-Tech au meilleur prix au Sénégal.',
 }
 
+import { Container } from '@/ui/Container'
+
 export default async function Home() {
   // Pre-fetch all data server-side to avoid client-side waterfalls
   const [categories, newestProducts, topRatedProducts] = await Promise.all([
@@ -38,16 +40,39 @@ export default async function Home() {
   }
 
   return (
-    <>
-      <HomeSlider initialSlides={sliderSlides} />
-      <ShippingBar />
-      <CategoryCarousel initialCategories={categories} />
-      <HeadphonePromo />
-      <PromoGrid />
-      <ShippingPromoBand />
-      <ProductTabs initialData={initialProductTabsData} />
-      <BrandsAndSocial />
-    </>
+    <div className="flex flex-col gap-10 py-10">
+      <Container>
+        <HomeSlider initialSlides={sliderSlides} />
+      </Container>
+      
+      <Container>
+        <ShippingBar />
+      </Container>
+
+      <Container>
+        <CategoryCarousel initialCategories={categories} />
+      </Container>
+
+      <Container>
+        <HeadphonePromo />
+      </Container>
+
+      <Container>
+        <PromoGrid />
+      </Container>
+
+      <Container>
+        <ShippingPromoBand />
+      </Container>
+
+      <Container>
+        <ProductTabs initialData={initialProductTabsData} />
+      </Container>
+
+      <Container>
+        <BrandsAndSocial />
+      </Container>
+    </div>
   )
 }
 

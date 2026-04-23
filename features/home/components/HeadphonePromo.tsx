@@ -9,9 +9,9 @@ import { ArrowRight, Zap } from 'lucide-react'
 
 export function HeadphonePromo() {
     return (
-        <section className="bg-[#f2f2f2] py-6 md:py-8 pt-0">
+        <section className="pb-6 md:pb-8 pt-0">
             <Container className="px-0 md:px-6 lg:px-8">
-                <div className="relative rounded-none md:rounded-[2rem] overflow-hidden bg-[#1B1F3B] min-h-[300px] md:min-h-[514px] flex items-center group shadow-sm transition-all duration-500">
+                <div className="relative rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-[#1B1F3B] min-h-[300px] md:min-h-[514px] flex items-center group shadow-sm transition-all duration-500">
                     {/* Background Accents */}
                     <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[120px] rounded-full translate-x-1/2" />
                     <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-blue-500/10 blur-[100px] rounded-full -translate-x-1/2" />

@@ -75,10 +75,8 @@ export function CategoryCarousel({ initialCategories }: { initialCategories?: an
     const displayCategories = finalDisplay;
 
     return (
-        <section className="py-12 bg-[#fcfcfc] overflow-hidden">
-            <Container>
-                {/* Header */}
-                <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 px-4">
+        <section className="py-2 overflow-hidden">
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 px-4">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2 mb-0">
                             <div className="w-8 h-[2px] bg-primary rounded-full" />
@@ -158,7 +156,6 @@ export function CategoryCarousel({ initialCategories }: { initialCategories?: an
                         );
                     })}
                 </div>
-            </Container>
         </section>
     )
 }
