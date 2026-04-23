@@ -59,13 +59,16 @@ export function Header() {
 
     const handleMenuEnter = () => {
         if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
-        setShowMegaMenu(true)
+        menuTimeoutRef.current = setTimeout(() => {
+            setShowMegaMenu(true)
+        }, 200) // Hover intent delay
     }
 
     const handleMenuLeave = () => {
+        if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
         menuTimeoutRef.current = setTimeout(() => {
             setShowMegaMenu(false)
-        }, 1000) // 1 second delay as requested
+        }, 300) // Standard delay before closing
     }
 
     useEffect(() => {
@@ -299,7 +302,6 @@ export function Header() {
                         className="h-full flex items-center mr-8 pr-8 border-r border-white/10 cursor-pointer group relative"
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
-                        onClick={() => setShowMegaMenu(!showMegaMenu)}
                     >
                         <div className="flex items-center justify-between bg-primary text-white px-6 w-[240px] h-[48px] rounded-full font-black text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
                             <div className="flex items-center gap-3">
@@ -326,8 +328,8 @@ export function Header() {
                             <div
                                 key={item.name}
                                 className="relative h-full flex items-center"
-                                onMouseEnter={item.hasMegaMenu ? () => setShowMegaMenu(true) : undefined}
-                                onMouseLeave={item.hasMegaMenu ? () => setShowMegaMenu(false) : undefined}
+                                onMouseEnter={item.hasMegaMenu ? handleMenuEnter : undefined}
+                                onMouseLeave={item.hasMegaMenu ? handleMenuLeave : undefined}
                             >
                                 <Link
                                     href={item.href}
