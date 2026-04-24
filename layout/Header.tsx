@@ -77,7 +77,7 @@ const navigation: NavigationItem[] = [
     { name: 'Boutique', href: '/boutique', active: true },
     { name: 'Consommable', href: '/boutique?q=CONSOMMABLE' },
     { name: 'Promotions', href: '/promotions', isNew: true },
-    { name: 'Nouveautés', href: '/boutique?q=NOUVEAUTES', isNew: true },
+    { name: 'Nouveautés', href: '/nouveautes', isNew: true },
 ]
 
 export function Header() {
@@ -123,10 +123,10 @@ export function Header() {
                     getMegaMenuAction(),
                     fetch('/api/admin/stores').then(r => r.json())
                 ]);
-                
+
                 setCategories(categoriesData);
                 setStores(storesRes.stores || []);
-                
+
                 // Save to cache
                 (window as any).__headerDataCache = {
                     categories: categoriesData,

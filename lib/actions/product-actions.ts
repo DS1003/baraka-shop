@@ -18,6 +18,7 @@ export async function getProductsAction(options: {
     page?: number;
     limit?: number;
     onSale?: boolean;
+    isNew?: boolean;
 } = {}) {
     const {
         query,
@@ -29,7 +30,8 @@ export async function getProductsAction(options: {
         sort = 'newest',
         page = 1,
         limit = 12,
-        onSale = false
+        onSale = false,
+        isNew = false
     } = options;
 
     const cacheKey = `products:${JSON.stringify(options)}`;
@@ -62,6 +64,10 @@ export async function getProductsAction(options: {
 
         if (store) {
             where.store = { slug: store };
+        }
+
+        if (isNew) {
+            where.isNew = true;
         }
 
         if (onSale) {

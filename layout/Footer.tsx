@@ -48,7 +48,7 @@ export function Footer() {
                             <ul className="flex flex-col gap-5 text-sm md:text-[15px] font-medium text-gray-400">
                                 <FooterLink href="/boutique">Boutique</FooterLink>
                                 <FooterLink href="/promotions">Nos Promotions</FooterLink>
-                                <FooterLink href="/boutique">Nouveautés</FooterLink>
+                                <FooterLink href="/nouveautes">Nouveautés</FooterLink>
                                 <FooterLink href="/boutique">Meilleures Ventes</FooterLink>
                             </ul>
                         </div>
