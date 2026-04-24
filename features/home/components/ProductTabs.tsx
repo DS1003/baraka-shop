@@ -20,90 +20,7 @@ interface Product {
     badges?: { text: string; color: string }[]
 }
 
-const products: Record<string, Product[]> = {
-    'Nouveautés': [
-        {
-            id: '1',
-            name: 'MacBook Pro M3 Max 14" - Space Black',
-            category: 'Informatique',
-            price: 2500000,
-            oldPrice: 2800000,
-            rating: 5,
-            image: 'https://media.ldlc.com/r705/ld/products/00/06/22/20/LD0006222055.jpg',
-            badges: [{ text: '-15%', color: 'bg-primary' }, { text: 'HOT', color: 'bg-red-500' }]
-        },
-        {
-            id: '2',
-            name: 'iPhone 15 Pro Max 256GB Natural Titanium',
-            category: 'Smartphones',
-            price: 850000,
-            oldPrice: 900000,
-            rating: 5,
-            image: "https://media.ldlc.com/r705/ld/products/00/06/06/39/LD0006063994.jpg",
-            badges: [{ text: 'NEW', color: 'bg-green-500' }]
-        },
-        {
-            id: '3',
-            name: 'Sony WH-1000XM5 Wireless Headphones',
-            category: 'Audio & Son',
-            price: 250000,
-            rating: 4,
-            image: "https://sony.scene7.com/is/image/sonyglobalsolutions/360-RA-category-icon-20221202?$S7Product$&fmt=png-alpha",
-            badges: []
-        },
-        {
-            id: '4',
-            name: 'Canon EOS R6 Mark II Mirrorless Camera',
-            category: 'Image & Son',
-            price: 1800000,
-            oldPrice: 1950000,
-            rating: 5,
-            image: 'https://in.canon/media/image/2022/11/01/c8c8ab88ead148e9b64490fdd764bcf4_EOS+R6+Mark+II+RF24-105mm+f4-7.1+IS+STM+front+slant.png',
-            badges: [{ text: 'PRO', color: 'bg-[#1B1F3B]' }]
-        },
-        {
-            id: '8',
-            name: 'ROG Strix G16 (2024)',
-            category: 'Gaming',
-            price: 1450000,
-            rating: 5,
-            image: 'https://media.ldlc.com/r705/ld/products/00/06/21/20/LD0006212015.jpg',
-            badges: [{ text: 'HOT', color: 'bg-red-500' }]
-        }
-    ],
-    'Meilleures Ventes': [
-        {
-            id: '5',
-            name: 'PlayStation 5 Slim Digital Edition',
-            category: 'Jeux Vidéo',
-            price: 450000,
-            oldPrice: 500000,
-            rating: 5,
-            image: 'https://media.ldlc.com/encart/p/26671_b.jpg',
-            badges: [{ text: 'SOLD OUT', color: 'bg-black' }]
-        },
-        {
-            id: '6',
-            name: 'iPad Air M2 11" 128GB Blue',
-            category: 'Tablettes',
-            price: 650000,
-            rating: 4,
-            image: 'https://media.ldlc.com/encart/p/28858_b.jpg',
-            badges: []
-        },
-        {
-            id: '7',
-            name: 'JBL Boombox 3 Waterproof Speaker',
-            category: 'Audio',
-            price: 300000,
-            oldPrice: 350000,
-            rating: 5,
-            image: 'https://media.ldlc.com/encart/p/28829_b.jpg',
-            badges: [{ text: 'FLASH', color: 'bg-primary' }]
-        }
-    ],
-    'Promotions': []
-}
+
 
 const tabs = ['Nouveautés', 'Meilleures Ventes', 'Promotions']
 
@@ -192,7 +109,7 @@ export function ProductTabs({ initialData }: { initialData?: Record<string, any[
     }
 
     return (
-        <section className="py-2 relative overflow-hidden">
+        <section className="relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none"
                 style={{ backgroundImage: `url('https://res.cloudinary.com/dgro5x4h8/image/upload/v1768669738/pattern_2_kln9c6.png')`, backgroundSize: '400px' }} />
             <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
@@ -201,7 +118,7 @@ export function ProductTabs({ initialData }: { initialData?: Record<string, any[
             <div className="relative z-10">
                 {/* Header Style from Screenshot */}
                 <div className="flex flex-col gap-4 md:gap-6 mb-12 md:mb-16">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 px-4">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                         <div className="flex flex-col gap-2 w-full md:w-auto">
                             <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.5em] mb-1">Exploration</span>
                             <div className="flex items-center gap-x-6 md:gap-x-10 overflow-x-auto overflow-y-hidden pt-2 pb-6 md:pb-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
@@ -274,7 +191,7 @@ export function ProductTabs({ initialData }: { initialData?: Record<string, any[
                                     opacity: { duration: 0.3 }
                                 }}
                                 className={cn(
-                                    "absolute inset-0 px-2 grid gap-4 md:gap-8",
+                                    "absolute inset-0 grid gap-4 md:gap-8",
                                     isMobile ? "grid-cols-2" : "grid-cols-4"
                                 )}
                             >

@@ -213,6 +213,8 @@ model Store {
   name        String    @unique
   slug        String    @unique
   logo        String?
+  logo_detail String?
+  banner      String?
   description String?
   products    Product[]
   createdAt   DateTime  @default(now())

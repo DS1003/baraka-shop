@@ -94,8 +94,8 @@ export function PromoGrid() {
     }
 
     return (
-        <section className="py-2 overflow-hidden">
-            <div className="flex items-center justify-between mb-10 px-2 md:px-0">
+        <section className="overflow-hidden">
+            <div className="flex items-center justify-between mb-10">
                         <div className="flex items-center gap-2 mb-1">
                             <div className="w-8 h-[2px] bg-primary rounded-full" />
                             <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
@@ -127,7 +127,7 @@ export function PromoGrid() {
                 </div>
 
                 {/* Mobile Carousel */}
-                <div className="md:hidden relative px-1">
+                <div className="md:hidden relative">
                     <div className="relative h-[560px] w-full mb-10">
                         <AnimatePresence initial={false} custom={direction}>
                             <motion.div

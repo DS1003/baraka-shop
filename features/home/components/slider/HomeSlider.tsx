@@ -82,81 +82,78 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
 
     if (loading || slides.length === 0) {
         return (
-            <section className="bg-[#f2f2f2] pb-6 md:pb-8 pt-0 md:pt-4">
-                <Container className="px-0 md:px-6 lg:px-8">
-                    <div className="bg-white relative rounded-none md:rounded-xl overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[450px] flex items-center justify-center">
-                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    </div>
-                </Container>
+            <section>
+                <div className="bg-gray-100 relative rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[500px] flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </div>
             </section>
         )
     }
 
     return (
-        <section className="pb-6 md:pb-8 pt-0 md:pt-4">
-            <Container className="px-0 md:px-6 lg:px-8">
-                <div className="bg-white relative rounded-xl md:rounded-[1rem] overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[450px]">
-                    <AnimatePresence mode="wait">
-                        <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden bg-gray-50">
-                            <motion.div
-                                key={currentSlide}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.5 }}
-                                className="absolute inset-0 w-full h-full"
-                            >
-                                <Image
-                                    src={slides[currentSlide].image}
-                                    alt={slides[currentSlide].title}
-                                    fill
-                                    className="object-contain md:object-cover hover:scale-105 transition-transform duration-[2000ms]"
-                                    priority
-                                />
-                            </motion.div>
-                        </Link>
-                    </AnimatePresence>
-
-                    {/* Mobile Navigation Dots */}
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 md:hidden z-20">
-                        {slides.map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleTabClick(index)}
-                                className={cn(
-                                    "w-2 h-2 rounded-full transition-all duration-300",
-                                    currentSlide === index ? "bg-primary w-6" : "bg-white/50"
-                                )}
+        <section>
+            <div className="bg-white relative rounded-t-2xl md:rounded-t-[2.5rem] rounded-b-none overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[500px]">
+                <AnimatePresence mode="wait">
+                    <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden bg-gray-50">
+                        <motion.div
+                            key={currentSlide}
+                            initial={{ opacity: 0, scale: 1.05 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="absolute inset-0 w-full h-full"
+                        >
+                            <Image
+                                src={slides[currentSlide].image}
+                                alt={slides[currentSlide].title}
+                                fill
+                                className="object-cover hover:scale-105 transition-transform duration-[4000ms] ease-out"
+                                priority
                             />
-                        ))}
-                    </div>
-                </div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent hidden md:block" />
+                        </motion.div>
+                    </Link>
+                </AnimatePresence>
 
-                {/* LDLC Style Bottom Tabs - Responsive Grid - Hidden on Mobile */}
-                <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-x-0 md:border-x border-b border-gray-200 bg-[#f8f8f8] rounded-none md:rounded-b-xl overflow-hidden">
-                    {slides.map((slide, index) => (
+                {/* Mobile Navigation Dots */}
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 md:hidden z-20">
+                    {slides.map((_, index) => (
                         <button
-                            key={slide.id}
+                            key={index}
                             onClick={() => handleTabClick(index)}
                             className={cn(
-                                "relative py-3 px-2 text-center text-[9px] md:text-[11px] font-bold uppercase transition-all duration-300 h-14 md:h-16 flex items-center justify-center border-r border-b border-black/5 last:border-r-0 sm:border-b-0",
-                                currentSlide === index
-                                    ? "bg-primary text-white"
-                                    : "bg-[#f8f8f8] text-[#555] hover:bg-gray-100"
+                                "w-2 h-2 rounded-full transition-all duration-300",
+                                currentSlide === index ? "bg-primary w-6" : "bg-white/50"
                             )}
-                        >
-                            <span className="relative z-10 leading-tight px-1">{slide.title}</span>
-
-                            {/* Progress Bar */}
-                            {currentSlide === index && (
-                                <div className="absolute bottom-0 left-0 h-[3px] bg-white opacity-40 transition-all duration-100 ease-linear"
-                                    style={{ width: `${progress}%` }}
-                                />
-                            )}
-                        </button>
+                        />
                     ))}
                 </div>
-            </Container>
+            </div>
+
+            {/* LDLC Style Bottom Tabs - Responsive Grid - Hidden on Mobile */}
+            <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border border-t-0 border-gray-100 bg-white rounded-b-2xl md:rounded-b-[2.5rem] overflow-hidden shadow-sm relative z-10">
+                {slides.map((slide, index) => (
+                    <button
+                        key={slide.id}
+                        onClick={() => handleTabClick(index)}
+                        className={cn(
+                            "relative py-4 px-2 text-center text-[10px] md:text-[11px] font-bold uppercase transition-all duration-300 h-16 md:h-20 flex items-center justify-center border-r border-gray-100 last:border-r-0",
+                            currentSlide === index
+                                ? "bg-gray-50 text-primary"
+                                : "bg-white text-[#1B1F3B]/60 hover:bg-gray-50 hover:text-primary"
+                        )}
+                    >
+                        <span className="relative z-10 leading-tight px-1">{slide.title}</span>
+
+                        {/* Progress Bar */}
+                        {currentSlide === index && (
+                            <div className="absolute bottom-0 left-0 h-[3px] bg-primary transition-all duration-100 ease-linear"
+                                style={{ width: `${progress}%` }}
+                            />
+                        )}
+                    </button>
+                ))}
+            </div>
         </section>
     )
 }

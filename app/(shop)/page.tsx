@@ -40,39 +40,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col gap-10 py-10">
-      <Container>
-        <HomeSlider initialSlides={sliderSlides} />
-      </Container>
-      
-      <Container>
-        <ShippingBar />
-      </Container>
-
-      <Container>
-        <CategoryCarousel initialCategories={categories} />
-      </Container>
-
-      <Container>
-        <HeadphonePromo />
-      </Container>
-
-      <Container>
-        <PromoGrid />
-      </Container>
-
-      <Container>
-        <ShippingPromoBand />
-      </Container>
-
-      <Container>
-        <ProductTabs initialData={initialProductTabsData} />
-      </Container>
-
-      <Container>
-        <BrandsAndSocial />
-      </Container>
-    </div>
+    <Container className="flex flex-col gap-4 md:gap-8 py-6">
+      <HomeSlider initialSlides={sliderSlides} />
+      <ShippingBar />
+      <CategoryCarousel initialCategories={categories} />
+      <HeadphonePromo />
+      <PromoGrid />
+      <ShippingPromoBand />
+      <ProductTabs initialData={initialProductTabsData} />
+      <BrandsAndSocial />
+    </Container>
   )
 }
 

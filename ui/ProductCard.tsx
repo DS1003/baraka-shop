@@ -144,10 +144,14 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                 </div>
 
                 <Link href={`/product/${product.id}`}>
-                    <h3 className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 min-h-[32px] md:min-h-[38px] uppercase tracking-tight">
+                    <h3 className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 uppercase tracking-tight">
                         {product.name}
                     </h3>
                 </Link>
+
+                <p className="text-gray-400 text-[8px] md:text-[9px] leading-tight line-clamp-2 mt-1 flex-1">
+                    {product.shortDescription || product.description?.substring(0, 60) + "..." || "Découvrez la performance chez Baraka Shop."}
+                </p>
 
                 <div className="mt-4 md:mt-6 flex items-center justify-between">
                     <div className="flex flex-col">

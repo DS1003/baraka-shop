@@ -6,16 +6,16 @@ import Image from 'next/image'
 import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, ArrowRight, X } from 'lucide-react'
 import { Container } from '@/ui/Container'
 import { cn } from '@/lib/utils'
-import { MegaMenu } from '@/features/home/components/MegaMenu'
+import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
-import { MENU_CATEGORIES } from '@/lib/data'
 import { useSession } from 'next-auth/react'
 import { useCart } from '@/context/CartContext'
 import { useRouter } from 'next/navigation'
 import { getProductsAction, getMegaMenuAction } from '@/lib/actions/product-actions'
 import { getStoresAction } from '@/lib/actions/store-actions'
-import { CartToast } from '@/components/CartToast'
-import { MiniCart } from '@/components/MiniCart'
+const MegaMenu = dynamic(() => import('@/features/home/components/MegaMenu').then(mod => mod.MegaMenu), { ssr: false })
+const CartToast = dynamic(() => import('@/components/CartToast').then(mod => mod.CartToast), { ssr: false })
+const MiniCart = dynamic(() => import('@/components/MiniCart').then(mod => mod.MiniCart), { ssr: false })
 
 const SUGGESTIONS = [
     { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000 CFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
@@ -75,10 +75,9 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
     { name: 'Boutique', href: '/boutique', active: true },
-    { name: 'Laptops', href: '/boutique?q=ORDINATEURS%20PORTABLE' },
-    { name: 'Headphones', href: '/boutique?q=CASQUES' },
-    { name: 'Camera', href: '/boutique?q=APPAREIL%20PHOTO' },
+    { name: 'Consommable', href: '/boutique?q=CONSOMMABLE' },
     { name: 'Promotions', href: '/promotions', isNew: true },
+    { name: 'Nouveautés', href: '/boutique?q=NOUVEAUTES', isNew: true },
 ]
 
 export function Header() {
@@ -112,13 +111,27 @@ export function Header() {
 
     useEffect(() => {
         const fetchData = async () => {
+            // Simple session-level cache to prevent re-fetching on every navigation
+            if ((window as any).__headerDataCache) {
+                setCategories((window as any).__headerDataCache.categories);
+                setStores((window as any).__headerDataCache.stores);
+                return;
+            }
+
             try {
                 const [categoriesData, storesRes] = await Promise.all([
                     getMegaMenuAction(),
                     fetch('/api/admin/stores').then(r => r.json())
                 ]);
+                
                 setCategories(categoriesData);
                 setStores(storesRes.stores || []);
+                
+                // Save to cache
+                (window as any).__headerDataCache = {
+                    categories: categoriesData,
+                    stores: storesRes.stores || []
+                };
             } catch (err) {
                 console.error('Header fetch error:', err);
             }
@@ -451,12 +464,18 @@ export function Header() {
 
             {/* Mobile Search Bar */}
             <div className="md:hidden bg-white px-4 py-3 border-b border-gray-50">
-                <div className="flex w-full h-[42px] bg-[#f4f4f4] border border-gray-200 rounded-xl overflow-hidden group">
-                    <input type="text" placeholder="Rechercher..." className="flex-1 px-4 bg-transparent outline-none text-sm font-medium" />
-                    <button className="px-4 text-gray-400">
+                <form onSubmit={handleSearch} className="flex w-full h-[42px] bg-[#f4f4f4] border border-gray-200 rounded-xl overflow-hidden group">
+                    <input
+                        type="text"
+                        placeholder="Rechercher..."
+                        className="flex-1 px-4 bg-transparent outline-none text-sm font-medium"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <button type="submit" className="px-4 text-gray-400 active:text-primary transition-colors">
                         <Search className="w-4 h-4" />
                     </button>
-                </div>
+                </form>
             </div>
 
             {/* Premium Mobile Menu Drawer with Drill-down */}
@@ -519,21 +538,43 @@ export function Header() {
                                     >
                                         {currentMenu.type === 'main' && (
                                             <div className="py-2 flex flex-col h-full">
-                                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] mb-6 block">Catégories</span>
+                                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] mb-6 block">Univers Populaires</span>
                                                 <div className="space-y-3">
                                                     {(() => {
+                                                        const prioritizedSlugs = [
+                                                            'informatique',
+                                                            'telephone-tablette',
+                                                            'telephone',
+                                                            'image-son',
+                                                            'consommables',
+                                                            'jeux-loisirs',
+                                                            'electromenager',
+                                                            'coiffure',
+                                                            'connectique'
+                                                        ];
+
                                                         let cats = [...categories];
+
+                                                        // Sort by prioritized slugs
+                                                        cats.sort((a, b) => {
+                                                            const idxA = prioritizedSlugs.indexOf(a.slug);
+                                                            const idxB = prioritizedSlugs.indexOf(b.slug);
+                                                            if (idxA === -1 && idxB === -1) return 0;
+                                                            if (idxA === -1) return 1;
+                                                            if (idxB === -1) return -1;
+                                                            return idxA - idxB;
+                                                        });
+
+                                                        // Filter out duplicates or unwanted
                                                         cats = cats.filter(c => c.name.toUpperCase() !== 'CABLE');
-                                                        let finalDisplay = cats.slice(0, 8);
-                                                        const informatiqueCat = cats.find(c => c.name.toUpperCase() === 'INFORMATIQUE');
-                                                        if (informatiqueCat && !finalDisplay.find(c => c.id === informatiqueCat.id)) {
-                                                            finalDisplay[finalDisplay.length - 1] = informatiqueCat;
-                                                        }
-                                                        
+
+                                                        let finalDisplay = cats.slice(0, 10);
+
                                                         return finalDisplay.map((cat, idx) => {
                                                             const catKey = cat.name.trim().toUpperCase();
                                                             const icon = CLEAN_IMAGES[catKey] || CLEAN_IMAGES['DEFAULT'];
-                                                            
+                                                            const hasSubs = cat.subCategories && cat.subCategories.length > 0;
+
                                                             return (
                                                                 <motion.div
                                                                     initial={{ opacity: 0, y: 10 }}
@@ -541,9 +582,15 @@ export function Header() {
                                                                     transition={{ delay: idx * 0.05 }}
                                                                     key={cat.id}
                                                                 >
-                                                                    <Link
-                                                                        href={`/category/${cat.slug}`}
-                                                                        onClick={resetMenu}
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            if (hasSubs) {
+                                                                                handlePushMenu(cat.name, 'category', cat);
+                                                                            } else {
+                                                                                router.push(`/category/${cat.slug}`);
+                                                                                resetMenu();
+                                                                            }
+                                                                        }}
                                                                         className="w-full flex items-center justify-between p-4 bg-[#fcfcfc] border border-gray-50 rounded-2xl hover:bg-white hover:shadow-xl hover:shadow-black/5 transition-all text-left group"
                                                                     >
                                                                         <div className="flex items-center gap-4">
@@ -555,8 +602,12 @@ export function Header() {
                                                                                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{SUBTITLES[catKey] || 'Découvrir'}</span>
                                                                             </div>
                                                                         </div>
-                                                                        <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary transition-colors" />
-                                                                    </Link>
+                                                                        {hasSubs ? (
+                                                                            <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary transition-colors" />
+                                                                        ) : (
+                                                                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors" />
+                                                                        )}
+                                                                    </button>
                                                                 </motion.div>
                                                             );
                                                         });

@@ -75,11 +75,11 @@ export function BrandsAndSocial() {
     }
 
     return (
-        <section className="py-2 relative overflow-hidden">
+        <section className="relative overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
                     {/* Left Side: Premium Brands Carousel */}
                     <div className="flex flex-col gap-10">
-                        <div className="flex flex-col gap-6 px-2">
+                        <div className="flex flex-col gap-6">
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-3">
                                     <div className="h-[2px] w-8 bg-primary rounded-full" />

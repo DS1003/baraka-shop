@@ -1,23 +1,13 @@
 import { NextResponse } from 'next/server';
-import pg from 'pg';
-
-// Direct database connection - bypasses Prisma model caching entirely
-async function getPool() {
-    const pool = new pg.Pool({
-        connectionString: process.env.DATABASE_URL!,
-        ssl: { rejectUnauthorized: false },
-        max: 3,
-        idleTimeoutMillis: 10000,
-        connectionTimeoutMillis: 5000
-    });
-    return pool;
-}
+import pool from '@/lib/db';
+import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
 
 export async function GET() {
-    let pool: pg.Pool | null = null;
     try {
-        pool = await getPool();
-        
+        const cacheKey = 'api:stores:all';
+        const cached = await getCache<any>(cacheKey);
+        if (cached) return NextResponse.json(cached);
+
         const storesResult = await pool.query(`
             SELECT s.*, 
                    COALESCE(pc.count, 0)::int as product_count
@@ -36,6 +26,8 @@ export async function GET() {
             name: row.name,
             slug: row.slug,
             logo: row.logo,
+            banner: row.banner,
+            logo_detail: row.logo_detail,
             description: row.description,
             createdAt: row.createdAt,
             updatedAt: row.updatedAt,
@@ -43,26 +35,25 @@ export async function GET() {
         }));
 
         const totalProducts = stores.reduce((acc: number, s: any) => acc + s._count.products, 0);
-
-        return NextResponse.json({ 
+        const responseData = { 
             stores, 
             stats: { stores: stores.length, productWithStore: totalProducts } 
-        });
+        };
+
+        await setCache(cacheKey, responseData, 3600); // Cache for 1h
+
+        return NextResponse.json(responseData);
     } catch (error: any) {
         console.error('API /admin/stores GET error:', error.message);
         return NextResponse.json(
             { stores: [], stats: { stores: 0, productWithStore: 0 }, error: error.message }, 
             { status: 500 }
         );
-    } finally {
-        if (pool) await pool.end();
     }
 }
 
 export async function POST(request: Request) {
-    let pool: pg.Pool | null = null;
     try {
-        pool = await getPool();
         const body = await request.json();
         const { action, data, id } = body;
 
@@ -70,8 +61,8 @@ export async function POST(request: Request) {
             if (id) {
                 // Update
                 await pool.query(
-                    `UPDATE "Store" SET name = $1, slug = $2, logo = $3, description = $4, "updatedAt" = NOW() WHERE id = $5`,
-                    [data.name, data.slug, data.logo || null, data.description || null, id]
+                    `UPDATE "Store" SET name = $1, slug = $2, logo = $3, banner = $4, logo_detail = $5, description = $6, "updatedAt" = NOW() WHERE id = $7`,
+                    [data.name, data.slug, data.logo || null, data.banner || null, data.logo_detail || null, data.description || null, id]
                 );
             } else {
                 // Check for duplicates
@@ -87,10 +78,15 @@ export async function POST(request: Request) {
                 }
                 // Create
                 await pool.query(
-                    `INSERT INTO "Store" (id, name, slug, logo, description, "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW(), NOW())`,
-                    [data.name, data.slug, data.logo || null, data.description || null]
+                    `INSERT INTO "Store" (id, name, slug, logo, banner, logo_detail, description, "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+                    [data.name, data.slug, data.logo || null, data.banner || null, data.logo_detail || null, data.description || null]
                 );
             }
+            
+            // Invalidate cache
+            await invalidatePrefix('api:stores:');
+            await invalidatePrefix('stores:'); // Also invalidate prisma-level cache if any
+            
             return NextResponse.json({ success: true });
         }
 
@@ -105,6 +101,11 @@ export async function POST(request: Request) {
                 });
             }
             await pool.query(`DELETE FROM "Store" WHERE id = $1`, [id]);
+            
+            // Invalidate cache
+            await invalidatePrefix('api:stores:');
+            await invalidatePrefix('stores:');
+            
             return NextResponse.json({ success: true });
         }
 
@@ -112,7 +113,5 @@ export async function POST(request: Request) {
     } catch (error: any) {
         console.error('API /admin/stores POST error:', error.message);
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-    } finally {
-        if (pool) await pool.end();
     }
 }

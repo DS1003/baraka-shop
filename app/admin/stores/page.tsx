@@ -29,7 +29,9 @@ export default function StoresPage() {
     const [stats, setStats] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [previewLogo, setPreviewLogo] = useState<string | null>(null);
+    const [previewBanner, setPreviewBanner] = useState<string | null>(null);
+    const [previewLogoDetail, setPreviewLogoDetail] = useState<string | null>(null);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,21 +83,37 @@ export default function StoresPage() {
         const formData = new FormData(e.currentTarget);
         
         let logoUrl = editingItem?.logo || '';
+        let bannerUrl = editingItem?.banner || '';
+        let logoDetailUrl = editingItem?.logo_detail || '';
         
-        const imageFile = formData.get('imageFile') as File;
-        if (imageFile && imageFile.size > 0) {
+        const logoFile = formData.get('logoFile') as File;
+        const bannerFile = formData.get('bannerFile') as File;
+        const logoDetailFile = formData.get('logoDetailFile') as File;
+
+        if (logoFile && logoFile.size > 0) {
             setIsUploading(true);
-            const uploadFormData = new FormData();
-            uploadFormData.append('file', imageFile);
-            const uploadRes = await uploadToCloudinaryAction(uploadFormData);
-            if (uploadRes.success && uploadRes.media?.url) {
-                logoUrl = uploadRes.media.url;
-            } else {
-                alert("Échec de l'upload du logo");
-                setIsUploading(false);
-                setIsSaving(false);
-                return;
-            }
+            const logoFormData = new FormData();
+            logoFormData.append('file', logoFile);
+            const res = await uploadToCloudinaryAction(logoFormData);
+            if (res.success && res.media?.url) logoUrl = res.media.url;
+            setIsUploading(false);
+        }
+
+        if (bannerFile && bannerFile.size > 0) {
+            setIsUploading(true);
+            const bannerFormData = new FormData();
+            bannerFormData.append('file', bannerFile);
+            const res = await uploadToCloudinaryAction(bannerFormData);
+            if (res.success && res.media?.url) bannerUrl = res.media.url;
+            setIsUploading(false);
+        }
+
+        if (logoDetailFile && logoDetailFile.size > 0) {
+            setIsUploading(true);
+            const detailFormData = new FormData();
+            detailFormData.append('file', logoDetailFile);
+            const res = await uploadToCloudinaryAction(detailFormData);
+            if (res.success && res.media?.url) logoDetailUrl = res.media.url;
             setIsUploading(false);
         }
 
@@ -103,6 +121,8 @@ export default function StoresPage() {
         const storeData = {
             name,
             logo: logoUrl,
+            banner: bannerUrl,
+            logo_detail: logoDetailUrl,
             slug: slugify(name),
             description: formData.get('description') as string,
         };
@@ -117,7 +137,9 @@ export default function StoresPage() {
         if (result.success) {
             setIsModalOpen(false);
             setEditingItem(null);
-            setPreviewImage(null);
+            setPreviewLogo(null);
+            setPreviewBanner(null);
+            setPreviewLogoDetail(null);
             loadItems();
         } else {
             alert(result.message || "Erreur lors de la sauvegarde.");
@@ -144,7 +166,13 @@ export default function StoresPage() {
 
                 <div className="flex gap-4">
                     <button
-                        onClick={() => { setEditingItem(null); setPreviewImage(null); setIsModalOpen(true); }}
+                        onClick={() => { 
+                            setEditingItem(null); 
+                            setPreviewLogo(null); 
+                            setPreviewBanner(null);
+                            setPreviewLogoDetail(null);
+                            setIsModalOpen(true); 
+                        }}
                         className="flex items-center gap-3 px-6 py-3 bg-[#1B1F3B] text-white rounded-xl font-bold text-[13px] hover:bg-orange-600 hover:shadow-xl transition-all shadow-lg group"
                     >
                         <Plus size={20} />
@@ -245,7 +273,9 @@ export default function StoresPage() {
                                                         onClick={(e) => { 
                                                             e.stopPropagation();
                                                             setEditingItem(item); 
-                                                            setPreviewImage(item.logo);
+                                                            setPreviewLogo(item.logo);
+                                                            setPreviewBanner(item.banner);
+                                                            setPreviewLogoDetail(item.logo_detail);
                                                             setIsModalOpen(true); 
                                                             setActiveMenuId(null);
                                                         }}
@@ -291,7 +321,13 @@ export default function StoresPage() {
                     ))}
 
                     <button
-                        onClick={() => { setEditingItem(null); setPreviewImage(null); setIsModalOpen(true); }}
+                        onClick={() => { 
+                            setEditingItem(null); 
+                            setPreviewLogo(null); 
+                            setPreviewBanner(null);
+                            setPreviewLogoDetail(null);
+                            setIsModalOpen(true); 
+                        }}
                         className="border-2 border-dashed border-slate-200/60 rounded-[32px] p-8 flex flex-col items-center justify-center gap-4 group hover:border-orange-600/20 hover:bg-orange-600/5 transition-all text-slate-400 hover:text-orange-600 min-h-[300px]"
                     >
                         <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-slate-100 group-hover:scale-110 group-hover:rotate-12 transition-transform">
@@ -321,100 +357,154 @@ export default function StoresPage() {
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }} 
                                 animate={{ opacity: 1, scale: 1, y: 0 }} 
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-                                className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl relative z-10 overflow-hidden text-slate-900"
+                                className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden text-slate-900"
                             >
-                                <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                                <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
                                     <div>
-                                        <h3 className="text-[20px] font-bold tracking-tight">
+                                        <h3 className="text-[18px] font-bold tracking-tight">
                                             {editingItem ? 'Modifier' : 'Nouvelle'} Boutique
                                         </h3>
-                                        <p className="text-[11px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">Identité Visuelle & Infos</p>
+                                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">Identité Visuelle & Informations</p>
                                     </div>
-                                    <button onClick={() => { setIsModalOpen(false); setPreviewImage(null); }} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100/50 text-slate-400 hover:text-rose-600 transition-colors">
-                                        <X size={20} />
+                                    <button onClick={() => { setIsModalOpen(false); setPreviewLogo(null); setPreviewBanner(null); setPreviewLogoDetail(null); }} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100/50 text-slate-400 hover:text-rose-600 transition-colors">
+                                        <X size={16} />
                                     </button>
                                 </div>
                                 
-                                <form onSubmit={handleUpsert} className="p-8 space-y-8">
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nom de la boutique</label>
+                                <form onSubmit={handleUpsert} className="p-6 space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nom de la boutique</label>
                                             <input
                                                 name="name"
                                                 defaultValue={editingItem?.name}
-                                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[15px] font-bold"
+                                                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-bold"
                                                 placeholder="Ex: Airflux, RS Car..."
                                                 required
                                             />
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
-                                            <textarea
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Description courte</label>
+                                            <input
                                                 name="description"
                                                 defaultValue={editingItem?.description}
-                                                rows={3}
-                                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
-                                                placeholder="Courte description de la boutique..."
+                                                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
+                                                placeholder="Ex: Boutique de cosmétiques..."
                                             />
                                         </div>
                                     </div>
                                     
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo / Icône (Header)</label>
-                                        
-                                        <div className="flex items-center gap-6 p-4 bg-slate-50/50 border border-slate-100 rounded-[24px]">
-                                            <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
-                                                {previewImage ? (
-                                                    <img src={previewImage} alt="Preview" className="w-full h-full object-contain p-2" />
-                                                ) : (
-                                                    <ImageIcon size={32} strokeWidth={1} className="text-slate-200" />
-                                                )}
+                                    <div className="grid grid-cols-2 gap-6">
+                                        {/* Logo Bouton */}
+                                        <div className="space-y-3">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo Bouton</label>
+                                            <div className="relative group">
+                                                <div className="w-full aspect-square rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:border-primary/50 group-hover:bg-primary/5">
+                                                    {previewLogo ? (
+                                                        <img src={previewLogo} alt="Logo" className="w-full h-full object-contain p-4" />
+                                                    ) : (
+                                                        <>
+                                                            <ImageIcon size={24} className="text-slate-300 mb-2" />
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Header Icon</span>
+                                                        </>
+                                                    )}
+                                                    <input
+                                                        type="file"
+                                                        name="logoFile"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                const reader = new FileReader();
+                                                                reader.onloadend = () => setPreviewLogo(reader.result as string);
+                                                                reader.readAsDataURL(file);
+                                                            }
+                                                        }}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                        accept="image/*"
+                                                    />
+                                                </div>
                                             </div>
-                                            
-                                            <div className="flex-1 space-y-2">
-                                                <input
-                                                    type="file"
-                                                    name="imageFile"
-                                                    ref={fileInputRef}
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) {
-                                                            const reader = new FileReader();
-                                                            reader.onloadend = () => setPreviewImage(reader.result as string);
-                                                            reader.readAsDataURL(file);
-                                                        }
-                                                    }}
-                                                    className="hidden"
-                                                    accept="image/*"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-[12px] font-bold text-slate-600 hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm"
-                                                >
-                                                    <CloudUpload size={18} /> Télécharger
-                                                </button>
-                                                <p className="text-[10px] text-slate-400 font-medium italic">Format carré recommandé</p>
+                                        </div>
+
+                                        {/* Logo Détail */}
+                                        <div className="space-y-3">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Logo Page Détails</label>
+                                            <div className="relative group">
+                                                <div className="w-full aspect-square rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:border-primary/50 group-hover:bg-primary/5">
+                                                    {previewLogoDetail ? (
+                                                        <img src={previewLogoDetail} alt="Logo Detail" className="w-full h-full object-contain p-4" />
+                                                    ) : (
+                                                        <>
+                                                            <Store size={24} className="text-slate-300 mb-2" />
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Large Logo</span>
+                                                        </>
+                                                    )}
+                                                    <input
+                                                        type="file"
+                                                        name="logoDetailFile"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                const reader = new FileReader();
+                                                                reader.onloadend = () => setPreviewLogoDetail(reader.result as string);
+                                                                reader.readAsDataURL(file);
+                                                            }
+                                                        }}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                        accept="image/*"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Banner */}
+                                        <div className="col-span-2 space-y-3">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Bannière de fond (Optionnel)</label>
+                                            <div className="relative group">
+                                                <div className="w-full h-24 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:border-primary/50 group-hover:bg-primary/5">
+                                                    {previewBanner ? (
+                                                        <img src={previewBanner} alt="Banner" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <>
+                                                            <CloudUpload size={24} className="text-slate-300 mb-1" />
+                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Importer une bannière</span>
+                                                        </>
+                                                    )}
+                                                    <input
+                                                        type="file"
+                                                        name="bannerFile"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                const reader = new FileReader();
+                                                                reader.onloadend = () => setPreviewBanner(reader.result as string);
+                                                                reader.readAsDataURL(file);
+                                                            }
+                                                        }}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                        accept="image/*"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-4 pt-4">
+                                    <div className="flex gap-4 pt-2">
                                         <button 
                                             type="button" 
-                                            onClick={() => { setIsModalOpen(false); setPreviewImage(null); }} 
-                                            className="flex-1 py-4 border border-slate-200 rounded-[20px] font-bold text-[13px] text-slate-500 hover:bg-slate-50 transition-all"
+                                            onClick={() => { setIsModalOpen(false); setPreviewLogo(null); setPreviewBanner(null); setPreviewLogoDetail(null); }} 
+                                            className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-[13px] text-slate-500 hover:bg-slate-50 transition-all"
                                         >
                                             Annuler
                                         </button>
                                         <button 
                                             type="submit" 
                                             disabled={isSaving || isUploading} 
-                                            className="flex-[2] py-4 bg-slate-900 text-white rounded-[20px] font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-orange-600 shadow-xl transition-all disabled:opacity-50"
+                                            className="flex-[2] py-3 bg-[#1B1F3B] text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-orange-600 shadow-xl transition-all disabled:opacity-50"
                                         >
-                                            {(isSaving || isUploading) ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                                            {editingItem ? 'Mettre à jour' : 'Créer la boutique'}
+                                            {(isSaving || isUploading) ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                            {editingItem ? 'Mettre à jour' : 'Créer'}
                                         </button>
                                     </div>
                                 </form>

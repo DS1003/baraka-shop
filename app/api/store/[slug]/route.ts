@@ -1,24 +1,12 @@
 import { NextResponse } from 'next/server';
-import pg from 'pg';
-
-async function getPool() {
-    return new pg.Pool({
-        connectionString: process.env.DATABASE_URL!,
-        ssl: { rejectUnauthorized: false },
-        max: 3,
-        idleTimeoutMillis: 10000,
-        connectionTimeoutMillis: 5000
-    });
-}
+import pool from '@/lib/db';
 
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ slug: string }> }
 ) {
-    let pool: pg.Pool | null = null;
     try {
         const { slug } = await params;
-        pool = await getPool();
 
         // Fetch store
         const storeResult = await pool.query(
@@ -62,7 +50,5 @@ export async function GET(
     } catch (error: any) {
         console.error('API /store/[slug] error:', error.message);
         return NextResponse.json({ store: null, products: [], error: error.message }, { status: 500 });
-    } finally {
-        if (pool) await pool.end();
     }
 }

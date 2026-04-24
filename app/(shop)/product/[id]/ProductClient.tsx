@@ -114,10 +114,30 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
     return (
         <Container className="py-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8">
+                {/* Mobile Header: Name & Brand - Hidden on Desktop */}
+                <div className="flex flex-col gap-2 lg:hidden">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-primary font-black text-[9px] uppercase tracking-[0.3em]">Premium Quality</span>
+                        <div className="h-px flex-1 bg-gray-100" />
+                    </div>
+                    <h1 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tight leading-tight">
+                        {product.name}
+                    </h1>
+                    <div className="flex items-center gap-3 mt-1">
+                        <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                            <span className="text-[9px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[9px] font-black uppercase tracking-wider">
+                            {product.category?.name || product.category}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Image Gallery */}
-                <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-6">
-                    <div className="relative aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-8 md:p-12 group/main-img">
+                <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-4 md:gap-6">
+                    <div className="relative aspect-square bg-white rounded-3xl md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-6 md:p-12 group/main-img">
                         <motion.div
                             key={activeImg}
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -135,89 +155,92 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                             />
                         </motion.div>
                         {product.oldPrice && (
-                            <div className="absolute top-8 left-8">
-                                <span className="bg-primary text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-widest">
+                            <div className="absolute top-6 left-6 md:top-8 md:left-8">
+                                <span className="bg-primary text-white text-[8px] md:text-[10px] font-black px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl shadow-xl shadow-primary/20 uppercase tracking-widest">
                                     Promotion Flash
                                 </span>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         {productImages.map((img: string, idx: number) => (
                             <button
                                 key={idx}
                                 onClick={() => setActiveImg(idx)}
                                 className={cn(
-                                    "relative w-20 h-20 md:w-24 md:h-24 shrink-0 bg-white rounded-2xl overflow-hidden border-2 transition-all p-2",
+                                    "relative w-16 h-16 md:w-24 md:h-24 shrink-0 bg-white rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all p-1.5 md:p-2",
                                     activeImg === idx ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
                                 )}
                             >
-                                <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-2" unoptimized />
+                                <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
                             </button>
                         ))}
                     </div>
                 </div>
 
                 {/* Product Info */}
-                <div className="lg:col-span-12 xl:col-span-7 flex flex-col pt-2">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-primary font-black text-[10px] uppercase tracking-[0.3em]">Premium Quality</span>
-                        <div className="h-px flex-1 bg-gray-100" />
+                <div className="lg:col-span-12 xl:col-span-7 flex flex-col pt-0 lg:pt-2">
+                    {/* Desktop Header - Hidden on Mobile */}
+                    <div className="hidden lg:flex flex-col">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-primary font-black text-[10px] uppercase tracking-[0.3em]">Premium Quality</span>
+                            <div className="h-px flex-1 bg-gray-100" />
+                        </div>
+
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-[1.1] mb-4">
+                            {product.name}
+                        </h1>
+
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-primary" />
+                                <span className="text-[11px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                {product.category?.name || product.category}
+                            </div>
+                        </div>
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-[1.1] mb-4">
-                        {product.name}
-                    </h1>
-
                     {/* Description Courte */}
-                    <div className="mb-6 max-w-2xl">
-                        <p className="text-gray-500 text-[16px] leading-relaxed font-medium">
-                            {product.shortDescription || product.description?.substring(0, 160) + "..." || "Découvrez l'élégance et la technologie de pointe combinées dans ce produit d'exception, sélectionné par Baraka Shop pour son rapport qualité-prix imbattable."}
+                    <div className="mb-4 md:mb-6 max-w-2xl">
+                        <p className="text-gray-500 text-sm md:text-[16px] leading-relaxed font-medium">
+                            {product.shortDescription || product.description?.substring(0, 160) + "..." || "Découvrez l'élégance et la technologie de pointe combinées dans ce produit d'exception, sélectionné par Baraka Shop."}
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-primary" />
-                            <span className="text-[11px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                            {product.category?.name || product.category}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-8 mb-6 pb-6 border-b border-gray-100/60">
+                    <div className="flex items-center gap-6 md:gap-8 mb-4 md:mb-6 pb-4 md:pb-6 border-b border-gray-100/60">
                         <div className="flex items-center gap-2">
                             <div className="flex gap-0.5">
-                                {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+                                {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3.5 h-3.5 md:w-4 md:h-4 fill-yellow-400 text-yellow-400" />)}
                             </div>
-                            <span className="text-sm font-black text-[#1B1F3B] ml-1">{product.rating || 5}.0</span>
+                            <span className="text-xs md:text-sm font-black text-[#1B1F3B] ml-1">{product.rating || 5}.0</span>
                         </div>
                         <div className="h-4 w-px bg-gray-200" />
-                        <div className="flex items-center gap-6 text-gray-500">
-                            <button className="group hover:text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                                <Heart className="w-4 h-4 group-hover:fill-primary transition-colors" />
+                        <div className="flex items-center gap-4 md:gap-6 text-gray-500">
+                            <button className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest">
+                                <Heart className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:fill-primary transition-colors" />
                                 <span>Ma liste</span>
                             </button>
-                            <button className="group hover:text-primary transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                                <Share2 className="w-4 h-4" />
+                            <button className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest">
+                                <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                 <span>Partager</span>
                             </button>
                         </div>
                     </div>
 
 
-                    <div className="bg-[#1B1F3B] rounded-[2.5rem] p-8 shadow-2xl shadow-blue-900/10 mb-4">
+                    <div className="bg-[#1B1F3B] rounded-3xl md:rounded-[2.5rem] p-5 md:p-8 shadow-2xl shadow-blue-900/10 mb-4">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex flex-col gap-1">
-                                <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Prix de vente officiel</span>
-                                <div className="flex items-baseline gap-4">
-                                    <span className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+                                <span className="text-gray-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">Prix de vente officiel</span>
+                                <div className="flex items-baseline gap-3 md:gap-4">
+                                    <span className="text-2xl md:text-5xl font-black text-white tracking-tighter">
                                         {product.price.toLocaleString()} <span className="text-sm uppercase font-black text-primary italic">CFA</span>
                                     </span>
                                     {product.oldPrice && (
-                                        <span className="text-xl font-bold text-gray-500 line-through tracking-tighter italic">
+                                        <span className="text-sm md:text-xl font-bold text-gray-500 line-through tracking-tighter italic">
                                             {product.oldPrice.toLocaleString()} CFA
                                         </span>
                                     )}
@@ -256,13 +279,13 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 </button>
                             </div>
 
-                            <div className="flex-1 w-full flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1 w-full flex flex-col sm:flex-row gap-3 md:gap-4">
                                 <Button
                                     onClick={() => addToCart(product, quantity)}
                                     disabled={product.stock <= 0}
-                                    className="flex-1 h-14 bg-white text-[#1B1F3B] hover:bg-gray-100 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-3 border border-gray-100"
+                                    className="flex-1 h-12 md:h-14 bg-white text-[#1B1F3B] hover:bg-gray-100 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 md:gap-3 border border-gray-100"
                                 >
-                                    <ShoppingCart className="w-5 h-5" />
+                                    <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
                                     Ajouter au panier
                                 </Button>
 
@@ -272,9 +295,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         setTimeout(() => window.location.href = '/checkout', 100);
                                     }}
                                     disabled={product.stock <= 0}
-                                    className="flex-1 h-14 bg-primary text-white hover:bg-[#1B1F3B] hover:border hover:border-white/10 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-3"
+                                    className="flex-1 h-12 md:h-14 bg-primary text-white hover:bg-[#1B1F3B] hover:border hover:border-white/10 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 md:gap-3"
                                 >
-                                    <Zap className="w-5 h-5 fill-white" />
+                                    <Zap className="w-4 h-4 md:w-5 md:h-5 fill-white" />
                                     Achat Rapide
                                 </Button>
                             </div>
@@ -310,31 +333,31 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                 </div>
             </div>
 
-            {/* Content Tabs */}
-            <div className="mt-12">
-                <div className="flex items-center gap-8 md:gap-14 border-b border-gray-100 mb-6 overflow-x-auto scrollbar-hide px-4">
+            <div className="mt-8 md:mt-12 px-0 md:px-0">
+                <div className="flex p-1 bg-gray-50 rounded-2xl md:rounded-[2rem] border border-gray-100 mb-6 md:mb-8 w-full scrollbar-hide">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={cn(
-                                "pb-6 text-[12px] font-black uppercase tracking-[0.2em] relative transition-all flex items-center gap-3 whitespace-nowrap",
-                                activeTab === tab.id ? "text-primary" : "text-gray-300 hover:text-gray-500"
+                                "relative flex-1 px-2 md:px-8 py-2.5 md:py-4 text-[8px] md:text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 md:gap-3 whitespace-nowrap rounded-xl md:rounded-[1.5rem] z-10",
+                                activeTab === tab.id ? "text-white" : "text-gray-400 hover:text-gray-600"
                             )}
                         >
-                            <tab.icon className="w-4 h-4" />
-                            {tab.label}
+                            <tab.icon className={cn("w-3 h-3 md:w-4 md:h-4", activeTab === tab.id ? "text-white" : "text-gray-400")} />
+                            <span className="truncate">{tab.label}</span>
                             {activeTab === tab.id && (
                                 <motion.div
-                                    layoutId="activeTabDetails"
-                                    className="absolute bottom-0 left-0 w-full h-1.5 bg-primary rounded-full"
+                                    layoutId="activeTabPill"
+                                    className="absolute inset-0 bg-primary rounded-xl md:rounded-[1.5rem] -z-10 shadow-lg shadow-primary/20"
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}
                         </button>
                     ))}
                 </div>
 
-                <div className="bg-white rounded-[3rem] p-8 md:p-16 border border-gray-100 shadow-[0_30px_60px_rgba(0,0,0,0.02)] min-h-[400px]">
+                <div className="bg-white rounded-3xl md:rounded-[3rem] p-6 md:p-16 border border-gray-100 shadow-[0_20px_40px_rgba(0,0,0,0.015)] min-h-[300px] md:min-h-[400px]">
                     <AnimatePresence mode="wait">
                         {activeTab === 'description' && (
                             <motion.div
@@ -345,8 +368,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 className="max-w-none"
                             >
                                 {product.brand?.image && (
-                                    <div className="flex justify-center mb-10">
-                                        <div className="relative w-48 h-20">
+                                    <div className="flex justify-center mb-6 md:mb-10">
+                                        <div className="relative w-32 h-12 md:w-48 md:h-20">
                                             <Image 
                                                 src={product.brand.image} 
                                                 alt={product.brand.name} 
@@ -357,14 +380,14 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         </div>
                                     </div>
                                 )}
-                                <h3 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight mb-8 text-center">Description Détaillée</h3>
-                                <p className="text-gray-500 text-lg leading-relaxed font-medium mb-12">
+                                <h3 className="text-xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight mb-6 md:mb-8 text-center">Description Détaillée</h3>
+                                <p className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12">
                                     {product.description || "Une description complète pour ce produit sera bientôt disponible."}
                                 </p>
 
-                                <div className="pt-12 border-t border-gray-100">
-                                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-8">Caractéristiques principales</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                                <div className="pt-8 md:pt-12 border-t border-gray-100">
+                                    <h4 className="text-[9px] md:text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 md:mb-8">Caractéristiques principales</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 md:gap-y-6">
                                         {(Array.isArray(product.features) && product.features.length > 0 ? product.features : [
                                             "Qualité Premium Certifiée",
                                             "Garantie Baraka Shop 12 mois",
@@ -373,11 +396,11 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                             "Service Après-Vente Local",
                                             "Authenticité Garantie"
                                         ]).map((feature: any, i: number) => (
-                                            <div key={i} className="flex items-center gap-4 group">
-                                                <div className="w-10 h-10 rounded-2xl bg-green-50 flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all">
-                                                    <Zap size={16} fill="currentColor" />
+                                            <div key={i} className="flex items-center gap-3 md:gap-4 group">
+                                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-green-50 flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all">
+                                                    <Zap className="w-3.5 h-3.5 md:w-4 md:h-4" fill="currentColor" />
                                                 </div>
-                                                <span className="text-[15px] font-bold text-[#1B1F3B]">{feature}</span>
+                                                <span className="text-[13px] md:text-[15px] font-bold text-[#1B1F3B]">{feature}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -415,17 +438,47 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-2"
+                                className="flex flex-col gap-2"
                             >
                                 {product.metadata && typeof product.metadata === 'object' ? (
-                                    Object.entries(product.metadata).map(([key, value], i) => (
-                                        <div key={i} className="flex items-center justify-between py-6 border-b border-gray-100 last:border-0 group">
-                                            <span className="text-[11px] font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">{key}</span>
-                                            <span className="text-base font-bold text-[#1B1F3B]">{String(value)}</span>
-                                        </div>
-                                    ))
+                                    Object.entries(product.metadata)
+                                        .filter(([key]) => !['id', 'importedat', 'customfields', 'images', 'description'].includes(key.toLowerCase()))
+                                        .map(([key, value], i) => {
+                                            // Format key
+                                            const formattedKey = key
+                                                .replace(/([A-Z])/g, ' $1')
+                                                .replace(/^./, str => str.toUpperCase())
+                                                .replace('Subcategory 1', 'Sous-catégorie')
+                                                .replace('Subcategory 2', 'Type')
+                                                .replace('Category', 'Catégorie')
+                                                .replace('Price', 'Prix')
+                                                .replace('Name', 'Désignation')
+                                                .replace('Stock', 'État du stock');
+
+                                            // Format value
+                                            let formattedValue = String(value);
+                                            if (key.toLowerCase() === 'price') {
+                                                formattedValue = `${Number(value).toLocaleString()} CFA`;
+                                            } else if (key.toLowerCase().includes('date') || key.toLowerCase() === 'createdat') {
+                                                formattedValue = new Date(String(value)).toLocaleDateString('fr-FR');
+                                            } else if (typeof value === 'object') {
+                                                formattedValue = 'Détails disponibles';
+                                            }
+
+                                            return (
+                                                <div key={i} className={cn(
+                                                    "flex items-center justify-between p-4 md:p-6 rounded-2xl transition-colors",
+                                                    i % 2 === 0 ? "bg-gray-50/50" : "bg-transparent"
+                                                )}>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{formattedKey}</span>
+                                                        <span className="text-sm md:text-base font-bold text-[#1B1F3B] leading-tight">{formattedValue}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
                                 ) : (
-                                    <div className="col-span-2 py-20 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
+                                    <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
                                         <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Fiche technique en cours de saisie...</p>
                                     </div>
                                 )}

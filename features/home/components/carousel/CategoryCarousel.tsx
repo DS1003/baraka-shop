@@ -75,8 +75,8 @@ export function CategoryCarousel({ initialCategories }: { initialCategories?: an
     const displayCategories = finalDisplay;
 
     return (
-        <section className="py-2 overflow-hidden">
-            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 px-4">
+        <section className="overflow-hidden">
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10">
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2 mb-0">
                             <div className="w-8 h-[2px] bg-primary rounded-full" />
@@ -102,7 +102,7 @@ export function CategoryCarousel({ initialCategories }: { initialCategories?: an
                 </div>
 
                 {/* Grid - 2 columns on mobile, 4 on desktop */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 px-2 md:px-0">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                     {displayCategories.map((category, idx) => {
                         const originalName = category.name || '';
                         const catKey = originalName.trim().toUpperCase();

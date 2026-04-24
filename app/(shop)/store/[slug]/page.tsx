@@ -86,10 +86,25 @@ export default function StoreDetailPage() {
         <main className="bg-[#f8f9fb] min-h-screen">
             {/* Hero Banner */}
             <div className="relative bg-[#1B1F3B] overflow-hidden">
-                {/* Background pattern */}
+                {/* Background Banner */}
                 <div className="absolute inset-0">
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2" />
-                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] -translate-x-1/2 translate-y-1/2" />
+                    {store.banner ? (
+                        <>
+                            <Image 
+                                src={store.banner} 
+                                alt={store.name} 
+                                fill 
+                                className="object-cover opacity-40"
+                                priority
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#1B1F3B] via-[#1B1F3B]/80 to-transparent" />
+                        </>
+                    ) : (
+                        <>
+                            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2" />
+                            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] -translate-x-1/2 translate-y-1/2" />
+                        </>
+                    )}
                     <div className="absolute inset-0" style={{
                         backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)',
                         backgroundSize: '40px 40px'
@@ -113,8 +128,8 @@ export default function StoreDetailPage() {
                             animate={{ opacity: 1, scale: 1 }}
                             className="w-28 h-28 md:w-36 md:h-36 rounded-[28px] bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl shadow-black/20 flex-shrink-0"
                         >
-                            {store.logo ? (
-                                <img src={store.logo} alt={store.name} className="w-full h-full object-contain p-4" />
+                            {(store.logo_detail || store.logo) ? (
+                                <img src={store.logo_detail || store.logo} alt={store.name} className="w-full h-full object-contain p-4" />
                             ) : (
                                 <Store size={56} className="text-white/30" />
                             )}
