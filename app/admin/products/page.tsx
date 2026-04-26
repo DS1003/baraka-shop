@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { RichTextEditor } from '@/ui/RichTextEditor';
 import {
     getAdminProducts,
     deleteProduct,
@@ -65,7 +66,9 @@ export default function ProductsPage() {
     const [detailProduct, setDetailProduct] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [formImages, setFormImages] = useState<string[]>([]);
-    const [newImageUrl, setNewImageUrl] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Selection
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -1001,55 +1004,106 @@ export default function ProductsPage() {
                                         Gestion des Photos
                                     </h4>
 
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-4 col-span-2">
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="URL de l'image (Ex: https://...)"
-                                                    className="flex-1 px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium"
-                                                    value={newImageUrl}
-                                                    onChange={(e) => setNewImageUrl(e.target.value)}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (newImageUrl.trim()) {
-                                                            setFormImages(prev => [...prev, newImageUrl.trim()]);
-                                                            setNewImageUrl('');
-                                                        }
-                                                    }}
-                                                    className="px-6 py-3.5 bg-orange-600 text-white rounded-2xl font-bold text-[13px] hover:bg-orange-700 transition-all flex items-center gap-2 shadow-lg shadow-orange-100"
-                                                >
-                                                    <Plus size={18} />
-                                                    Ajouter
-                                                </button>
-                                            </div>
-
-                                            {formImages.length > 0 ? (
-                                                <div className="grid grid-cols-5 gap-4 bg-slate-50 p-6 rounded-[24px] border border-slate-200/50">
-                                                    {formImages.map((img, i) => (
-                                                        <div key={i} className="relative aspect-square group">
-                                                            <div className="w-full h-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
-                                                                <img src={img} alt="" className="w-full h-full object-cover" />
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setFormImages(prev => prev.filter((_, idx) => idx !== i))}
-                                                                className="absolute -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
-                                                            >
-                                                                <X size={14} strokeWidth={3} />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                    <div className="space-y-4">
+                                        {/* Upload Zone - Drag & Drop */}
+                                        <div
+                                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                            onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                                            onDrop={async (e) => {
+                                                e.preventDefault();
+                                                setIsDragging(false);
+                                                const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                                                if (files.length === 0) return;
+                                                setIsUploading(true);
+                                                try {
+                                                    const fd = new FormData();
+                                                    files.forEach(f => fd.append('files', f));
+                                                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                    const data = await res.json();
+                                                    if (data.urls) setFormImages(prev => [...prev, ...data.urls]);
+                                                    else toast.error(data.error || 'Erreur upload');
+                                                } catch { toast.error('Erreur lors de l\'upload.'); }
+                                                finally { setIsUploading(false); }
+                                            }}
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className={cn(
+                                                "relative py-10 border-2 border-dashed rounded-[24px] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300",
+                                                isDragging
+                                                    ? "border-orange-500 bg-orange-50/80 scale-[1.02] shadow-lg shadow-orange-100"
+                                                    : "border-slate-200 bg-slate-50/50 hover:border-orange-300 hover:bg-orange-50/30",
+                                                isUploading && "pointer-events-none opacity-60"
+                                            )}
+                                        >
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                multiple
+                                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const files = Array.from(e.target.files || []);
+                                                    if (files.length === 0) return;
+                                                    setIsUploading(true);
+                                                    try {
+                                                        const fd = new FormData();
+                                                        files.forEach(f => fd.append('files', f));
+                                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                        const data = await res.json();
+                                                        if (data.urls) setFormImages(prev => [...prev, ...data.urls]);
+                                                        else toast.error(data.error || 'Erreur upload');
+                                                    } catch { toast.error('Erreur lors de l\'upload.'); }
+                                                    finally { setIsUploading(false); e.target.value = ''; }
+                                                }}
+                                            />
+                                            {isUploading ? (
+                                                <>
+                                                    <Loader2 size={32} className="animate-spin text-orange-500" />
+                                                    <p className="text-[13px] font-bold text-orange-600">Upload en cours...</p>
+                                                </>
                                             ) : (
-                                                <div className="py-12 border-2 border-dashed border-slate-200 rounded-[24px] flex flex-col items-center justify-center gap-3 text-slate-400 bg-slate-50/50">
-                                                    <ImagePlus size={32} strokeWidth={1.5} />
-                                                    <p className="text-[12px] font-bold uppercase tracking-widest">Aucune photo ajoutée</p>
-                                                </div>
+                                                <>
+                                                    <div className={cn(
+                                                        "w-14 h-14 rounded-2xl flex items-center justify-center transition-all",
+                                                        isDragging ? "bg-orange-500 text-white" : "bg-white border border-slate-200 text-slate-400"
+                                                    )}>
+                                                        <Upload size={24} />
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-[13px] font-bold text-slate-600">
+                                                            {isDragging ? 'Déposez vos images ici' : 'Glissez-déposez vos images ici'}
+                                                        </p>
+                                                        <p className="text-[11px] text-slate-400 font-medium mt-1">
+                                                            ou <span className="text-orange-500 font-bold">cliquez pour parcourir</span> — JPG, PNG, WebP • Max 5 MB
+                                                        </p>
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
+
+                                        {/* Image Thumbnails */}
+                                        {formImages.length > 0 && (
+                                            <div className="grid grid-cols-5 gap-4 bg-slate-50 p-6 rounded-[24px] border border-slate-200/50">
+                                                {formImages.map((img, i) => (
+                                                    <div key={i} className="relative aspect-square group">
+                                                        <div className="w-full h-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+                                                            <img src={img} alt="" className="w-full h-full object-cover" />
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormImages(prev => prev.filter((_, idx) => idx !== i))}
+                                                            className="absolute -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                                                        >
+                                                            <X size={14} strokeWidth={3} />
+                                                        </button>
+                                                        {i === 0 && (
+                                                            <span className="absolute bottom-1 left-1 px-2 py-0.5 bg-orange-600 text-white text-[8px] font-black uppercase rounded-md tracking-wider shadow-sm">
+                                                                Principal
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </section>
 
@@ -1072,11 +1126,9 @@ export default function ProductsPage() {
 
                                     <div className="space-y-2">
                                         <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Détaillée</label>
-                                        <textarea
+                                        <RichTextEditor
                                             name="description"
                                             defaultValue={editingProduct?.description}
-                                            rows={5}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed"
                                             placeholder="Décrivez les caractéristiques, matières, coupes..."
                                         />
                                     </div>

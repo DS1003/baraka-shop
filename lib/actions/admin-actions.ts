@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 import { revalidatePath } from 'next/cache';
+import { invalidatePrefix, invalidateCache } from '@/lib/redis';
 
 export async function getDashboardStats() {
     try {
@@ -924,11 +925,16 @@ export async function upsertProduct(data: any, id?: string) {
                 data: prismaData,
             });
         }
-        revalidatePath('/admin/products');
-        revalidatePath('/admin/inventory');
-        revalidatePath('/admin/promotions');
-        revalidatePath('/boutique');
-        revalidatePath('/');
+        
+        // Invalider le cache Redis
+        if (id) {
+            await invalidateCache(`product:${id}`);
+            await invalidatePrefix('similar:');
+        }
+        await invalidatePrefix('products:');
+
+        // Force le rechargement complet de tout le cache (boutique, accueil, détails produits...)
+        revalidatePath('/', 'layout');
         return { success: true, product };
     } catch (error) {
         console.error("Upsert product error:", error);

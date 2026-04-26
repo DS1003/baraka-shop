@@ -121,7 +121,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         <span className="text-primary font-black text-[9px] uppercase tracking-[0.3em]">Premium Quality</span>
                         <div className="h-px flex-1 bg-gray-100" />
                     </div>
-                    <h1 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tight leading-tight">
+                    <h1 className="text-2xl font-black text-[#1B1F3B] tracking-tight leading-tight">
                         {product.name}
                     </h1>
                     <div className="flex items-center gap-3 mt-1">
@@ -188,7 +188,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                             <div className="h-px flex-1 bg-gray-100" />
                         </div>
 
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-[1.1] mb-4">
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] tracking-tight leading-[1.1] mb-4">
                             {product.name}
                         </h1>
 
@@ -370,20 +370,27 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 {product.brand?.image && (
                                     <div className="flex justify-center mb-6 md:mb-10">
                                         <div className="relative w-32 h-12 md:w-48 md:h-20">
-                                            <Image 
-                                                src={product.brand.image} 
-                                                alt={product.brand.name} 
-                                                fill 
-                                                className="object-contain filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500" 
+                                            <Image
+                                                src={product.brand.image}
+                                                alt={product.brand.name}
+                                                fill
+                                                className="object-contain"
                                                 unoptimized
                                             />
                                         </div>
                                     </div>
                                 )}
                                 <h3 className="text-xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight mb-6 md:mb-8 text-center">Description Détaillée</h3>
-                                <p className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12">
-                                    {product.description || "Une description complète pour ce produit sera bientôt disponible."}
-                                </p>
+                                {product.description ? (
+                                    <div
+                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12 [&>b]:font-bold [&>strong]:font-bold [&>i]:italic [&>em]:italic [&>u]:underline [&>div]:mb-2 [&>p]:mb-2 [&>*:last-child]:mb-0"
+                                        dangerouslySetInnerHTML={{ __html: product.description }}
+                                    />
+                                ) : (
+                                    <p className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12">
+                                        Une description complète pour ce produit sera bientôt disponible.
+                                    </p>
+                                )}
 
                                 <div className="pt-8 md:pt-12 border-t border-gray-100">
                                     <h4 className="text-[9px] md:text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 md:mb-8">Caractéristiques principales</h4>
@@ -560,7 +567,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         <Container>
                             <div className="flex items-center justify-between gap-8">
                                 <div className="hidden lg:flex flex-col gap-1 max-w-md">
-                                    <h4 className="font-black text-[#1B1F3B] text-sm uppercase tracking-tight line-clamp-1">{product.name}</h4>
+                                    <h4 className="font-black text-[#1B1F3B] text-sm tracking-tight line-clamp-1">{product.name}</h4>
                                     <div className="flex items-center gap-2">
                                         <div className="flex gap-0.5">
                                             {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
