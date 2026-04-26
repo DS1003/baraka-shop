@@ -270,7 +270,33 @@ export default function ProductsPage() {
             features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
             metadata: (() => {
                 const raw = formData.get('metadata') as string;
-                try { return JSON.parse(raw); } catch { return { info: raw }; }
+                if (!raw || raw.trim() === '') return {};
+                try { 
+                    const parsed = JSON.parse(raw); 
+                    if (typeof parsed === 'object' && parsed !== null) return parsed;
+                } catch {}
+                
+                const metadataObj: any = {};
+                raw.split('\n').forEach(line => {
+                    // Try to split by explicit colon
+                    const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
+                    if (colonMatch) {
+                        metadataObj[colonMatch[1].trim()] = colonMatch[2].trim();
+                        return;
+                    }
+                    
+                    // Try to split by tab (common when copy-pasting tables)
+                    if (line.includes('\t')) {
+                        const parts = line.split('\t');
+                        metadataObj[parts[0].trim()] = parts.slice(1).join(' ').trim();
+                        return;
+                    }
+                    
+                    if (line.trim() !== "") {
+                        metadataObj[line.trim()] = "Oui";
+                    }
+                });
+                return metadataObj;
             })()
         };
 
@@ -1145,13 +1171,19 @@ export default function ProductsPage() {
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Fiche Technique (JSON)</label>
+                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Fiche Technique (1 par ligne)</label>
                                             <textarea
                                                 name="metadata"
-                                                defaultValue={editingProduct?.metadata ? JSON.stringify(editingProduct.metadata, null, 2) : ""}
+                                                defaultValue={editingProduct?.metadata 
+                                                    ? Object.entries(editingProduct.metadata)
+                                                        .filter(([k]) => k !== 'importedAt')
+                                                        .map(([k, v]) => `${k}: ${v}`)
+                                                        .join('\n') 
+                                                    : ""
+                                                }
                                                 rows={6}
                                                 className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[13px]"
-                                                placeholder='{"Ecran": "15 pouces", "RAM": "16GB"}'
+                                                placeholder="Ex:&#10;Ecran: 15 pouces&#10;RAM: 16GB&#10;Stockage: 512GB SSD"
                                             />
                                         </div>
                                     </div>

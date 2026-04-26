@@ -445,15 +445,16 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="flex flex-col gap-2"
+                                className="grid grid-cols-1 md:grid-cols-2 gap-4"
                             >
                                 {product.metadata && typeof product.metadata === 'object' ? (
                                     Object.entries(product.metadata)
                                         .filter(([key]) => !['id', 'importedat', 'customfields', 'images', 'description'].includes(key.toLowerCase()))
                                         .map(([key, value], i) => {
-                                            // Format key
+                                            // Format key: Convert camelCase to Title Case but preserve normal words and acronyms
                                             const formattedKey = key
-                                                .replace(/([A-Z])/g, ' $1')
+                                                // Only add space before a capital letter if it follows a lowercase letter (e.g. storageCapacity -> storage Capacity)
+                                                .replace(/([a-z])([A-Z])/g, '$1 $2')
                                                 .replace(/^./, str => str.toUpperCase())
                                                 .replace('Subcategory 1', 'Sous-catégorie')
                                                 .replace('Subcategory 2', 'Type')
@@ -473,14 +474,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                             }
 
                                             return (
-                                                <div key={i} className={cn(
-                                                    "flex items-center justify-between p-4 md:p-6 rounded-2xl transition-colors",
-                                                    i % 2 === 0 ? "bg-gray-50/50" : "bg-transparent"
-                                                )}>
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">{formattedKey}</span>
-                                                        <span className="text-sm md:text-base font-bold text-[#1B1F3B] leading-tight">{formattedValue}</span>
-                                                    </div>
+                                                <div key={i} className="flex flex-col gap-1 p-5 md:p-6 bg-slate-50 border border-slate-100 rounded-[1.5rem] hover:border-orange-500/20 hover:bg-orange-50/50 transition-all">
+                                                    <span className="text-[10px] md:text-[11px] font-black text-gray-400 uppercase tracking-widest">{formattedKey}</span>
+                                                    <span className="text-sm md:text-base font-bold text-[#1B1F3B] leading-snug">{formattedValue}</span>
                                                 </div>
                                             );
                                         })
