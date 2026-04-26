@@ -75,7 +75,7 @@ interface NavigationItem {
 
 const navigation: NavigationItem[] = [
     { name: 'Boutique', href: '/boutique', active: true },
-    { name: 'Consommable', href: '/boutique?q=CONSOMMABLE' },
+    { name: 'Consommable', href: '/boutique?category=consommables&page=1' },
     { name: 'Promotions', href: '/promotions', isNew: true },
     { name: 'Nouveautés', href: '/nouveautes', isNew: true },
 ]
@@ -99,14 +99,14 @@ export function Header() {
 
     const handleMenuEnter = () => {
         if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
-        menuTimeoutRef.current = setTimeout(() => {
-            setShowMegaMenu(true)
-        }, 200) // Hover intent delay
+        setShowMegaMenu(true)
     }
 
     const handleMenuLeave = () => {
         if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
-        setShowMegaMenu(false)
+        menuTimeoutRef.current = setTimeout(() => {
+            setShowMegaMenu(false)
+        }, 150)
     }
 
     useEffect(() => {
@@ -351,7 +351,7 @@ export function Header() {
             <div className="bg-black text-white border-t border-white/10 hidden md:block">
                 <Container className="relative flex items-center h-[55px]">
                     <div
-                        className="h-full flex items-center mr-8 pr-8 border-r border-white/10 cursor-pointer group relative"
+                        className="h-full flex items-center mr-8 pr-8 border-r border-white/10 cursor-pointer group"
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
                     >
@@ -360,20 +360,16 @@ export function Header() {
                                 <Menu className="w-5 h-5" />
                                 <span>Catégories</span>
                             </div>
-                            <ChevronDown className="w-4 h-4 opacity-70 group-hover:rotate-180 transition-transform" />
+                            <ChevronDown className={cn("w-4 h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
                         </div>
+                        <AnimatePresence>
+                            {showMegaMenu && (
+                                <div className="absolute top-full left-0 w-full z-[120] px-4 md:px-6 lg:px-8">
+                                    <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
+                                </div>
+                            )}
+                        </AnimatePresence>
                     </div>
-                    <AnimatePresence>
-                        {showMegaMenu && (
-                            <div
-                                className="absolute top-full left-0 w-full px-4 md:px-6 lg:px-8 z-[120]"
-                                onMouseEnter={handleMenuEnter}
-                                onMouseLeave={handleMenuLeave}
-                            >
-                                <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
-                            </div>
-                        )}
-                    </AnimatePresence>
 
                     <nav className="flex items-center gap-5">
                         {navigation.map((item) => (

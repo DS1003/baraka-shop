@@ -95,29 +95,32 @@ export function PromoGrid() {
 
     return (
         <section className="overflow-hidden">
-            <div className="flex items-center justify-between mb-10">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="w-8 h-[2px] bg-primary rounded-full" />
-                            <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
-                        </div>
-                        <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
-                            Nos <span className="text-primary italic">Incontournables</span>
-                        </h2>
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-[2px] bg-primary rounded-full" />
+                        <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
                     </div>
-                    <div className="flex md:hidden gap-2.5">
-                        <button
-                            onClick={slidePrev}
-                            className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={slideNext}
-                            className="w-12 h-12 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
-                        >
-                            <ChevronRight className="w-5 h-5 text-primary" />
-                        </button>
-                    </div>
+                    <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
+                        Nos <span className="text-primary italic">Incontournables</span>
+                    </h2>
+                </div>
+                
+                <div className="flex md:hidden gap-2.5">
+                    <button
+                        onClick={slidePrev}
+                        className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={slideNext}
+                        className="w-12 h-12 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                    >
+                        <ChevronRight className="w-5 h-5 text-primary" />
+                    </button>
+                </div>
+            </div>
 
                 {/* Desktop Grid */}
                 <div className="hidden md:grid grid-cols-4 gap-8">

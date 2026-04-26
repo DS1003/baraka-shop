@@ -34,10 +34,10 @@ export function MegaMenu({ categories, onClose }: MegaMenuProps) {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 15 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="w-full max-w-[1500px] h-[600px] mx-auto bg-white text-black shadow-2xl border border-gray-100 rounded-b-2xl overflow-hidden z-50 flex relative"
         >
             {/* Left Column: Categories List (LDLC Style Sidebar) */}
