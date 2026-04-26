@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { randomUUID } from 'crypto';
+import { v2 as cloudinary } from 'cloudinary';
 
 export async function POST(request: NextRequest) {
     try {
+        // Init Cloudinary Config
+        cloudinary.config({
+            cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET
+        });
+
         const formData = await request.formData();
         const files = formData.getAll('files') as File[];
 
@@ -14,10 +19,6 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
-
-        // Ensure uploads directory exists
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'products');
-        await mkdir(uploadDir, { recursive: true });
 
         const uploadedUrls: string[] = [];
 
@@ -36,15 +37,18 @@ export async function POST(request: NextRequest) {
             const bytes = await file.arrayBuffer();
             const buffer = Buffer.from(bytes);
 
-            // Generate unique filename
-            const ext = path.extname(file.name) || '.jpg';
-            const uniqueName = `${randomUUID()}${ext}`;
-            const filePath = path.join(uploadDir, uniqueName);
+            // Upload vers Cloudinary
+            const uploadResponse = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream({
+                    folder: 'products_baraka',
+                    resource_type: 'auto'
+                }, (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }).end(buffer);
+            }) as any;
 
-            await writeFile(filePath, buffer);
-
-            // Return the public URL
-            uploadedUrls.push(`/uploads/products/${uniqueName}`);
+            uploadedUrls.push(uploadResponse.secure_url);
         }
 
         if (uploadedUrls.length === 0) {
