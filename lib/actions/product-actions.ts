@@ -297,6 +297,7 @@ export async function getMegaMenuAction() {
 
 
 interface ImportProduct {
+    reference?: string;
     name: string;
     category: string;
     subCategory?: string;
@@ -419,21 +420,34 @@ async function getEntityIds(products: ImportProduct[]) {
  * Identifie les produits déjà présents en base pour éviter les doublons.
  */
 async function getExistingProductsInBatch(products: ImportProduct[], catMap: Map<string, string>) {
-    const pairs = [...new Set(products.map(p => ({
-        name: p.name || 'Produit sans nom',
-        categoryId: catMap.get(p.category)
-    })).filter(x => x.categoryId).map(x => JSON.stringify(x)))].map(s => JSON.parse(s));
+    const references = [...new Set(products.map(p => p.reference?.trim()).filter(Boolean))] as string[];
+    const categoryIds = [...new Set(products.map(p => catMap.get(p.category)).filter(Boolean))] as string[];
 
-    if (pairs.length === 0) return new Map<string, any>();
+    // Fetch by references
+    const existingByRef = references.length > 0 ? await prisma.product.findMany({
+        where: { reference: { in: references } },
+        select: { id: true, name: true, categoryId: true, price: true, stock: true, subCategoryId: true, thirdLevelCategoryId: true, brandId: true, reference: true }
+    }) : [];
 
-    const existing = await prisma.product.findMany({
-        where: { OR: pairs },
-        select: { id: true, name: true, categoryId: true, price: true, stock: true, subCategoryId: true, thirdLevelCategoryId: true, brandId: true }
-    });
+    // Fetch by categories
+    const existingByName = categoryIds.length > 0 ? await prisma.product.findMany({
+        where: { categoryId: { in: categoryIds } },
+        select: { id: true, name: true, categoryId: true, price: true, stock: true, subCategoryId: true, thirdLevelCategoryId: true, brandId: true, reference: true }
+    }) : [];
+
+    const existing = [...existingByRef, ...existingByName];
 
     const map = new Map<string, any>();
     for (const p of existing) {
-        map.set(`${p.name}|${p.categoryId}`, p);
+        if (p.reference) {
+            map.set(`ref:${p.reference}`, p);
+        }
+        // Key based on normalized name and category
+        const normalizedName = p.name.toLowerCase().trim();
+        map.set(`${normalizedName}|${p.categoryId}`, p);
+        // Also map by slug for extra safety
+        const slugged = slugify(p.name);
+        if (slugged) map.set(`${slugged}|${p.categoryId}`, p);
     }
     return map;
 }
@@ -457,9 +471,23 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
 
             if (!catId) continue;
 
-            const name = p.name || 'Produit sans nom';
-            const identity = `${name}|${catId}`;
-            const ext = existingMap.get(identity);
+            const rawName = p.name || 'Produit sans nom';
+            const name = rawName.trim();
+            const normalizedName = name.toLowerCase();
+            const sluggedName = slugify(name);
+            const reference = p.reference?.trim() || null;
+            
+            // Try matching by reference first
+            let ext = null;
+            if (reference) {
+                ext = existingMap.get(`ref:${reference}`);
+            }
+            
+            // Fallback to name/slug match
+            if (!ext) ext = existingMap.get(`${normalizedName}|${catId}`);
+            if (!ext && sluggedName) {
+                ext = existingMap.get(`${sluggedName}|${catId}`);
+            }
 
             if (ext) {
                 // --- MISE À JOUR SI CHANGEMENT ---
@@ -469,18 +497,22 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                 if (
                     ext.price !== newPrice ||
                     ext.stock !== newStock ||
+                    ext.categoryId !== catId ||
                     ext.subCategoryId !== (subId || null) ||
                     ext.thirdLevelCategoryId !== (thirdId || null) ||
-                    ext.brandId !== (bId || null)
+                    ext.brandId !== (bId || null) ||
+                    (reference && ext.reference !== reference)
                 ) {
                     toUpdate.push({
                         id: ext.id,
                         data: {
                             price: newPrice,
                             stock: newStock,
+                            categoryId: catId,
                             subCategoryId: subId || null,
                             thirdLevelCategoryId: thirdId || null,
                             brandId: bId || null,
+                            reference: reference || undefined,
                             updatedAt: new Date()
                         }
                     });
@@ -491,6 +523,7 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                 const slugBase = slugify(`${name}-${brandName}`) || 'product';
 
                 toCreate.push({
+                    reference: reference || null,
                     name,
                     slug: `${slugBase}-${Math.random().toString(36).substring(2, 7)}`,
                     description: p.description || '',

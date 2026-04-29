@@ -2,6 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import prismaClient from '@/lib/prisma';
 const prisma = prismaClient as any;
 import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
@@ -14,8 +15,8 @@ import { revalidatePath } from 'next/cache';
 export async function saveToJsonAndStartImport(products: any[]) {
     console.log(`[Import Start] Received ${products.length} products to save and import.`);
     try {
-        // 1. Sauvegarder dans un JSON intermédiaire
-        const dataDir = path.join(process.cwd(), 'public', 'data');
+        // 1. Sauvegarder dans un JSON intermédiaire (utilise /tmp pour la compatibilité Vercel)
+        const dataDir = path.join(os.tmpdir(), 'baraka-import-data');
         await fs.mkdir(dataDir, { recursive: true });
         const filePath = path.join(dataDir, 'latest-import.json');
 

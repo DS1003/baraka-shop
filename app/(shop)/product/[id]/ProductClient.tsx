@@ -17,9 +17,7 @@ import {
     ChevronLeft,
     MessageSquare,
     Info,
-    LayoutGrid,
-    ShieldCheck,
-    Globe
+    LayoutGrid
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -117,22 +115,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
             <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8">
                 {/* Mobile Header: Name & Brand - Hidden on Desktop */}
                 <div className="flex flex-col gap-2 lg:hidden">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-primary font-black text-[9px] uppercase tracking-[0.3em]">Premium Quality</span>
-                        <div className="h-px flex-1 bg-gray-100" />
-                    </div>
                     <h1 className="text-2xl font-black text-[#1B1F3B] tracking-tight leading-tight">
                         {product.name}
                     </h1>
-                    <div className="flex items-center gap-3 mt-1">
-                        <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            <span className="text-[9px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[9px] font-black uppercase tracking-wider">
-                            {product.category?.name || product.category}
-                        </div>
-                    </div>
                 </div>
 
                 {/* Image Gallery */}
@@ -183,31 +168,27 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                 <div className="lg:col-span-12 xl:col-span-7 flex flex-col pt-0 lg:pt-2">
                     {/* Desktop Header - Hidden on Mobile */}
                     <div className="hidden lg:flex flex-col">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-primary font-black text-[10px] uppercase tracking-[0.3em]">Premium Quality</span>
-                            <div className="h-px flex-1 bg-gray-100" />
-                        </div>
-
                         <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1B1F3B] tracking-tight leading-[1.1] mb-4">
                             {product.name}
                         </h1>
 
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-primary" />
-                                <span className="text-[11px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-wider">
-                                {product.category?.name || product.category}
-                            </div>
-                        </div>
                     </div>
 
                     {/* Description Courte */}
-                    <div className="mb-4 md:mb-6 max-w-2xl">
+                    <div className="mb-2 md:mb-3 max-w-2xl">
                         <p className="text-gray-500 text-sm md:text-[16px] leading-relaxed font-medium">
                             {product.shortDescription || product.description?.substring(0, 160) + "..." || "Découvrez l'élégance et la technologie de pointe combinées dans ce produit d'exception, sélectionné par Baraka Shop."}
                         </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 mb-3 md:mb-4">
+                        <div className="px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <span className="text-[10px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                            {product.category?.name || product.category}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-6 md:gap-8 mb-4 md:mb-6 pb-4 md:pb-6 border-b border-gray-100/60">
@@ -319,17 +300,6 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                             </a>
                         </div>
                     </div>
-
-                    <div className="flex items-center justify-center gap-8 py-4">
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            <ShieldCheck size={14} className="text-primary" />
-                            Garantie 1 an
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            <Globe size={14} className="text-primary" />
-                            SAV Local
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -380,10 +350,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         </div>
                                     </div>
                                 )}
-                                <h3 className="text-xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight mb-6 md:mb-8 text-center">Description Détaillée</h3>
                                 {product.description ? (
                                     <div
-                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12 [&>b]:font-bold [&>strong]:font-bold [&>i]:italic [&>em]:italic [&>u]:underline [&>div]:mb-2 [&>p]:mb-2 [&>*:last-child]:mb-0"
+                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-2 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
                                         dangerouslySetInnerHTML={{ __html: product.description }}
                                     />
                                 ) : (

@@ -37,6 +37,7 @@ import { saveToJsonAndStartImport } from '@/lib/actions/import-bg-actions';
 
 interface ParsedProduct {
     id: string;
+    reference?: string;
     name: string;
     category: string;
     subcategory1?: string;
@@ -52,6 +53,7 @@ interface ParsedProduct {
 type MappingState = Record<string, string>; // TargetField -> ExcelHeader
 
 const TARGET_FIELDS = [
+    { id: 'reference', label: 'Référence / SKU', required: false, icon: FileText },
     { id: 'name', label: 'Nom / Désignation', required: true, icon: Box },
     { id: 'price', label: 'Prix de vente', required: true, icon: Tag },
     { id: 'stock', label: 'Stock Total', required: true, icon: Database },
@@ -137,6 +139,8 @@ export default function ImportProductsPage() {
 
                         // Heuristics
                         if (hNorm.includes(fNorm)) return true;
+                        if (hNorm.includes('ref') && field.id === 'reference') return true;
+                        if (hNorm.includes('sku') && field.id === 'reference') return true;
                         if (hNorm.includes('design') && field.id === 'name') return true;
                         if (hNorm.includes('prix') && field.id === 'price') return true;
                         if (hNorm.includes('stock') && field.id === 'stock') return true;
@@ -186,6 +190,7 @@ export default function ImportProductsPage() {
 
             return {
                 id: `temp-${idx}-${Date.now()}`,
+                reference: getVal('reference') ? String(getVal('reference')) : undefined,
                 name: String(getVal('name') || ''),
                 category: String(getVal('category') || 'Général'),
                 subcategory1: getVal('subcategory1') ? String(getVal('subcategory1')) : undefined,
