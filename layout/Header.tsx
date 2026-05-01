@@ -99,7 +99,9 @@ export function Header() {
 
     const handleMenuEnter = () => {
         if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
-        setShowMegaMenu(true)
+        menuTimeoutRef.current = setTimeout(() => {
+            setShowMegaMenu(true)
+        }, 250) // S'ouvre après 250ms de survol (intent delay)
     }
 
     const handleMenuLeave = () => {
@@ -348,19 +350,21 @@ export function Header() {
             </div>
 
             {/* 3. Navigation Bar (Desktop) */}
-            <div className="bg-black text-white border-t border-white/10 hidden md:block">
-                <Container className="relative flex items-center h-[55px]">
+            {/* 3. Navigation Bar (Desktop) */}
+            <div className="bg-black text-white border-t border-white/10 hidden md:block relative z-[90]">
+                <Container className="relative flex items-center h-[55px] lg:h-[60px]">
+                    {/* Menu Categories - Fixed Left */}
                     <div
-                        className="h-full flex items-center mr-8 pr-8 border-r border-white/10 cursor-pointer group"
+                        className="h-full flex items-center mr-2 md:mr-4 lg:mr-8 pr-2 md:pr-4 lg:pr-8 border-r border-white/10 cursor-pointer group shrink-0"
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
                     >
-                        <div className="flex items-center justify-between bg-primary text-white px-6 w-[240px] h-[48px] rounded-full font-black text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                            <div className="flex items-center gap-3">
-                                <Menu className="w-5 h-5" />
+                        <div className="flex items-center justify-between bg-primary text-white px-3 md:px-4 lg:px-6 w-[150px] md:w-[180px] lg:w-[240px] h-[36px] md:h-[40px] lg:h-[48px] rounded-full font-black text-[10px] md:text-xs lg:text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                            <div className="flex items-center gap-1.5 lg:gap-3">
+                                <Menu className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5" />
                                 <span>Catégories</span>
                             </div>
-                            <ChevronDown className={cn("w-4 h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
+                            <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
                         </div>
                         <AnimatePresence>
                             {showMegaMenu && (
@@ -371,61 +375,67 @@ export function Header() {
                         </AnimatePresence>
                     </div>
 
-                    <nav className="flex items-center gap-5">
-                        {navigation.map((item) => (
-                            <div
-                                key={item.name}
-                                className="relative h-full flex items-center"
-                                onMouseEnter={item.hasMegaMenu ? handleMenuEnter : undefined}
-                                onMouseLeave={item.hasMegaMenu ? handleMenuLeave : undefined}
-                            >
-                                <Link
-                                    href={item.href}
-                                    className={cn(
-                                        "text-sm font-bold transition-all uppercase tracking-tight hover:text-primary flex items-center gap-1",
-                                        item.active ? "text-primary px-3 py-1 bg-white/5 rounded-md" : "text-gray-300"
-                                    )}
-                                >
-                                    {item.name}
-                                    {item.hasMegaMenu && <ChevronDown className="w-3.5 h-3.5 opacity-50" />}
-                                    {item.isNew && <span className="text-[9px] bg-red-500 text-white px-1.5 py-0.5 rounded-full ml-1">HOT</span>}
-                                </Link>
-                            </div>
-                        ))}
-                    </nav>
-
-                    {/* Right Link - Dynamic Stores */}
-                    <div className="ml-auto flex items-center gap-2">
-                        {stores.length > 0 ? (
-                            <div className="flex items-center gap-1.5">
-                                {stores.map((store) => (
-                                    <Link
-                                        key={store.id}
-                                        href={`/store/${store.slug}`}
-                                        className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 hover:bg-white hover:text-primary transition-all"
-                                        title={store.name}
+                    {/* Adaptive Container for Links and Stores (No Scroll) */}
+                    <div className="flex-1 flex items-center min-w-0 h-full">
+                        <div className="flex items-center justify-between w-full min-w-0 gap-2 lg:gap-8">
+                            {/* Middle Navigation Links */}
+                            <nav className="flex items-center gap-0.5 md:gap-1 lg:gap-3 shrink min-w-0">
+                                {navigation.map((item) => (
+                                    <div
+                                        key={item.name}
+                                        className="relative h-full flex items-center shrink min-w-0"
+                                        onMouseEnter={item.hasMegaMenu ? handleMenuEnter : undefined}
+                                        onMouseLeave={item.hasMegaMenu ? handleMenuLeave : undefined}
                                     >
-                                        {store.logo && (
-                                            <div className="relative w-6 h-6 rounded-full overflow-hidden bg-white/10 group-hover:bg-white/20 transition-all">
-                                                <Image
-                                                    src={store.logo}
-                                                    alt={store.name}
-                                                    fill
-                                                    className="object-contain p-1"
-                                                />
-                                            </div>
-                                        )}
-                                        <span className="text-sm font-bold text-gray-300 group-hover:text-primary uppercase tracking-tight">
-                                            {store.name}
-                                        </span>
-                                    </Link>
+                                        <Link
+                                            href={item.href}
+                                            className={cn(
+                                                "text-[9px] md:text-[10px] lg:text-[12px] xl:text-[13px] font-bold transition-all uppercase tracking-tight hover:text-primary flex items-center gap-1 whitespace-nowrap px-1.5 md:px-2 lg:px-2.5 py-1 md:py-1.5 rounded-lg truncate",
+                                                item.active ? "text-primary bg-white/5" : "text-gray-300 hover:bg-white/5 hover:text-white"
+                                            )}
+                                        >
+                                            <span className="truncate">{item.name}</span>
+                                            {item.hasMegaMenu && <ChevronDown className="w-2.5 h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 opacity-50 shrink-0" />}
+                                            {item.isNew && <span className="text-[7px] md:text-[8px] lg:text-[9px] bg-red-500 text-white px-1 md:px-1.5 py-0.5 rounded-md ml-0.5 font-black shadow-sm shrink-0">HOT</span>}
+                                        </Link>
+                                    </div>
                                 ))}
+                            </nav>
+
+                            {/* Right Link - Dynamic Stores */}
+                            <div className="flex items-center gap-1 lg:gap-2 shrink min-w-0 pl-2 lg:pl-8 border-l border-white/10">
+                                {stores.length > 0 ? (
+                                    <div className="flex items-center gap-1 lg:gap-2 min-w-0">
+                                        {stores.map((store) => (
+                                            <Link
+                                                key={store.id}
+                                                href={`/store/${store.slug}`}
+                                                className="group flex items-center gap-1 md:gap-1.5 lg:gap-2 px-1.5 md:px-2 lg:px-3 py-1 lg:py-1.5 rounded-full border border-white/10 hover:bg-white transition-all shrink min-w-0 bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                                                title={store.name}
+                                            >
+                                                {store.logo && (
+                                                    <div className="relative w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 rounded-full overflow-hidden bg-white/10 group-hover:bg-gray-100 transition-all shrink-0">
+                                                        <Image
+                                                            src={store.logo}
+                                                            alt={store.name}
+                                                            fill
+                                                            className="object-contain p-[2px]"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <span className="text-[8px] md:text-[9px] lg:text-[11px] xl:text-xs font-black text-gray-300 group-hover:text-[#1B1F3B] uppercase tracking-wider truncate transition-colors">
+                                                    {store.name}
+                                                </span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Link href="/contact" className="text-[8px] md:text-[10px] lg:text-xs font-black text-white uppercase border border-white/20 px-2 md:px-3 lg:px-4 py-1 lg:py-1.5 rounded-md hover:bg-primary hover:border-primary hover:shadow-[0_0_15px_rgba(var(--primary),0.3)] transition-all whitespace-nowrap shrink-0">
+                                        Vendre sur Baraka
+                                    </Link>
+                                )}
                             </div>
-                        ) : (
-                            <Link href="/contact" className="text-xs font-black text-white uppercase border border-white/20 px-4 py-1.5 rounded-md hover:bg-primary hover:border-primary transition-all">
-                                Vendre sur Baraka
-                            </Link>
-                        )}
+                        </div>
                     </div>
                 </Container>
             </div>
