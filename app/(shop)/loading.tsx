@@ -2,80 +2,77 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Loader2, Zap } from 'lucide-react'
+import Image from 'next/image'
 
 export default function Loading() {
     return (
-        <div className="min-h-[80vh] flex flex-col items-center justify-center bg-[#f8f9fb] overflow-hidden relative">
-            {/* Background decorative elements */}
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/5 blur-[100px] rounded-full animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full animate-pulse delay-700" />
+        <div className="min-h-[70vh] flex flex-col items-center justify-center bg-white relative overflow-hidden">
+            {/* Soft background glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-orange-500/5 blur-[100px] rounded-full pointer-events-none" />
 
-            <div className="relative z-10">
-                <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="flex flex-col items-center"
-                >
-                    <div className="relative mb-12">
+            <div className="relative z-10 flex flex-col items-center gap-10">
+                {/* Premium Spinner */}
+                <div className="relative flex items-center justify-center w-28 h-28">
+                    {/* Pulsing rings */}
+                    <motion.div
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                        className="absolute inset-0 rounded-full border-2 border-orange-500/20"
+                    />
+                    <motion.div
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0, 0.1] }}
+                        transition={{ repeat: Infinity, duration: 2.5, delay: 0.5, ease: "easeInOut" }}
+                        className="absolute inset-0 rounded-full border-2 border-orange-500/10"
+                    />
+                    
+                    {/* Main rotating gradient ring */}
+                    <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                        className="absolute inset-0 rounded-full border-[3px] border-slate-100 border-t-orange-500"
+                    />
+                    
+                    {/* Center Logo */}
+                    <div className="w-16 h-16 rounded-[20px] bg-white shadow-md border border-slate-100 flex items-center justify-center relative overflow-hidden p-2">
                         <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                            className="w-24 h-24 rounded-[2rem] border-4 border-gray-100 border-t-primary shadow-2xl bg-white"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <Zap className="w-8 h-8 text-[#1B1F3B] fill-primary" />
-                        </div>
-
-                        <motion.div
-                            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                            transition={{ repeat: Infinity, duration: 2 }}
-                            className="absolute -inset-4 bg-primary/10 rounded-[3rem] blur-xl -z-10"
-                        />
-                    </div>
-
-                    <div className="text-center">
-                        <motion.h2
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tighter"
+                            animate={{ scale: [1, 1.05, 1] }}
+                            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                            className="relative w-full h-full flex items-center justify-center"
                         >
-                            Baraka <span className="text-primary italic">Shop</span>
-                        </motion.h2>
-
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: 120 }}
-                            transition={{ delay: 0.5, duration: 1 }}
-                            className="h-1 bg-gradient-to-r from-primary to-[#1B1F3B] mx-auto mt-4 rounded-full"
-                        />
-
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.8 }}
-                            className="text-gray-400 text-[10px] font-black uppercase tracking-[0.4em] mt-6"
-                        >
-                            L'Excellence Technologique au Sénégal
-                        </motion.p>
+                            <Image 
+                                src="/logo.png" 
+                                alt="Baraka Shop Logo" 
+                                fill
+                                className="object-contain" 
+                                unoptimized
+                                priority
+                            />
+                        </motion.div>
                     </div>
-                </motion.div>
-            </div>
+                </div>
 
-            {/* Corner labels for premium feel */}
-            <div className="absolute bottom-10 left-10 hidden md:block">
-                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest leading-loose">
-                    Qualité <br />
-                    Premium <br />
-                    Service
-                </span>
-            </div>
-            <div className="absolute bottom-10 right-10 hidden md:block">
-                <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.5em]">
-                    V1.2.0 - 2026
-                </span>
+                {/* Text section */}
+                <div className="flex flex-col items-center gap-3 text-center">
+                    <motion.h2
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                        className="text-[24px] font-black text-slate-900 uppercase tracking-tighter"
+                    >
+                        Baraka<span className="text-orange-500">Shop.</span>
+                    </motion.h2>
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex items-center gap-2"
+                    >
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                            Chargement en cours...
+                        </span>
+                    </motion.div>
+                </div>
             </div>
         </div>
     )
