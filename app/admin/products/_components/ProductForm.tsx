@@ -130,6 +130,12 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [brands, setBrands] = useState<any[]>([]);
     const [stores, setStores] = useState<any[]>([]);
 
+    const [categoryId, setCategoryId] = useState(editingProduct?.categoryId || editingProduct?.category?.id || '');
+    const [subCategoryId, setSubCategoryId] = useState(editingProduct?.subCategoryId || editingProduct?.subCategory?.id || '');
+    const [thirdLevelCategoryId, setThirdLevelCategoryId] = useState(editingProduct?.thirdLevelCategoryId || editingProduct?.thirdLevelCategory?.id || '');
+    const [brandId, setBrandId] = useState(editingProduct?.brandId || editingProduct?.brand?.id || '');
+    const [storeId, setStoreId] = useState(editingProduct?.storeId || editingProduct?.store?.id || '');
+
     // Color Variants
     type ColorVariant = { id?: string; colorName: string; colorHex: string; images: string[] };
     const [colorVariants, setColorVariants] = useState<ColorVariant[]>([]);
@@ -157,11 +163,27 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
     useEffect(() => {
         if (editingProduct) {
-            if (editingProduct.categoryId) {
-                getSubCategories(editingProduct.categoryId).then(setSubCategories);
+            const cId = editingProduct.categoryId || editingProduct.category?.id;
+            if (cId) {
+                setCategoryId(cId);
+                getSubCategories(cId).then(setSubCategories);
             }
-            if (editingProduct.subCategoryId) {
-                getThirdLevelCategories(editingProduct.subCategoryId).then(setThirdCategories);
+            const sId = editingProduct.subCategoryId || editingProduct.subCategory?.id;
+            if (sId) {
+                setSubCategoryId(sId);
+                getThirdLevelCategories(sId).then(setThirdCategories);
+            }
+            const tId = editingProduct.thirdLevelCategoryId || editingProduct.thirdLevelCategory?.id;
+            if (tId) {
+                setThirdLevelCategoryId(tId);
+            }
+            const bId = editingProduct.brandId || editingProduct.brand?.id;
+            if (bId) {
+                setBrandId(bId);
+            }
+            const stId = editingProduct.storeId || editingProduct.store?.id;
+            if (stId) {
+                setStoreId(stId);
             }
             setFormImages(editingProduct.images || []);
             setColorVariants(
@@ -312,11 +334,15 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Catégorie (L1)</label>
                             <select
+                                key={`cat-${categories.length}`}
                                 name="categoryId"
-                                defaultValue={editingProduct?.categoryId}
+                                value={categoryId}
                                 required
                                 onChange={(e) => {
                                     const catId = e.target.value;
+                                    setCategoryId(catId);
+                                    setSubCategoryId('');
+                                    setThirdLevelCategoryId('');
                                     getSubCategories(catId).then(setSubCategories);
                                     setThirdCategories([]);
                                 }}
@@ -330,10 +356,13 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Sous-catégorie (L2)</label>
                             <select
+                                key={`subcat-${subCategories.length}`}
                                 name="subCategoryId"
-                                defaultValue={editingProduct?.subCategoryId}
+                                value={subCategoryId}
                                 onChange={(e) => {
                                     const subId = e.target.value;
+                                    setSubCategoryId(subId);
+                                    setThirdLevelCategoryId('');
                                     if (subId) getThirdLevelCategories(subId).then(setThirdCategories);
                                     else setThirdCategories([]);
                                 }}
@@ -347,8 +376,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Sous-sous (L3)</label>
                             <select
+                                key={`thirdcat-${thirdCategories.length}`}
                                 name="thirdLevelCategoryId"
-                                defaultValue={editingProduct?.thirdLevelCategoryId}
+                                value={thirdLevelCategoryId}
+                                onChange={(e) => setThirdLevelCategoryId(e.target.value)}
                                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
                             >
                                 <option value="">Aucune</option>
@@ -359,8 +390,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Marque</label>
                             <select
+                                key={`brand-${brands.length}`}
                                 name="brandId"
-                                defaultValue={editingProduct?.brandId}
+                                value={brandId}
+                                onChange={(e) => setBrandId(e.target.value)}
                                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
                             >
                                 <option value="">Aucune</option>
@@ -371,8 +404,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Boutique (Vendor)</label>
                             <select
+                                key={`store-${stores.length}`}
                                 name="storeId"
-                                defaultValue={editingProduct?.storeId}
+                                value={storeId}
+                                onChange={(e) => setStoreId(e.target.value)}
                                 className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
                             >
                                 <option value="">Aucune (Baraka General)</option>
