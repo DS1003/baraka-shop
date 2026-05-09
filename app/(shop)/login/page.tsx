@@ -8,12 +8,12 @@ import {
     Lock,
     Loader2,
     AlertCircle,
-    ShieldCheck,
     Eye,
     EyeOff,
     ArrowRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function LoginPage() {
     const [identifier, setIdentifier] = useState('');
@@ -72,11 +72,19 @@ export default function LoginPage() {
                 className="w-full max-w-md"
             >
                 {/* Banner/Logo */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-[#1B1F3B] rounded-2xl shadow-xl shadow-gray-200 mb-4 transition-transform hover:scale-105 duration-500">
-                        <ShieldCheck size={32} className="text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-[#1B1F3B] tracking-tight">Baraka Shop</h1>
+                <div className="text-center mb-8 flex flex-col items-center">
+                    <Link href="/">
+                        <div className="relative w-[240px] h-[65px] mb-4 transition-transform hover:scale-105 duration-500">
+                            <Image
+                                src="/logo.png"
+                                alt="Baraka Shop"
+                                fill
+                                className="object-contain"
+                                priority
+                                unoptimized
+                            />
+                        </div>
+                    </Link>
                     <p className="text-[#64748B] mt-2 font-medium italic">Accès sécurisé à votre espace</p>
                 </div>
 
@@ -138,9 +146,9 @@ export default function LoginPage() {
                                 <input type="checkbox" className="w-4 h-4 rounded border-[#E2E8F0] text-[#1B1F3B] focus:ring-[#1B1F3B]/20" />
                                 <span className="text-sm font-medium text-[#64748B] group-hover:text-[#1B1F3B] transition-colors">Rester connecté</span>
                             </label>
-                            <button type="button" className="text-sm font-bold text-[#1B1F3B] hover:text-primary transition-colors">
+                            {/* <button type="button" className="text-sm font-bold text-[#1B1F3B] hover:text-primary transition-colors">
                                 Perdu ?
-                            </button>
+                            </button> */}
                         </div>
 
                         <button
