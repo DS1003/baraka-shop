@@ -61,9 +61,22 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
 
-    const productImages = product.images && product.images.length > 0
-        ? product.images
-        : ['/placeholder.png']
+    const [selectedColor, setSelectedColor] = useState<any>(
+        product.colorVariants && product.colorVariants.length > 0 ? product.colorVariants[0] : null
+    )
+
+    useEffect(() => {
+        if (product.colorVariants && product.colorVariants.length > 0) {
+            setSelectedColor(product.colorVariants[0])
+            setActiveImg(0)
+        }
+    }, [product])
+
+    const productImages = selectedColor && selectedColor.images && selectedColor.images.length > 0
+        ? selectedColor.images
+        : product.images && product.images.length > 0
+            ? product.images
+            : ['/placeholder.png']
 
     const chunkSize = isMobile ? 2 : 4
     const similarProductChunks = similarProducts.reduce((resultArray: any[][], item, index) => {
@@ -211,6 +224,37 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
                     </div>
 
+                    {/* Variantes de Couleur */}
+                    {product.colorVariants && product.colorVariants.length > 0 && (
+                        <div className="mb-6">
+                            <span className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3 block">
+                                Couleur : {selectedColor?.colorName || ''}
+                            </span>
+                            <div className="flex flex-wrap gap-3">
+                                {product.colorVariants.map((color: any, idx: number) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => {
+                                            setSelectedColor(color);
+                                            setActiveImg(0); // Reset to first image
+                                        }}
+                                        className={cn(
+                                            "w-10 h-10 rounded-full border-2 transition-all p-0.5",
+                                            selectedColor?.id === color.id 
+                                                ? "border-primary shadow-md shadow-primary/20 scale-110" 
+                                                : "border-transparent hover:border-gray-200"
+                                        )}
+                                        title={color.colorName}
+                                    >
+                                        <div 
+                                            className="w-full h-full rounded-full shadow-inner"
+                                            style={{ backgroundColor: color.colorHex }}
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-[#1B1F3B] rounded-3xl md:rounded-[2.5rem] p-5 md:p-8 shadow-2xl shadow-blue-900/10 mb-4">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -262,7 +306,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                             <div className="flex-1 w-full flex flex-col sm:flex-row gap-3 md:gap-4">
                                 <Button
-                                    onClick={() => addToCart(product, quantity)}
+                                    onClick={() => addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity)}
                                     disabled={product.stock <= 0}
                                     className="flex-1 h-12 md:h-14 bg-white text-[#1B1F3B] hover:bg-gray-100 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 md:gap-3 border border-gray-100"
                                 >
@@ -272,7 +316,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                                 <Button
                                     onClick={() => {
-                                        addToCart(product, quantity);
+                                        addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity);
                                         setTimeout(() => window.location.href = '/checkout', 100);
                                     }}
                                     disabled={product.stock <= 0}
@@ -551,7 +595,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                                     <div className="flex items-center gap-3">
                                         <button
-                                            onClick={() => addToCart(product, quantity)}
+                                            onClick={() => addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity)}
                                             className="h-12 px-6 md:px-8 bg-primary text-white hover:bg-[#1B1F3B] rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                                         >
                                             <ShoppingCart className="w-4 h-4" />
@@ -559,7 +603,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         </button>
                                         <button
                                             onClick={() => {
-                                                addToCart(product, quantity);
+                                                addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity);
                                                 window.location.href = '/checkout';
                                             }}
                                             className="h-12 px-6 md:px-8 bg-white text-[#1B1F3B] border-2 border-primary hover:bg-primary/5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2"

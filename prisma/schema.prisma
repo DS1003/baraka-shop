@@ -71,6 +71,7 @@ model Product {
   reviews     Review[]
   orderItems  OrderItem[]
   favoritedBy User[]    @relation("Wishlist")
+  colorVariants ProductColorVariant[]
 
   @@index([name])
   @@index([slug])
@@ -80,6 +81,20 @@ model Product {
   @@index([brandId])
   @@index([storeId])
   @@index([stock])
+}
+
+model ProductColorVariant {
+  id        String   @id @default(uuid())
+  colorName String
+  colorHex  String
+  images    String[]
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
 }
 
 model Category {
@@ -145,6 +160,7 @@ model OrderItem {
   productId String
   quantity  Int
   price     Float
+  selectedColor String?
 }
 
 model Review {

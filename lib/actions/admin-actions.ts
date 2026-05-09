@@ -252,7 +252,11 @@ export async function getAdminProducts(
                 category: true,
                 brand: true,
                 subCategory: true,
-                thirdLevelCategory: true
+                thirdLevelCategory: true,
+                store: true,
+                colorVariants: {
+                    orderBy: { position: 'asc' }
+                }
             },
             orderBy: { createdAt: 'desc' },
             take: pageSize,
@@ -892,6 +896,7 @@ export async function upsertProduct(data: any, id?: string) {
     try {
         const { 
             categoryId, subCategoryId, thirdLevelCategoryId, brandId, storeId, promotionId,
+            colorVariants,
             ...rest 
         } = data;
 
@@ -924,6 +929,27 @@ export async function upsertProduct(data: any, id?: string) {
             product = await prisma.product.create({
                 data: prismaData,
             });
+        }
+
+        // Handle color variants (delete-and-recreate strategy)
+        if (colorVariants !== undefined) {
+            // Delete existing variants
+            await (prisma as any).productColorVariant.deleteMany({
+                where: { productId: product.id }
+            });
+
+            // Create new variants
+            if (Array.isArray(colorVariants) && colorVariants.length > 0) {
+                await (prisma as any).productColorVariant.createMany({
+                    data: colorVariants.map((cv: any, idx: number) => ({
+                        colorName: cv.colorName,
+                        colorHex: cv.colorHex,
+                        images: cv.images || [],
+                        productId: product.id,
+                        position: idx,
+                    }))
+                });
+            }
         }
         
         // Invalider le cache Redis

@@ -205,7 +205,10 @@ export default function OrdersPage() {
                     <tbody>
                         ${order.items.map((item: any) => `
                             <tr>
-                                <td>${item.product.name}</td>
+                                <td>
+                                    ${item.product.name}
+                                    ${item.selectedColor ? `<br/><span style="font-size: 10px; color: #F97316; font-weight: bold; text-transform: uppercase;">Couleur: ${item.selectedColor}</span>` : ''}
+                                </td>
                                 <td>${item.price.toLocaleString()} F</td>
                                 <td>${item.quantity}</td>
                                 <td style="text-align: right;">${(item.price * item.quantity).toLocaleString()} F</td>
@@ -607,6 +610,11 @@ export default function OrdersPage() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[14px] font-bold text-slate-900 mb-1 truncate">{item.product.name}</p>
+                                                {item.selectedColor && (
+                                                    <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">
+                                                        Couleur: {item.selectedColor}
+                                                    </p>
+                                                )}
                                                 <p className="text-[12px] text-slate-500 font-medium">Prix unitaire: {item.price.toLocaleString()} F</p>
                                             </div>
                                             <div className="text-right shrink-0">

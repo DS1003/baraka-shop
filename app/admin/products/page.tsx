@@ -6,6 +6,7 @@ import {
     Plus,
     Search,
     Filter,
+    Download,
     Upload,
     Edit,
     Trash2,
@@ -19,26 +20,22 @@ import {
     MoreHorizontal,
     Eye,
     ArrowUpDown,
-    Download,
     Layers,
     Tag,
     BarChart3,
     Loader2,
-    Image as ImageIcon,
-    ImagePlus,
+    ImageIcon,
     X,
-    Save,
     ExternalLink,
-    Maximize2
+    Maximize2,
+    GripVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { RichTextEditor } from '@/ui/RichTextEditor';
 import {
     getAdminProducts,
     deleteProduct,
     deleteBulkProducts,
-    upsertProduct,
     getAdminCategories,
     getAdminBrands as getBrands,
     getAdminStores,
@@ -60,15 +57,8 @@ export default function ProductsPage() {
     const pageSize = 12;
 
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<any>(null);
     const [detailProduct, setDetailProduct] = useState<any>(null);
-    const [isSaving, setIsSaving] = useState(false);
-    const [formImages, setFormImages] = useState<string[]>([]);
-    const [isUploading, setIsUploading] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Selection
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -136,22 +126,6 @@ export default function ProductsPage() {
         };
         loadMetadata();
     }, []);
-
-    useEffect(() => {
-        if (editingProduct) {
-            if (editingProduct.categoryId) {
-                getSubCategories(editingProduct.categoryId).then(setSubCategories);
-            }
-            if (editingProduct.subCategoryId) {
-                getThirdLevelCategories(editingProduct.subCategoryId).then(setThirdCategories);
-            }
-            setFormImages(editingProduct.images || []);
-        } else {
-            setSubCategories([]);
-            setThirdCategories([]);
-            setFormImages([]);
-        }
-    }, [editingProduct]);
 
     useEffect(() => {
         if (activeFilters.categoryId) {
@@ -250,70 +224,6 @@ export default function ProductsPage() {
         );
     };
 
-    const handleUpsert = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setIsSaving(true);
-        const formData = new FormData(e.currentTarget);
-        const data = {
-            name: formData.get('name') as string,
-            slug: (formData.get('name') as string).toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-            description: formData.get('description') as string,
-            price: parseFloat(formData.get('price') as string),
-            stock: parseInt(formData.get('stock') as string),
-            categoryId: formData.get('categoryId') as string,
-            subCategoryId: formData.get('subCategoryId') as string || null,
-            thirdLevelCategoryId: formData.get('thirdLevelCategoryId') as string || null,
-            brandId: formData.get('brandId') as string || null,
-            storeId: formData.get('storeId') as string || null,
-            images: formImages,
-            shortDescription: formData.get('shortDescription') as string || null,
-            features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
-            metadata: (() => {
-                const raw = formData.get('metadata') as string;
-                if (!raw || raw.trim() === '') return {};
-                try { 
-                    const parsed = JSON.parse(raw); 
-                    if (typeof parsed === 'object' && parsed !== null) return parsed;
-                } catch {}
-                
-                const metadataObj: any = {};
-                raw.split('\n').forEach(line => {
-                    // Try to split by explicit colon
-                    const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
-                    if (colonMatch) {
-                        metadataObj[colonMatch[1].trim()] = colonMatch[2].trim();
-                        return;
-                    }
-                    
-                    // Try to split by tab (common when copy-pasting tables)
-                    if (line.includes('\t')) {
-                        const parts = line.split('\t');
-                        metadataObj[parts[0].trim()] = parts.slice(1).join(' ').trim();
-                        return;
-                    }
-                    
-                    if (line.trim() !== "") {
-                        metadataObj[line.trim()] = "Oui";
-                    }
-                });
-                return metadataObj;
-            })()
-        };
-
-        const res = await upsertProduct(data, editingProduct?.id);
-        if (res.success) {
-            setIsModalOpen(false);
-            setEditingProduct(null);
-            const updated = await getAdminProducts(searchQuery, page, pageSize);
-            setProducts(updated.products);
-            setTotal(updated.total);
-            toast.success(editingProduct ? '✅ Produit mis à jour !' : '✅ Produit créé !');
-        } else {
-            toast.error("Erreur lors de la sauvegarde.");
-        }
-        setIsSaving(false);
-    };
-
     // Removed local KPI calculations - now using 'stats' from server
 
     return (
@@ -343,13 +253,13 @@ export default function ProductsPage() {
                         <Trash2 size={18} />
                         <span>Tout Vider</span>
                     </button>
-                    <button
-                        onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
+                    <Link
+                        href="/admin/products/new"
                         className="flex items-center gap-3 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold text-[13px] hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-200 transition-all shadow-lg shadow-orange-100 group"
                     >
                         <Plus size={20} />
                         <span>Nouveau Produit</span>
-                    </button>
+                    </Link>
                 </div>
             </div>
 
@@ -655,12 +565,12 @@ export default function ProductsPage() {
                                         </td>
                                         <td className="px-4 py-4 text-right border-b border-slate-50">
                                             <div className="flex justify-end gap-2 pr-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300">
-                                                <button
-                                                    onClick={() => { setEditingProduct(p); setIsModalOpen(true); }}
-                                                    className="p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-white hover:text-orange-600 hover:shadow-md transition-all border border-transparent hover:border-slate-200"
+                                                <Link
+                                                    href={`/admin/products/${p.id}/edit`}
+                                                    className="p-2.5 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-white hover:text-orange-600 hover:shadow-md transition-all border border-transparent hover:border-slate-200"
                                                 >
                                                     <Edit size={18} />
-                                                </button>
+                                                </Link>
                                                 <button
                                                     onClick={() => handleDelete(p.id)}
                                                     className="p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-white hover:text-rose-600 hover:shadow-md transition-all border border-transparent hover:border-slate-200"
@@ -857,13 +767,13 @@ export default function ProductsPage() {
                                 </div>
 
                                 <div className="flex gap-4 border-t border-slate-100 pt-8 mt-auto">
-                                    <button
-                                        onClick={() => { setEditingProduct(detailProduct); setIsModalOpen(true); setIsDetailOpen(false); }}
+                                    <Link
+                                        href={`/admin/products/${detailProduct.id}/edit`}
                                         className="flex-1 flex items-center justify-center gap-3 py-4 bg-slate-900 text-white rounded-2xl font-bold text-[14px] hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
                                     >
                                         <Edit size={18} />
                                         Modifier
-                                    </button>
+                                    </Link>
                                     <button
                                         onClick={() => { handleDelete(detailProduct.id); setIsDetailOpen(false); }}
                                         className="flex-1 flex items-center justify-center gap-3 py-4 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl font-bold text-[14px] hover:bg-rose-100 transition-all"
@@ -878,339 +788,7 @@ export default function ProductsPage() {
                 )}
             </AnimatePresence>
 
-            {/* Upsert Modal */}
-            <AnimatePresence>
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-12">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white w-full max-w-3xl max-h-[90vh] rounded-[32px] shadow-2xl overflow-hidden relative z-10 flex flex-col"
-                        >
-                            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
-                                <div>
-                                    <h3 className="text-[20px] font-bold text-slate-900">{editingProduct ? 'Modifier' : 'Ajouter un'} Produit</h3>
-                                    <p className="text-[12px] text-slate-400 font-medium">Configurez les détails techniques du produit.</p>
-                                </div>
-                                <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
-                                    <X size={20} />
-                                </button>
-                            </div>
 
-                            <form onSubmit={handleUpsert} className="p-8 space-y-8 overflow-y-auto scrollbar-thin flex-1 pb-10">
-                                <section className="space-y-6">
-                                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
-                                        Informations de Base
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2 col-span-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Nom du Produit</label>
-                                            <input
-                                                name="name"
-                                                defaultValue={editingProduct?.name}
-                                                required
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium"
-                                                placeholder="Ex: Abaya Silk Premium"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Prix (F CFA)</label>
-                                            <input
-                                                name="price"
-                                                type="number"
-                                                defaultValue={editingProduct?.price}
-                                                required
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Stock Initial</label>
-                                            <input
-                                                name="stock"
-                                                type="number"
-                                                defaultValue={editingProduct?.stock}
-                                                required
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium"
-                                            />
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section className="space-y-6">
-                                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
-                                        Catégorisation & Marque
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Catégorie (L1)</label>
-                                            <select
-                                                name="categoryId"
-                                                defaultValue={editingProduct?.categoryId}
-                                                required
-                                                onChange={(e) => {
-                                                    const catId = e.target.value;
-                                                    getSubCategories(catId).then(setSubCategories);
-                                                    setThirdCategories([]);
-                                                }}
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
-                                            >
-                                                <option value="">Sélectionner</option>
-                                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Sous-catégorie (L2)</label>
-                                            <select
-                                                name="subCategoryId"
-                                                defaultValue={editingProduct?.subCategoryId}
-                                                onChange={(e) => {
-                                                    const subId = e.target.value;
-                                                    if (subId) getThirdLevelCategories(subId).then(setThirdCategories);
-                                                    else setThirdCategories([]);
-                                                }}
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
-                                            >
-                                                <option value="">Aucune</option>
-                                                {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Sous-sous (L3)</label>
-                                            <select
-                                                name="thirdLevelCategoryId"
-                                                defaultValue={editingProduct?.thirdLevelCategoryId}
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
-                                            >
-                                                <option value="">Aucune</option>
-                                                {thirdCategories.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Marque</label>
-                                            <select
-                                                name="brandId"
-                                                defaultValue={editingProduct?.brandId}
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
-                                            >
-                                                <option value="">Aucune</option>
-                                                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                            </select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Boutique (Vendor)</label>
-                                            <select
-                                                name="storeId"
-                                                defaultValue={editingProduct?.storeId}
-                                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
-                                            >
-                                                <option value="">Aucune (Baraka General)</option>
-                                                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section className="space-y-6">
-                                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
-                                        Gestion des Photos
-                                    </h4>
-
-                                    <div className="space-y-4">
-                                        {/* Upload Zone - Drag & Drop */}
-                                        <div
-                                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                            onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
-                                            onDrop={async (e) => {
-                                                e.preventDefault();
-                                                setIsDragging(false);
-                                                const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                if (files.length === 0) return;
-                                                setIsUploading(true);
-                                                try {
-                                                    const fd = new FormData();
-                                                    files.forEach(f => fd.append('files', f));
-                                                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                    const data = await res.json();
-                                                    if (data.urls) setFormImages(prev => [...prev, ...data.urls]);
-                                                    else toast.error(data.error || 'Erreur upload');
-                                                } catch { toast.error('Erreur lors de l\'upload.'); }
-                                                finally { setIsUploading(false); }
-                                            }}
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className={cn(
-                                                "relative py-10 border-2 border-dashed rounded-[24px] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300",
-                                                isDragging
-                                                    ? "border-orange-500 bg-orange-50/80 scale-[1.02] shadow-lg shadow-orange-100"
-                                                    : "border-slate-200 bg-slate-50/50 hover:border-orange-300 hover:bg-orange-50/30",
-                                                isUploading && "pointer-events-none opacity-60"
-                                            )}
-                                        >
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                multiple
-                                                accept="image/jpeg,image/png,image/webp,image/gif"
-                                                className="hidden"
-                                                onChange={async (e) => {
-                                                    const files = Array.from(e.target.files || []);
-                                                    if (files.length === 0) return;
-                                                    setIsUploading(true);
-                                                    try {
-                                                        const fd = new FormData();
-                                                        files.forEach(f => fd.append('files', f));
-                                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                        const data = await res.json();
-                                                        if (data.urls) setFormImages(prev => [...prev, ...data.urls]);
-                                                        else toast.error(data.error || 'Erreur upload');
-                                                    } catch { toast.error('Erreur lors de l\'upload.'); }
-                                                    finally { setIsUploading(false); e.target.value = ''; }
-                                                }}
-                                            />
-                                            {isUploading ? (
-                                                <>
-                                                    <Loader2 size={32} className="animate-spin text-orange-500" />
-                                                    <p className="text-[13px] font-bold text-orange-600">Upload en cours...</p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className={cn(
-                                                        "w-14 h-14 rounded-2xl flex items-center justify-center transition-all",
-                                                        isDragging ? "bg-orange-500 text-white" : "bg-white border border-slate-200 text-slate-400"
-                                                    )}>
-                                                        <Upload size={24} />
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <p className="text-[13px] font-bold text-slate-600">
-                                                            {isDragging ? 'Déposez vos images ici' : 'Glissez-déposez vos images ici'}
-                                                        </p>
-                                                        <p className="text-[11px] text-slate-400 font-medium mt-1">
-                                                            ou <span className="text-orange-500 font-bold">cliquez pour parcourir</span> — JPG, PNG, WebP • Max 5 MB
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        {/* Image Thumbnails */}
-                                        {formImages.length > 0 && (
-                                            <div className="grid grid-cols-5 gap-4 bg-slate-50 p-6 rounded-[24px] border border-slate-200/50">
-                                                {formImages.map((img, i) => (
-                                                    <div key={i} className="relative aspect-square group">
-                                                        <div className="w-full h-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
-                                                            <img src={img} alt="" className="w-full h-full object-cover" />
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setFormImages(prev => prev.filter((_, idx) => idx !== i))}
-                                                            className="absolute -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
-                                                        >
-                                                            <X size={14} strokeWidth={3} />
-                                                        </button>
-                                                        {i === 0 && (
-                                                            <span className="absolute bottom-1 left-1 px-2 py-0.5 bg-orange-600 text-white text-[8px] font-black uppercase rounded-md tracking-wider shadow-sm">
-                                                                Principal
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </section>
-
-                                <section className="space-y-6">
-                                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
-                                        Contenu Détaillé
-                                    </h4>
-                                    
-                                    <div className="space-y-2">
-                                        <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Courte</label>
-                                        <textarea
-                                            name="shortDescription"
-                                            defaultValue={editingProduct?.shortDescription}
-                                            rows={2}
-                                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed"
-                                            placeholder="Résumé accrocheur pour le haut de page..."
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Détaillée</label>
-                                        <RichTextEditor
-                                            name="description"
-                                            defaultValue={editingProduct?.description}
-                                            placeholder="Décrivez les caractéristiques, matières, coupes..."
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Caractéristiques (1 par ligne)</label>
-                                            <textarea
-                                                name="features"
-                                                defaultValue={Array.isArray(editingProduct?.features) ? editingProduct.features.join('\n') : ""}
-                                                rows={6}
-                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[13px]"
-                                                placeholder="Ex: Coton 100%&#10;Lavage 30°C&#10;Coupe ajustée"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Fiche Technique (1 par ligne)</label>
-                                            <textarea
-                                                name="metadata"
-                                                defaultValue={editingProduct?.metadata 
-                                                    ? Object.entries(editingProduct.metadata)
-                                                        .filter(([k]) => k !== 'importedAt')
-                                                        .map(([k, v]) => `${k}: ${v}`)
-                                                        .join('\n') 
-                                                    : ""
-                                                }
-                                                rows={6}
-                                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[13px]"
-                                                placeholder="Ex:&#10;Ecran: 15 pouces&#10;RAM: 16GB&#10;Stockage: 512GB SSD"
-                                            />
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <div className="pt-4 flex gap-4 border-t border-slate-100 pt-8 mt-4 sticky bottom-0 bg-white/80 backdrop-blur-md">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="flex-1 px-6 py-4 border border-slate-200 rounded-2xl font-bold text-[14px] text-slate-500 hover:bg-slate-50 transition-all"
-                                    >
-                                        Annuler
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isSaving}
-                                        className="flex-[2] px-6 py-4 bg-orange-600 text-white rounded-2xl font-bold text-[14px] flex items-center justify-center gap-3 hover:bg-orange-700 shadow-xl shadow-orange-100 transition-all disabled:opacity-50"
-                                    >
-                                        {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
-                                        <span>{editingProduct ? 'Mettre à jour' : 'Créer le Produit'}</span>
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
             {/* Selection Floating Bar */}
             <AnimatePresence>

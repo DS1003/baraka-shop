@@ -94,9 +94,10 @@ export default function CheckoutPage() {
 
         const orderData = {
             items: cartItems.map(item => ({
-                productId: item.id,
+                productId: item.productId || item.id, // Fallback to id if productId is missing (for older carts)
                 quantity: item.qty,
-                price: item.price
+                price: item.price,
+                selectedColor: item.selectedColor
             })),
             total,
             paymentMethod,

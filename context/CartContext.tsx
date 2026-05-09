@@ -3,12 +3,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface CartItem {
-    id: string;
+    id: string; // unique ID in cart (can include color)
+    productId: string; // actual product ID
     name: string;
     price: number;
     qty: number;
     image: string;
     brand: string;
+    selectedColor?: string;
 }
 
 interface CartContextType {
@@ -53,11 +55,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const showToast = (product: any) => {
         setLastAddedItem({
             id: product.id,
+            productId: product.id,
             name: product.name,
             price: product.price,
             qty: 1,
             image: product.image || (product.images && product.images[0]) || '/placeholder.png',
-            brand: product.brand?.name || product.brand || 'Baraka'
+            brand: product.brand?.name || product.brand || 'Baraka',
+            selectedColor: product.selectedColor
         });
         setIsToastVisible(true);
     };
@@ -66,19 +70,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const addToCart = (product: any, qty: number = 1) => {
         setCartItems(prev => {
-            const existing = prev.find(item => item.id === product.id);
+            const uniqueId = product.selectedColor ? `${product.id}-${product.selectedColor}` : product.id;
+            const existing = prev.find(item => item.id === uniqueId);
+            
             if (existing) {
                 return prev.map(item =>
-                    item.id === product.id ? { ...item, qty: item.qty + qty } : item
+                    item.id === uniqueId ? { ...item, qty: item.qty + qty } : item
                 );
             }
             return [...prev, {
-                id: product.id,
+                id: uniqueId,
+                productId: product.id,
                 name: product.name,
                 price: product.price,
                 qty: qty,
                 image: product.image || (product.images && product.images[0]) || '/placeholder.png',
-                brand: product.brand?.name || product.brand || 'Baraka'
+                brand: product.brand?.name || product.brand || 'Baraka',
+                selectedColor: product.selectedColor
             }];
         });
 

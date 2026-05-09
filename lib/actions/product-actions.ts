@@ -148,6 +148,9 @@ export async function getProductByIdAction(id: string) {
                 subCategory: true,
                 thirdLevelCategory: true,
                 brand: true,
+                colorVariants: {
+                    orderBy: { position: 'asc' }
+                },
                 reviews: {
                     include: {
                         user: {

@@ -8,6 +8,7 @@ interface OrderItemData {
     productId: string;
     quantity: number;
     price: number;
+    selectedColor?: string;
 }
 
 interface CreateOrderData {
@@ -77,7 +78,8 @@ export async function createOrder(data: CreateOrderData) {
                         create: data.items.map(item => ({
                             productId: item.productId,
                             quantity: item.quantity,
-                            price: item.price
+                            price: item.price,
+                            selectedColor: item.selectedColor || null
                         }))
                     }
                 }
