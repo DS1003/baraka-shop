@@ -51,8 +51,10 @@ const sidebarGroups = [
             { icon: Store, label: 'Boutiques', href: '/admin/stores' },
             { icon: Layers, label: 'Catégories', href: '/admin/categories' },
             { icon: Zap, label: 'Univers Populaires', href: '/admin/popular-universes' },
+            { icon: Zap, label: 'Promotions Accueil', href: '/admin/home-promos' },
+            { icon: Maximize, label: 'Bannières Larges', href: '/admin/big-banners' },
             { icon: Tag, label: 'Marques', href: '/admin/brands' },
-            { icon: Zap, label: 'Promotions', href: '/admin/promotions' },
+            { icon: Zap, label: 'Campagnes Promos', href: '/admin/promotions' },
             { icon: ImageIcon, label: 'Médiathèque', href: '/admin/media' },
         ]
     },

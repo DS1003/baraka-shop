@@ -14,19 +14,12 @@ const XIcon = () => (
     </svg>
 )
 
-const brands = [
-    { name: "Apple", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" },
-    { name: "Samsung", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Samsung_old_logo_before_year_2015.svg/1280px-Samsung_old_logo_before_year_2015.svg.png" },
-    { name: "Sony", logo: "https://www.freepnglogos.com/uploads/sony-png-logo/brand-sony-png-logo-5.png" },
-    { name: "Dell", logo: "https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg" },
-    { name: "HP", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" },
-    { name: "LG", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/LG_logo_%282014%29.svg/1280px-LG_logo_%282014%29.svg.png" },
-]
-
-export function BrandsAndSocial() {
+export function BrandsAndSocial({ initialBrands }: { initialBrands?: any[] }) {
     const [currentIndex, setCurrentIndex] = React.useState(0)
     const [direction, setDirection] = React.useState(0)
     const [isMobile, setIsMobile] = React.useState(false)
+
+    const brands = initialBrands || []
 
     React.useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -34,6 +27,8 @@ export function BrandsAndSocial() {
         window.addEventListener('resize', checkMobile)
         return () => window.removeEventListener('resize', checkMobile)
     }, [])
+
+    if (brands.length === 0) return null
 
     const chunkSize = isMobile ? 4 : 6
     const brandChunks = brands.reduce((resultArray: any[][], item, index) => {

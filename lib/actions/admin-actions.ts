@@ -1122,5 +1122,201 @@ export async function deletePopularUniverse(id: string) {
         return { success: false, message: "Erreur serveur." };
     }
 }
+export async function initializePopularUniverses() {
+    const DEFAULT_UNIVERSES = [
+        { name: 'BATTERIE', subtitle: 'Externes & Internes', href: '/category/batterie', order: 0 },
+        { name: 'CHARGEUR', subtitle: 'Secteur & Induction', href: '/category/chargeur', order: 1 },
+        { name: 'CONNECTIQUE', subtitle: 'Adaptateurs & Hubs', href: '/category/connectique', order: 2 },
+        { name: 'CONSOMMABLES', subtitle: 'Encre & Papier', href: '/category/consommables', order: 3 },
+        { name: 'ELECTRONIQUE', subtitle: 'Composants & Gadgets', href: '/category/electronique', order: 4 },
+        { name: 'GÉNÉRAL', subtitle: 'Univers High-Tech', href: '/category/general', order: 5 },
+        { name: 'IMAGE & SON', subtitle: 'TV, Casques & Caméras', href: '/category/image-son', order: 6 },
+        { name: 'INFORMATIQUE', subtitle: 'MacBook, PC & Portables', href: '/category/informatique', order: 7 }
+    ];
 
+    try {
+        const count = await (prisma as any).popularUniverse.count();
+        if (count > 0) return { success: false, message: "La table n'est pas vide." };
 
+        for (const uni of DEFAULT_UNIVERSES) {
+            await (prisma as any).popularUniverse.create({ data: uni });
+        }
+
+        revalidatePath('/admin/popular-universes');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Initialize popular universes error:", error);
+        return { success: false, message: "Erreur serveur." };
+    }
+}
+
+// ==========================================
+// HOME PROMOS ACTIONS
+// ==========================================
+
+export async function getHomePromos() {
+    try {
+        return await (prisma as any).homePromo.findMany({
+            orderBy: { order: 'asc' }
+        });
+    } catch (error) {
+        return [];
+    }
+}
+
+export async function upsertHomePromo(data: any, id?: string) {
+    try {
+        if (id) {
+            await (prisma as any).homePromo.update({ where: { id }, data });
+        } else {
+            await (prisma as any).homePromo.create({ data });
+        }
+        revalidatePath('/');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, message: error.message };
+    }
+}
+
+export async function deleteHomePromo(id: string) {
+    try {
+        await (prisma as any).homePromo.delete({ where: { id } });
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        return { success: false };
+    }
+}
+
+export async function initializeHomePromos() {
+    const DEFAULT_PROMOS = [
+        {
+            badge: "Exclusivité",
+            title: "Pack Gaming Ultimate",
+            subtitle: "PS5 + 2 Jeux + Manette",
+            price: "499.000 CFA",
+            image: "https://media.ldlc.com/encart/p/26671_b.jpg",
+            bg: "bg-[#F8FAFC]",
+            border: "border-slate-100",
+            size: "md:col-span-2",
+            href: "/boutique?category=jeux",
+            order: 0
+        },
+        {
+            badge: "Tendance",
+            title: "Apple Ecosystem",
+            subtitle: "MacBook & iPad M3",
+            price: "Dès 650.000 CFA",
+            image: "https://media.ldlc.com/encart/p/28885_b.jpg",
+            bg: "bg-[#FFFBF5]",
+            border: "border-orange-100/50",
+            size: "md:col-span-2",
+            href: "/boutique?category=informatique",
+            order: 1
+        },
+        {
+            badge: "Vente Flash",
+            title: "Smartphones Pro",
+            subtitle: "Derniers modèles arrivés",
+            image: "https://media.ldlc.com/encart/p/28828_b.jpg",
+            bg: "bg-[#F5F7FF]",
+            border: "border-orange-100/50",
+            size: "md:col-span-1",
+            href: "/boutique?category=smartphones",
+            order: 2
+        },
+        {
+            badge: "Promo",
+            title: "Accessoires Premium",
+            subtitle: "Optimisez votre setup",
+            image: "https://media.ldlc.com/encart/p/22889_b.jpg",
+            bg: "bg-[#FFF5F9]",
+            border: "border-pink-100/50",
+            size: "md:col-span-1",
+            href: "/boutique?category=connectique",
+            order: 3
+        },
+        {
+            badge: "Nouveau",
+            title: "Son & Image High-End",
+            subtitle: "Le cinéma à la maison",
+            image: "https://media.ldlc.com/encart/p/28829_b.jpg",
+            bg: "bg-[#F5FFF9]",
+            border: "border-emerald-100/50",
+            size: "md:col-span-2",
+            href: "/boutique?category=image-son",
+            order: 4
+        }
+    ];
+
+    try {
+        for (const p of DEFAULT_PROMOS) {
+            await (prisma as any).homePromo.create({ data: p });
+        }
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        return { success: false };
+    }
+}
+
+// ==========================================
+// BIG BANNERS ACTIONS
+// ==========================================
+
+export async function getBigBanners() {
+    try {
+        return await (prisma as any).bigBanner.findMany({
+            where: { isActive: true },
+            orderBy: { createdAt: 'desc' }
+        });
+    } catch (error) {
+        return [];
+    }
+}
+
+export async function upsertBigBanner(data: any, id?: string) {
+    try {
+        if (id) {
+            await (prisma as any).bigBanner.update({ where: { id }, data });
+        } else {
+            await (prisma as any).bigBanner.create({ data });
+        }
+        revalidatePath('/');
+        return { success: true };
+    } catch (error: any) {
+        return { success: false, message: error.message };
+    }
+}
+
+export async function deleteBigBanner(id: string) {
+    try {
+        await (prisma as any).bigBanner.delete({ where: { id } });
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        return { success: false };
+    }
+}
+
+export async function initializeBigBanners() {
+    const DEFAULT_BANNER = {
+        title: "Le Son Absolu.",
+        subtitle: "Série Sony XM5",
+        description: "Découvrez la nouvelle gamme Sony Noise Cancelling. Une immersion totale, un confort inégalé. Jusqu'à -40% ce weekend.",
+        badge: "Offre Spéciale",
+        image: "https://sony.scene7.com/is/image/sonyglobalsolutions/360-RA-category-icon-20221202?$S7Product$&fmt=png-alpha",
+        href: "/boutique",
+        buttonText: "Commander",
+        isActive: true
+    };
+
+    try {
+        await (prisma as any).bigBanner.create({ data: DEFAULT_BANNER });
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        return { success: false };
+    }
+}

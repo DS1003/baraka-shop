@@ -7,64 +7,11 @@ import { Container } from '@/ui/Container'
 import { ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const promos = [
-    {
-        badge: "Exclusivité",
-        title: "Pack Gaming Ultimate",
-        subtitle: "PS5 + 2 Jeux + Manette",
-        price: "499.000 CFA",
-        image: "https://media.ldlc.com/encart/p/26671_b.jpg",
-        bg: "bg-[#F8FAFC]",
-        border: "border-slate-100",
-        size: "md:col-span-2",
-        href: "/boutique?category=jeux"
-    },
-    {
-        badge: "Tendance",
-        title: "Apple Ecosystem",
-        subtitle: "MacBook & iPad M3",
-        price: "Dès 650.000 CFA",
-        image: "https://media.ldlc.com/encart/p/28885_b.jpg",
-        bg: "bg-[#FFFBF5]",
-        border: "border-orange-100/50",
-        size: "md:col-span-2",
-        href: "/boutique?category=informatique"
-    },
-    {
-        badge: "Vente Flash",
-        title: "Smartphones Pro",
-        subtitle: "Derniers modèles arrivés",
-        image: "https://media.ldlc.com/encart/p/28828_b.jpg",
-        bg: "bg-[#F5F7FF]",
-        border: "border-orange-100/50",
-        size: "md:col-span-2 lg:col-span-1",
-        href: "/boutique?category=smartphones"
-    },
-    {
-        badge: "Promo",
-        title: "Accessoires Premium",
-        subtitle: "Optimisez votre setup",
-        image: "https://media.ldlc.com/encart/p/22889_b.jpg",
-        bg: "bg-[#FFF5F9]",
-        border: "border-pink-100/50",
-        size: "md:col-span-2 lg:col-span-1",
-        href: "/boutique?category=connectique"
-    },
-    {
-        badge: "Nouveau",
-        title: "Son & Image High-End",
-        subtitle: "Le cinéma à la maison",
-        image: "https://media.ldlc.com/encart/p/28829_b.jpg",
-        bg: "bg-[#F5FFF9]",
-        border: "border-emerald-100/50",
-        size: "md:col-span-2 lg:col-span-2",
-        href: "/boutique?category=image-son"
-    }
-]
-
-export function PromoGrid() {
+export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
     const [currentIndex, setCurrentIndex] = useState(0)
     const [direction, setDirection] = useState(0)
+
+    const promos = initialPromos || []
 
     const slideNext = () => {
         setDirection(1)
@@ -75,6 +22,8 @@ export function PromoGrid() {
         setDirection(-1)
         setCurrentIndex((prev) => (prev - 1 + promos.length) % promos.length)
     }
+
+    if (promos.length === 0) return null
 
     const variants = {
         enter: (direction: number) => ({

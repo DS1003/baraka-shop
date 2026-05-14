@@ -248,3 +248,33 @@ model PopularUniverse {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model HomePromo {
+  id        String   @id @default(uuid())
+  badge     String?
+  title     String
+  subtitle  String?
+  price     String?
+  image     String
+  bg        String   @default("bg-slate-50")
+  border    String   @default("border-slate-100")
+  size      String   @default("md:col-span-1")
+  href      String   @default("/boutique")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BigBanner {
+  id          String   @id @default(uuid())
+  title       String
+  subtitle    String?
+  description String?
+  badge       String?
+  image       String
+  href        String   @default("/boutique")
+  buttonText  String   @default("Commander")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

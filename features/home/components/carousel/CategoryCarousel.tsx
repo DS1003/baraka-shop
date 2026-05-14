@@ -30,23 +30,23 @@ const CLEAN_IMAGES: Record<string, string> = {
 };
 
 const SUBTITLES: Record<string, string> = {
-    'INFORMATIQUE': 'MACBOOK, PC & PORTABLES',
-    'TELEPHONE & TABLETTE': 'IPHONE, GALAXY & IPAD',
-    'IMAGE & SON': 'TV, CASQUES & CAMÉRAS',
-    'CONSOLES & JEUX': 'PS5, XBOX & GAMING',
-    'RESEAUX': 'ROUTEURS & WIFI 7',
-    'SECURITE': 'CAMÉRAS & ALARMES',
-    'ELECTROMENAGER': 'MAISON INTELLIGENTE',
-    'BUREAUTIQUE': 'IMPRIMANTES & IMPRESSION',
-    'MULTIMEDIA': 'STREAMING & CINÉMA',
-    'BATTERIE': 'EXTERNES & INTERNES',
-    'CABLE': 'HDMI, USB & RÉSEAU',
-    'CHARGEUR': 'SECTEUR & INDUCTION',
-    'CONNECTIQUE': 'ADAPTATEURS & HUBS',
-    'CONSOMMABLES': 'ENCRE & PAPIER',
-    'ELECTRONIQUE': 'COMPOSANTS & GADGETS',
-    'GÉNÉRAL': 'UNIVERS HIGH-TECH',
-    'GÉNERAL': 'UNIVERS HIGH-TECH'
+    'INFORMATIQUE': 'MacBook, PC & Portables',
+    'TELEPHONE & TABLETTE': 'iPhone, Galaxy & iPad',
+    'IMAGE & SON': 'TV, Casques & Caméras',
+    'CONSOLES & JEUX': 'PS5, Xbox & Gaming',
+    'RESEAUX': 'Routeurs & Wifi 7',
+    'SECURITE': 'Caméras & Alarmes',
+    'ELECTROMENAGER': 'Maison Intelligente',
+    'BUREAUTIQUE': 'Imprimantes & Impression',
+    'MULTIMEDIA': 'Streaming & Cinéma',
+    'BATTERIE': 'Externes & Internes',
+    'CABLE': 'HDMI, USB & Réseau',
+    'CHARGEUR': 'Secteur & Induction',
+    'CONNECTIQUE': 'Adaptateurs & Hubs',
+    'CONSOMMABLES': 'Encre & Papier',
+    'ELECTRONIQUE': 'Composants & Gadgets',
+    'GÉNÉRAL': 'Univers High-Tech',
+    'GÉNERAL': 'Univers High-Tech'
 };
 
 export function CategoryCarousel({ 
@@ -83,7 +83,7 @@ export function CategoryCarousel({
             return {
                 id: cat.id,
                 name: cat.name,
-                subtitle: SUBTITLES[catKey] || 'DÉCOUVREZ NOS OFFRES',
+                subtitle: SUBTITLES[catKey] || 'Découvrez nos offres',
                 image: CLEAN_IMAGES[catKey] || CLEAN_IMAGES['DEFAULT'],
                 href: `/category/${cat.slug}`
             };
@@ -93,19 +93,19 @@ export function CategoryCarousel({
     if (displayItems.length === 0) return null;
 
     return (
-        <section className="py-16 md:py-24">
+        <section className="py-12 md:py-20 overflow-hidden">
             <Container>
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-16 md:mb-20">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 md:mb-16">
                     <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                            <span className="w-10 h-[2px] bg-primary rounded-full" />
-                            <span className="text-primary font-black text-[11px] uppercase tracking-[0.6em]">Exploration</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-[2px] bg-primary rounded-full" />
+                            <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Exploration</span>
                         </div>
-                        <h2 className="text-4xl md:text-6xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-[0.9]">
+                        <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
                             Univers <span className="text-primary italic">Populaires</span>
                         </h2>
-                        <p className="text-slate-400 text-base md:text-xl font-medium italic opacity-80">
-                           Une sélection exclusive pour vous
+                        <p className="text-gray-400 text-sm md:text-base font-medium italic">
+                           Tout ce que vous aimez est là
                         </p>
                     </div>
 
@@ -120,61 +120,50 @@ export function CategoryCarousel({
                     </Link>
                 </div>
 
-                {/* Grid - 4x2 Layout Optimized */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
+                {/* Grid - 2 columns on mobile, 4 on desktop */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                     {displayItems.map((item, idx) => {
                         return (
                             <motion.div
                                 key={item.id}
-                                initial={{ opacity: 0, y: 40 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-50px" }}
-                                transition={{ 
-                                    delay: idx * 0.08, 
-                                    duration: 0.8, 
-                                    ease: [0.22, 1, 0.36, 1] 
-                                }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.02, duration: 0.3, ease: "easeOut" }}
                             >
                                 <Link
                                     href={item.href}
-                                    className="group relative flex flex-col h-[280px] md:h-[380px] bg-white rounded-[40px] border border-slate-50 transition-all duration-700 hover:-translate-y-3 p-8 md:p-10 overflow-hidden shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_-20px_rgba(245,131,32,0.15)]"
+                                    className="group relative flex flex-col h-[220px] md:h-[280px] bg-white rounded-xl border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:border-primary/20 hover:-translate-y-1 p-3 md:p-5 overflow-hidden"
                                 >
-                                    {/* Card Header - Minimalist */}
-                                    <div className="relative z-10 flex flex-col items-center text-center space-y-2">
-                                        <h3 className="text-lg md:text-2xl font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-500 uppercase tracking-tight line-clamp-1">
+                                    {/* Card Header */}
+                                    <div className="relative z-10 flex flex-col items-center text-center">
+                                        <h3 className="text-[10px] md:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
                                             {item.name}
                                         </h3>
-                                        <p className="text-[9px] md:text-[11px] font-bold text-slate-300 uppercase tracking-[0.25em] group-hover:text-primary/50 transition-colors duration-500 line-clamp-1">
+                                        <p className="text-[7px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-0.5 opacity-80 group-hover:text-gray-400 transition-all line-clamp-1">
                                             {item.subtitle}
                                         </p>
                                     </div>
 
-                                    {/* Visual Core */}
-                                    <div className="relative flex-1 flex items-center justify-center my-6">
-                                        {/* Subtle background glow on hover */}
-                                        <div className="absolute inset-0 bg-primary/5 rounded-full scale-0 group-hover:scale-125 transition-transform duration-1000 blur-3xl opacity-0 group-hover:opacity-100" />
-                                        
-                                        <div className="relative w-full h-full max-h-[160px] md:max-h-[200px] transform transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-115 group-hover:rotate-2">
+                                    {/* Image */}
+                                    <div className="relative flex-1 flex items-center justify-center my-1 md:my-2">
+                                        <div className="relative w-full h-[110px] md:h-[150px] transform transition-all duration-500 group-hover:scale-110">
                                             <Image
                                                 src={item.image || CLEAN_IMAGES['DEFAULT']}
                                                 alt={item.name}
                                                 fill
-                                                className="object-contain drop-shadow-2xl"
+                                                className="object-contain"
                                                 sizes="(max-width: 768px) 50vw, 25vw"
-                                                priority={idx < 4}
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Minimalist Action */}
-                                    <div className="relative z-10 flex justify-center">
-                                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center transition-all duration-700 group-hover:bg-primary group-hover:scale-110 shadow-2xl group-hover:shadow-primary/40">
-                                            <ArrowRight className="w-5 h-5 md:w-7 md:h-7" />
+                                    {/* Action Button */}
+                                    <div className="relative z-10 flex justify-center mt-auto">
+                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center transition-all duration-300 group-hover:bg-primary shadow-md">
+                                            <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
                                         </div>
                                     </div>
-
-                                    {/* Glassmorphism border effect on hover */}
-                                    <div className="absolute inset-0 border-2 border-primary/0 group-hover:border-primary/10 rounded-[40px] transition-colors duration-700" />
                                 </Link>
                             </motion.div>
                         );
