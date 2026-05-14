@@ -95,22 +95,22 @@ async function main() {
         });
     }
 
-    // 3. Brands (Ensure logos exist in DB)
+    // 3. Brands (Ensure images exist in DB)
     const DEFAULT_BRANDS = [
-        { name: "Apple", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" },
-        { name: "Samsung", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Samsung_old_logo_before_year_2015.svg/1280px-Samsung_old_logo_before_year_2015.svg.png" },
-        { name: "Sony", logo: "https://www.freepnglogos.com/uploads/sony-png-logo/brand-sony-png-logo-5.png" },
-        { name: "Dell", logo: "https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg" },
-        { name: "HP", logo: "https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" },
-        { name: "LG", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/LG_logo_%282014%29.svg/1280px-LG_logo_%282014%29.svg.png" },
+        { name: "Apple", image: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" },
+        { name: "Samsung", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Samsung_old_logo_before_year_2015.svg/1280px-Samsung_old_logo_before_year_2015.svg.png" },
+        { name: "Sony", image: "https://www.freepnglogos.com/uploads/sony-png-logo/brand-sony-png-logo-5.png" },
+        { name: "Dell", image: "https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg" },
+        { name: "HP", image: "https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" },
+        { name: "LG", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/LG_logo_%282014%29.svg/1280px-LG_logo_%282014%29.svg.png" },
     ];
 
     console.log('Seeding Brands...');
     for (const b of DEFAULT_BRANDS) {
         await prisma.brand.upsert({
             where: { name: b.name },
-            update: { logo: b.logo },
-            create: { name: b.name, slug: b.name.toLowerCase(), logo: b.logo }
+            update: { image: b.image },
+            create: { name: b.name, slug: b.name.toLowerCase(), image: b.image }
         });
     }
 
