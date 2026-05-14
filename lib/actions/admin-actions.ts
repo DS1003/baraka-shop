@@ -1075,3 +1075,52 @@ export async function updateCustomer(id: string, data: any) {
     }
 }
 
+// ==========================================
+// POPULAR UNIVERSES ACTIONS
+// ==========================================
+
+export async function getPopularUniverses() {
+    try {
+        return await (prisma as any).popularUniverse.findMany({
+            orderBy: { order: 'asc' }
+        });
+    } catch (error) {
+        console.error("Fetch popular universes error:", error);
+        return [];
+    }
+}
+
+export async function upsertPopularUniverse(data: any, id?: string) {
+    try {
+        if (id) {
+            await (prisma as any).popularUniverse.update({
+                where: { id },
+                data
+            });
+        } else {
+            await (prisma as any).popularUniverse.create({
+                data
+            });
+        }
+        revalidatePath('/admin/popular-universes');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Upsert popular universe error:", error);
+        return { success: false, message: error.message };
+    }
+}
+
+export async function deletePopularUniverse(id: string) {
+    try {
+        await (prisma as any).popularUniverse.delete({ where: { id } });
+        revalidatePath('/admin/popular-universes');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Delete popular universe error:", error);
+        return { success: false, message: "Erreur serveur." };
+    }
+}
+
+

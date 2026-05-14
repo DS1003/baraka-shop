@@ -297,6 +297,24 @@ export async function getMegaMenuAction() {
     }
 }
 
+export async function getPopularUniversesAction() {
+    try {
+        const cacheKey = 'popular_universes:all';
+        const cached = await getCache<any>(cacheKey);
+        if (cached) return cached;
+
+        const universes = await (prisma as any).popularUniverse.findMany({
+            orderBy: { order: 'asc' }
+        });
+
+        await setCache(cacheKey, universes, 3600); // 1h cache
+        return universes;
+    } catch (error) {
+        console.error('[Get Popular Universes Error]:', error);
+        return [];
+    }
+}
+
 
 
 interface ImportProduct {

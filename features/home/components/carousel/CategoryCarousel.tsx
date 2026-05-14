@@ -7,7 +7,7 @@ import { Container } from '@/ui/Container'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 
-// Images locales dans /public/categories/ - garanties d'affichage
+// Images locales dans /public/categories/ - garanties d'affichage (Fallback)
 const CLEAN_IMAGES: Record<string, string> = {
     'BATTERIE': '/categories/batterie.png',
     'CABLE': '/categories/cable.png',
@@ -30,132 +30,157 @@ const CLEAN_IMAGES: Record<string, string> = {
 };
 
 const SUBTITLES: Record<string, string> = {
-    'INFORMATIQUE': 'MacBook, PC & Portables',
-    'TELEPHONE & TABLETTE': 'iPhone, Galaxy & iPad',
-    'IMAGE & SON': 'TV, Casques & Caméras',
-    'CONSOLES & JEUX': 'PS5, Xbox & Gaming',
-    'RESEAUX': 'Routeurs & Wifi 7',
-    'SECURITE': 'Caméras & Alarmes',
-    'ELECTROMENAGER': 'Maison Intelligente',
-    'BUREAUTIQUE': 'Imprimantes & Impression',
-    'MULTIMEDIA': 'Streaming & Cinéma',
-    'BATTERIE': 'Externes & Internes',
-    'CABLE': 'HDMI, USB & Réseau',
-    'CHARGEUR': 'Secteur & Induction',
-    'CONNECTIQUE': 'Adaptateurs & Hubs',
-    'CONSOMMABLES': 'Encre & Papier',
-    'ELECTRONIQUE': 'Composants & Gadgets',
-    'GÉNÉRAL': 'Univers High-Tech',
-    'GÉNERAL': 'Univers High-Tech'
+    'INFORMATIQUE': 'MACBOOK, PC & PORTABLES',
+    'TELEPHONE & TABLETTE': 'IPHONE, GALAXY & IPAD',
+    'IMAGE & SON': 'TV, CASQUES & CAMÉRAS',
+    'CONSOLES & JEUX': 'PS5, XBOX & GAMING',
+    'RESEAUX': 'ROUTEURS & WIFI 7',
+    'SECURITE': 'CAMÉRAS & ALARMES',
+    'ELECTROMENAGER': 'MAISON INTELLIGENTE',
+    'BUREAUTIQUE': 'IMPRIMANTES & IMPRESSION',
+    'MULTIMEDIA': 'STREAMING & CINÉMA',
+    'BATTERIE': 'EXTERNES & INTERNES',
+    'CABLE': 'HDMI, USB & RÉSEAU',
+    'CHARGEUR': 'SECTEUR & INDUCTION',
+    'CONNECTIQUE': 'ADAPTATEURS & HUBS',
+    'CONSOMMABLES': 'ENCRE & PAPIER',
+    'ELECTRONIQUE': 'COMPOSANTS & GADGETS',
+    'GÉNÉRAL': 'UNIVERS HIGH-TECH',
+    'GÉNERAL': 'UNIVERS HIGH-TECH'
 };
 
-export function CategoryCarousel({ initialCategories }: { initialCategories?: any[] }) {
-    if (!initialCategories || initialCategories.length === 0) return null;
-
-    // Filter out 'CABLE' and ensure 'INFORMATIQUE' is in the top 8
-    let categories = [...initialCategories];
+export function CategoryCarousel({ 
+    initialCategories, 
+    initialUniverses 
+}: { 
+    initialCategories?: any[],
+    initialUniverses?: any[]
+}) {
+    // If we have managed universes, use them. Otherwise fallback to categories logic.
+    const hasManagedUniverses = initialUniverses && initialUniverses.length > 0;
     
-    // Find Informatique if it exists outside the first 8
-    const informatiqueCat = categories.find(c => c.name.toUpperCase() === 'INFORMATIQUE');
+    let displayItems: any[] = [];
     
-    // Remove Cable from the display list
-    categories = categories.filter(c => c.name.toUpperCase() !== 'CABLE');
-    
-    // If we found Informatique and it's not already in the list (it would be if it wasn't CABLE)
-    // Actually, filter just ensures CABLE is gone. 
-    // We want to make sure Informatique is in the first 8.
-    const finalDisplay = categories.slice(0, 8);
-    
-    // If Informatique was in the original list but not in the top 8 of the filtered list, 
-    // we should swap it with the last element.
-    if (informatiqueCat && !finalDisplay.find(c => c.id === informatiqueCat.id)) {
-        finalDisplay[finalDisplay.length - 1] = informatiqueCat;
+    if (hasManagedUniverses) {
+        displayItems = initialUniverses.map(u => ({
+            id: u.id,
+            name: u.name,
+            subtitle: u.subtitle,
+            image: u.image,
+            href: u.href
+        }));
+    } else if (initialCategories && initialCategories.length > 0) {
+        // Fallback logic
+        let categories = [...initialCategories];
+        const informatiqueCat = categories.find(c => c.name.toUpperCase() === 'INFORMATIQUE');
+        categories = categories.filter(c => c.name.toUpperCase() !== 'CABLE');
+        const finalDisplay = categories.slice(0, 8);
+        if (informatiqueCat && !finalDisplay.find(c => c.id === informatiqueCat.id)) {
+            finalDisplay[finalDisplay.length - 1] = informatiqueCat;
+        }
+        displayItems = finalDisplay.map(cat => {
+            const catKey = (cat.name || '').trim().toUpperCase();
+            return {
+                id: cat.id,
+                name: cat.name,
+                subtitle: SUBTITLES[catKey] || 'DÉCOUVREZ NOS OFFRES',
+                image: CLEAN_IMAGES[catKey] || CLEAN_IMAGES['DEFAULT'],
+                href: `/category/${cat.slug}`
+            };
+        });
     }
 
-    const displayCategories = finalDisplay;
+    if (displayItems.length === 0) return null;
 
     return (
-        <section className="overflow-hidden">
-            <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10">
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2 mb-0">
-                            <div className="w-8 h-[2px] bg-primary rounded-full" />
-                            <span className="text-primary font-black text-[9px] uppercase tracking-[0.4em]">Exploration</span>
+        <section className="py-16 md:py-24">
+            <Container>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-16 md:mb-20">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                            <span className="w-10 h-[2px] bg-primary rounded-full" />
+                            <span className="text-primary font-black text-[11px] uppercase tracking-[0.6em]">Exploration</span>
                         </div>
-                        <h2 className="text-2xl md:text-4xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
+                        <h2 className="text-4xl md:text-6xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-[0.9]">
                             Univers <span className="text-primary italic">Populaires</span>
                         </h2>
-                        <p className="text-gray-400 text-[11px] md:text-sm font-medium italic">
-                           Tout ce que vous aimez est là
+                        <p className="text-slate-400 text-base md:text-xl font-medium italic opacity-80">
+                           Une sélection exclusive pour vous
                         </p>
                     </div>
 
                     <Link 
                         href="/categories" 
-                        className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#1B1F3B] hover:text-primary transition-all group"
+                        className="mt-8 md:mt-0 group flex items-center gap-6 text-[12px] font-black uppercase tracking-[0.3em] text-[#1B1F3B] hover:text-primary transition-all duration-300"
                     >
-                        Tous les rayons 
-                        <div className="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
-                             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        Explorer Tout 
+                        <div className="w-12 h-12 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-primary/20">
+                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-500" />
                         </div>
                     </Link>
                 </div>
 
-                {/* Grid - 2 columns on mobile, 4 on desktop */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-                    {displayCategories.map((category, idx) => {
-                        const originalName = category.name || '';
-                        const catKey = originalName.trim().toUpperCase();
-                        
-                        const image = CLEAN_IMAGES[catKey] || CLEAN_IMAGES['DEFAULT'];
-                        const subtitle = SUBTITLES[catKey] || 'Découvrez nos offres';
-
+                {/* Grid - 4x2 Layout Optimized */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
+                    {displayItems.map((item, idx) => {
                         return (
                             <motion.div
-                                key={category.id}
-                                initial={{ opacity: 0, y: 15 }}
+                                key={item.id}
+                                initial={{ opacity: 0, y: 40 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: idx * 0.02, duration: 0.3, ease: "easeOut" }}
+                                viewport={{ once: true, margin: "-50px" }}
+                                transition={{ 
+                                    delay: idx * 0.08, 
+                                    duration: 0.8, 
+                                    ease: [0.22, 1, 0.36, 1] 
+                                }}
                             >
                                 <Link
-                                    href={`/category/${category.slug}`}
-                                    className="group relative flex flex-col h-[220px] md:h-[280px] bg-white rounded-xl border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:border-primary/20 hover:-translate-y-1 p-3 md:p-5 overflow-hidden"
+                                    href={item.href}
+                                    className="group relative flex flex-col h-[280px] md:h-[380px] bg-white rounded-[40px] border border-slate-50 transition-all duration-700 hover:-translate-y-3 p-8 md:p-10 overflow-hidden shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_70px_-20px_rgba(245,131,32,0.15)]"
                                 >
-                                    {/* Card Header */}
-                                    <div className="relative z-10 flex flex-col items-center text-center">
-                                        <h3 className="text-[10px] md:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
-                                            {category.name}
+                                    {/* Card Header - Minimalist */}
+                                    <div className="relative z-10 flex flex-col items-center text-center space-y-2">
+                                        <h3 className="text-lg md:text-2xl font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-500 uppercase tracking-tight line-clamp-1">
+                                            {item.name}
                                         </h3>
-                                        <p className="text-[7px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-0.5 opacity-80 group-hover:text-gray-400 transition-all line-clamp-1">
-                                            {subtitle}
+                                        <p className="text-[9px] md:text-[11px] font-bold text-slate-300 uppercase tracking-[0.25em] group-hover:text-primary/50 transition-colors duration-500 line-clamp-1">
+                                            {item.subtitle}
                                         </p>
                                     </div>
 
-                                    {/* Product Image */}
-                                    <div className="relative flex-1 flex items-center justify-center my-1 md:my-2">
-                                        <div className="relative w-full h-[110px] md:h-[150px] transform transition-all duration-500 group-hover:scale-110">
+                                    {/* Visual Core */}
+                                    <div className="relative flex-1 flex items-center justify-center my-6">
+                                        {/* Subtle background glow on hover */}
+                                        <div className="absolute inset-0 bg-primary/5 rounded-full scale-0 group-hover:scale-125 transition-transform duration-1000 blur-3xl opacity-0 group-hover:opacity-100" />
+                                        
+                                        <div className="relative w-full h-full max-h-[160px] md:max-h-[200px] transform transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-115 group-hover:rotate-2">
                                             <Image
-                                                src={image}
-                                                alt={category.name}
+                                                src={item.image || CLEAN_IMAGES['DEFAULT']}
+                                                alt={item.name}
                                                 fill
-                                                className="object-contain"
+                                                className="object-contain drop-shadow-2xl"
                                                 sizes="(max-width: 768px) 50vw, 25vw"
+                                                priority={idx < 4}
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Action Button */}
-                                    <div className="relative z-10 flex justify-center mt-auto">
-                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center transition-all duration-300 group-hover:bg-primary shadow-md">
-                                            <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                    {/* Minimalist Action */}
+                                    <div className="relative z-10 flex justify-center">
+                                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center transition-all duration-700 group-hover:bg-primary group-hover:scale-110 shadow-2xl group-hover:shadow-primary/40">
+                                            <ArrowRight className="w-5 h-5 md:w-7 md:h-7" />
                                         </div>
                                     </div>
+
+                                    {/* Glassmorphism border effect on hover */}
+                                    <div className="absolute inset-0 border-2 border-primary/0 group-hover:border-primary/10 rounded-[40px] transition-colors duration-700" />
                                 </Link>
                             </motion.div>
                         );
                     })}
                 </div>
+            </Container>
         </section>
     )
 }

@@ -7,7 +7,7 @@ import { ProductTabs } from '@/features/home/components/ProductTabs'
 import { HeadphonePromo } from '@/features/home/components/HeadphonePromo'
 import { ShippingPromoBand } from '@/features/home/components/ShippingPromoBand'
 import { BrandsAndSocial } from '@/features/home/components/BrandsAndSocial'
-import { getProductsAction, getCategoriesAction } from '@/lib/actions/product-actions'
+import { getProductsAction, getCategoriesAction, getPopularUniversesAction } from '@/lib/actions/product-actions'
 
 import { Metadata } from 'next'
 
@@ -20,10 +20,11 @@ import { Container } from '@/ui/Container'
 
 export default async function Home() {
   // Pre-fetch all data server-side to avoid client-side waterfalls
-  const [categories, newestProducts, topRatedProducts] = await Promise.all([
+  const [categories, newestProducts, topRatedProducts, popularUniverses] = await Promise.all([
     getCategoriesAction(),
     getProductsAction({ sort: 'newest', limit: 8 }),
     getProductsAction({ sort: 'top_rated', limit: 8 }),
+    getPopularUniversesAction()
   ])
 
   const sliderSlides = categories.slice(0, 6).map((cat: any) => ({
@@ -43,7 +44,7 @@ export default async function Home() {
     <Container className="flex flex-col gap-4 md:gap-8 py-6">
       <HomeSlider initialSlides={sliderSlides} />
       <ShippingBar />
-      <CategoryCarousel initialCategories={categories} />
+      <CategoryCarousel initialUniverses={popularUniverses} initialCategories={categories} />
       <HeadphonePromo />
       <PromoGrid />
       <ShippingPromoBand />

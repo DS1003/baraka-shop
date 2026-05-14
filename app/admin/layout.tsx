@@ -50,6 +50,7 @@ const sidebarGroups = [
             { icon: Box, label: 'Produits', href: '/admin/products' },
             { icon: Store, label: 'Boutiques', href: '/admin/stores' },
             { icon: Layers, label: 'Catégories', href: '/admin/categories' },
+            { icon: Zap, label: 'Univers Populaires', href: '/admin/popular-universes' },
             { icon: Tag, label: 'Marques', href: '/admin/brands' },
             { icon: Zap, label: 'Promotions', href: '/admin/promotions' },
             { icon: ImageIcon, label: 'Médiathèque', href: '/admin/media' },
