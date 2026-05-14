@@ -27,7 +27,8 @@ import {
     ShieldCheck,
     Tag,
     Zap,
-    Store
+    Store,
+    Maximize
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';

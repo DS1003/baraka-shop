@@ -12,7 +12,8 @@ import {
     ExternalLink,
     Image as ImageIcon,
     CheckCircle,
-    XCircle
+    XCircle,
+    Maximize
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -429,4 +430,3 @@ export default function BigBannersPage() {
     );
 }
 
-import { Maximize } from 'lucide-react';
