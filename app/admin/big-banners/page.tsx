@@ -113,8 +113,8 @@ export default function BigBannersPage() {
         formData.append('file', file);
 
         const res = await uploadToCloudinaryAction(formData);
-        if (res.success) {
-            setPreviewImage(res.url);
+        if (res.success && res.media?.url) {
+            setPreviewImage(res.media.url);
         }
         setIsUploading(false);
     }
@@ -329,7 +329,7 @@ export default function BigBannersPage() {
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Texte du bouton</label>
                                         <input
                                             value={buttonText}
-                                            onChange={(e) => setPrice(e.target.value)} // Wait, I use setButtonText
+                                            onChange={(e) => setButtonText(e.target.value)}
                                             onInput={(e: any) => setButtonText(e.target.value)}
                                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 transition-all text-[14px] font-bold"
                                             placeholder="Ex: Commander"

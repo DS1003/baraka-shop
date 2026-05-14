@@ -129,8 +129,8 @@ export default function HomePromosPage() {
         formData.append('file', file);
 
         const res = await uploadToCloudinaryAction(formData);
-        if (res.success) {
-            setPreviewImage(res.url);
+        if (res.success && res.media?.url) {
+            setPreviewImage(res.media.url);
         }
         setIsUploading(false);
     }
