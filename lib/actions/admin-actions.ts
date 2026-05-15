@@ -921,11 +921,13 @@ export async function upsertProduct(data: any, id?: string) {
 
         let product;
         if (id) {
+            console.log(`[AdminAction] Updating product: ${id}`);
             product = await prisma.product.update({
                 where: { id },
                 data: prismaData,
             });
         } else {
+            console.log(`[AdminAction] Creating new product: ${rest.name}`);
             product = await prisma.product.create({
                 data: prismaData,
             });
@@ -953,14 +955,25 @@ export async function upsertProduct(data: any, id?: string) {
         }
         
         // Invalider le cache Redis
-        if (id) {
-            await invalidateCache(`product:${id}`);
-            await invalidatePrefix('similar:');
+        try {
+            if (id) {
+                console.log(`[Redis] Invalidating cache for product: ${id}`);
+                await invalidateCache(`product:${id}`);
+                await invalidatePrefix('similar:');
+            }
+            await invalidatePrefix('products:');
+        } catch (redisError) {
+            console.warn("[Redis] Cache invalidation failed (non-blocking):", redisError);
         }
-        await invalidatePrefix('products:');
 
-        // Force le rechargement complet de tout le cache (boutique, accueil, détails produits...)
-        revalidatePath('/', 'layout');
+        // Revalidation ciblée (plus performant que '/' layout)
+        console.log(`[AdminAction] Revalidating paths...`);
+        revalidatePath('/admin/products');
+        revalidatePath('/boutique');
+        revalidatePath(`/product/${product.id}`);
+        revalidatePath('/');
+        
+        console.log(`[AdminAction] Success!`);
         return { success: true, product };
     } catch (error) {
         console.error("Upsert product error:", error);

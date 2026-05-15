@@ -7,11 +7,70 @@ import { Container } from '@/ui/Container'
 import { ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+const DEFAULT_PROMOS = [
+    {
+        badge: "Exclusivité",
+        title: "Pack Gaming Ultimate",
+        subtitle: "PS5 + 2 Jeux + Manette",
+        price: "499 000 CFA",
+        image: "https://media.ldlc.com/encart/p/26671_b.jpg",
+        bg: "bg-[#F8FAFC]",
+        border: "border-slate-100",
+        size: "md:col-span-2",
+        href: "/boutique?category=jeux",
+        order: 0
+    },
+    {
+        badge: "Tendance",
+        title: "Apple Ecosystem",
+        subtitle: "MacBook & iPad M3",
+        price: "Dès 650 000 CFA",
+        image: "https://media.ldlc.com/encart/p/28885_b.jpg",
+        bg: "bg-[#FFFBF5]",
+        border: "border-orange-100/50",
+        size: "md:col-span-2",
+        href: "/boutique?category=informatique",
+        order: 1
+    },
+    {
+        badge: "Vente Flash",
+        title: "Smartphones Pro",
+        subtitle: "Derniers modèles arrivés",
+        image: "https://media.ldlc.com/encart/p/28828_b.jpg",
+        bg: "bg-[#F5F7FF]",
+        border: "border-blue-100/50",
+        size: "md:col-span-1",
+        href: "/boutique?category=smartphones",
+        order: 2
+    },
+    {
+        badge: "Promo",
+        title: "Accessoires Premium",
+        subtitle: "Optimisez votre setup",
+        image: "https://media.ldlc.com/encart/p/22889_b.jpg",
+        bg: "bg-[#FFF5F9]",
+        border: "border-pink-100/50",
+        size: "md:col-span-1",
+        href: "/boutique?category=connectique",
+        order: 3
+    }
+];
+
 export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
     const [currentIndex, setCurrentIndex] = useState(0)
     const [direction, setDirection] = useState(0)
+    const [isMobileView, setIsMobileView] = useState(false)
 
-    const promos = initialPromos || []
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobileView(window.innerWidth < 768)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    const promos = initialPromos && initialPromos.length > 0 ? initialPromos : DEFAULT_PROMOS;
 
     const slideNext = () => {
         setDirection(1)
@@ -22,8 +81,6 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
         setDirection(-1)
         setCurrentIndex((prev) => (prev - 1 + promos.length) % promos.length)
     }
-
-    if (promos.length === 0) return null
 
     const variants = {
         enter: (direction: number) => ({
@@ -43,78 +100,80 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
     }
 
     return (
-        <section className="overflow-hidden">
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-[2px] bg-primary rounded-full" />
-                        <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
+        <section className="overflow-hidden py-10">
+            <Container>
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-[2px] bg-primary rounded-full" />
+                            <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
+                        </div>
+                        <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
+                            Nos <span className="text-primary italic">Incontournables</span>
+                        </h2>
                     </div>
-                    <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
-                        Nos <span className="text-primary italic">Incontournables</span>
-                    </h2>
-                </div>
-                
-                <div className="flex md:hidden gap-2.5">
-                    <button
-                        onClick={slidePrev}
-                        className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={slideNext}
-                        className="w-12 h-12 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
-                    >
-                        <ChevronRight className="w-5 h-5 text-primary" />
-                    </button>
-                </div>
-            </div>
-
-                {/* Desktop Grid */}
-                <div className="hidden md:grid grid-cols-4 gap-8">
-                    {promos.map((promo, idx) => (
-                        <PromoCard key={idx} promo={promo} />
-                    ))}
-                </div>
-
-                {/* Mobile Carousel */}
-                <div className="md:hidden relative">
-                    <div className="relative h-[560px] w-full mb-10">
-                        <AnimatePresence initial={false} custom={direction}>
-                            <motion.div
-                                key={currentIndex}
-                                custom={direction}
-                                variants={variants}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{
-                                    x: { type: "spring", stiffness: 300, damping: 32 },
-                                    opacity: { duration: 0.3 }
-                                }}
-                                className="absolute inset-0"
-                            >
-                                <PromoCard promo={promos[currentIndex]} isMobile />
-                            </motion.div>
-                        </AnimatePresence>
+                    
+                    <div className="flex md:hidden gap-2.5">
+                        <button
+                            onClick={slidePrev}
+                            className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={slideNext}
+                            className="w-12 h-12 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
+                        >
+                            <ChevronRight className="w-5 h-5 text-primary" />
+                        </button>
                     </div>
+                </div>
 
-                    {/* Pagination Dots */}
-                    <div className="flex justify-center gap-3">
-                        {promos.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => {
-                                    setDirection(idx > currentIndex ? 1 : -1)
-                                    setCurrentIndex(idx)
-                                }}
-                                className={`h-1.5 rounded-full transition-all duration-500 ${currentIndex === idx ? "w-10 bg-[#1B1F3B]" : "w-1.5 bg-slate-200"
-                                    }`}
-                            />
+                    {/* Desktop Grid */}
+                    <div className="hidden md:grid grid-cols-4 gap-8">
+                        {promos.map((promo, idx) => (
+                            <PromoCard key={idx} promo={promo} />
                         ))}
                     </div>
-                </div>
+
+                    {/* Mobile Carousel */}
+                    <div className="md:hidden relative">
+                        <div className="relative h-[560px] w-full mb-10">
+                            <AnimatePresence initial={false} custom={direction}>
+                                <motion.div
+                                    key={currentIndex}
+                                    custom={direction}
+                                    variants={variants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{
+                                        x: { type: "spring", stiffness: 300, damping: 32 },
+                                        opacity: { duration: 0.3 }
+                                    }}
+                                    className="absolute inset-0"
+                                >
+                                    <PromoCard promo={promos[currentIndex]} isMobile={true} />
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Pagination Dots */}
+                        <div className="flex justify-center gap-3">
+                            {promos.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => {
+                                        setDirection(idx > currentIndex ? 1 : -1)
+                                        setCurrentIndex(idx)
+                                    }}
+                                    className={`h-1.5 rounded-full transition-all duration-500 ${currentIndex === idx ? "w-10 bg-[#1B1F3B]" : "w-1.5 bg-slate-200"
+                                        }`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+            </Container>
         </section>
     )
 }

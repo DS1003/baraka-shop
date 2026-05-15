@@ -226,32 +226,43 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                     {/* Variantes de Couleur */}
                     {product.colorVariants && product.colorVariants.length > 0 && (
-                        <div className="mb-6">
-                            <span className="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-3 block">
-                                Couleur : {selectedColor?.colorName || ''}
+                        <div className="mb-6 md:mb-8">
+                            <span className="text-[12px] md:text-[13px] font-bold text-[#1B1F3B] mb-4 block">
+                                Couleur ({product.colorVariants.length}) : <span className="font-black uppercase tracking-tight">{selectedColor?.colorName || ''}</span>
                             </span>
-                            <div className="flex flex-wrap gap-3">
-                                {product.colorVariants.map((color: any, idx: number) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => {
-                                            setSelectedColor(color);
-                                            setActiveImg(0); // Reset to first image
-                                        }}
-                                        className={cn(
-                                            "w-10 h-10 rounded-full border-2 transition-all p-0.5",
-                                            selectedColor?.id === color.id 
-                                                ? "border-primary shadow-md shadow-primary/20 scale-110" 
-                                                : "border-transparent hover:border-gray-200"
-                                        )}
-                                        title={color.colorName}
-                                    >
-                                        <div 
-                                            className="w-full h-full rounded-full shadow-inner"
-                                            style={{ backgroundColor: color.colorHex }}
-                                        />
-                                    </button>
-                                ))}
+                            <div className="flex flex-wrap gap-3 md:gap-4">
+                                {product.colorVariants.map((color: any, idx: number) => {
+                                    const variantImage = color.images && color.images.length > 0 ? color.images[0] : (product.images && product.images.length > 0 ? product.images[0] : '/placeholder.png');
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                setSelectedColor(color);
+                                                setActiveImg(0); 
+                                            }}
+                                            className={cn(
+                                                "relative w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl border-2 transition-all p-1 bg-white overflow-hidden group",
+                                                selectedColor?.id === color.id 
+                                                    ? "border-[#1B1F3B] shadow-lg scale-105" 
+                                                    : "border-gray-100 hover:border-gray-300"
+                                            )}
+                                            title={color.colorName}
+                                        >
+                                            <div className="relative w-full h-full">
+                                                <Image 
+                                                    src={variantImage} 
+                                                    alt={color.colorName} 
+                                                    fill 
+                                                    className="object-contain p-1 group-hover:scale-110 transition-transform duration-500"
+                                                    unoptimized
+                                                />
+                                            </div>
+                                            {selectedColor?.id === color.id && (
+                                                <div className="absolute inset-0 bg-[#1B1F3B]/5 pointer-events-none" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -397,13 +408,13 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 
                                 {product.description && (
                                     <div
-                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-12 md:mb-16 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-2 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
+                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-6 md:mb-8 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-2 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
                                         dangerouslySetInnerHTML={{ __html: product.description }}
                                     />
                                 )}
                                 
                                 {product.detailedDescription && Array.isArray(product.detailedDescription) && product.detailedDescription.length > 0 && (
-                                    <div className="space-y-16 md:space-y-24 mb-16 md:mb-24">
+                                    <div className="space-y-16 md:space-y-24 mb-8 md:mb-10">
                                         {product.detailedDescription.map((block: any, idx: number) => {
                                             switch (block.type) {
                                                 case 'LOGO':
@@ -483,9 +494,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                     </p>
                                 )}
 
-                                <div className="pt-8 md:pt-12 border-t border-gray-100">
-                                    <h4 className="text-[9px] md:text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 md:mb-8">Caractéristiques principales</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 md:gap-y-6">
+                                <div className="pt-6 md:pt-8 border-t border-gray-100">
+                                    <h4 className="text-[9px] md:text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 md:mb-5">Caractéristiques principales</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2 md:gap-y-3">
                                         {(Array.isArray(product.features) && product.features.length > 0 ? product.features : [
                                             "Qualité Premium Certifiée",
                                             "Garantie Baraka Shop 12 mois",
@@ -494,7 +505,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                             "Service Après-Vente Local",
                                             "Authenticité Garantie"
                                         ]).map((feature: any, i: number) => (
-                                            <div key={i} className="flex items-center gap-3 md:gap-4 group">
+                                            <div key={i} className="flex items-center gap-2.5 md:gap-3 group">
                                                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-green-50 flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all">
                                                     <Zap className="w-3.5 h-3.5 md:w-4 md:h-4" fill="currentColor" />
                                                 </div>
