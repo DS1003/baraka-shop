@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { RichTextEditor } from '@/ui/RichTextEditor';
+import { ProductDescriptionBuilder, DescriptionBlock } from './ProductDescriptionBuilder';
 import {
     upsertProduct,
     getAdminCategories,
@@ -146,6 +147,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [colorSearch, setColorSearch] = useState('');
     const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
     const colorDropdownRef = React.useRef<HTMLDivElement>(null);
+    const [detailedDescription, setDetailedDescription] = useState<DescriptionBlock[]>(editingProduct?.detailedDescription || []);
 
     useEffect(() => {
         const loadMetadata = async () => {
@@ -214,7 +216,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         const data = {
             name: formData.get('name') as string,
             slug: (formData.get('name') as string).toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-            description: formData.get('description') as string,
+            description: (formData.get('description') as string) || "",
             price: parseFloat(formData.get('price') as string),
             stock: parseInt(formData.get('stock') as string),
             categoryId: formData.get('categoryId') as string,
@@ -225,6 +227,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             images: formImages,
             colorVariants: colorVariants.filter(cv => cv.colorName.trim() !== ''),
             shortDescription: formData.get('shortDescription') as string || null,
+            detailedDescription,
             features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
             metadata: (() => {
                 const raw = formData.get('metadata') as string;
@@ -553,12 +556,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <div className="space-y-4">
                             <div className="flex flex-wrap gap-2">
                                 {colorVariants.map((cv, idx) => (
-                                    <button
+                                    <div
                                         key={idx}
-                                        type="button"
                                         onClick={() => setActiveColorIdx(activeColorIdx === idx ? null : idx)}
                                         className={cn(
-                                            "flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[12px] font-bold transition-all border",
+                                            "flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[12px] font-bold transition-all border cursor-pointer",
                                             activeColorIdx === idx
                                                 ? "bg-white border-orange-300 text-orange-700 shadow-md shadow-orange-100"
                                                 : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300"
@@ -582,7 +584,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                         >
                                             <X size={10} strokeWidth={3} />
                                         </button>
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
 
@@ -807,12 +809,24 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Détaillée</label>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Classique (HTML)</label>
+                        </div>
                         <RichTextEditor
                             name="description"
-                            defaultValue={editingProduct?.description}
-                            placeholder="Décrivez les caractéristiques, matières, coupes..."
+                            defaultValue={editingProduct?.description || ""}
+                        />
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Visuelle (Style Apple/Logitech)</label>
+                            <span className="text-[10px] font-medium text-slate-400 italic">Glissez-déposez les blocs pour réorganiser</span>
+                        </div>
+                        <ProductDescriptionBuilder 
+                            initialData={detailedDescription}
+                            onChange={setDetailedDescription}
                         />
                     </div>
 

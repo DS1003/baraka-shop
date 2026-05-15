@@ -86,7 +86,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     useEffect(() => {
         async function loadNotifications() {
             const data = await getAdminNotifications();
-            setNotifications(data);
+            if (JSON.stringify(data) !== JSON.stringify(notifications)) {
+                setNotifications(data);
+            }
         }
         loadNotifications();
     }, []);

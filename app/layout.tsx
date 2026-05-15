@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Montserrat } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { Providers } from '@/components/providers'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' })
 
 export const metadata: Metadata = {
   title: 'Baraka Shop | High-Tech & Électronique Premium au Sénégal',
@@ -55,7 +56,12 @@ export default function RootLayout({
     <html lang="fr" className="h-full antialiased scroll-smooth" suppressHydrationWarning>
       <head />
       <body
-        className={cn("min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20", inter.className)}
+        className={cn(
+          "min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20",
+          inter.variable,
+          montserrat.variable,
+          inter.className
+        )}
         suppressHydrationWarning
       >
         <Providers>

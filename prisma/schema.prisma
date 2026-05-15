@@ -41,8 +41,9 @@ model Product {
   name          String
   slug          String       @unique
   reference     String?      @unique
-  description   String
+  description   String?
   shortDescription String?
+  detailedDescription Json?    @default("[]")
   features      Json?        @default("[]")
   price         Float
   oldPrice      Float?

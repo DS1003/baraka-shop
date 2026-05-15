@@ -381,7 +381,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 exit={{ opacity: 0, y: -20 }}
                                 className="max-w-none"
                             >
-                                {product.brand?.image && (
+                                {(!product.detailedDescription || !Array.isArray(product.detailedDescription) || !product.detailedDescription.some((b: any) => b.type === 'LOGO')) && product.brand?.image && (
                                     <div className="flex justify-center mb-6 md:mb-10">
                                         <div className="relative w-32 h-12 md:w-48 md:h-20">
                                             <Image
@@ -394,12 +394,90 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         </div>
                                     </div>
                                 )}
-                                {product.description ? (
+                                
+                                {product.description && (
                                     <div
-                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-2 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
+                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-12 md:mb-16 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-2 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
                                         dangerouslySetInnerHTML={{ __html: product.description }}
                                     />
-                                ) : (
+                                )}
+                                
+                                {product.detailedDescription && Array.isArray(product.detailedDescription) && product.detailedDescription.length > 0 && (
+                                    <div className="space-y-16 md:space-y-24 mb-16 md:mb-24">
+                                        {product.detailedDescription.map((block: any, idx: number) => {
+                                            switch (block.type) {
+                                                case 'LOGO':
+                                                    return (
+                                                        <div key={idx} className="flex justify-center">
+                                                            <div className="relative w-32 h-12 md:w-48 md:h-20">
+                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                case 'TITLE_CENTERED':
+                                                    return (
+                                                        <div key={idx} className="text-center max-w-4xl mx-auto py-12 font-montserrat">
+                                                            <h2 className="text-[20px] md:text-[24px] font-bold text-[#282828] uppercase tracking-[0.1em] leading-tight">
+                                                                {block.title}
+                                                            </h2>
+                                                        </div>
+                                                    );
+                                                case 'TEXT_CENTERED':
+                                                    return (
+                                                        <div key={idx} className="text-center max-w-2xl mx-auto">
+                                                            <p className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium">
+                                                                {block.text}
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                case 'IMAGE_FULL':
+                                                    return (
+                                                        <div key={idx} className="relative w-full aspect-[16/7] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-slate-50 shadow-sm border border-slate-100">
+                                                            <Image src={block.image} alt="" fill className="object-cover" unoptimized />
+                                                        </div>
+                                                    );
+                                                case 'IMAGE_LEFT':
+                                                    return (
+                                                        <div key={idx} className="flex flex-col md:flex-row items-center gap-12 md:gap-24 py-12 font-montserrat">
+                                                            <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
+                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                            </div>
+                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                                    {block.title}
+                                                                </h3>
+                                                                <div 
+                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                case 'IMAGE_RIGHT':
+                                                    return (
+                                                        <div key={idx} className="flex flex-col-reverse md:flex-row items-center gap-12 md:gap-24 py-12 font-montserrat">
+                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                                    {block.title}
+                                                                </h3>
+                                                                <div 
+                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                />
+                                                            </div>
+                                                            <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
+                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                default:
+                                                    return null;
+                                            }
+                                        })}
+                                    </div>
+                                )}
+
+                                {!product.description && (!product.detailedDescription || product.detailedDescription.length === 0) && (
                                     <p className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-8 md:mb-12">
                                         Une description complète pour ce produit sera bientôt disponible.
                                     </p>
