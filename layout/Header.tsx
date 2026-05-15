@@ -93,6 +93,7 @@ export function Header() {
     const [isSearchFocused, setIsSearchFocused] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([])
+    const [isSearching, setIsSearching] = useState(false)
     const [categories, setCategories] = useState<any[]>([])
     const [stores, setStores] = useState<any[]>([])
     const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -146,14 +147,23 @@ export function Header() {
         if (searchQuery.trim()) {
             router.push(`/boutique?q=${encodeURIComponent(searchQuery.trim())}`)
             setIsSearchFocused(false)
+            setSearchQuery('')
         }
     }
 
     useEffect(() => {
         const fetchSuggestions = async () => {
             if (searchQuery.length >= 2) {
-                const result = await getProductsAction({ query: searchQuery, limit: 5 })
-                setSearchSuggestions(result.products)
+                setIsSearching(true)
+                try {
+                    const result = await getProductsAction({ query: searchQuery, limit: 5 })
+                    setSearchSuggestions(result.products)
+                } catch (error) {
+                    console.error('Search suggestions error:', error)
+                    setSearchSuggestions([])
+                } finally {
+                    setIsSearching(false)
+                }
             } else {
                 setSearchSuggestions([])
             }
@@ -262,15 +272,26 @@ export function Header() {
                                 "flex w-full h-[46px] bg-[#f4f4f4] border border-gray-200 rounded-lg overflow-hidden transition-all focus-within:bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
                                 scrolled && "h-[40px]"
                             )}>
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher un produit, une marque..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onFocus={() => setIsSearchFocused(true)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                    className="flex-1 px-6 h-full bg-transparent outline-none text-sm placeholder:text-gray-400 font-medium"
-                                />
+                                <div className="flex-1 relative flex items-center">
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher un produit, une marque..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onFocus={() => setIsSearchFocused(true)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                        className="w-full px-6 h-full bg-transparent outline-none text-base placeholder:text-gray-400 font-medium"
+                                    />
+                                    {searchQuery && (
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute right-2 p-1.5 text-gray-400 hover:text-primary transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
                                 <button type="submit" className="bg-primary hover:bg-primary/90 text-white w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
                                     <Search className="w-5 h-5" />
                                 </button>
@@ -294,7 +315,10 @@ export function Header() {
                                                         key={item.id}
                                                         href={`/product/${item.id}`}
                                                         className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
-                                                        onClick={() => setIsSearchFocused(false)}
+                                                        onClick={() => {
+                                                            setIsSearchFocused(false)
+                                                            setSearchQuery('')
+                                                        }}
                                                     >
                                                         <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
                                                             <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" unoptimized />
@@ -312,7 +336,16 @@ export function Header() {
                                                     </div>
                                                 )}
                                             </div>
-                                            <Link href={`/boutique?q=${searchQuery}`} className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"> Voir tous les résultats </Link>
+                                            <Link 
+                                                href={`/boutique?q=${searchQuery}`} 
+                                                className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
+                                                onClick={() => {
+                                                    setIsSearchFocused(false)
+                                                    setSearchQuery('')
+                                                }}
+                                            > 
+                                                Voir tous les résultats 
+                                            </Link>
                                         </motion.div>
                                         <div className="fixed inset-0 z-[105] bg-black/5" onClick={() => setIsSearchFocused(false)} />
                                     </>
@@ -469,19 +502,90 @@ export function Header() {
             </div>
 
             {/* Mobile Search Bar */}
-            <div className="md:hidden bg-white px-4 py-3 border-b border-gray-50">
+            <div className="md:hidden bg-white px-4 py-3 border-b border-gray-50 relative">
                 <form onSubmit={handleSearch} className="flex w-full h-[42px] bg-[#f4f4f4] border border-gray-200 rounded-xl overflow-hidden group">
-                    <input
-                        type="text"
-                        placeholder="Rechercher..."
-                        className="flex-1 px-4 bg-transparent outline-none text-sm font-medium"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <div className="flex-1 relative flex items-center">
+                        <input
+                            type="text"
+                            placeholder="Rechercher..."
+                            className="w-full px-4 bg-transparent outline-none text-base font-medium"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setIsSearchFocused(true)}
+                        />
+                        {searchQuery && (
+                            <button 
+                                type="button" 
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-1 p-2 text-gray-400"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
                     <button type="submit" className="px-4 text-gray-400 active:text-primary transition-colors">
                         <Search className="w-4 h-4" />
                     </button>
                 </form>
+
+                {/* Mobile Search Suggestions */}
+                <AnimatePresence>
+                    {isSearchFocused && (searchQuery.length > 1 || searchSuggestions.length > 0) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="absolute left-0 right-0 top-full bg-white z-[150] shadow-2xl border-t border-gray-100 max-h-[70vh] overflow-y-auto"
+                        >
+                            {isSearching ? (
+                                <div className="p-8 text-center">
+                                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Recherche en cours...</p>
+                                </div>
+                            ) : searchSuggestions.length > 0 ? (
+                                <div className="flex flex-col">
+                                    <div className="p-4 bg-gray-50/50 border-b border-gray-100">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Résultats suggérés</span>
+                                    </div>
+                                    {searchSuggestions.map((item: any) => (
+                                        <Link
+                                            key={item.id}
+                                            href={`/product/${item.id}`}
+                                            className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
+                                            onClick={() => {
+                                                setIsSearchFocused(false)
+                                                setSearchQuery('')
+                                            }}
+                                        >
+                                            <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
+                                                <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" unoptimized />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-sm font-bold text-[#1B1F3B] truncate group-hover:text-primary transition-colors uppercase tracking-tight">{item.name}</h4>
+                                                <p className="text-[10px] font-black text-primary">{item.price.toLocaleString()} CFA</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                    <Link 
+                                        href={`/boutique?q=${searchQuery}`} 
+                                        className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
+                                        onClick={() => {
+                                            setIsSearchFocused(false)
+                                            setSearchQuery('')
+                                        }}
+                                    > 
+                                        Voir tous les résultats 
+                                    </Link>
+                                </div>
+                            ) : searchQuery.length > 1 ? (
+                                <div className="p-8 text-center text-gray-400">
+                                    <Search className="w-8 h-8 mx-auto mb-4 opacity-20" />
+                                    <p className="text-xs font-black uppercase tracking-widest">Aucun résultat trouvé</p>
+                                </div>
+                            ) : null}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Premium Mobile Menu Drawer with Drill-down */}

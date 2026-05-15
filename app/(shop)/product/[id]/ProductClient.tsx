@@ -124,17 +124,17 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
     ]
 
     return (
-        <Container className="py-8">
-            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8">
+        <Container className="pt-2 pb-8 md:pt-4 md:pb-12">
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-2 md:gap-4 lg:gap-8">
                 {/* Mobile Header: Name & Brand - Hidden on Desktop */}
-                <div className="flex flex-col gap-2 lg:hidden">
+                <div className="flex flex-col gap-1 lg:hidden">
                     <h1 className="text-2xl font-black text-[#1B1F3B] tracking-tight leading-tight">
                         {product.name}
                     </h1>
                 </div>
 
                 {/* Image Gallery */}
-                <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-4 md:gap-6">
+                <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-2 md:gap-4">
                     <div className="relative aspect-square bg-white rounded-3xl md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-6 md:p-12 group/main-img">
                         <motion.div
                             key={activeImg}
@@ -188,23 +188,23 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     </div>
 
                     {/* Description Courte */}
-                    <div className="mb-2 md:mb-3 max-w-2xl">
+                    <div className="mb-1 md:mb-2 max-w-2xl">
                         <p className="text-gray-500 text-sm md:text-[16px] leading-relaxed font-medium">
                             {product.shortDescription || product.description?.substring(0, 160) + "..." || "Découvrez l'élégance et la technologie de pointe combinées dans ce produit d'exception, sélectionné par Baraka Shop."}
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 mb-3 md:mb-4">
-                        <div className="px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-primary" />
+                    <div className="flex flex-wrap items-center gap-2 mb-2 md:mb-3">
+                        <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                             <span className="text-[10px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider">
                             {product.category?.name || product.category}
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-6 md:gap-8 mb-4 md:mb-6 pb-4 md:pb-6 border-b border-gray-100/60">
+                    <div className="flex items-center gap-6 md:gap-8 mb-3 md:mb-4 pb-3 md:pb-4 border-b border-gray-100/60">
                         <div className="flex items-center gap-2">
                             <div className="flex gap-0.5">
                                 {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-3.5 h-3.5 md:w-4 md:h-4 fill-yellow-400 text-yellow-400" />)}
@@ -257,7 +257,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     )}
 
                     <div className="bg-[#1B1F3B] rounded-3xl md:rounded-[2.5rem] p-5 md:p-8 shadow-2xl shadow-blue-900/10 mb-4">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8">
                             <div className="flex flex-col gap-1">
                                 <span className="text-gray-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">Prix de vente officiel</span>
                                 <div className="flex items-baseline gap-3 md:gap-4">
@@ -272,7 +272,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 </div>
                             </div>
 
-                            <div className="flex flex-col items-end gap-2">
+                            <div className="flex flex-col items-start md:items-end gap-2">
                                 {product.stock > 0 ? (
                                     <div className="flex items-center gap-2 text-green-400">
                                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
@@ -288,17 +288,17 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         <div className="h-px bg-white/5 my-4" />
 
                         <div className="flex flex-col sm:flex-row items-center gap-6">
-                            <div className="flex items-center bg-white/5 rounded-2xl p-2 border border-white/10 w-full sm:w-auto">
+                            <div className="flex items-center justify-between bg-white/5 rounded-2xl p-1.5 md:p-2 border border-white/10 w-full sm:w-auto h-14 md:h-16">
                                 <button
                                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-90"
+                                    className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-90"
                                 >
                                     <Minus className="w-4 h-4" />
                                 </button>
                                 <span className="w-14 text-center font-black text-xl text-white">{quantity}</span>
                                 <button
                                     onClick={() => setQuantity(quantity + 1)}
-                                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-90"
+                                    className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-90"
                                 >
                                     <Plus className="w-4 h-4" />
                                 </button>
@@ -308,7 +308,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 <Button
                                     onClick={() => addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity)}
                                     disabled={product.stock <= 0}
-                                    className="flex-1 h-12 md:h-14 bg-white text-[#1B1F3B] hover:bg-gray-100 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 md:gap-3 border border-gray-100"
+                                    className="flex-1 h-14 md:h-16 bg-white text-[#1B1F3B] hover:bg-gray-100 rounded-2xl font-black text-[11px] md:text-[12px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 md:gap-3 border border-white/10 shadow-sm"
                                 >
                                     <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
                                     Ajouter au panier
@@ -320,7 +320,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         setTimeout(() => window.location.href = '/checkout', 100);
                                     }}
                                     disabled={product.stock <= 0}
-                                    className="flex-1 h-12 md:h-14 bg-primary text-white hover:bg-[#1B1F3B] hover:border hover:border-white/10 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 md:gap-3"
+                                    className="flex-1 h-14 md:h-16 bg-primary text-white hover:bg-[#1B1F3B] hover:border hover:border-white/10 rounded-2xl font-black text-[11px] md:text-[12px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 md:gap-3 border border-primary/20"
                                 >
                                     <Zap className="w-4 h-4 md:w-5 md:h-5 fill-white" />
                                     Achat Rapide
@@ -328,7 +328,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                             </div>
                         </div>
 
-                        <div className="mt-8 pt-8 border-t border-white/5 flex flex-col items-center">
+                        <div className="mt-6 pt-6 border-t border-white/5 flex flex-col items-center">
                             <a
                                 href={`https://wa.me/221770000000?text=${encodeURIComponent(`Bonjour Baraka Shop, je souhaiterais commander le produit : ${product.name} (Prix: ${product.price.toLocaleString()} CFA)`)}`}
                                 target="_blank"
@@ -347,7 +347,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                 </div>
             </div>
 
-            <div className="mt-8 md:mt-12 px-0 md:px-0">
+            <div className="mt-4 md:mt-8 px-0 md:px-0">
                 <div className="flex p-1 bg-gray-50 rounded-2xl md:rounded-[2rem] border border-gray-100 mb-6 md:mb-8 w-full scrollbar-hide">
                     {tabs.map((tab) => (
                         <button
@@ -371,7 +371,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     ))}
                 </div>
 
-                <div className="bg-white rounded-3xl md:rounded-[3rem] p-6 md:p-16 border border-gray-100 shadow-[0_20px_40px_rgba(0,0,0,0.015)] min-h-[300px] md:min-h-[400px]">
+                <div className="bg-white rounded-3xl md:rounded-[3rem] p-4 md:p-10 border border-gray-100 shadow-[0_20px_40px_rgba(0,0,0,0.015)] min-h-[300px] md:min-h-[400px]">
                     <AnimatePresence mode="wait">
                         {activeTab === 'description' && (
                             <motion.div
@@ -622,7 +622,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
                     </div>
 
-                    <div className="relative h-[450px]">
+                    <div className="relative h-auto">
                         <AnimatePresence initial={false} custom={directionSimilar} mode="wait">
                             <motion.div
                                 key={currentIndexSimilar}
@@ -632,7 +632,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 animate="center"
                                 exit="exit"
                                 transition={{ x: { type: "spring", stiffness: 200, damping: 25 }, opacity: { duration: 0.3 } }}
-                                className={cn("grid gap-8 absolute inset-0", isMobile ? "grid-cols-2" : "grid-cols-4")}
+                                className={cn("grid gap-4 md:gap-8 relative w-full", isMobile ? "grid-cols-2" : "grid-cols-4")}
                             >
                                 {similarProductChunks[currentIndexSimilar]?.map((prod) => (
                                     <ProductCard key={prod.id} product={prod} />

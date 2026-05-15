@@ -140,13 +140,20 @@ export function BrandsAndSocial({ initialBrands }: { initialBrands?: any[] }) {
                                             className="h-24 md:h-28 bg-white rounded-3xl border border-gray-100/50 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col items-center justify-center transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 p-6"
                                         >
                                             <div className="relative w-full h-full flex items-center justify-center">
-                                                <div className="relative h-10 w-full">
-                                                    <Image
-                                                        src={brand.logo}
-                                                        alt={brand.name}
-                                                        fill
-                                                        className="object-contain"
-                                                    />
+                                                <div className="relative h-10 w-full flex items-center justify-center">
+                                                    {brand.logo ? (
+                                                        <Image
+                                                            src={brand.logo}
+                                                            alt={brand.name}
+                                                            fill
+                                                            className="object-contain"
+                                                            unoptimized
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm font-bold text-gray-400 text-center uppercase tracking-wider">
+                                                            {brand.name}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <span className="mt-2 text-[9px] font-black text-gray-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Reseller officiel</span>

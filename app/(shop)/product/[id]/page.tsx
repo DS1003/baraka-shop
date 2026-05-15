@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
             {/* Breadcrumbs */}
-            <div className="bg-white border-b border-gray-100 py-4">
+            <div className="bg-white border-b border-gray-100 py-2.5">
                 <Container>
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 overflow-x-auto whitespace-nowrap scrollbar-hide">
                         <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
