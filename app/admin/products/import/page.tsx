@@ -93,7 +93,8 @@ export default function ImportProductsPage() {
         return data
             .filter(p =>
                 p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                p.category.toLowerCase().includes(searchTerm.toLowerCase())
+                p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (p.reference || '').toLowerCase().includes(searchTerm.toLowerCase())
             )
             .slice(0, 100); // Only preview first 100 to keep UI fast
     }, [data, searchTerm]);
@@ -467,7 +468,7 @@ export default function ImportProductsPage() {
                                                     className="w-5 h-5 rounded-lg border-2 border-slate-200 text-orange-600 focus:ring-orange-500 cursor-pointer"
                                                 />
                                             </th>
-                                            {['PRODUIT', 'CATÉGORIES (1, 2, 3)', 'PRIX', 'STOCK', 'CUSTOM'].map((h) => (
+                                            {['PRODUIT', 'RÉF.', 'CATÉGORIES (1, 2, 3)', 'PRIX', 'STOCK', 'CUSTOM'].map((h) => (
                                                 <th key={h} className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
                                             ))}
                                         </tr>
@@ -491,6 +492,9 @@ export default function ImportProductsPage() {
                                                 <td className="px-6 py-6">
                                                     <p className="text-[15px] font-bold text-slate-900 mb-1">{prod.name}</p>
                                                     <p className="text-[12px] text-slate-400 line-clamp-1 italic">{prod.description}</p>
+                                                </td>
+                                                <td className="px-6 py-6">
+                                                    <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">{prod.reference || '-'}</span>
                                                 </td>
                                                 <td className="px-6 py-6">
                                                     <div className="flex flex-col gap-1.5">

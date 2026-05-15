@@ -274,126 +274,84 @@ export default function ProductsPage() {
             )}
 
             {/* Tools & Search Bar */}
-            <div className="space-y-6">
-                <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-                    <div className="relative flex-1 w-full max-w-xl group">
+            <div className="space-y-4">
+                <div className="flex flex-col xl:flex-row gap-4 items-stretch">
+                    <div className="relative flex-1 group">
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={18} />
                         <input
                             type="text"
-                            placeholder="Rechercher par nom, SKU ou mots-clés..."
-                            className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm placeholder:text-slate-400"
+                            placeholder="Rechercher par nom, SKU..."
+                            className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm placeholder:text-slate-400"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <button
-                            onClick={() => setIsFilterVisible(!isFilterVisible)}
-                            className={cn(
-                                "flex-1 md:flex-none flex items-center justify-center gap-2.5 px-5 py-3.5 bg-white border rounded-xl font-bold text-[13px] transition-all shadow-sm",
-                                isFilterVisible ? "border-orange-200 bg-orange-50 text-orange-600" : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                            )}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex-1 min-w-[160px]">
+                            <select
+                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                value={activeFilters.categoryId || ''}
+                                onChange={(e) => setActiveFilters(prev => ({ ...prev, categoryId: e.target.value || undefined, subCategoryId: undefined, thirdLevelCategoryId: undefined }))}
+                            >
+                                <option value="">Toutes Catégories</option>
+                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+
+                        {filterSubCategories.length > 0 && (
+                            <div className="flex-1 min-w-[160px]">
+                                <select
+                                    className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                    value={activeFilters.subCategoryId || ''}
+                                    onChange={(e) => setActiveFilters(prev => ({ ...prev, subCategoryId: e.target.value || undefined, thirdLevelCategoryId: undefined }))}
+                                >
+                                    <option value="">Sous-catégories</option>
+                                    {filterSubCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                        )}
+
+                        <div className="flex-1 min-w-[140px]">
+                            <select
+                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                value={activeFilters.brandId || ''}
+                                onChange={(e) => setActiveFilters(prev => ({ ...prev, brandId: e.target.value || undefined }))}
+                            >
+                                <option value="">Marque</option>
+                                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="flex-1 min-w-[140px]">
+                            <select
+                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                value={activeFilters.stockStatus || ''}
+                                onChange={(e) => setActiveFilters(prev => ({ ...prev, stockStatus: (e.target.value || undefined) as any }))}
+                            >
+                                <option value="">Stock</option>
+                                <option value="in_stock">En stock (&gt;10)</option>
+                                <option value="low_stock">Faible (&lt;10)</option>
+                                <option value="out_of_stock">Rupture (0)</option>
+                            </select>
+                        </div>
+
+                        <button 
+                            onClick={() => {
+                                setActiveFilters({});
+                                setSearchQuery('');
+                            }}
+                            className="p-4 bg-slate-100 text-slate-500 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-transparent hover:border-rose-100"
+                            title="Réinitialiser"
                         >
-                            <Filter size={18} className={isFilterVisible ? "text-orange-500" : "text-slate-400"} />
-                            <span>{isFilterVisible ? "Masquer Filtres" : "Afficher Filtres"}</span>
+                            <X size={20} />
                         </button>
-                        <button className="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-[13px] hover:bg-slate-50 transition-all shadow-sm">
-                            <Download size={18} className="text-slate-400" />
-                            <span>Export</span>
+
+                        <button className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                            <Download size={20} />
                         </button>
                     </div>
                 </div>
-
-                {/* Filter Options Bar */}
-                <AnimatePresence>
-                    {isFilterVisible && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                        >
-                            <div className="p-6 bg-slate-50/50 rounded-[24px] border border-slate-200/50 flex flex-wrap gap-4 items-end">
-                                <div className="space-y-2 flex-1 min-w-[200px]">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Catégorie N1</label>
-                                    <select
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/10"
-                                        value={activeFilters.categoryId || ''}
-                                        onChange={(e) => setActiveFilters(prev => ({ ...prev, categoryId: e.target.value || undefined, subCategoryId: undefined, thirdLevelCategoryId: undefined }))}
-                                    >
-                                        <option value="">Toutes les catégories</option>
-                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                    </select>
-                                </div>
-
-                                {filterSubCategories.length > 0 && (
-                                    <div className="space-y-2 flex-1 min-w-[200px]">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Catégorie N2</label>
-                                        <select
-                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/10"
-                                            value={activeFilters.subCategoryId || ''}
-                                            onChange={(e) => setActiveFilters(prev => ({ ...prev, subCategoryId: e.target.value || undefined, thirdLevelCategoryId: undefined }))}
-                                        >
-                                            <option value="">Toutes les sous-catégories</option>
-                                            {filterSubCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                        </select>
-                                    </div>
-                                )}
-
-                                {filterThirdCategories.length > 0 && (
-                                    <div className="space-y-2 flex-1 min-w-[200px]">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Catégorie N3</label>
-                                        <select
-                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/10"
-                                            value={activeFilters.thirdLevelCategoryId || ''}
-                                            onChange={(e) => setActiveFilters(prev => ({ ...prev, thirdLevelCategoryId: e.target.value || undefined }))}
-                                        >
-                                            <option value="">Toutes les catégories N3</option>
-                                            {filterThirdCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                        </select>
-                                    </div>
-                                )}
-
-                                <div className="space-y-2 flex-1 min-w-[200px]">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Marque</label>
-                                    <select
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/10"
-                                        value={activeFilters.brandId || ''}
-                                        onChange={(e) => setActiveFilters(prev => ({ ...prev, brandId: e.target.value || undefined }))}
-                                    >
-                                        <option value="">Toutes les marques</option>
-                                        {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="space-y-2 flex-1 min-w-[200px]">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Statut Stock</label>
-                                    <select
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/10"
-                                        value={activeFilters.stockStatus || ''}
-                                        onChange={(e) => setActiveFilters(prev => ({ ...prev, stockStatus: (e.target.value || undefined) as any }))}
-                                    >
-                                        <option value="">Tous les statuts</option>
-                                        <option value="in_stock">En stock (&gt;10)</option>
-                                        <option value="low_stock">Stock faible (&lt;10)</option>
-                                        <option value="out_of_stock">Rupture (0)</option>
-                                    </select>
-                                </div>
-
-                                <button
-                                    onClick={() => {
-                                        setActiveFilters({});
-                                        setSearchQuery('');
-                                    }}
-                                    className="px-6 py-2.5 text-rose-500 font-bold text-[13px] hover:bg-rose-50 rounded-xl transition-all"
-                                >
-                                    Réinitialiser
-                                </button>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </div>
 
             {/* Premium Table Container */}
@@ -425,6 +383,7 @@ export default function ProductsPage() {
                                     <th className="px-6 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
                                         Produit
                                     </th>
+                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Réf.</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N1</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N2</th>
                                     <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N3</th>
@@ -439,7 +398,7 @@ export default function ProductsPage() {
                                 {/* Banner for Global Selection */}
                                 {selectedIds.length === products.length && total > products.length && !isGlobalSelected && (
                                     <tr>
-                                        <td colSpan={9} className="px-6 py-3 bg-orange-50 border-b border-orange-100 text-center">
+                                        <td colSpan={10} className="px-6 py-3 bg-orange-50 border-b border-orange-100 text-center">
                                             <p className="text-[13px] font-medium text-orange-800">
                                                 Les {products.length} produits de cette page sont sélectionnés.
                                                 <button
@@ -454,7 +413,7 @@ export default function ProductsPage() {
                                 )}
                                 {isGlobalSelected && (
                                     <tr>
-                                        <td colSpan={9} className="px-6 py-3 bg-orange-100 border-b border-orange-200 text-center">
+                                        <td colSpan={10} className="px-6 py-3 bg-orange-100 border-b border-orange-200 text-center">
                                             <p className="text-[13px] font-black text-orange-900">
                                                 ⚠️ Sélection globale active : TOUS les {total} produits du catalogue sont sélectionnés.
                                                 <button
@@ -508,6 +467,9 @@ export default function ProductsPage() {
                                                     <p className="text-[11px] text-slate-400 font-medium font-mono uppercase truncate">{p.brand?.name || 'Marque No Name'}</p>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td className="px-4 py-4 border-b border-slate-50">
+                                            <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">{p.reference || '-'}</span>
                                         </td>
                                         <td className="px-4 py-4 border-b border-slate-50">
                                             <span className="inline-flex px-3 py-1 rounded-lg bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-tight">
@@ -583,7 +545,7 @@ export default function ProductsPage() {
                                 ))}
                                 {products.length === 0 && (
                                     <tr>
-                                        <td colSpan={9} className="px-10 py-16 text-center text-slate-400 font-bold text-[14px]">
+                                        <td colSpan={10} className="px-10 py-16 text-center text-slate-400 font-bold text-[14px]">
                                             Aucun produit trouvé selon vos critères.
                                         </td>
                                     </tr>

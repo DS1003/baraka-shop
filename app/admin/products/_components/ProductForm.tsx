@@ -282,7 +282,14 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <ArrowLeft size={18} />
                     </button>
                     <div>
-                        <h3 className="text-[20px] font-bold text-slate-900">{editingProduct ? 'Modifier' : 'Ajouter un'} Produit</h3>
+                        <div className="flex items-center gap-3">
+                            <h3 className="text-[20px] font-bold text-slate-900">{editingProduct ? 'Modifier' : 'Ajouter un'} Produit</h3>
+                            {editingProduct?.reference && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">
+                                    REF: {editingProduct.reference}
+                                </span>
+                            )}
+                        </div>
                         <p className="text-[12px] text-slate-400 font-medium">Configurez les détails techniques du produit.</p>
                     </div>
                 </div>
@@ -295,7 +302,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         Informations de Base
                     </h4>
                     <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2 col-span-2">
+                        <div className={editingProduct?.reference ? "space-y-2 col-span-1" : "space-y-2 col-span-2"}>
                             <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Nom du Produit</label>
                             <input
                                 name="name"
@@ -305,6 +312,16 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 placeholder="Ex: Abaya Silk Premium"
                             />
                         </div>
+                        {editingProduct?.reference && (
+                            <div className="space-y-2 col-span-1">
+                                <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Référence</label>
+                                <input
+                                    value={editingProduct.reference}
+                                    readOnly
+                                    className="w-full px-5 py-3.5 bg-slate-100 border border-slate-200 rounded-2xl font-mono font-bold text-slate-500 cursor-not-allowed"
+                                />
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Prix (F CFA)</label>
                             <input

@@ -202,6 +202,11 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider">
                             {product.category?.name || product.category}
                         </div>
+                        {product.reference && (
+                            <div className="px-3 py-1 bg-gray-50 border border-gray-100 rounded-xl">
+                                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider">Réf: {product.reference}</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-6 md:gap-8 mb-3 md:mb-4 pb-3 md:pb-4 border-b border-gray-100/60">
