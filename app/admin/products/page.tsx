@@ -31,6 +31,7 @@ import {
     GripVertical
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import {
     getAdminProducts,
@@ -67,6 +68,11 @@ export default function ProductsPage() {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isGlobalSelected, setIsGlobalSelected] = useState(false);
     const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Filters
     const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -276,37 +282,37 @@ export default function ProductsPage() {
     // Removed local KPI calculations - now using 'stats' from server
 
     return (
-        <div className="space-y-12">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-2 border-b border-slate-200/40">
-                <div className="space-y-1.5">
-                    <h1 className="text-[36px] font-bold text-slate-900 tracking-tight leading-tight">
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-slate-200/40">
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                         Gestion <span className="text-orange-600">Catalogue.</span>
                     </h1>
-                    <p className="text-[15px] text-slate-500 font-medium">
+                    <p className="text-[13px] text-slate-400 font-medium">
                         Administrez vos produits et optimisez votre inventaire digital.
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <Link
                         href="/admin/products/import"
-                        className="flex items-center gap-2.5 px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-[13px] hover:bg-slate-50 transition-all shadow-sm"
+                        className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 font-bold text-[12px] hover:bg-slate-50 transition-all shadow-sm"
                     >
-                        <Upload size={18} className="text-slate-400" />
+                        <Upload size={16} className="text-slate-400" />
                         <span>Importer CSV</span>
                     </Link>
                     <button
                         onClick={handleBulkDelete}
-                        className="flex items-center gap-2.5 px-5 py-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 font-bold text-[13px] hover:bg-rose-100 transition-all shadow-sm"
+                        className="flex items-center gap-2 px-3 py-2 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 font-bold text-[12px] hover:bg-rose-100 transition-all shadow-sm"
                     >
-                        <Trash2 size={18} />
+                        <Trash2 size={16} />
                         <span>Tout Vider</span>
                     </button>
                     <Link
                         href="/admin/products/new"
-                        className="flex items-center gap-3 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold text-[13px] hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-200 transition-all shadow-lg shadow-orange-100 group"
+                        className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg font-bold text-[12px] hover:bg-orange-700 transition-all shadow-lg shadow-orange-100 group"
                     >
-                        <Plus size={20} />
+                        <Plus size={18} />
                         <span>Nouveau Produit</span>
                     </Link>
                 </div>
@@ -323,23 +329,23 @@ export default function ProductsPage() {
             )}
 
             {/* Tools & Search Bar */}
-            <div className="space-y-4">
-                <div className="flex flex-col xl:flex-row gap-4 items-stretch">
+            <div className="space-y-3">
+                <div className="flex flex-col xl:flex-row gap-3 items-stretch">
                     <div className="relative flex-1 group">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={18} />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={16} />
                         <input
                             type="text"
                             placeholder="Rechercher par nom, SKU..."
-                            className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm placeholder:text-slate-400"
+                            className="w-full pl-11 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm placeholder:text-slate-400"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex-1 min-w-[160px]">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex-1 min-w-[150px]">
                             <select
-                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                 value={activeFilters.categoryId || ''}
                                 onChange={(e) => setActiveFilters(prev => ({ ...prev, categoryId: e.target.value || undefined, subCategoryId: undefined, thirdLevelCategoryId: undefined }))}
                             >
@@ -349,9 +355,9 @@ export default function ProductsPage() {
                         </div>
 
                         {filterSubCategories.length > 0 && (
-                            <div className="flex-1 min-w-[160px]">
+                            <div className="flex-1 min-w-[150px]">
                                 <select
-                                    className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                    className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                     value={activeFilters.subCategoryId || ''}
                                     onChange={(e) => setActiveFilters(prev => ({ ...prev, subCategoryId: e.target.value || undefined, thirdLevelCategoryId: undefined }))}
                                 >
@@ -361,9 +367,9 @@ export default function ProductsPage() {
                             </div>
                         )}
 
-                        <div className="flex-1 min-w-[140px]">
+                        <div className="flex-1 min-w-[130px]">
                             <select
-                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                 value={activeFilters.brandId || ''}
                                 onChange={(e) => setActiveFilters(prev => ({ ...prev, brandId: e.target.value || undefined }))}
                             >
@@ -372,9 +378,9 @@ export default function ProductsPage() {
                             </select>
                         </div>
 
-                        <div className="flex-1 min-w-[140px]">
+                        <div className="flex-1 min-w-[130px]">
                             <select
-                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                 value={activeFilters.stockStatus || ''}
                                 onChange={(e) => setActiveFilters(prev => ({ ...prev, stockStatus: (e.target.value || undefined) as any }))}
                             >
@@ -385,9 +391,9 @@ export default function ProductsPage() {
                             </select>
                         </div>
 
-                        <div className="flex-1 min-w-[140px]">
+                        <div className="flex-1 min-w-[130px]">
                             <select
-                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                 value={activeFilters.publishStatus || ''}
                                 onChange={(e) => setActiveFilters(prev => ({ ...prev, publishStatus: (e.target.value || undefined) as any }))}
                             >
@@ -402,21 +408,21 @@ export default function ProductsPage() {
                                 setActiveFilters({});
                                 setSearchQuery('');
                             }}
-                            className="p-4 bg-slate-100 text-slate-500 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-transparent hover:border-rose-100"
+                            className="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-transparent hover:border-rose-100"
                             title="Réinitialiser"
                         >
-                            <X size={20} />
+                            <X size={18} />
                         </button>
 
-                        <button className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-                            <Download size={20} />
+                        <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+                            <Download size={18} />
                         </button>
                     </div>
                 </div>
             </div>
 
             {/* Premium Table Container */}
-            <div className="bg-white rounded-[24px] border border-slate-200/50 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.04)] overflow-hidden min-h-[400px]">
+            <div className="bg-white rounded-xl border border-slate-200/50 shadow-sm overflow-hidden min-h-[400px]">
                 {loading ? (
                     <div className="h-[400px] flex flex-col items-center justify-center text-slate-400 gap-4">
                         <Loader2 className="animate-spin text-orange-600" size={32} />
@@ -427,32 +433,32 @@ export default function ProductsPage() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50/50">
-                                    <th className="px-6 py-6 border-b border-slate-100 text-center w-16">
+                                    <th className="px-4 py-4 border-b border-slate-100 text-center w-12">
                                         <button
                                             onClick={toggleSelectAll}
-                                            className="w-6 h-6 rounded-md flex items-center justify-center transition-all bg-white border border-slate-200 text-slate-400 hover:border-orange-500 hover:text-orange-500"
+                                            className="w-5 h-5 rounded flex items-center justify-center transition-all bg-white border border-slate-200 text-slate-400 hover:border-orange-500 hover:text-orange-500"
                                         >
                                             {selectedIds.length === products.length && products.length > 0 ? (
-                                                <CheckSquare size={16} className="text-orange-600" />
+                                                <CheckSquare size={14} className="text-orange-600" />
                                             ) : selectedIds.length > 0 ? (
-                                                <div className="w-2 h-0.5 bg-orange-600 rounded-full" />
+                                                <div className="w-1.5 h-0.5 bg-orange-600 rounded-full" />
                                             ) : (
-                                                <Square size={16} />
+                                                <Square size={14} />
                                             )}
                                         </button>
                                     </th>
-                                    <th className="px-6 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                    <th className="px-4 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
                                         Produit
                                     </th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Réf.</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N1</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N2</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N3</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Boutique</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Prix</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Stock</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Status</th>
-                                    <th className="px-4 py-6 text-[12px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Actions</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Réf.</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N1</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N2</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Catégorie N3</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Boutique</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Prix</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Stock</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Status</th>
+                                    <th className="px-3 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -501,78 +507,78 @@ export default function ProductsPage() {
                                             setIsDetailOpen(true);
                                         }}
                                     >
-                                        <td className="px-6 py-4 text-center border-b border-slate-50">
+                                        <td className="px-4 py-3 text-center border-b border-slate-50">
                                             <button
                                                 onClick={() => toggleSelectOne(p.id)}
                                                 className={cn(
-                                                    "w-6 h-6 rounded-md flex items-center justify-center transition-all bg-white border",
+                                                    "w-5 h-5 rounded flex items-center justify-center transition-all bg-white border",
                                                     selectedIds.includes(p.id)
                                                         ? "border-orange-500 text-orange-500 shadow-sm"
                                                         : "border-slate-200 text-slate-300 group-hover:border-slate-300"
                                                 )}
                                             >
-                                                {selectedIds.includes(p.id) ? <Check size={14} strokeWidth={3} /> : <Square size={14} />}
+                                                {selectedIds.includes(p.id) ? <Check size={12} strokeWidth={3} /> : <Square size={12} />}
                                             </button>
                                         </td>
-                                        <td className="px-4 py-4 border-b border-slate-50">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200/50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-2 transition-transform duration-500 overflow-hidden shadow-sm">
+                                        <td className="px-3 py-3 border-b border-slate-50">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200/50 flex items-center justify-center flex-shrink-0 transition-transform duration-500 overflow-hidden">
                                                     {p.images?.[0] ? (
                                                         <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <ImageIcon size={18} className="text-slate-200" />
+                                                        <ImageIcon size={16} className="text-slate-200" />
                                                     )}
                                                 </div>
                                                 <div className="min-w-[150px]">
-                                                    <p className="text-[14px] font-bold text-slate-900 leading-snug mb-0.5 line-clamp-1">{p.name}</p>
-                                                    <p className="text-[11px] text-slate-400 font-medium font-mono uppercase truncate">{p.brand?.name || 'Marque No Name'}</p>
+                                                    <p className="text-[13px] font-bold text-slate-900 leading-snug mb-0.5 line-clamp-1">{p.name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-medium font-mono uppercase truncate">{p.brand?.name || 'Marque No Name'}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-4 border-b border-slate-50">
-                                            <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">{p.reference || '-'}</span>
+                                        <td className="px-3 py-3 border-b border-slate-50">
+                                            <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">{p.reference || '-'}</span>
                                         </td>
-                                        <td className="px-4 py-4 border-b border-slate-50">
-                                            <span className="inline-flex px-3 py-1 rounded-lg bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-tight">
+                                        <td className="px-3 py-3 border-b border-slate-50">
+                                            <span className="inline-flex px-2 py-0.5 rounded bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-tight">
                                                 {p.category?.name || '-'}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-4 border-b border-slate-50">
+                                        <td className="px-3 py-3 border-b border-slate-50">
                                             {p.subCategory ? (
-                                                <span className="inline-flex px-3 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 text-[10px] font-bold uppercase tracking-tight">
+                                                <span className="inline-flex px-2 py-0.5 rounded bg-slate-50 border border-slate-200/60 text-slate-600 text-[10px] font-bold uppercase tracking-tight">
                                                     {p.subCategory.name}
                                                 </span>
                                             ) : (
                                                 <span className="text-slate-300">-</span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 border-b border-slate-50">
+                                        <td className="px-3 py-3 border-b border-slate-50">
                                             {p.thirdLevelCategory ? (
-                                                <span className="inline-flex px-3 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-slate-600 text-[10px] font-bold uppercase tracking-tight">
+                                                <span className="inline-flex px-2 py-0.5 rounded bg-slate-50 border border-slate-200/60 text-slate-600 text-[10px] font-bold uppercase tracking-tight">
                                                     {p.thirdLevelCategory.name}
                                                 </span>
                                             ) : (
                                                 <span className="text-slate-300">-</span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 border-b border-slate-50">
+                                        <td className="px-3 py-3 border-b border-slate-50">
                                             {p.store ? (
-                                                <span className="inline-flex px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-tight">
+                                                <span className="inline-flex px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-tight">
                                                     {p.store.name}
                                                 </span>
                                             ) : (
                                                 <span className="text-slate-300">-</span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-4 text-right font-black text-slate-900 text-[15px] tabular-nums whitespace-nowrap border-b border-slate-50">
+                                        <td className="px-3 py-3 text-right font-bold text-slate-900 text-[14px] tabular-nums whitespace-nowrap border-b border-slate-50">
                                             {p.price.toLocaleString()} F
                                         </td>
-                                        <td className="px-4 py-4 border-b border-slate-50">
-                                            <div className="flex flex-col items-center gap-1.5">
+                                        <td className="px-3 py-3 border-b border-slate-50">
+                                            <div className="flex flex-col items-center gap-1">
                                                 <div className="flex items-center gap-1">
-                                                    <span className={cn("text-[13px] font-bold", p.stock < 10 ? "text-rose-600" : "text-slate-700")}>{p.stock}</span>
+                                                    <span className={cn("text-[12px] font-bold", p.stock < 10 ? "text-rose-600" : "text-slate-700")}>{p.stock}</span>
                                                 </div>
-                                                <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                                <div className="w-10 h-1 bg-slate-100 rounded-full overflow-hidden">
                                                     <div className={cn("h-full rounded-full transition-all duration-700", p.stock < 10 ? "bg-rose-500" : "bg-emerald-500")} style={{ width: `${Math.min(100, (p.stock / 50) * 100)}%` }} />
                                                 </div>
                                             </div>
@@ -602,18 +608,18 @@ export default function ProductsPage() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4 text-right border-b border-slate-50">
-                                            <div className="flex justify-end gap-2 pr-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300">
+                                            <div className="flex justify-end gap-1.5 pr-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300">
                                                 <Link
                                                     href={`/admin/products/${p.id}/edit`}
-                                                    className="p-2.5 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-white hover:text-orange-600 hover:shadow-md transition-all border border-transparent hover:border-slate-200"
+                                                    className="p-2 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-white hover:text-orange-600 hover:shadow-sm transition-all border border-transparent hover:border-slate-200"
                                                 >
-                                                    <Edit size={18} />
+                                                    <Edit size={16} />
                                                 </Link>
                                                 <button
                                                     onClick={() => handleDelete(p.id)}
-                                                    className="p-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-white hover:text-rose-600 hover:shadow-md transition-all border border-transparent hover:border-slate-200"
+                                                    className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-white hover:text-rose-600 hover:shadow-sm transition-all border border-transparent hover:border-slate-200"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -633,17 +639,17 @@ export default function ProductsPage() {
 
                 {/* Pagination Controls */}
                 {!loading && total > pageSize && (
-                    <div className="px-10 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-                        <p className="text-[13px] text-slate-500 font-medium">
+                    <div className="px-6 py-4 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between">
+                        <p className="text-[12px] text-slate-500 font-medium">
                             Affichage de <span className="font-bold text-slate-900">{(page - 1) * pageSize + 1}</span> à <span className="font-bold text-slate-900">{Math.min(page * pageSize, total)}</span> sur <span className="font-bold text-slate-900">{total}</span> produits
                         </p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                             <button
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
-                                <ChevronLeft size={20} />
+                                <ChevronLeft size={16} />
                             </button>
                             <div className="flex items-center gap-1">
                                 {(() => {
@@ -663,15 +669,15 @@ export default function ProductsPage() {
 
                                     return pages.map((pageNum, i) => (
                                         typeof pageNum === 'string' ? (
-                                            <span key={`dots-${i}`} className="w-10 h-10 flex items-center justify-center text-slate-400 font-bold">...</span>
+                                            <span key={`dots-${i}`} className="w-8 h-8 flex items-center justify-center text-slate-400 font-bold">...</span>
                                         ) : (
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setPage(pageNum)}
                                                 className={cn(
-                                                    "w-10 h-10 rounded-lg font-bold text-[13px] transition-all",
+                                                    "w-8 h-8 rounded-lg font-bold text-[12px] transition-all",
                                                     page === pageNum
-                                                        ? "bg-orange-600 text-white shadow-lg shadow-orange-200"
+                                                        ? "bg-orange-600 text-white shadow-sm"
                                                         : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
                                                 )}
                                             >
@@ -684,9 +690,9 @@ export default function ProductsPage() {
                             <button
                                 onClick={() => setPage(p => Math.min(Math.ceil(total / pageSize), p + 1))}
                                 disabled={page >= Math.ceil(total / pageSize)}
-                                className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
-                                <ChevronRight size={20} />
+                                <ChevronRight size={16} />
                             </button>
                         </div>
                     </div>
@@ -694,137 +700,140 @@ export default function ProductsPage() {
             </div>
 
             {/* Detail Modal */}
-            <AnimatePresence>
-                {isDetailOpen && detailProduct && (
-                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-6">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsDetailOpen(false)}
-                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 40 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 40 }}
-                            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[40px] shadow-2xl overflow-hidden relative z-10 flex flex-col md:flex-row"
-                        >
-                            {/* Left: Product Images */}
-                            <div className="md:w-1/2 bg-slate-50 p-8 flex flex-col gap-6 border-r border-slate-100 overflow-y-auto">
-                                <div className="aspect-square bg-white rounded-3xl border border-slate-200/50 flex items-center justify-center overflow-hidden shadow-inner">
-                                    {detailProduct.images?.[0] ? (
-                                        <img src={detailProduct.images[0]} alt={detailProduct.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <ImageIcon size={64} className="text-slate-200" />
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-4 gap-4">
-                                    {detailProduct.images?.slice(1).map((img: string, i: number) => (
-                                        <div key={i} className="aspect-square bg-white rounded-xl border border-slate-200/50 flex items-center justify-center overflow-hidden hover:border-orange-500 transition-all cursor-pointer">
-                                            <img src={img} alt="" className="w-full h-full object-cover" />
-                                        </div>
-                                    ))}
-                                    {(!detailProduct.images || detailProduct.images.length === 0) && (
-                                        <div className="col-span-4 py-8 text-center text-slate-400 font-bold text-[11px] uppercase tracking-widest bg-white border border-dashed border-slate-200 rounded-2xl">
-                                            Aucune image secondaire
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Right: Product Info */}
-                            <div className="md:w-1/2 p-10 flex flex-col justify-between overflow-y-auto">
-                                <div>
-                                    <div className="flex items-center justify-between mb-8">
-                                        <span className="px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                            Détails Produit
-                                        </span>
-                                        <button onClick={() => setIsDetailOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                            <X size={24} />
-                                        </button>
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {isDetailOpen && detailProduct && (
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsDetailOpen(false)}
+                                className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden relative z-10 flex flex-col md:flex-row"
+                            >
+                                {/* Left: Product Images */}
+                                <div className="md:w-1/2 bg-slate-50 p-8 flex flex-col gap-6 border-r border-slate-100 overflow-y-auto">
+                                    <div className="aspect-square bg-white rounded-3xl border border-slate-200/50 flex items-center justify-center overflow-hidden shadow-inner">
+                                        {detailProduct.images?.[0] ? (
+                                            <img src={detailProduct.images[0]} alt={detailProduct.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <ImageIcon size={64} className="text-slate-200" />
+                                        )}
                                     </div>
-
-                                    <h2 className="text-[32px] font-black text-slate-900 leading-tight mb-4">{detailProduct.name}</h2>
-
-                                    <div className="flex items-center gap-2 mb-8">
-                                        <p className="text-[28px] font-black text-orange-600">{detailProduct.price.toLocaleString()} F</p>
-                                        <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[13px] font-bold">CFA</span>
-                                    </div>
-
-                                    <div className="space-y-6 mb-10">
-                                        <div className="grid grid-cols-2 gap-8">
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Marque</p>
-                                                <p className="font-bold text-slate-700">{detailProduct.brand?.name || '-'}</p>
+                                    <div className="grid grid-cols-4 gap-4">
+                                        {detailProduct.images?.slice(1).map((img: string, i: number) => (
+                                            <div key={i} className="aspect-square bg-white rounded-xl border border-slate-200/50 flex items-center justify-center overflow-hidden hover:border-orange-500 transition-all cursor-pointer">
+                                                <img src={img} alt="" className="w-full h-full object-cover" />
                                             </div>
+                                        ))}
+                                        {(!detailProduct.images || detailProduct.images.length === 0) && (
+                                            <div className="col-span-4 py-8 text-center text-slate-400 font-bold text-[11px] uppercase tracking-widest bg-white border border-dashed border-slate-200 rounded-2xl">
+                                                Aucune image secondaire
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Right: Product Info */}
+                                <div className="md:w-1/2 p-10 flex flex-col justify-between overflow-y-auto">
+                                    <div>
+                                        <div className="flex items-center justify-between mb-8">
+                                            <span className="px-4 py-1.5 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                                Détails Produit
+                                            </span>
+                                            <button onClick={() => setIsDetailOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                                <X size={24} />
+                                            </button>
+                                        </div>
+
+                                        <h2 className="text-2xl font-black text-slate-900 leading-tight mb-4">{detailProduct.name}</h2>
+
+                                        <div className="flex items-center gap-2 mb-8">
+                                            <p className="text-[28px] font-black text-orange-600">{detailProduct.price.toLocaleString()} F</p>
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[13px] font-bold">CFA</span>
+                                        </div>
+
+                                        <div className="space-y-6 mb-10">
+                                            <div className="grid grid-cols-2 gap-8">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Marque</p>
+                                                    <p className="font-bold text-slate-700">{detailProduct.brand?.name || '-'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Stock</p>
+                                                    <p className={cn("font-bold", detailProduct.stock < 10 ? "text-rose-500" : "text-emerald-500")}>
+                                                        {detailProduct.stock} unités disponibles
+                                                    </p>
+                                                </div>
+                                            </div>
+
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Stock</p>
-                                                <p className={cn("font-bold", detailProduct.stock < 10 ? "text-rose-500" : "text-emerald-500")}>
-                                                    {detailProduct.stock} unités disponibles
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Hiérarchie Catégories</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700">{detailProduct.category?.name}</span>
+                                                    {detailProduct.subCategory && (
+                                                        <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700">{detailProduct.subCategory.name}</span>
+                                                    )}
+                                                    {detailProduct.thirdLevelCategory && (
+                                                        <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700">{detailProduct.thirdLevelCategory.name}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {detailProduct.shortDescription && (
+                                                <div>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description Courte</p>
+                                                    <p className="text-[13px] text-slate-600 font-medium italic">{detailProduct.shortDescription}</p>
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-wrap">Description Détaillée</p>
+                                                <p className="text-[14px] text-slate-500 font-medium leading-relaxed max-h-[100px] overflow-y-auto pr-4 scrollbar-thin">
+                                                    {detailProduct.description || 'Aucune description fournie.'}
                                                 </p>
                                             </div>
+
+                                            {Array.isArray(detailProduct.features) && detailProduct.features.length > 0 && (
+                                                <div>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Caractéristiques</p>
+                                                    <ul className="list-disc list-inside text-[13px] text-slate-600 font-medium space-y-1">
+                                                        {detailProduct.features.map((f: string, i: number) => <li key={i}>{f}</li>)}
+                                                    </ul>
+                                                </div>
+                                            )}
                                         </div>
+                                    </div>
 
-                                        <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Hiérarchie Catégories</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700">{detailProduct.category?.name}</span>
-                                                {detailProduct.subCategory && (
-                                                    <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700">{detailProduct.subCategory.name}</span>
-                                                )}
-                                                {detailProduct.thirdLevelCategory && (
-                                                    <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[12px] font-bold text-slate-700">{detailProduct.thirdLevelCategory.name}</span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {detailProduct.shortDescription && (
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description Courte</p>
-                                                <p className="text-[13px] text-slate-600 font-medium italic">{detailProduct.shortDescription}</p>
-                                            </div>
-                                        )}
-
-                                        <div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-wrap">Description Détaillée</p>
-                                            <p className="text-[14px] text-slate-500 font-medium leading-relaxed max-h-[100px] overflow-y-auto pr-4 scrollbar-thin">
-                                                {detailProduct.description || 'Aucune description fournie.'}
-                                            </p>
-                                        </div>
-
-                                        {Array.isArray(detailProduct.features) && detailProduct.features.length > 0 && (
-                                            <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Caractéristiques</p>
-                                                <ul className="list-disc list-inside text-[13px] text-slate-600 font-medium space-y-1">
-                                                    {detailProduct.features.map((f: string, i: number) => <li key={i}>{f}</li>)}
-                                                </ul>
-                                            </div>
-                                        )}
+                                    <div className="flex gap-4 border-t border-slate-100 pt-8 mt-auto">
+                                        <Link
+                                            href={`/admin/products/${detailProduct.id}/edit`}
+                                            className="flex-1 flex items-center justify-center gap-3 py-4 bg-slate-900 text-white rounded-2xl font-bold text-[14px] hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+                                        >
+                                            <Edit size={18} />
+                                            Modifier
+                                        </Link>
+                                        <button
+                                            onClick={() => { handleDelete(detailProduct.id); setIsDetailOpen(false); }}
+                                            className="flex-1 flex items-center justify-center gap-3 py-4 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl font-bold text-[14px] hover:bg-rose-100 transition-all"
+                                        >
+                                            <Trash2 size={18} />
+                                            Supprimer
+                                        </button>
                                     </div>
                                 </div>
-
-                                <div className="flex gap-4 border-t border-slate-100 pt-8 mt-auto">
-                                    <Link
-                                        href={`/admin/products/${detailProduct.id}/edit`}
-                                        className="flex-1 flex items-center justify-center gap-3 py-4 bg-slate-900 text-white rounded-2xl font-bold text-[14px] hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
-                                    >
-                                        <Edit size={18} />
-                                        Modifier
-                                    </Link>
-                                    <button
-                                        onClick={() => { handleDelete(detailProduct.id); setIsDetailOpen(false); }}
-                                        className="flex-1 flex items-center justify-center gap-3 py-4 bg-rose-50 text-rose-600 border border-rose-100 rounded-2xl font-bold text-[14px] hover:bg-rose-100 transition-all"
-                                    >
-                                        <Trash2 size={18} />
-                                        Supprimer
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
 
 
 
@@ -851,28 +860,28 @@ export default function ProductsPage() {
                                 <button
                                     onClick={() => handleBulkPublish(true)}
                                     disabled={isDeletingBulk}
-                                    className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-[13px] flex items-center gap-2.5 transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[12px] flex items-center gap-2 transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
                                 >
-                                    <Eye size={16} /> Publier
+                                    <Eye size={14} /> Publier
                                 </button>
                                 <button
                                     onClick={() => handleBulkPublish(false)}
                                     disabled={isDeletingBulk}
-                                    className="px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold text-[13px] flex items-center gap-2.5 transition-all shadow-lg shadow-slate-900/20 disabled:opacity-50"
+                                    className="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-bold text-[12px] flex items-center gap-2 transition-all shadow-lg shadow-slate-900/20 disabled:opacity-50"
                                 >
-                                    <X size={16} /> Cacher
+                                    <X size={14} /> Cacher
                                 </button>
                                 <button
                                     onClick={handleBulkDelete}
                                     disabled={isDeletingBulk}
-                                    className="px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-[13px] flex items-center gap-2.5 transition-all shadow-lg shadow-rose-900/20 disabled:opacity-50"
+                                    className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[12px] flex items-center gap-2 transition-all shadow-lg shadow-rose-900/20 disabled:opacity-50"
                                 >
-                                    {isDeletingBulk ? <Loader2 size={16} className="animate-spin" /> : <Trash size={16} />}
+                                    {isDeletingBulk ? <Loader2 size={14} className="animate-spin" /> : <Trash size={14} />}
                                     <span>Supprimer</span>
                                 </button>
                                 <button
                                     onClick={() => setSelectedIds([])}
-                                    className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-[13px] transition-all ml-4"
+                                    className="px-5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold text-[12px] transition-all ml-2"
                                 >
                                     Annuler
                                 </button>
@@ -888,16 +897,16 @@ export default function ProductsPage() {
 function ProductQuickStat({ label, value, trend, isPositiveTrend, icon: Icon, color }: any) {
     return (
         <motion.div
-            whileHover={{ y: -4, boxShadow: "0 15px 30px -10px rgba(0,0,0,0.05)" }}
-            className="p-6 bg-white border border-slate-200/50 rounded-[22px] shadow-[0_10px_30px_-15px_rgba(0,0,0,0.04)] flex flex-col gap-4 group transition-all"
+            whileHover={{ y: -2, boxShadow: "0 10px 20px -10px rgba(0,0,0,0.04)" }}
+            className="p-5 bg-white border border-slate-200/50 rounded-xl shadow-sm flex flex-col gap-3 group transition-all"
         >
             <div className="flex items-center justify-between">
-                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110", color)}>
-                    <Icon size={22} strokeWidth={2.5} />
+                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110", color)}>
+                    <Icon size={18} strokeWidth={2.5} />
                 </div>
                 {trend !== "0" && (
                     <span className={cn(
-                        "text-[11px] font-bold px-2 py-1 rounded-lg",
+                        "text-[10px] font-bold px-2 py-0.5 rounded-md",
                         isPositiveTrend ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
                     )}>
                         {trend}
@@ -905,8 +914,8 @@ function ProductQuickStat({ label, value, trend, isPositiveTrend, icon: Icon, co
                 )}
             </div>
             <div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
-                <h4 className="text-[24px] font-black text-slate-900 leading-none mt-1">{value}</h4>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+                <h4 className="text-[20px] font-black text-slate-900 leading-none mt-1">{value}</h4>
             </div>
         </motion.div>
     );

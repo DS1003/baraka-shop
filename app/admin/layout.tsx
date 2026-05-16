@@ -94,16 +94,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }, []);
 
     return (
-        <div className="flex h-screen bg-[#F8FAFC] overflow-hidden font-sans text-slate-900 selection:bg-orange-100 selection:text-orange-900">
+        <div className="flex h-screen bg-[#FDFDFD] overflow-hidden font-roboto text-slate-900 selection:bg-orange-100 selection:text-orange-900">
             {/* SaaS Minimalist Sidebar */}
             <motion.aside
-                animate={{ width: isSidebarCollapsed ? 80 : 260 }}
-                className="bg-[#F9FAFB] flex flex-col z-30 transition-all duration-300 ease-in-out relative border-r border-slate-200/60"
+                animate={{ width: isSidebarCollapsed ? 80 : 240 }}
+                className="bg-[#F8F9FA] flex flex-col z-30 transition-all duration-300 ease-in-out relative border-r border-slate-200/50"
             >
-                {/* Logo Section - High Profile */}
-                <div className="p-6 h-[88px] flex items-center justify-between">
+                {/* Logo Section - Compact */}
+                <div className="p-5 h-[72px] flex items-center justify-between border-b border-slate-200/40">
                     <Link href="/admin" className="flex items-center gap-3 overflow-hidden">
-                        <div className="flex-shrink-0 w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100/50 overflow-hidden p-1.5">
+                        <div className="flex-shrink-0 w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center shadow-sm overflow-hidden p-1">
                             <img
                                 src="https://baraka-shop-alpha.vercel.app/_next/image?url=https%3A%2F%2Fbaraka.sn%2Fwp-content%2Fuploads%2F2025%2F11%2FWhatsApp-Image-2025-08-30-at-22.56.22-2.png&w=2048&q=75"
                                 alt="Baraka Shop"
@@ -116,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 animate={{ opacity: 1, x: 0 }}
                                 className="flex flex-col whitespace-nowrap"
                             >
-                                <span className="font-bold text-[15px] text-slate-900 tracking-tight leading-none mb-1">
+                                <span className="font-bold text-[14px] text-slate-900 tracking-tight leading-none mb-0.5">
                                     Baraka Admin
                                 </span>
                                 <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none">
@@ -145,10 +145,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                             key={item.href}
                                             href={item.href}
                                             className={cn(
-                                                "flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 group relative",
+                                                "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
                                                 isActive
                                                     ? "bg-white text-orange-600 shadow-sm border border-slate-200/50 font-semibold"
-                                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/30"
+                                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/20"
                                             )}
                                         >
                                             <div
@@ -163,7 +163,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                 />
                                             </div>
                                             {!isSidebarCollapsed && (
-                                                <span className="text-[14px]">
+                                                <span className="text-[13.5px]">
                                                     {item.label}
                                                 </span>
                                             )}
@@ -185,10 +185,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="p-4 mt-auto border-t border-slate-200/50">
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="flex items-center gap-3.5 w-full px-4 py-2.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200 group"
+                        className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200 group"
                     >
-                        <LogOut size={18} strokeWidth={2} />
-                        {!isSidebarCollapsed && <span className="text-[14px] font-medium">Déconnexion</span>}
+                        <LogOut size={16} strokeWidth={2} />
+                        {!isSidebarCollapsed && <span className="text-[13px] font-medium">Déconnexion</span>}
                     </button>
 
                     <button
@@ -202,15 +202,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                {/* Elevated Topbar */}
-                <header className="h-[88px] flex items-center justify-between px-10 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 transition-all">
+                {/* Elevated Topbar - Compact */}
+                <header className="h-[72px] flex items-center justify-between px-8 z-20 bg-white border-b border-slate-200/50 transition-all">
                     <div className="flex-1 max-w-xl">
                         <div className="relative group flex items-center">
-                            <Search className="absolute left-4 text-slate-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" size={16} strokeWidth={2} />
+                            <Search className="absolute left-3.5 text-slate-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" size={14} strokeWidth={2} />
                             <input
                                 type="text"
                                 placeholder="Recherche globale..."
-                                className="w-full pl-11 pr-12 py-2.5 bg-slate-100/50 border border-transparent rounded-[14px] focus:outline-none focus:bg-white focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all text-[14px] font-medium placeholder:text-slate-400"
+                                className="w-full pl-10 pr-12 py-2 bg-slate-50 border border-slate-200/60 rounded-lg focus:outline-none focus:bg-white focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all text-[13px] font-medium placeholder:text-slate-400"
                             />
                             <div className="absolute right-4 flex items-center gap-1.5 text-slate-300 pointer-events-none border border-slate-200 rounded-lg px-2 py-0.5 bg-white">
                                 <Command size={10} strokeWidth={2.5} />
@@ -228,12 +228,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                         setIsProfileOpen(false);
                                     }}
                                     className={cn(
-                                        "relative w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                                        isNotificationsOpen ? "bg-orange-600 text-white shadow-lg shadow-orange-100" : "text-slate-500 hover:text-orange-600 hover:bg-white border border-transparent hover:border-slate-200"
+                                        "relative w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                                        isNotificationsOpen ? "bg-orange-600 text-white shadow-lg shadow-orange-100" : "text-slate-500 hover:text-orange-600 hover:bg-slate-50 border border-transparent hover:border-slate-200"
                                     )}
                                 >
-                                    <Bell size={20} strokeWidth={2} />
-                                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
+                                    <Bell size={18} strokeWidth={2} />
+                                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border-2 border-white" />
                                 </button>
 
                                 <AnimatePresence>
@@ -278,9 +278,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <Link
                                 href="/"
                                 target="_blank"
-                                className="hidden md:flex items-center gap-2.5 px-4 py-2.5 text-slate-500 hover:text-orange-900 hover:bg-slate-100 rounded-xl transition-all group font-medium text-[13px]"
+                                className="hidden md:flex items-center gap-2 px-3 py-2 text-slate-500 hover:text-orange-900 hover:bg-slate-50 rounded-lg transition-all group font-medium text-[12px]"
                             >
-                                <ExternalLink size={16} className="text-slate-400 group-hover:text-orange-500" />
+                                <ExternalLink size={14} className="text-slate-400 group-hover:text-orange-500" />
                                 <span>Voir le site</span>
                             </Link>
                         </div>
@@ -297,7 +297,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     <span className="text-[13px] font-bold text-slate-900 leading-none">Admin Baraka</span>
                                     <span className="text-[10px] text-slate-400 font-medium mt-1">Super Admin</span>
                                 </div>
-                                <div className="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center font-bold text-[13px] shadow-lg shadow-orange-100 group-hover:scale-105 transition-transform">
+                                <div className="w-9 h-9 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-[12px] shadow-lg shadow-orange-100 group-hover:scale-105 transition-transform">
                                     AB
                                 </div>
                             </button>

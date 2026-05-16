@@ -6,74 +6,58 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
-
 model User {
-  id            String    @id @default(uuid())
-  username      String?   @unique
-  email         String    @unique
-  password      String
-  role          Role      @default(USER)
-  image         String?
-  address       String?
-  phone         String?   @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  orders        Order[]
-  reviews       Review[]
-  wishlist      Product[] @relation("Wishlist")
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  role      Role      @default(USER)
+  image     String?
+  address   String?
+  phone     String?   @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  username  String?   @unique
+  metadata  Json?     @default("{}")
+  orders    Order[]
+  reviews   Review[]
+  wishlist  Product[] @relation("Wishlist")
 }
 
 model Product {
-  id            String       @id @default(uuid())
-  name          String
-  slug          String       @unique
-  reference     String?      @unique
-  description   String?
-  shortDescription String?
-  detailedDescription Json?    @default("[]")
-  features      Json?        @default("[]")
-  price         Float
-  oldPrice      Float?
-  stock         Int          @default(0)
-  images        String[]
-  category      Category     @relation(fields: [categoryId], references: [id])
-  categoryId    String
-  subCategory   SubCategory? @relation(fields: [subCategoryId], references: [id])
-  subCategoryId String?
-  thirdLevelCategory   ThirdLevelCategory? @relation(fields: [thirdLevelCategoryId], references: [id])
+  id                   String                @id @default(uuid())
+  name                 String
+  slug                 String                @unique
+  description          String?
+  price                Float
+  oldPrice             Float?
+  stock                Int                   @default(0)
+  images               String[]
+  categoryId           String
+  subCategoryId        String?
+  brandId              String?
+  isFeatured           Boolean               @default(false)
+  isNew                Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  metadata             Json?                 @default("{}")
   thirdLevelCategoryId String?
-  brand         Brand?       @relation(fields: [brandId], references: [id])
-  brandId       String?
-  isFeatured    Boolean      @default(false)
-  isNew         Boolean      @default(false)
-  isPublished   Boolean      @default(true)
-  metadata      Json?        @default("{}")
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-
-  store         Store?       @relation(fields: [storeId], references: [id])
-  storeId       String?
-
-  promotion     Promotion?   @relation(fields: [promotionId], references: [id], onDelete: SetNull)
-  promotionId   String?
-
-  reviews     Review[]
-  orderItems  OrderItem[]
-  favoritedBy User[]    @relation("Wishlist")
-  colorVariants ProductColorVariant[]
+  promotionId          String?
+  storeId              String?
+  features             Json?                 @default("[]")
+  shortDescription     String?
+  reference            String?               @unique
+  detailedDescription  Json?                 @default("[]")
+  isPublished          Boolean               @default(true)
+  orderItems           OrderItem[]
+  brand                Brand?                @relation(fields: [brandId], references: [id])
+  category             Category              @relation(fields: [categoryId], references: [id])
+  promotion            Promotion?            @relation(fields: [promotionId], references: [id])
+  store                Store?                @relation(fields: [storeId], references: [id])
+  subCategory          SubCategory?          @relation(fields: [subCategoryId], references: [id])
+  thirdLevelCategory   ThirdLevelCategory?   @relation(fields: [thirdLevelCategoryId], references: [id])
+  colorVariants        ProductColorVariant[]
+  reviews              Review[]
+  favoritedBy          User[]                @relation("Wishlist")
 
   @@index([name])
   @@index([slug])
@@ -90,11 +74,11 @@ model ProductColorVariant {
   colorName String
   colorHex  String
   images    String[]
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   position  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
 }
@@ -104,18 +88,18 @@ model Category {
   name          String        @unique
   slug          String        @unique
   image         String?
-  subCategories SubCategory[]
   products      Product[]
+  subCategories SubCategory[]
 }
 
 model SubCategory {
-  id         String    @id @default(uuid())
-  name       String
-  slug       String    @unique
-  category   Category  @relation(fields: [categoryId], references: [id])
-  categoryId String
+  id                   String               @id @default(uuid())
+  name                 String
+  slug                 String               @unique
+  categoryId           String
+  products             Product[]
+  category             Category             @relation(fields: [categoryId], references: [id])
   thirdLevelCategories ThirdLevelCategory[]
-  products   Product[]
 
   @@unique([name, categoryId])
 }
@@ -124,9 +108,9 @@ model ThirdLevelCategory {
   id            String      @id @default(uuid())
   name          String
   slug          String      @unique
-  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
   subCategoryId String
   products      Product[]
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
 
   @@unique([name, subCategoryId])
 }
@@ -141,50 +125,50 @@ model Brand {
 
 model Order {
   id             String      @id @default(uuid())
-  user           User        @relation(fields: [userId], references: [id])
   userId         String
   status         OrderStatus @default(PENDING)
   total          Float
   paymentMethod  String?
-  deliveryMethod String?     // "livraison" or "retrait"
-  deliveryZone   String?     // Zone name chosen by customer
-  shippingCost   Float?      @default(0)
-  items          OrderItem[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+  deliveryMethod String?
+  deliveryZone   String?
+  shippingCost   Float?      @default(0)
+  user           User        @relation(fields: [userId], references: [id])
+  items          OrderItem[]
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
-  order     Order   @relation(fields: [orderId], references: [id])
-  orderId   String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId String
-  quantity  Int
-  price     Float
+  id            String  @id @default(uuid())
+  orderId       String
+  productId     String
+  quantity      Int
+  price         Float
   selectedColor String?
+  order         Order   @relation(fields: [orderId], references: [id])
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Review {
   id        String   @id @default(uuid())
   rating    Int
   comment   String?
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model ImportJob {
-  id            String   @id @default(uuid())
-  status        String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, PAUSED, CANCELLED
-  progress      Int      @default(0)
-  totalItems    Int      @default(0)
+  id             String   @id @default(uuid())
+  status         String   @default("PENDING")
+  progress       Int      @default(0)
+  totalItems     Int      @default(0)
   processedItems Int      @default(0)
-  error         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Media {
@@ -194,7 +178,7 @@ model Media {
   publicId  String   @unique
   format    String?
   size      Int?
-  type      String   @default("image") // image, video, raw
+  type      String   @default("image")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -203,14 +187,14 @@ model Media {
 
 model MediaJob {
   id             String   @id @default(uuid())
-  status         String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  status         String   @default("PENDING")
   progress       Int      @default(0)
   totalItems     Int      @default(0)
   processedItems Int      @default(0)
   matchedCount   Int      @default(0)
   error          String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Promotion {
@@ -223,7 +207,6 @@ model Promotion {
   isActive           Boolean   @default(true)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
-
   products           Product[]
 }
 
@@ -232,12 +215,12 @@ model Store {
   name        String    @unique
   slug        String    @unique
   logo        String?
-  logo_detail String?
-  banner      String?
   description String?
-  products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  banner      String?
+  logo_detail String?
+  products    Product[]
 }
 
 model PopularUniverse {
@@ -279,4 +262,17 @@ model BigBanner {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }

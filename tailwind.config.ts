@@ -98,6 +98,11 @@ const config: Config = {
                 "fade-in-up": "fade-in-up 0.8s ease-out forwards",
                 "float": "float 6s ease-in-out infinite",
             },
+            fontFamily: {
+                sans: ["var(--font-inter)", "ui-sans-serif", "system-ui"],
+                montserrat: ["var(--font-montserrat)"],
+                roboto: ["var(--font-roboto)", "sans-serif"],
+            },
         },
     },
     plugins: [],

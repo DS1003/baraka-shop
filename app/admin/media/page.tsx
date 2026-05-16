@@ -136,11 +136,11 @@ export default function MediaPage() {
         <div className="space-y-12 pb-20" suppressHydrationWarning>
             {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-2 border-b border-slate-200/40" suppressHydrationWarning>
-                <div className="space-y-1.5" suppressHydrationWarning>
-                    <h1 className="text-[36px] font-bold text-slate-900 tracking-tight leading-tight">
+                <div className="space-y-1" suppressHydrationWarning>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">
                         Médiathèque <span className="text-orange-600">Assets.</span>
                     </h1>
-                    <p className="text-[15px] text-slate-500 font-medium">
+                    <p className="text-[13px] text-slate-500 font-medium">
                         Centralisez et organisez toutes vos ressources visuelles et documents.
                     </p>
                 </div>
@@ -149,14 +149,14 @@ export default function MediaPage() {
                     <button
                         onClick={handleStartMatching}
                         disabled={isStartingJob || matchingJob?.status === 'PROCESSING'}
-                        className="flex items-center gap-2.5 px-5 py-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 font-bold text-[13px] hover:bg-amber-100 transition-all shadow-sm disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 font-bold text-[12px] hover:bg-amber-100 transition-all shadow-sm disabled:opacity-50"
                     >
                         {isStartingJob || matchingJob?.status === 'PROCESSING' ? (
-                            <Loader2 size={18} className="animate-spin" />
+                            <Loader2 size={16} className="animate-spin" />
                         ) : (
-                            <Zap size={18} fill="currentColor" />
+                            <Zap size={16} fill="currentColor" />
                         )}
-                        <span>{matchingJob?.status === 'PROCESSING' ? 'Matching en cours...' : 'Lancer le Matching'}</span>
+                        <span>{matchingJob?.status === 'PROCESSING' ? 'Matching...' : 'Matching IA'}</span>
                     </button>
 
                     <input
@@ -171,9 +171,9 @@ export default function MediaPage() {
                     <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        className="flex items-center gap-3 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold text-[13px] hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-200 transition-all shadow-lg shadow-orange-100 group disabled:opacity-50"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-orange-600 text-white rounded-lg font-bold text-[12px] hover:bg-orange-700 hover:shadow-xl transition-all shadow-lg shadow-orange-100 group disabled:opacity-50"
                     >
-                        {isUploading ? <Loader2 size={18} className="animate-spin" /> : <CloudUpload size={18} />}
+                        {isUploading ? <Loader2 size={16} className="animate-spin" /> : <CloudUpload size={16} />}
                         <span>{isUploading ? 'Envoi...' : 'Téléverser'}</span>
                     </button>
                 </div>
@@ -181,14 +181,14 @@ export default function MediaPage() {
 
             {/* Matching Job Status Banner */}
             {matchingJob && matchingJob.status === 'PROCESSING' && (
-                <div className="bg-amber-50 border border-amber-100 rounded-[32px] p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                    <div className="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-200 animate-pulse">
-                        <Zap size={32} fill="currentColor" />
+                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 shadow-sm">
+                    <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-200 animate-pulse">
+                        <Zap size={24} fill="currentColor" />
                     </div>
-                    <div className="flex-1 space-y-3 w-full">
+                    <div className="flex-1 space-y-2 w-full">
                         <div className="flex justify-between items-end">
                             <div>
-                                <h4 className="text-[16px] font-black text-amber-900 tracking-tight">Intelligence Artificielle de Matching en cours...</h4>
+                                <h4 className="text-[14px] font-bold text-amber-900 tracking-tight">Intelligence Artificielle de Matching en cours...</h4>
                                 <p className="text-[12px] text-amber-600 font-bold uppercase tracking-widest mt-0.5">
                                     Analyse : {matchingJob.processedItems} / {matchingJob.totalItems} Produits — <span className="text-emerald-600">{matchingJob.matchedCount} Associés</span>
                                 </p>
@@ -207,12 +207,12 @@ export default function MediaPage() {
             )}
 
             {/* Storage Insight */}
-            <div className="bg-white p-8 rounded-[32px] border border-slate-200/50 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.04)] flex flex-col md:flex-row items-center gap-10">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200/50 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.04)] flex flex-col md:flex-row items-center gap-8">
                 <div className="flex-1 space-y-4 w-full">
                     <div className="flex justify-between items-end mb-2">
                         <div>
-                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">UTILISATION STOCKAGE</p>
-                            <h4 className="text-[20px] font-black text-slate-900">12.4 GB <span className="text-slate-300">/ 50 GB</span></h4>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">UTILISATION STOCKAGE</p>
+                            <h4 className="text-[18px] font-black text-slate-900">12.4 GB <span className="text-slate-300">/ 50 GB</span></h4>
                         </div>
                         <span className="text-[13px] font-bold text-orange-600">25% utilisé</span>
                     </div>
@@ -230,10 +230,10 @@ export default function MediaPage() {
                 <div className="h-16 w-px bg-slate-100 hidden md:block" />
                 <div className="flex gap-6">
                     <button className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-600 transition-all border border-transparent group-hover:border-orange-100">
-                            <Settings size={20} />
+                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-orange-50 group-hover:text-orange-600 transition-all border border-transparent group-hover:border-orange-100">
+                            <Settings size={18} />
                         </div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gérer</span>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gérer</span>
                     </button>
                 </div>
             </div>
@@ -241,11 +241,11 @@ export default function MediaPage() {
             {/* Browser Controls */}
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
                 <div className="relative flex-1 w-full max-w-xl group">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={16} />
                     <input
                         type="text"
                         placeholder="Rechercher par nom de fichier, tag ou type..."
-                        className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm placeholder:text-slate-400"
+                        className="w-full pl-11 pr-5 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm placeholder:text-slate-400"
                     />
                 </div>
 
@@ -288,11 +288,11 @@ export default function MediaPage() {
                     mediaItems.map((item, i) => (
                         <motion.div
                             key={item.id}
-                            whileHover={{ y: -6, boxShadow: "0 25px 40px -20px rgba(0,0,0,0.06)" }}
+                            whileHover={{ y: -4, boxShadow: "0 15px 30px -15px rgba(0,0,0,0.06)" }}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: i * 0.02 }}
-                            className="bg-white rounded-[24px] border border-slate-200/60 shadow-sm group overflow-hidden relative active:scale-95 transition-all"
+                            className="bg-white rounded-xl border border-slate-200/60 shadow-sm group overflow-hidden relative active:scale-95 transition-all"
                         >
                             <div className="aspect-square bg-slate-50 relative overflow-hidden flex items-center justify-center">
                                 {item.type === 'image' || item.format === 'jpg' || item.format === 'png' || item.format === 'webp' ? (
@@ -300,8 +300,8 @@ export default function MediaPage() {
                                         <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
                                     </div>
                                 ) : (
-                                    <div className="w-16 h-16 bg-white border border-slate-200 rounded-2xl flex items-center justify-center text-orange-600 shadow-lg group-hover:rotate-12 transition-transform duration-500">
-                                        <FileText size={32} />
+                                    <div className="w-12 h-12 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-orange-600 shadow-lg group-hover:rotate-12 transition-transform duration-500">
+                                        <FileText size={24} />
                                     </div>
                                 )}
 
@@ -328,16 +328,16 @@ export default function MediaPage() {
                 <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="aspect-square border-2 border-dashed border-slate-200 rounded-[24px] flex flex-col items-center justify-center gap-4 group hover:border-orange-300 hover:bg-orange-50/20 transition-all duration-500 disabled:opacity-50"
+                    className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center gap-3 group hover:border-orange-300 hover:bg-orange-50/20 transition-all duration-500 disabled:opacity-50"
                 >
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg shadow-slate-100 border border-slate-200 group-hover:scale-110 group-hover:rotate-12 transition-all">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg shadow-slate-100 border border-slate-200 group-hover:scale-110 group-hover:rotate-12 transition-all">
                         {isUploading ? (
-                            <Loader2 size={32} className="text-orange-600 animate-spin" />
+                            <Loader2 size={24} className="text-orange-600 animate-spin" />
                         ) : (
-                            <Plus size={32} className="text-slate-400 group-hover:text-orange-600 transition-colors" />
+                            <Plus size={24} className="text-slate-400 group-hover:text-orange-600 transition-colors" />
                         )}
                     </div>
-                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         {isUploading ? 'Chargement...' : 'Ajouter Asset'}
                     </span>
                 </button>

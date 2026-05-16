@@ -271,88 +271,88 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     };
 
     return (
-        <form onSubmit={handleUpsert} className="bg-white rounded-[32px] shadow-sm border border-slate-200/50 flex flex-col max-w-5xl mx-auto overflow-hidden">
-            <div className="p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+        <form onSubmit={handleUpsert} className="bg-white rounded-2xl shadow-sm border border-slate-200/50 flex flex-col max-w-5xl mx-auto overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
                 <div className="flex items-center gap-4">
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-orange-600 transition-colors shadow-sm"
+                        className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-orange-600 transition-colors shadow-sm"
                     >
-                        <ArrowLeft size={18} />
+                        <ArrowLeft size={16} />
                     </button>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h3 className="text-[20px] font-bold text-slate-900">{editingProduct ? 'Modifier' : 'Ajouter un'} Produit</h3>
+                            <h3 className="text-[18px] font-bold text-slate-900">{editingProduct ? 'Modifier' : 'Ajouter un'} Produit</h3>
                             {editingProduct?.reference && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200 rounded-lg text-[11px] font-mono font-bold text-slate-500 uppercase tracking-wider">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">
                                     REF: {editingProduct.reference}
                                 </span>
                             )}
                         </div>
-                        <p className="text-[12px] text-slate-400 font-medium">Configurez les détails techniques du produit.</p>
+                        <p className="text-[11px] text-slate-400 font-medium">Configurez les détails techniques du produit.</p>
                     </div>
                 </div>
             </div>
 
-            <div className="p-8 space-y-10">
-                <section className="space-y-6">
-                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
+            <div className="p-6 space-y-8">
+                <section className="space-y-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
                         Informations de Base
                     </h4>
                     <div className="grid grid-cols-2 gap-6">
-                        <div className={editingProduct?.reference ? "space-y-2 col-span-1" : "space-y-2 col-span-2"}>
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Nom du Produit</label>
+                        <div className={editingProduct?.reference ? "space-y-1.5 col-span-1" : "space-y-1.5 col-span-2"}>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nom du Produit</label>
                             <input
                                 name="name"
                                 defaultValue={editingProduct?.name}
                                 required
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-[13px]"
                                 placeholder="Ex: Abaya Silk Premium"
                             />
                         </div>
                         {editingProduct?.reference && (
-                            <div className="space-y-2 col-span-1">
-                                <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Référence</label>
+                            <div className="space-y-1.5 col-span-1">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Référence</label>
                                 <input
                                     value={editingProduct.reference}
                                     readOnly
-                                    className="w-full px-5 py-3.5 bg-slate-100 border border-slate-200 rounded-2xl font-mono font-bold text-slate-500 cursor-not-allowed"
+                                    className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg font-mono font-bold text-slate-500 cursor-not-allowed text-[13px]"
                                 />
                             </div>
                         )}
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Prix (F CFA)</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prix (F CFA)</label>
                             <input
                                 name="price"
                                 type="number"
                                 defaultValue={editingProduct?.price}
                                 required
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-[13px]"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Stock Initial</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Stock Initial</label>
                             <input
                                 name="stock"
                                 type="number"
                                 defaultValue={editingProduct?.stock}
                                 required
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-[13px]"
                             />
                         </div>
                     </div>
                 </section>
 
-                <section className="space-y-6">
-                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
+                <section className="space-y-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
                         Catégorisation & Marque
                     </h4>
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Catégorie (L1)</label>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Catégorie (L1)</label>
                             <select
                                 key={`cat-${categories.length}`}
                                 name="categoryId"
@@ -366,15 +366,15 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     getSubCategories(catId).then(setSubCategories);
                                     setThirdCategories([]);
                                 }}
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
                             >
                                 <option value="">Sélectionner</option>
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Sous-catégorie (L2)</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sous-catégorie (L2)</label>
                             <select
                                 key={`subcat-${subCategories.length}`}
                                 name="subCategoryId"
@@ -386,49 +386,49 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     if (subId) getThirdLevelCategories(subId).then(setThirdCategories);
                                     else setThirdCategories([]);
                                 }}
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
                             >
                                 <option value="">Aucune</option>
                                 {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Sous-sous (L3)</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sous-sous (L3)</label>
                             <select
                                 key={`thirdcat-${thirdCategories.length}`}
                                 name="thirdLevelCategoryId"
                                 value={thirdLevelCategoryId}
                                 onChange={(e) => setThirdLevelCategoryId(e.target.value)}
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
                             >
                                 <option value="">Aucune</option>
                                 {thirdCategories.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                             </select>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Marque</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Marque</label>
                             <select
                                 key={`brand-${brands.length}`}
                                 name="brandId"
                                 value={brandId}
                                 onChange={(e) => setBrandId(e.target.value)}
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
                             >
                                 <option value="">Aucune</option>
                                 {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                             </select>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Boutique (Vendor)</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Boutique (Vendor)</label>
                             <select
                                 key={`store-${stores.length}`}
                                 name="storeId"
                                 value={storeId}
                                 onChange={(e) => setStoreId(e.target.value)}
-                                className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
                             >
                                 <option value="">Aucune (Baraka General)</option>
                                 {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -437,9 +437,9 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     </div>
                 </section>
 
-                <section className="space-y-6">
-                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
+                <section className="space-y-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
                         Photo de mise en avant du produit
                     </h4>
 
@@ -465,9 +465,9 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             }}
                             onClick={() => fileInputRef.current?.click()}
                             className={cn(
-                                "relative py-10 border-2 border-dashed rounded-[24px] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300",
+                                "relative py-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300",
                                 isDragging
-                                    ? "border-orange-500 bg-orange-50/80 scale-[1.02] shadow-lg shadow-orange-100"
+                                    ? "border-orange-500 bg-orange-50/80 scale-[1.01]"
                                     : "border-slate-200 bg-slate-50/50 hover:border-orange-300 hover:bg-orange-50/30",
                                 isUploading && "pointer-events-none opacity-60"
                             )}
@@ -519,7 +519,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         </div>
 
                         {formImages.length > 0 && (
-                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 bg-slate-50 p-6 rounded-[24px] border border-slate-200/50">
+                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/50">
                                 {formImages.map((img, i) => (
                                     <div key={i} className="relative aspect-square group">
                                         <div className="w-full h-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
@@ -544,10 +544,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     </div>
                 </section>
 
-                <section className="space-y-6">
+                <section className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
+                        <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                            <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
                             Variantes de Couleur
                         </h4>
                         <button
@@ -556,18 +556,18 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 setColorVariants(prev => [...prev, { colorName: '', colorHex: '#000000', images: [] }]);
                                 setActiveColorIdx(colorVariants.length);
                             }}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl text-[12px] font-bold hover:bg-orange-100 transition-all border border-orange-200/50"
+                            className="flex items-center justify-center gap-2 px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-[11px] font-bold hover:bg-orange-100 transition-all border border-orange-200/50"
                         >
-                            <Plus size={14} />
+                            <Plus size={12} />
                             Ajouter une couleur
                         </button>
                     </div>
 
                     {colorVariants.length === 0 ? (
-                        <div className="py-8 text-center text-slate-400 bg-slate-50/50 rounded-[20px] border border-dashed border-slate-200">
-                            <Palette size={28} className="mx-auto mb-2 text-slate-300" />
-                            <p className="text-[13px] font-bold">Aucune variante de couleur</p>
-                            <p className="text-[11px] text-slate-400 mt-1">Les photos principales seront utilisées pour toutes les couleurs.</p>
+                        <div className="py-6 text-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                            <Palette size={24} className="mx-auto mb-2 text-slate-300" />
+                            <p className="text-[12px] font-bold">Aucune variante de couleur</p>
+                            <p className="text-[10px] text-slate-400 mt-1">Les photos principales seront utilisées pour toutes les couleurs.</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -577,9 +577,9 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                         key={idx}
                                         onClick={() => setActiveColorIdx(activeColorIdx === idx ? null : idx)}
                                         className={cn(
-                                            "flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-[12px] font-bold transition-all border cursor-pointer",
+                                            "flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-bold transition-all border cursor-pointer",
                                             activeColorIdx === idx
-                                                ? "bg-white border-orange-300 text-orange-700 shadow-md shadow-orange-100"
+                                                ? "bg-white border-orange-300 text-orange-700 shadow-sm shadow-orange-100"
                                                 : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300"
                                         )}
                                     >
@@ -612,7 +612,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
-                                        className="bg-slate-50/80 rounded-[20px] border border-slate-200/50 p-6 space-y-5"
+                                        className="bg-slate-50/80 rounded-xl border border-slate-200/50 p-5 space-y-4"
                                     >
                                         <div className="space-y-2 relative">
                                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Choisir une couleur</label>
@@ -621,7 +621,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                     type="button"
                                                     onClick={() => { setColorDropdownOpen(!colorDropdownOpen); setColorSearch(''); }}
                                                     className={cn(
-                                                        "w-full flex items-center gap-3 px-4 py-3 bg-white border rounded-xl text-left transition-all",
+                                                        "w-full flex items-center gap-3 px-4 py-2 bg-white border rounded-lg text-left transition-all",
                                                         colorDropdownOpen ? "border-orange-400 ring-4 ring-orange-500/10" : "border-slate-200 hover:border-slate-300"
                                                     )}
                                                 >
@@ -809,26 +809,26 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     )}
                 </section>
 
-                <section className="space-y-6">
-                    <h4 className="text-[12px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-4 h-[2px] bg-orange-500 rounded-full" />
+                <section className="space-y-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
                         Contenu Détaillé
                     </h4>
                     
-                    <div className="space-y-2">
-                        <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Courte</label>
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Courte</label>
                         <textarea
                             name="shortDescription"
                             defaultValue={editingProduct?.shortDescription}
                             rows={2}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed text-[13px]"
                             placeholder="Résumé accrocheur pour le haut de page..."
                         />
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Classique (HTML)</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Classique (HTML)</label>
                         </div>
                         <RichTextEditor
                             name="description"
@@ -836,10 +836,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         />
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Description Visuelle (Style Apple/Logitech)</label>
-                            <span className="text-[10px] font-medium text-slate-400 italic">Glissez-déposez les blocs pour réorganiser</span>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Visuelle (Apple Style)</label>
+                            <span className="text-[9px] font-medium text-slate-400 italic">Glissez-déposez pour réorganiser</span>
                         </div>
                         <ProductDescriptionBuilder 
                             initialData={detailedDescription}
@@ -847,19 +847,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Caractéristiques (1 par ligne)</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Caractéristiques (1 par ligne)</label>
                             <textarea
                                 name="features"
                                 defaultValue={Array.isArray(editingProduct?.features) ? editingProduct.features.join('\n') : ""}
                                 rows={6}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[13px]"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
                                 placeholder="Ex: Coton 100%&#10;Lavage 30°C&#10;Coupe ajustée"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Fiche Technique (1 par ligne)</label>
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fiche Technique (Key: Value)</label>
                             <textarea
                                 name="metadata"
                                 defaultValue={editingProduct?.metadata 
@@ -870,27 +870,27 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     : ""
                                 }
                                 rows={6}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[13px]"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
                                 placeholder="Ex:&#10;Ecran: 15 pouces&#10;RAM: 16GB&#10;Stockage: 512GB SSD"
                             />
                         </div>
                     </div>
                 </section>
             </div>
-            <div className="p-8 border-t border-slate-100 flex gap-4 bg-slate-50/50">
+            <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="flex-1 px-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold text-[14px] text-slate-500 hover:bg-slate-50 transition-all shadow-sm"
+                    className="flex-1 px-6 py-3.5 bg-white border border-slate-200 rounded-xl font-bold text-[13px] text-slate-500 hover:bg-slate-50 transition-all shadow-sm"
                 >
                     Annuler
                 </button>
                 <button
                     type="submit"
                     disabled={isSaving}
-                    className="flex-[2] px-6 py-4 bg-orange-600 text-white rounded-2xl font-bold text-[14px] flex items-center justify-center gap-3 hover:bg-orange-700 shadow-xl shadow-orange-100 transition-all disabled:opacity-50"
+                    className="flex-[2] px-6 py-3.5 bg-orange-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-3 hover:bg-orange-700 shadow-lg shadow-orange-100 transition-all disabled:opacity-50"
                 >
-                    {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                     <span>{editingProduct ? 'Mettre à jour le Produit' : 'Créer le Produit'}</span>
                 </button>
             </div>

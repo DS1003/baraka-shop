@@ -158,9 +158,9 @@ export default function CategoriesPage() {
     );
 
     const getTitle = () => {
-        if (view === 'l1') return <h1 className="text-[36px] font-bold text-slate-900 leading-tight">Rayons <span className="text-orange-600 italic font-serif">Niveau 1.</span></h1>;
-        if (view === 'l2') return <h1 className="text-[36px] font-bold text-slate-900 leading-tight">Sous-catégories de <span className="text-orange-600 italic font-serif">{selectedL1.name}.</span></h1>;
-        return <h1 className="text-[36px] font-bold text-slate-900 leading-tight">Sous-sous de <span className="text-orange-600 italic font-serif">{selectedL2.name}.</span></h1>;
+        if (view === 'l1') return <h1 className="text-2xl font-bold text-slate-900 leading-tight">Rayons <span className="text-orange-600 italic font-serif">Niveau 1.</span></h1>;
+        if (view === 'l2') return <h1 className="text-2xl font-bold text-slate-900 leading-tight">Sous-catégories de <span className="text-orange-600 italic font-serif">{selectedL1.name}.</span></h1>;
+        return <h1 className="text-2xl font-bold text-slate-900 leading-tight">Sous-sous de <span className="text-orange-600 italic font-serif">{selectedL2.name}.</span></h1>;
     };
 
     return (
@@ -184,37 +184,37 @@ export default function CategoriesPage() {
 
             {/* Stat Cards Section */}
             {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center">
-                            <Layers size={22} />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+                            <Layers size={18} />
                         </div>
                         <div>
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Rayons L1</p>
                             <h4 className="text-2xl font-black text-slate-900 leading-none">{stats.l1}</h4>
                         </div>
                     </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <Boxes size={22} />
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <Boxes size={18} />
                         </div>
                         <div>
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Sous-cats L2</p>
                             <h4 className="text-2xl font-black text-slate-900 leading-none">{stats.l2}</h4>
                         </div>
                     </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white p-6 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                            <TrendingUp size={22} />
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <TrendingUp size={18} />
                         </div>
                         <div>
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Lvl 3</p>
                             <h4 className="text-2xl font-black text-slate-900 leading-none">{stats.l3}</h4>
                         </div>
                     </motion.div>
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-white p-6 rounded-[24px] border border-slate-200/60 shadow-sm flex items-center gap-5">
-                        <div className="w-12 h-12 rounded-2xl bg-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-100">
-                            <PackageCheck size={22} />
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-100">
+                            <PackageCheck size={18} />
                         </div>
                         <div>
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Total Produits</p>
@@ -233,21 +233,21 @@ export default function CategoriesPage() {
                     </p>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                     {view !== 'l1' && (
                         <button
                             onClick={() => view === 'l2' ? setView('l1') : setView('l2')}
-                            className="flex items-center gap-3 px-6 py-3 bg-white border border-slate-200 rounded-xl font-bold text-[13px] hover:bg-slate-50 transition-all shadow-sm"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-[12px] hover:bg-slate-50 transition-all shadow-sm"
                         >
-                            <ChevronLeft size={20} />
+                            <ChevronLeft size={16} />
                             <span>Retour</span>
                         </button>
                     )}
                     <button
                         onClick={() => { setEditingItem(null); setPreviewImage(null); setIsModalOpen(true); }}
-                        className="flex items-center gap-3 px-6 py-3 bg-[#1B1F3B] text-white rounded-xl font-bold text-[13px] hover:bg-orange-600 hover:shadow-xl transition-all shadow-lg group"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-[#1B1F3B] text-white rounded-lg font-bold text-[12px] hover:bg-orange-600 hover:shadow-xl transition-all shadow-lg group"
                     >
-                        <Plus size={20} />
+                        <Plus size={16} />
                         <span>Nouvel Élément</span>
                     </button>
                 </div>
@@ -255,11 +255,11 @@ export default function CategoriesPage() {
 
             {/* Search Bar */}
             <div className="relative max-w-xl group">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-primary transition-colors" size={18} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-primary transition-colors" size={16} />
                 <input
                     type="text"
                     placeholder="Rechercher..."
-                    className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm"
+                    className="w-full pl-11 pr-5 py-2.5 bg-white border border-slate-200 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-4 focus:ring-primary/5 transition-all shadow-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -278,13 +278,13 @@ export default function CategoriesPage() {
                     {filteredItems.map((item, i) => (
                         <motion.div
                             key={item.id}
-                            whileHover={{ y: -6, boxShadow: "0 25px 40px -20px rgba(0,0,0,0.08)" }}
+                            whileHover={{ y: -4, boxShadow: "0 15px 30px -15px rgba(0,0,0,0.06)" }}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.05 }}
                             className={cn(
-                                "bg-white rounded-[32px] border border-slate-200/50 shadow-sm transition-all group relative flex flex-col overflow-hidden",
-                                view === 'l1' ? "min-h-[400px]" : "min-h-[240px]"
+                                "bg-white rounded-2xl border border-slate-200/50 shadow-sm transition-all group relative flex flex-col overflow-hidden",
+                                view === 'l1' ? "min-h-[360px]" : "min-h-[220px]"
                             )}
                         >
                             {/* Image Header for L1 */}
@@ -414,7 +414,7 @@ export default function CategoriesPage() {
                                             if (view === 'l1') { setSelectedL1(item); setView('l2'); }
                                             else if (view === 'l2') { setSelectedL2(item); setView('l3'); }
                                         }}
-                                        className="mt-8 w-full py-4 bg-slate-900 text-white rounded-2xl text-[12px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all hover:bg-orange-600 shadow-xl shadow-slate-200 hover:shadow-orange-100"
+                                        className="mt-6 w-full py-3 bg-slate-900 text-white rounded-xl text-[11px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all hover:bg-orange-600 shadow-lg shadow-slate-200 hover:shadow-orange-100"
                                     >
                                         Explorer Niveau {view === 'l1' ? '2' : '3'}
                                     </button>
@@ -425,14 +425,14 @@ export default function CategoriesPage() {
 
                     <button
                         onClick={() => { setEditingItem(null); setPreviewImage(null); setIsModalOpen(true); }}
-                        className="border-2 border-dashed border-slate-200/60 rounded-[28px] p-8 flex flex-col items-center justify-center gap-4 group hover:border-orange-600/20 hover:bg-orange-600/5 transition-all text-slate-400 hover:text-orange-600"
+                        className="border-2 border-dashed border-slate-200/60 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 group hover:border-orange-600/20 hover:bg-orange-600/5 transition-all text-slate-400 hover:text-orange-600"
                     >
-                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-slate-100 group-hover:scale-110 group-hover:rotate-12 transition-transform">
-                            <Plus size={32} strokeWidth={2.5} />
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg border border-slate-100 group-hover:scale-110 group-hover:rotate-12 transition-transform">
+                            <Plus size={24} strokeWidth={2.5} />
                         </div>
                         <div className="text-center">
-                            <span className="block text-[13px] font-bold uppercase tracking-widest">Ajouter</span>
-                            <span className="text-[11px] font-medium text-slate-400 mt-1">Niveau {view === 'l1' ? '1' : view === 'l2' ? '2' : '3'}</span>
+                            <span className="block text-[11px] font-bold uppercase tracking-widest">Ajouter</span>
+                            <span className="text-[10px] font-medium text-slate-400 mt-0.5">Niveau {view === 'l1' ? '1' : view === 'l2' ? '2' : '3'}</span>
                         </div>
                     </button>
                 </div>
@@ -454,27 +454,27 @@ export default function CategoriesPage() {
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }} 
                                 animate={{ opacity: 1, scale: 1, y: 0 }} 
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }} 
-                                className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl relative z-10 overflow-hidden text-slate-900"
+                                className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative z-10 overflow-hidden text-slate-900"
                             >
-                                <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                                <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
                                     <div>
-                                        <h3 className="text-[20px] font-bold tracking-tight">
+                                        <h3 className="text-[18px] font-bold tracking-tight">
                                             {editingItem ? 'Modifier' : 'Nouveau'} {view === 'l1' ? 'Rayon' : view === 'l2' ? 'Sous-rayon' : 'Niveau 3'}
                                         </h3>
-                                        <p className="text-[11px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">Configuration de la structure</p>
+                                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">Configuration de la structure</p>
                                     </div>
-                                    <button onClick={() => { setIsModalOpen(false); setPreviewImage(null); }} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100/50 text-slate-400 hover:text-rose-600 transition-colors">
-                                        <X size={20} />
+                                    <button onClick={() => { setIsModalOpen(false); setPreviewImage(null); }} className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100/50 text-slate-400 hover:text-rose-600 transition-colors">
+                                        <X size={18} />
                                     </button>
                                 </div>
                                 
-                                <form onSubmit={handleUpsert} className="p-8 space-y-8">
+                                <form onSubmit={handleUpsert} className="p-6 space-y-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Désignation du rayon</label>
                                         <input
                                             name="name"
                                             defaultValue={editingItem?.name}
-                                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all text-[15px] font-bold"
+                                            className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all text-[14px] font-bold"
                                             placeholder="Ex: Électronique, Smartphones..."
                                             required
                                         />
@@ -484,16 +484,16 @@ export default function CategoriesPage() {
                                         <div className="space-y-4">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Image de Couverture</label>
                                             
-                                            <div className="flex items-center gap-6 p-4 bg-slate-50/50 border border-slate-100 rounded-[24px]">
-                                                <div className="w-24 h-24 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
+                                            <div className="flex items-center gap-4 p-3 bg-slate-50/50 border border-slate-100 rounded-xl">
+                                                <div className="w-20 h-20 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
                                                     {previewImage ? (
                                                         <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <ImageIcon size={32} strokeWidth={1} className="text-slate-200" />
+                                                        <ImageIcon size={28} strokeWidth={1} className="text-slate-200" />
                                                     )}
                                                 </div>
                                                 
-                                                <div className="flex-1 space-y-2">
+                                                <div className="flex-1 space-y-1.5">
                                                     <input
                                                         type="file"
                                                         name="imageFile"
@@ -512,30 +512,30 @@ export default function CategoriesPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => fileInputRef.current?.click()}
-                                                        className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-[12px] font-bold text-slate-600 hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm"
+                                                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm"
                                                     >
-                                                        <CloudUpload size={18} /> Télécharger
+                                                        <CloudUpload size={16} /> Télécharger
                                                     </button>
-                                                    <p className="text-[10px] text-slate-400 font-medium italic">Recommandé: 800x600px</p>
+                                                    <p className="text-[9px] text-slate-400 font-medium italic">Recommandé: 800x600px</p>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    <div className="flex gap-4 pt-4">
+                                    <div className="flex gap-3 pt-2">
                                         <button 
                                             type="button" 
                                             onClick={() => { setIsModalOpen(false); setPreviewImage(null); }} 
-                                            className="flex-1 py-4 border border-slate-200 rounded-[20px] font-bold text-[13px] text-slate-500 hover:bg-slate-50 transition-all"
+                                            className="flex-1 py-3.5 border border-slate-200 rounded-xl font-bold text-[12px] text-slate-500 hover:bg-slate-50 transition-all"
                                         >
                                             Annuler
                                         </button>
                                         <button 
                                             type="submit" 
                                             disabled={isSaving || isUploading} 
-                                            className="flex-[2] py-4 bg-slate-900 text-white rounded-[20px] font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-orange-600 shadow-xl transition-all shadow-orange-100/20 disabled:opacity-50"
+                                            className="flex-[2] py-3.5 bg-slate-900 text-white rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-orange-600 shadow-xl transition-all shadow-orange-100/20 disabled:opacity-50"
                                         >
-                                            {(isSaving || isUploading) ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                                            {(isSaving || isUploading) ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                                             {editingItem ? 'Mettre à jour' : 'Confirmer la création'}
                                         </button>
                                     </div>

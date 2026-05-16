@@ -1,11 +1,16 @@
 import type { Metadata } from 'next'
-import { Inter, Montserrat } from 'next/font/google'
+import { Inter, Montserrat, Roboto } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { Providers } from '@/components/providers'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' })
+const roboto = Roboto({ 
+  subsets: ['latin'], 
+  weight: ['100', '300', '400', '500', '700', '900'],
+  variable: '--font-roboto' 
+})
 
 export const metadata: Metadata = {
   title: 'Baraka Shop | High-Tech & Électronique Premium au Sénégal',
@@ -60,6 +65,7 @@ export default function RootLayout({
           "min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20",
           inter.variable,
           montserrat.variable,
+          roboto.variable,
           inter.className
         )}
         suppressHydrationWarning
