@@ -235,8 +235,8 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                             </div>
                         ) : (
                             <div className={cn(
-                                "grid gap-6 md:gap-8",
-                                viewMode === 'grid' ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1"
+                                "grid",
+                                viewMode === 'grid' ? "gap-6 md:gap-8 grid-cols-2 md:grid-cols-3" : "gap-3 grid-cols-1"
                             )}>
                                 {initialProducts.map((product, idx) => (
                                     <motion.div

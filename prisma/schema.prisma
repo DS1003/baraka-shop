@@ -59,6 +59,7 @@ model Product {
   brandId       String?
   isFeatured    Boolean      @default(false)
   isNew         Boolean      @default(false)
+  isPublished   Boolean      @default(true)
   metadata      Json?        @default("{}")
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt

@@ -39,8 +39,10 @@ export async function saveToJsonAndStartImport(products: any[]) {
             const stock = getVal(p, ['stock', 'quantité', 'qty', 'qte']);
             const desc = getVal(p, ['description', 'desc', 'détails']);
             const imgs = getVal(p, ['images', 'photo', 'url']);
+            const reference = getVal(p, ['reference', 'ref', 'sku']);
 
             return {
+                reference: reference,
                 name: name || 'Produit sans nom',
                 category: cat || 'Général',
                 subcategory1: sub,

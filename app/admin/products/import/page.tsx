@@ -86,18 +86,28 @@ export default function ImportProductsPage() {
     const [isPaused, setIsPaused] = useState(false);
     const [isCancelled, setIsCancelled] = useState(false);
     const lastIndexRef = useRef(0);
+    const [previewPage, setPreviewPage] = useState(1);
+    const PREVIEW_PAGE_SIZE = 50;
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const filteredData = useMemo(() => {
-        return data
-            .filter(p =>
-                p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (p.reference || '').toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .slice(0, 100); // Only preview first 100 to keep UI fast
+    const allFilteredData = useMemo(() => {
+        return data.filter(p =>
+            p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.reference || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
     }, [data, searchTerm]);
+
+    const totalPreviewPages = Math.max(1, Math.ceil(allFilteredData.length / PREVIEW_PAGE_SIZE));
+
+    const filteredData = useMemo(() => {
+        const start = (previewPage - 1) * PREVIEW_PAGE_SIZE;
+        return allFilteredData.slice(start, start + PREVIEW_PAGE_SIZE);
+    }, [allFilteredData, previewPage]);
+
+    // Reset page when search changes
+    useEffect(() => { setPreviewPage(1); }, [searchTerm]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -435,15 +445,20 @@ export default function ImportProductsPage() {
                     >
                         {/* Control Bar */}
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="relative flex-1 max-w-md group">
-                                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-600 transition-colors" size={18} />
-                                <input
-                                    type="text"
-                                    placeholder="Rechercher dans l'aperçu..."
-                                    className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
+                            <div className="flex items-center gap-4 flex-1">
+                                <div className="relative flex-1 max-w-md group">
+                                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-600 transition-colors" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Rechercher par nom, catégorie ou référence..."
+                                        className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{allFilteredData.length} résultats</span>
+                                </div>
                             </div>
                             {selectedIds.size > 0 && (
                                 <button onClick={deleteSelected} className="flex items-center gap-2 px-6 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold text-[13px] hover:bg-rose-100">
@@ -523,6 +538,73 @@ export default function ImportProductsPage() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Pagination Controls */}
+                            {totalPreviewPages > 1 && (
+                                <div className="flex items-center justify-between px-10 py-5 bg-slate-50/80 border-t border-slate-100">
+                                    <p className="text-[12px] font-bold text-slate-400">
+                                        Page {previewPage} / {totalPreviewPages} — Produits {((previewPage - 1) * PREVIEW_PAGE_SIZE) + 1} à {Math.min(previewPage * PREVIEW_PAGE_SIZE, allFilteredData.length)} sur {allFilteredData.length}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setPreviewPage(1)}
+                                            disabled={previewPage === 1}
+                                            className="px-3 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider bg-white border border-slate-200 text-slate-500 hover:bg-orange-50 hover:text-orange-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        >
+                                            «
+                                        </button>
+                                        <button
+                                            onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
+                                            disabled={previewPage === 1}
+                                            className="px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider bg-white border border-slate-200 text-slate-500 hover:bg-orange-50 hover:text-orange-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        >
+                                            ‹ Préc.
+                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: Math.min(5, totalPreviewPages) }, (_, i) => {
+                                                let pageNum: number;
+                                                if (totalPreviewPages <= 5) {
+                                                    pageNum = i + 1;
+                                                } else if (previewPage <= 3) {
+                                                    pageNum = i + 1;
+                                                } else if (previewPage >= totalPreviewPages - 2) {
+                                                    pageNum = totalPreviewPages - 4 + i;
+                                                } else {
+                                                    pageNum = previewPage - 2 + i;
+                                                }
+                                                return (
+                                                    <button
+                                                        key={pageNum}
+                                                        onClick={() => setPreviewPage(pageNum)}
+                                                        className={cn(
+                                                            "w-9 h-9 rounded-lg text-[12px] font-black transition-all",
+                                                            previewPage === pageNum
+                                                                ? "bg-orange-600 text-white shadow-lg shadow-orange-200"
+                                                                : "bg-white border border-slate-200 text-slate-500 hover:bg-orange-50 hover:text-orange-600"
+                                                        )}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <button
+                                            onClick={() => setPreviewPage(p => Math.min(totalPreviewPages, p + 1))}
+                                            disabled={previewPage === totalPreviewPages}
+                                            className="px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider bg-white border border-slate-200 text-slate-500 hover:bg-orange-50 hover:text-orange-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        >
+                                            Suiv. ›
+                                        </button>
+                                        <button
+                                            onClick={() => setPreviewPage(totalPreviewPages)}
+                                            disabled={previewPage === totalPreviewPages}
+                                            className="px-3 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider bg-white border border-slate-200 text-slate-500 hover:bg-orange-50 hover:text-orange-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        >
+                                            »
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex justify-between items-center bg-[#0F172A] p-10 rounded-[40px] shadow-3xl">

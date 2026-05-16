@@ -41,7 +41,10 @@ import {
     getAdminStores,
     getSubCategories,
     getThirdLevelCategories,
-    deleteAllProducts
+    deleteAllProducts,
+    toggleProductPublish,
+    bulkTogglePublishProducts,
+    globalTogglePublishProducts
 } from '@/lib/actions/admin-actions';
 import { clearImportJobs } from '@/lib/actions/import-bg-actions';
 import { testConnection } from '@/lib/actions/debug-actions';
@@ -73,6 +76,7 @@ export default function ProductsPage() {
         thirdLevelCategoryId?: string;
         brandId?: string;
         stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+        publishStatus?: 'published' | 'hidden';
     }>({});
 
     // Form fields
@@ -200,6 +204,51 @@ export default function ProductsPage() {
             } finally {
                 setIsDeletingBulk(false);
             }
+        }
+    };
+
+    const handleTogglePublish = async (id: string, isPublished: boolean) => {
+        try {
+            const res = await toggleProductPublish(id, isPublished);
+            if (res.success) {
+                setProducts(prev => prev.map(p => p.id === id ? { ...p, isPublished } : p));
+                toast.success(`Produit ${isPublished ? 'publié' : 'dépublié'}.`);
+            } else {
+                toast.error(res.message);
+            }
+        } catch (error) {
+            toast.error("Erreur lors de la modification.");
+        }
+    };
+
+    const handleBulkPublish = async (isPublished: boolean) => {
+        if (selectedIds.length === 0 && !isGlobalSelected) return;
+        setIsDeletingBulk(true);
+        try {
+            if (isGlobalSelected) {
+                const res = await globalTogglePublishProducts(isPublished);
+                if (res.success) {
+                    setProducts(prev => prev.map(p => ({ ...p, isPublished })));
+                    toast.success(`Le catalogue ENTIER (${total} produits) a été ${isPublished ? 'publié' : 'dépublié'}.`);
+                    setSelectedIds([]);
+                    setIsGlobalSelected(false);
+                } else {
+                    toast.error(res.message);
+                }
+            } else {
+                const res = await bulkTogglePublishProducts(selectedIds, isPublished);
+                if (res.success) {
+                    setProducts(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, isPublished } : p));
+                    toast.success(`${selectedIds.length} produit(s) ${isPublished ? 'publié(s)' : 'dépublié(s)'}.`);
+                    setSelectedIds([]);
+                } else {
+                    toast.error(res.message);
+                }
+            }
+        } catch (error) {
+            toast.error("Erreur serveur.");
+        } finally {
+            setIsDeletingBulk(false);
         }
     };
 
@@ -333,6 +382,18 @@ export default function ProductsPage() {
                                 <option value="in_stock">En stock (&gt;10)</option>
                                 <option value="low_stock">Faible (&lt;10)</option>
                                 <option value="out_of_stock">Rupture (0)</option>
+                            </select>
+                        </div>
+
+                        <div className="flex-1 min-w-[140px]">
+                            <select
+                                className="w-full px-4 py-4 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                                value={activeFilters.publishStatus || ''}
+                                onChange={(e) => setActiveFilters(prev => ({ ...prev, publishStatus: (e.target.value || undefined) as any }))}
+                            >
+                                <option value="">Statut de publication</option>
+                                <option value="published">Publiés</option>
+                                <option value="hidden">Cachés</option>
                             </select>
                         </div>
 
@@ -517,13 +578,28 @@ export default function ProductsPage() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-4 text-center border-b border-slate-50">
-                                            <span className={cn(
-                                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight border whitespace-nowrap",
-                                                p.stock > 0 ? "bg-emerald-50 text-emerald-600 border-emerald-100/50" : "bg-rose-50 text-rose-600 border-rose-100/50"
-                                            )}>
-                                                <div className={cn("w-1.5 h-1.5 rounded-full", p.stock > 0 ? "bg-emerald-500" : "bg-rose-500")} />
-                                                {p.stock > 0 ? 'En vente' : 'Rupture'}
-                                            </span>
+                                            <div className="flex flex-col items-center gap-2">
+                                                <span className={cn(
+                                                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight border whitespace-nowrap",
+                                                    p.stock > 0 ? "bg-emerald-50 text-emerald-600 border-emerald-100/50" : "bg-rose-50 text-rose-600 border-rose-100/50"
+                                                )}>
+                                                    <div className={cn("w-1.5 h-1.5 rounded-full", p.stock > 0 ? "bg-emerald-500" : "bg-rose-500")} />
+                                                    {p.stock > 0 ? 'En vente' : 'Rupture'}
+                                                </span>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleTogglePublish(p.id, !p.isPublished);
+                                                    }}
+                                                    className={cn(
+                                                        "inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight border whitespace-nowrap transition-all",
+                                                        p.isPublished ? "bg-blue-50 text-blue-600 border-blue-100/50 hover:bg-blue-100" : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
+                                                    )}
+                                                >
+                                                    <div className={cn("w-1.5 h-1.5 rounded-full", p.isPublished ? "bg-blue-500" : "bg-slate-400")} />
+                                                    {p.isPublished ? 'Publié' : 'Caché'}
+                                                </button>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4 text-right border-b border-slate-50">
                                             <div className="flex justify-end gap-2 pr-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300">
@@ -773,10 +849,18 @@ export default function ProductsPage() {
 
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => setSelectedIds([])}
-                                    className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-[13px] transition-all"
+                                    onClick={() => handleBulkPublish(true)}
+                                    disabled={isDeletingBulk}
+                                    className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-[13px] flex items-center gap-2.5 transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
                                 >
-                                    Annuler
+                                    <Eye size={16} /> Publier
+                                </button>
+                                <button
+                                    onClick={() => handleBulkPublish(false)}
+                                    disabled={isDeletingBulk}
+                                    className="px-4 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold text-[13px] flex items-center gap-2.5 transition-all shadow-lg shadow-slate-900/20 disabled:opacity-50"
+                                >
+                                    <X size={16} /> Cacher
                                 </button>
                                 <button
                                     onClick={handleBulkDelete}
@@ -784,7 +868,13 @@ export default function ProductsPage() {
                                     className="px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-[13px] flex items-center gap-2.5 transition-all shadow-lg shadow-rose-900/20 disabled:opacity-50"
                                 >
                                     {isDeletingBulk ? <Loader2 size={16} className="animate-spin" /> : <Trash size={16} />}
-                                    <span>Supprimer la sélection</span>
+                                    <span>Supprimer</span>
+                                </button>
+                                <button
+                                    onClick={() => setSelectedIds([])}
+                                    className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold text-[13px] transition-all ml-4"
+                                >
+                                    Annuler
                                 </button>
                             </div>
                         </motion.div>

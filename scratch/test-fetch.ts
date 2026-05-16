@@ -1,15 +1,12 @@
-import 'dotenv/config';
-import prisma from '../lib/prisma';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 async function main() {
-    try {
-        console.log('Connecting to DB...');
-        const stores = await prisma.store.findMany();
-        console.log(`Found ${stores.length} stores in DB.`);
-        console.log(JSON.stringify(stores, null, 2));
-    } catch (err) {
-        console.error('Error fetching stores:', err);
-    }
+    const products = await prisma.product.findMany({
+        where: { name: { contains: 'AF5XHD' } }
+    });
+    console.dir(products, { depth: null });
 }
 
-main().finally(() => process.exit());
+main();

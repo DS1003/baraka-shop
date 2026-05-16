@@ -45,7 +45,7 @@ export async function getProductsAction(options: {
 
     try {
         // Construction du WHERE clause
-        const where: any = {};
+        const where: any = { isPublished: true };
 
         if (query) {
             where.OR = [
@@ -183,7 +183,8 @@ export async function getSimilarProductsAction(productId: string, categoryId: st
             where: {
                 categoryId,
                 id: { not: productId },
-                stock: { gt: 0 }
+                stock: { gt: 0 },
+                isPublished: true
             },
             include: {
                 category: true,
@@ -450,9 +451,17 @@ async function getExistingProductsInBatch(products: ImportProduct[], catMap: Map
         select: { id: true, name: true, categoryId: true, price: true, stock: true, subCategoryId: true, thirdLevelCategoryId: true, brandId: true, reference: true }
     }) : [];
 
-    // Fetch by categories
-    const existingByName = categoryIds.length > 0 ? await prisma.product.findMany({
-        where: { categoryId: { in: categoryIds } },
+    // Fetch by names and slugs to ensure we catch the products even if category differs
+    const names = products.map(p => p.name?.trim()).filter(Boolean);
+    const slugs = names.map(n => slugify(n)).filter(Boolean);
+
+    const existingByName = names.length > 0 ? await prisma.product.findMany({
+        where: { 
+            OR: [
+                { name: { in: names } },
+                { slug: { in: slugs } }
+            ]
+        },
         select: { id: true, name: true, categoryId: true, price: true, stock: true, subCategoryId: true, thirdLevelCategoryId: true, brandId: true, reference: true }
     }) : [];
 
@@ -463,12 +472,12 @@ async function getExistingProductsInBatch(products: ImportProduct[], catMap: Map
         if (p.reference) {
             map.set(`ref:${p.reference}`, p);
         }
-        // Key based on normalized name and category
+        // Key based on normalized name to allow matching across slightly different categories
         const normalizedName = p.name.toLowerCase().trim();
-        map.set(`${normalizedName}|${p.categoryId}`, p);
+        map.set(`${normalizedName}`, p);
         // Also map by slug for extra safety
         const slugged = slugify(p.name);
-        if (slugged) map.set(`${slugged}|${p.categoryId}`, p);
+        if (slugged) map.set(`${slugged}`, p);
     }
     return map;
 }
@@ -505,9 +514,9 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
             }
             
             // Fallback to name/slug match
-            if (!ext) ext = existingMap.get(`${normalizedName}|${catId}`);
+            if (!ext) ext = existingMap.get(`${normalizedName}`);
             if (!ext && sluggedName) {
-                ext = existingMap.get(`${sluggedName}|${catId}`);
+                ext = existingMap.get(`${sluggedName}`);
             }
 
             if (ext) {
@@ -515,24 +524,20 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                 const newPrice = Number(p.price) || 0;
                 const newStock = Number(p.stock) || 0;
 
-                if (
+                const hasChanged = (
                     ext.price !== newPrice ||
                     ext.stock !== newStock ||
-                    ext.categoryId !== catId ||
-                    ext.subCategoryId !== (subId || null) ||
-                    ext.thirdLevelCategoryId !== (thirdId || null) ||
-                    ext.brandId !== (bId || null) ||
                     (reference && ext.reference !== reference)
-                ) {
+                );
+
+                console.log(`[Import Debug] Prod: ${name} | RefExcel: ${reference} | RefDB: ${ext.reference} | Changed: ${hasChanged}`);
+
+                if (hasChanged) {
                     toUpdate.push({
                         id: ext.id,
                         data: {
                             price: newPrice,
                             stock: newStock,
-                            categoryId: catId,
-                            subCategoryId: subId || null,
-                            thirdLevelCategoryId: thirdId || null,
-                            brandId: bId || null,
                             reference: reference || undefined,
                             updatedAt: new Date()
                         }
@@ -574,13 +579,18 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
         }
 
         if (toUpdate.length > 0) {
-            // Pour les mises à jour, on traite par petits lots dans la transaction pour la stabilité
-            await prisma.$transaction(
-                toUpdate.map(item => prisma.product.update({
-                    where: { id: item.id },
-                    data: item.data
-                }))
-            );
+            // Pour éviter les timeouts et la surcharge des connexions à la base de données,
+            // on effectue les mises à jour séquentiellement plutôt que dans une seule grosse transaction
+            for (const item of toUpdate) {
+                try {
+                    await prisma.product.update({
+                        where: { id: item.id },
+                        data: item.data
+                    });
+                } catch (updateErr) {
+                    console.error(`Erreur update produit ${item.id}:`, updateErr);
+                }
+            }
         }
 
         if (!skipRevalidate) {

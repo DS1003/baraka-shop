@@ -191,6 +191,7 @@ export async function getAdminProducts(
         thirdLevelCategoryId?: string;
         brandId?: string;
         stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+        publishStatus?: 'published' | 'hidden';
     }
 ) {
     try {
@@ -231,6 +232,14 @@ export async function getAdminProducts(
                 andFilters.push({ stock: { gt: 0, lt: 10 } });
             } else if (filters.stockStatus === 'out_of_stock') {
                 andFilters.push({ stock: 0 });
+            }
+        }
+
+        if (filters?.publishStatus) {
+            if (filters.publishStatus === 'published') {
+                andFilters.push({ isPublished: true });
+            } else if (filters.publishStatus === 'hidden') {
+                andFilters.push({ isPublished: false });
             }
         }
 
@@ -1331,5 +1340,61 @@ export async function initializeBigBanners() {
         return { success: true };
     } catch (error) {
         return { success: false };
+    }
+}
+
+// ---------------------------------------------------------
+// NEW PUBLISH ACTIONS
+// ---------------------------------------------------------
+
+export async function toggleProductPublish(id: string, isPublished: boolean) {
+    try {
+        await prisma.product.update({
+            where: { id },
+            data: { isPublished }
+        });
+        
+        await invalidatePrefix('products:');
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Toggle publish error:", error);
+        return { success: false, message: "Erreur lors de la modification du statut" };
+    }
+}
+
+export async function bulkTogglePublishProducts(ids: string[], isPublished: boolean) {
+    try {
+        if (!ids || ids.length === 0) return { success: false, message: "Aucun produit sélectionné" };
+        
+        await prisma.product.updateMany({
+            where: { id: { in: ids } },
+            data: { isPublished }
+        });
+        
+        await invalidatePrefix('products:');
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Bulk publish error:", error);
+        return { success: false, message: "Erreur lors de la modification en masse" };
+    }
+}
+
+export async function globalTogglePublishProducts(isPublished: boolean) {
+    try {
+        await prisma.product.updateMany({
+            data: { isPublished }
+        });
+        
+        await invalidatePrefix('products:');
+        revalidatePath('/admin/products');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Global publish error:", error);
+        return { success: false, message: "Erreur lors de la modification de tout le catalogue" };
     }
 }

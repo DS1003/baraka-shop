@@ -282,8 +282,8 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                             </div>
                         ) : (
                             <div className={cn(
-                                "grid gap-4 md:gap-8",
-                                viewMode === 'grid' ? "grid-cols-2 md:grid-cols-3" : "grid-cols-1"
+                                "grid",
+                                viewMode === 'grid' ? "gap-4 md:gap-8 grid-cols-2 md:grid-cols-3" : "gap-3 grid-cols-1"
                             )}>
                                 {initialProducts.map((product) => (
                                     <ProductCard key={product.id} product={product} viewMode={viewMode} />

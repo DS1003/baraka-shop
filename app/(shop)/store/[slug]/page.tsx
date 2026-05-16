@@ -254,10 +254,9 @@ export default function StoreDetailPage() {
                 {filteredProducts.length > 0 ? (
                     <motion.div
                         className={cn(
-                            "gap-6",
                             viewMode === 'grid'
-                                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                                : "flex flex-col"
+                                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+                                : "flex flex-col gap-3"
                         )}
                     >
                         {filteredProducts.map((product, i) => (
