@@ -32,6 +32,7 @@ model Product {
   oldPrice             Float?
   stock                Int                   @default(0)
   images               String[]
+  videos               String[]
   categoryId           String
   subCategoryId        String?
   brandId              String?

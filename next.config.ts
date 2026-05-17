@@ -67,6 +67,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'www.pngall.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
       }
     ],
   },

@@ -13,7 +13,11 @@ import {
     ChevronRight,
     Search,
     Check,
-    ArrowLeft
+    ArrowLeft,
+    Play,
+    Video,
+    Link as LinkIcon,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -116,13 +120,60 @@ const COLOR_PALETTE = [
     { name: 'Rouille', hex: '#B7410E' },
 ];
 
+function smartParseMetadata(text: string) {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l !== "");
+    const result: Record<string, string> = {};
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // Handle Key: Value
+        const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
+        if (colonMatch) {
+            result[colonMatch[1].trim()] = colonMatch[2].trim();
+            continue;
+        }
+        
+        // Handle Key\tValue
+        if (line.includes('\t')) {
+            const parts = line.split('\t');
+            result[parts[0].trim()] = parts.slice(1).join(' ').trim();
+            continue;
+        }
+
+        // Handle Key\nValue (common in messy pastes)
+        if (i + 1 < lines.length) {
+            const nextLine = lines[i+1];
+            // Skip lines that are likely section headers (all caps or known categories)
+            const isHeader = ["Informations générales", "Ergonomie", "Utilisation", "Capteur", "Caractéristiques physiques", "Alimentation", "Garanties", "Information sur la sécurité"].some(h => line.toLowerCase().includes(h.toLowerCase()));
+            const isProbablyValue = nextLine === "Oui" || nextLine === "Non" || nextLine.match(/\d+/) || nextLine.length > 0;
+            
+            if (!isHeader && line.length < 50 && isProbablyValue && !nextLine.includes(':')) {
+                result[line] = nextLine;
+                i++; // Skip next line as it was the value
+                continue;
+            }
+        }
+        
+        // Fallback: treat as boolean if short
+        if (line.length < 40 && !line.includes(':')) {
+            result[line] = "Oui";
+        }
+    }
+    return result;
+}
+
 export default function ProductForm({ editingProduct }: { editingProduct?: any }) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
     const [formImages, setFormImages] = useState<string[]>([]);
+    const [formVideos, setFormVideos] = useState<string[]>([]);
+    const [youtubeUrl, setYoutubeUrl] = useState('');
     const [isUploading, setIsUploading] = useState(false);
+    const [isUploadingVideo, setIsUploadingVideo] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const videoFileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Categories
     const [categories, setCategories] = useState<any[]>([]);
@@ -148,6 +199,14 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [colorDropdownOpen, setColorDropdownOpen] = useState(false);
     const colorDropdownRef = React.useRef<HTMLDivElement>(null);
     const [detailedDescription, setDetailedDescription] = useState<DescriptionBlock[]>(editingProduct?.detailedDescription || []);
+    const [metadataText, setMetadataText] = useState(
+        editingProduct?.metadata 
+            ? Object.entries(editingProduct.metadata)
+                .filter(([k]) => k !== 'importedAt')
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('\n') 
+            : ""
+    );
 
     useEffect(() => {
         const loadMetadata = async () => {
@@ -188,6 +247,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 setStoreId(stId);
             }
             setFormImages(editingProduct.images || []);
+            setFormVideos(editingProduct.videos || []);
             setColorVariants(
                 (editingProduct.colorVariants || []).map((cv: any) => ({
                     id: cv.id,
@@ -225,37 +285,20 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             brandId: formData.get('brandId') as string || null,
             storeId: formData.get('storeId') as string || null,
             images: formImages,
+            videos: formVideos,
             colorVariants: colorVariants.filter(cv => cv.colorName.trim() !== ''),
             shortDescription: formData.get('shortDescription') as string || null,
             detailedDescription,
             features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
             metadata: (() => {
-                const raw = formData.get('metadata') as string;
+                const raw = metadataText;
                 if (!raw || raw.trim() === '') return {};
                 try {
                     const parsed = JSON.parse(raw);
                     if (typeof parsed === 'object' && parsed !== null) return parsed;
                 } catch { }
 
-                const metadataObj: any = {};
-                raw.split('\n').forEach(line => {
-                    const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
-                    if (colonMatch) {
-                        metadataObj[colonMatch[1].trim()] = colonMatch[2].trim();
-                        return;
-                    }
-
-                    if (line.includes('\t')) {
-                        const parts = line.split('\t');
-                        metadataObj[parts[0].trim()] = parts.slice(1).join(' ').trim();
-                        return;
-                    }
-
-                    if (line.trim() !== "") {
-                        metadataObj[line.trim()] = "Oui";
-                    }
-                });
-                return metadataObj;
+                return smartParseMetadata(raw);
             })()
         };
 
@@ -545,6 +588,164 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 </section>
 
                 <section className="space-y-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
+                        Vidéos du Produit
+                        <span className="text-[9px] text-slate-300 font-medium italic normal-case tracking-normal ml-1">(YouTube ou fichier vidéo court)</span>
+                    </h4>
+
+                    <div className="space-y-4">
+                        {/* YouTube URL input */}
+                        <div className="flex items-center gap-3">
+                            <div className="relative flex-1">
+                                <LinkIcon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="url"
+                                    value={youtubeUrl}
+                                    onChange={(e) => setYoutubeUrl(e.target.value)}
+                                    placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:border-red-500/20 transition-all font-medium text-[13px]"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (!youtubeUrl.trim()) return;
+                                    // Validate YouTube URL
+                                    const ytPatterns = [
+                                        /youtube\.com\/watch\?v=/,
+                                        /youtube\.com\/embed\//,
+                                        /youtu\.be\//,
+                                        /youtube\.com\/shorts\//,
+                                    ];
+                                    const isYT = ytPatterns.some(p => p.test(youtubeUrl));
+                                    if (!isYT) {
+                                        toast.error("URL YouTube invalide. Utilisez un lien youtube.com ou youtu.be.");
+                                        return;
+                                    }
+                                    if (formVideos.includes(youtubeUrl.trim())) {
+                                        toast.error("Cette vidéo est déjà ajoutée.");
+                                        return;
+                                    }
+                                    setFormVideos(prev => [...prev, youtubeUrl.trim()]);
+                                    setYoutubeUrl('');
+                                    toast.success('✅ Vidéo YouTube ajoutée !');
+                                }}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg font-bold text-[12px] hover:bg-red-700 transition-all shadow-sm"
+                            >
+                                <Play size={14} className="fill-white" />
+                                Ajouter YT
+                            </button>
+                        </div>
+
+                        {/* Video file upload */}
+                        <div
+                            onClick={() => videoFileInputRef.current?.click()}
+                            className={cn(
+                                "relative py-6 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300",
+                                "border-slate-200 bg-slate-50/50 hover:border-purple-300 hover:bg-purple-50/30",
+                                isUploadingVideo && "pointer-events-none opacity-60"
+                            )}
+                        >
+                            <input
+                                ref={videoFileInputRef}
+                                type="file"
+                                accept="video/mp4,video/webm,video/quicktime"
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const files = Array.from(e.target.files || []);
+                                    if (files.length === 0) return;
+                                    setIsUploadingVideo(true);
+                                    try {
+                                        const fd = new FormData();
+                                        files.forEach(f => fd.append('files', f));
+                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                        const data = await res.json();
+                                        if (data.urls) {
+                                            setFormVideos(prev => [...prev, ...data.urls]);
+                                            toast.success(`✅ ${data.urls.length} vidéo(s) uploadée(s) !`);
+                                        } else {
+                                            toast.error(data.error || 'Erreur upload vidéo');
+                                        }
+                                    } catch {
+                                        toast.error("Erreur lors de l'upload vidéo.");
+                                    } finally {
+                                        setIsUploadingVideo(false);
+                                        e.target.value = '';
+                                    }
+                                }}
+                            />
+                            {isUploadingVideo ? (
+                                <>
+                                    <Loader2 size={28} className="animate-spin text-purple-500" />
+                                    <p className="text-[13px] font-bold text-purple-600">Upload vidéo en cours...</p>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white border border-slate-200 text-slate-400">
+                                        <Video size={22} />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-[13px] font-bold text-slate-600">
+                                            Uploader une courte vidéo
+                                        </p>
+                                        <p className="text-[11px] text-slate-400 font-medium mt-1">
+                                            <span className="text-purple-500 font-bold">Cliquez pour parcourir</span> — MP4, WebM • Max 50 MB
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Video previews */}
+                        {formVideos.length > 0 && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/50">
+                                {formVideos.map((vid, i) => {
+                                    // Check if YouTube
+                                    const ytMatch = vid.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&?\s]+)/);
+                                    const ytId = ytMatch ? ytMatch[1] : null;
+                                    const thumbSrc = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : undefined;
+
+                                    return (
+                                        <div key={i} className="relative aspect-video group rounded-xl overflow-hidden border border-slate-200 bg-gray-900 shadow-sm">
+                                            {thumbSrc ? (
+                                                <img src={thumbSrc} alt="YouTube" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <video src={vid} className="w-full h-full object-cover" muted />
+                                            )}
+                                            {/* Play overlay */}
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className={cn(
+                                                    "w-10 h-10 rounded-full flex items-center justify-center shadow-lg",
+                                                    ytId ? "bg-red-600/90" : "bg-purple-600/90"
+                                                )}>
+                                                    <Play size={16} className="text-white fill-white ml-0.5" />
+                                                </div>
+                                            </div>
+                                            {/* Badge */}
+                                            <span className={cn(
+                                                "absolute top-1.5 left-1.5 px-2 py-0.5 text-white text-[8px] font-black uppercase rounded tracking-wider",
+                                                ytId ? "bg-red-600" : "bg-purple-600"
+                                            )}>
+                                                {ytId ? 'YouTube' : 'Vidéo'}
+                                            </span>
+                                            {/* Remove button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormVideos(prev => prev.filter((_, idx) => idx !== i))}
+                                                className="absolute -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                                            >
+                                                <X size={14} strokeWidth={3} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                <section className="space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
                             <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
@@ -629,9 +830,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                         className="w-7 h-7 rounded-lg border-2 border-white shadow-sm flex-shrink-0"
                                                         style={{ backgroundColor: colorVariants[activeColorIdx].colorHex || '#ccc' }}
                                                     />
-                                                    <span className="flex-1 text-[13px] font-semibold text-slate-700 truncate">
-                                                        {colorVariants[activeColorIdx].colorName || 'Sélectionner une couleur...'}
-                                                    </span>
+                                                    <input
+                                                        type="text"
+                                                        value={colorVariants[activeColorIdx].colorName || ''}
+                                                        placeholder="Sélectionner ou nommer..."
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (!colorDropdownOpen) setColorDropdownOpen(true);
+                                                        }}
+                                                        onChange={(e) => {
+                                                            setColorVariants(prev => prev.map((cv, i) => i === activeColorIdx ? { ...cv, colorName: e.target.value } : cv));
+                                                        }}
+                                                        className="flex-1 text-[13px] font-semibold text-slate-700 bg-transparent focus:outline-none placeholder:text-slate-400 placeholder:font-normal truncate"
+                                                    />
                                                     <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">
                                                         {colorVariants[activeColorIdx].colorHex}
                                                     </span>
@@ -647,49 +858,94 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                             transition={{ duration: 0.15 }}
                                                             className="absolute z-50 top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl shadow-slate-200/60 overflow-hidden"
                                                         >
-                                                            <div className="p-3 border-b border-slate-100">
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                                                    <input
-                                                                        type="text"
-                                                                        autoFocus
-                                                                        placeholder="Rechercher une couleur..."
-                                                                        value={colorSearch}
-                                                                        onChange={(e) => setColorSearch(e.target.value)}
-                                                                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-300 transition-all"
-                                                                    />
+                                                                                                      <div className="p-3 border-b border-slate-100">
+                                                                <div className="flex gap-2">
+                                                                    <div className="relative flex-1">
+                                                                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                                        <input
+                                                                            type="text"
+                                                                            autoFocus
+                                                                            placeholder="Rechercher ou code hex (#...)"
+                                                                            value={colorSearch}
+                                                                            onChange={(e) => setColorSearch(e.target.value)}
+                                                                            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[12px] font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-300 transition-all"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="relative w-10 h-10 flex-shrink-0 rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:border-orange-300 transition-colors bg-slate-50" title="Choisir une couleur personnalisée">
+                                                                        <input 
+                                                                            type="color" 
+                                                                            className="absolute -top-2 -left-2 w-16 h-16 cursor-pointer opacity-0"
+                                                                            onChange={(e) => {
+                                                                                const hex = e.target.value.toUpperCase();
+                                                                                setColorVariants(prev => prev.map((cv, i) => i === activeColorIdx ? { ...cv, colorName: 'Personnalisée', colorHex: hex } : cv));
+                                                                                setColorDropdownOpen(false);
+                                                                            }}
+                                                                        />
+                                                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                                            <Palette size={16} className="text-slate-600" />
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <div className="max-h-[280px] overflow-y-auto py-2 scrollbar-thin">
-                                                                {COLOR_PALETTE
-                                                                    .filter(c => c.name.toLowerCase().includes(colorSearch.toLowerCase()))
-                                                                    .map((color) => {
-                                                                        const isSelected = colorVariants[activeColorIdx].colorHex.toUpperCase() === color.hex.toUpperCase();
-                                                                        return (
-                                                                            <button
-                                                                                key={color.hex}
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    setColorVariants(prev => prev.map((cv, i) => i === activeColorIdx ? { ...cv, colorName: color.name, colorHex: color.hex } : cv));
-                                                                                    setColorDropdownOpen(false);
-                                                                                    setColorSearch('');
-                                                                                }}
-                                                                                className={cn(
-                                                                                    "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all",
-                                                                                    isSelected ? "bg-orange-50 text-orange-700" : "hover:bg-slate-50 text-slate-700"
-                                                                                )}
-                                                                            >
-                                                                                <div
-                                                                                    className={cn("w-6 h-6 rounded-lg flex-shrink-0 shadow-sm", color.hex === '#FFFFFF' && "border border-slate-200")}
-                                                                                    style={{ backgroundColor: color.hex }}
-                                                                                />
-                                                                                <span className="flex-1 text-[12px] font-semibold">{color.name}</span>
-                                                                                <span className="text-[10px] font-mono text-slate-400">{color.hex}</span>
-                                                                                {isSelected && <Check size={14} className="text-orange-500" />}
-                                                                            </button>
-                                                                        );
-                                                                    })
-                                                                }
+                                                                {(() => {
+                                                                    const customColorMatch = colorSearch.trim().match(/^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/i);
+                                                                    const customHex = customColorMatch ? (colorSearch.trim().startsWith('#') ? colorSearch.trim() : `#${colorSearch.trim()}`).toUpperCase() : null;
+                                                                    
+                                                                    return (
+                                                                        <>
+                                                                            {customHex && (
+                                                                                <button
+                                                                                    key="custom"
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setColorVariants(prev => prev.map((cv, i) => i === activeColorIdx ? { ...cv, colorName: 'Personnalisée', colorHex: customHex } : cv));
+                                                                                        setColorDropdownOpen(false);
+                                                                                        setColorSearch('');
+                                                                                    }}
+                                                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-orange-50 transition-all border-b border-orange-100"
+                                                                                >
+                                                                                    <div
+                                                                                        className="w-6 h-6 rounded-lg flex-shrink-0 shadow-sm border border-orange-200"
+                                                                                        style={{ backgroundColor: customHex }}
+                                                                                    />
+                                                                                    <span className="flex-1 text-[12px] font-bold text-orange-700">Utiliser cette couleur</span>
+                                                                                    <span className="text-[10px] font-mono text-orange-600">{customHex}</span>
+                                                                                    <Plus size={14} className="text-orange-500" />
+                                                                                </button>
+                                                                            )}
+                                                                            {COLOR_PALETTE
+                                                                                .filter(c => c.name.toLowerCase().includes(colorSearch.toLowerCase()) || c.hex.toLowerCase().includes(colorSearch.toLowerCase()))
+                                                                                .map((color) => {
+                                                                                    const isSelected = colorVariants[activeColorIdx].colorHex.toUpperCase() === color.hex.toUpperCase();
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={color.name}
+                                                                                            type="button"
+                                                                                            onClick={() => {
+                                                                                                setColorVariants(prev => prev.map((cv, i) => i === activeColorIdx ? { ...cv, colorName: color.name, colorHex: color.hex } : cv));
+                                                                                                setColorDropdownOpen(false);
+                                                                                                setColorSearch('');
+                                                                                            }}
+                                                                                            className={cn(
+                                                                                                "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all",
+                                                                                                isSelected ? "bg-orange-50 text-orange-700" : "hover:bg-slate-50 text-slate-700"
+                                                                                            )}
+                                                                                        >
+                                                                                            <div
+                                                                                                className={cn("w-6 h-6 rounded-lg flex-shrink-0 shadow-sm", color.hex === '#FFFFFF' && "border border-slate-200")}
+                                                                                                style={{ backgroundColor: color.hex }}
+                                                                                            />
+                                                                                            <span className="flex-1 text-[12px] font-semibold">{color.name}</span>
+                                                                                            <span className="text-[10px] font-mono text-slate-400">{color.hex}</span>
+                                                                                            {isSelected && <Check size={14} className="text-orange-500" />}
+                                                                                        </button>
+                                                                                    );
+                                                                                })
+                                                                            }
+                                                                        </>
+                                                                    );
+                                                                })()}
                                                             </div>
                                                         </motion.div>
                                                     )}
@@ -859,19 +1115,29 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fiche Technique (Key: Value)</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fiche Technique (Key: Value)</label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const parsed = smartParseMetadata(metadataText);
+                                        const formatted = Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
+                                        setMetadataText(formatted);
+                                        toast.info("🪄 Fiche technique adaptée !");
+                                    }}
+                                    className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5 hover:text-orange-700 transition-colors"
+                                >
+                                    <span>Adapter</span>
+                                    <Palette size={10} />
+                                </button>
+                            </div>
                             <textarea
                                 name="metadata"
-                                defaultValue={editingProduct?.metadata 
-                                    ? Object.entries(editingProduct.metadata)
-                                        .filter(([k]) => k !== 'importedAt')
-                                        .map(([k, v]) => `${k}: ${v}`)
-                                        .join('\n') 
-                                    : ""
-                                }
+                                value={metadataText}
+                                onChange={(e) => setMetadataText(e.target.value)}
                                 rows={6}
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
-                                placeholder="Ex:&#10;Ecran: 15 pouces&#10;RAM: 16GB&#10;Stockage: 512GB SSD"
+                                placeholder="Collez ici vos spécifications en vrac..."
                             />
                         </div>
                     </div>

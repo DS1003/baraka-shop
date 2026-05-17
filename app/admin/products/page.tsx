@@ -715,7 +715,7 @@ export default function ProductsPage() {
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden relative z-10 flex flex-col md:flex-row"
+                                className="bg-white w-full max-w-7xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden relative z-10 flex flex-col md:flex-row"
                             >
                                 {/* Left: Product Images */}
                                 <div className="md:w-1/2 bg-slate-50 p-8 flex flex-col gap-6 border-r border-slate-100 overflow-y-auto">
@@ -786,6 +786,25 @@ export default function ProductsPage() {
                                                 </div>
                                             </div>
 
+                                            {detailProduct.metadata && typeof detailProduct.metadata === 'object' && Object.keys(detailProduct.metadata).filter(k => k !== 'importedAt').length > 0 && (
+                                                <div className="space-y-4">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Fiche Technique</p>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+                                                        {Object.entries(detailProduct.metadata)
+                                                            .filter(([k]) => k !== 'importedAt')
+                                                            .map(([key, value]: [string, any], i) => (
+                                                                <div key={i} className="flex flex-col gap-0.5 border-l-2 border-slate-100 pl-3 py-0.5">
+                                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">{key}</span>
+                                                                    <span className="text-[12px] font-bold text-slate-700 leading-tight">
+                                                                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                                                    </span>
+                                                                </div>
+                                                            ))
+                                                        }
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {detailProduct.shortDescription && (
                                                 <div>
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description Courte</p>
@@ -794,10 +813,14 @@ export default function ProductsPage() {
                                             )}
 
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-wrap">Description Détaillée</p>
-                                                <p className="text-[14px] text-slate-500 font-medium leading-relaxed max-h-[100px] overflow-y-auto pr-4 scrollbar-thin">
-                                                    {detailProduct.description || 'Aucune description fournie.'}
-                                                </p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description Détaillée</p>
+                                                <div className="text-[13px] text-slate-500 font-medium leading-relaxed max-h-[150px] overflow-y-auto pr-4 scrollbar-thin">
+                                                    {detailProduct.description ? (
+                                                        <div dangerouslySetInnerHTML={{ __html: detailProduct.description }} />
+                                                    ) : (
+                                                        'Aucune description fournie.'
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {Array.isArray(detailProduct.features) && detailProduct.features.length > 0 && (

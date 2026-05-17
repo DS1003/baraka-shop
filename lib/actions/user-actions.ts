@@ -54,6 +54,7 @@ export async function updateUserSettings(data: {
         phone?: string;
         email?: string;
         image?: string;
+        address?: string;
     },
     settings?: {
         notifications?: any;
@@ -83,14 +84,78 @@ export async function updateUserSettings(data: {
                 ...(data.profile?.phone && { phone: data.profile.phone }),
                 ...(data.profile?.email && { email: data.profile.email }),
                 ...(data.profile?.image && { image: data.profile.image }),
+                ...(data.profile?.address && { address: data.profile.address }),
                 metadata: newMetadata,
             } as any,
         });
 
         revalidatePath("/admin/settings");
+        revalidatePath("/account");
         return { success: true };
     } catch (error) {
         console.error("Update settings error:", error);
         return { success: false, error: "Erreur lors de la mise à jour" };
     }
 }
+
+// Backward compatibility for the shop account page
+export async function updateProfile(data: { username: string; phone: string; address: string }) {
+    return updateUserSettings({
+        profile: {
+            username: data.username,
+            phone: data.phone,
+            address: data.address
+        }
+    });
+}
+
+export async function toggleWishlistAction(productId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, message: "Vous devez être connecté pour utiliser la liste d'envies." };
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { wishlist: { select: { id: true } } }
+        });
+
+        if (!user) return { success: false, message: "Utilisateur non trouvé." };
+
+        const isInWishlist = user.wishlist.some(p => p.id === productId);
+
+        if (isInWishlist) {
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: { wishlist: { disconnect: { id: productId } } }
+            });
+            revalidatePath('/account');
+            return { success: true, isWishlisted: false, message: "Retiré de votre liste d'envies." };
+        } else {
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: { wishlist: { connect: { id: productId } } }
+            });
+            revalidatePath('/account');
+            return { success: true, isWishlisted: true, message: "Ajouté à votre liste d'envies." };
+        }
+    } catch (error) {
+        console.error("Toggle wishlist error:", error);
+        return { success: false, message: "Erreur serveur lors de la mise à jour de la liste d'envies." };
+    }
+}
+
+export async function checkWishlistAction(productId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return false;
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { wishlist: { where: { id: productId }, select: { id: true } } }
+        });
+        return (user?.wishlist?.length || 0) > 0;
+    } catch {
+        return false;
+    }
+}
+

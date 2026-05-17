@@ -82,6 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
+    const [hoveredTooltip, setHoveredTooltip] = useState<{label: string, top: number, left: number} | null>(null);
 
     useEffect(() => {
         async function loadNotifications() {
@@ -100,35 +101,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 animate={{ width: isSidebarCollapsed ? 80 : 240 }}
                 className="bg-[#F8F9FA] flex flex-col z-30 transition-all duration-300 ease-in-out relative border-r border-slate-200/50"
             >
-                {/* Logo Section - Compact */}
-                <div className="p-5 h-[72px] flex items-center justify-between border-b border-slate-200/40">
-                    <Link href="/admin" className="flex items-center gap-3 overflow-hidden">
-                        <div className="flex-shrink-0 w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center shadow-sm overflow-hidden p-1">
-                            <img
-                                src="https://baraka-shop-alpha.vercel.app/_next/image?url=https%3A%2F%2Fbaraka.sn%2Fwp-content%2Fuploads%2F2025%2F11%2FWhatsApp-Image-2025-08-30-at-22.56.22-2.png&w=2048&q=75"
-                                alt="Baraka Shop"
-                                className="w-full h-full object-contain"
-                            />
-                        </div>
-                        {!isSidebarCollapsed && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="flex flex-col whitespace-nowrap"
-                            >
-                                <span className="font-bold text-[14px] text-slate-900 tracking-tight leading-none mb-0.5">
-                                    Baraka Admin
-                                </span>
-                                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none">
-                                    Control Panel
-                                </span>
-                            </motion.div>
-                        )}
+                {/* Logo Section - Full Width */}
+                <div className="px-4 h-[72px] flex items-center justify-center border-b border-slate-200/40 overflow-hidden">
+                    <Link href="/admin" className="flex items-center justify-center w-full h-full">
+                        <img
+                            src="/logo.png"
+                            alt="Baraka Shop"
+                            className={cn(
+                                "object-contain transition-all duration-300",
+                                isSidebarCollapsed ? "w-10 h-10" : "w-[85%] h-12"
+                            )}
+                        />
                     </Link>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 px-3 py-4 space-y-7 overflow-y-auto custom-scrollbar">
+                <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {sidebarGroups.map((group, idx) => (
                         <div key={idx} className="space-y-1.5">
                             {!isSidebarCollapsed && (
@@ -144,11 +132,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                         <Link
                                             key={item.href}
                                             href={item.href}
+                                            onMouseEnter={(e) => {
+                                                if (isSidebarCollapsed) {
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    setHoveredTooltip({
+                                                        label: item.label,
+                                                        top: rect.top + rect.height / 2,
+                                                        left: rect.right + 10
+                                                    });
+                                                }
+                                            }}
+                                            onMouseLeave={() => setHoveredTooltip(null)}
                                             className={cn(
-                                                "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
+                                                "flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-200 group relative",
                                                 isActive
                                                     ? "bg-white text-orange-600 shadow-sm border border-slate-200/50 font-semibold"
-                                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/20"
+                                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/20",
+                                                isSidebarCollapsed && "justify-center px-0 py-2"
                                             )}
                                         >
                                             <div
@@ -185,7 +185,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="p-4 mt-auto border-t border-slate-200/50">
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200 group"
+                        onMouseEnter={(e) => {
+                            if (isSidebarCollapsed) {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setHoveredTooltip({
+                                    label: 'Déconnexion',
+                                    top: rect.top + rect.height / 2,
+                                    left: rect.right + 10
+                                });
+                            }
+                        }}
+                        onMouseLeave={() => setHoveredTooltip(null)}
+                        className={cn(
+                            "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200 group relative",
+                            isSidebarCollapsed && "justify-center px-0"
+                        )}
                     >
                         <LogOut size={16} strokeWidth={2} />
                         {!isSidebarCollapsed && <span className="text-[13px] font-medium">Déconnexion</span>}
@@ -372,6 +386,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     }}
                 />
             </main>
+
+            {/* Global Hover Tooltip */}
+            <AnimatePresence>
+                {hoveredTooltip && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -5, y: "-50%" }}
+                        animate={{ opacity: 1, x: 0, y: "-50%" }}
+                        exit={{ opacity: 0, x: -5, y: "-50%" }}
+                        transition={{ duration: 0.15 }}
+                        className="fixed z-[100] px-2.5 py-1.5 bg-slate-800 text-white text-[12px] font-medium rounded-md shadow-lg pointer-events-none whitespace-nowrap"
+                        style={{
+                            top: hoveredTooltip.top,
+                            left: hoveredTooltip.left,
+                        }}
+                    >
+                        {hoveredTooltip.label}
+                        <div className="absolute top-1/2 -left-1 -mt-1 border-4 border-transparent border-r-slate-800"></div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

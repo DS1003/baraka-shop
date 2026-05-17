@@ -561,6 +561,7 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                     thirdLevelCategoryId: thirdId || null,
                     brandId: bId || null,
                     images: p.images ? (Array.isArray(p.images) ? p.images : p.images.split(',').map(img => img.trim())) : [],
+                    videos: [],
                     storeId: p.metadata?.storeId || null,
                     metadata: {
                         ...(p.metadata || {}),

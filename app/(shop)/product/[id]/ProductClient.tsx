@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
@@ -17,12 +17,19 @@ import {
     ChevronLeft,
     MessageSquare,
     Info,
-    LayoutGrid
+    LayoutGrid,
+    Play,
+    Maximize2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { ProductCard } from '@/ui/ProductCard'
 import { useCart } from '@/context/CartContext'
+import { MediaViewer, buildProductMedia, getYouTubeId, getYouTubeThumbnail } from '@/components/MediaViewer'
+import type { MediaItem } from '@/components/MediaViewer'
+import { useSession } from 'next-auth/react'
+import { toast } from 'sonner'
+import { checkWishlistAction, toggleWishlistAction } from '@/lib/actions/user-actions'
 
 interface ProductClientProps {
     product: any
@@ -31,10 +38,54 @@ interface ProductClientProps {
 
 export function ProductClient({ product, similarProducts }: ProductClientProps) {
     const { addToCart } = useCart()
+    const { data: session } = useSession()
+    const [isWishlisted, setIsWishlisted] = useState(false)
+    const [isWishlisting, setIsWishlisting] = useState(false)
+
+    useEffect(() => {
+        if (session?.user?.id) {
+            checkWishlistAction(product.id).then(setIsWishlisted)
+        }
+    }, [session?.user?.id, product.id])
+
+    const handleWishlistToggle = async () => {
+        if (!session?.user?.id) {
+            toast.error("Veuillez vous connecter pour utiliser la liste d'envies.")
+            return
+        }
+        setIsWishlisting(true)
+        const res = await toggleWishlistAction(product.id)
+        if (res.success) {
+            setIsWishlisted(res.isWishlisted)
+            toast.success(res.message)
+        } else {
+            toast.error(res.message)
+        }
+        setIsWishlisting(false)
+    }
+
+    const handleShare = async () => {
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: product.name,
+                    text: `Découvrez ${product.name} sur Baraka Shop !`,
+                    url: window.location.href,
+                })
+            } else {
+                await navigator.clipboard.writeText(window.location.href)
+                toast.success("Lien copié dans le presse-papiers !")
+            }
+        } catch (error) {
+            console.error("Erreur lors du partage", error)
+        }
+    }
     const [activeImg, setActiveImg] = useState(0)
     const [quantity, setQuantity] = useState(1)
     const [activeTab, setActiveTab] = useState('description')
     const [showStickyBar, setShowStickyBar] = useState(false)
+    const [viewerOpen, setViewerOpen] = useState(false)
+    const [viewerIndex, setViewerIndex] = useState(0)
 
     useEffect(() => {
         const handleScroll = () => {
@@ -77,6 +128,18 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
         : product.images && product.images.length > 0
             ? product.images
             : ['/placeholder.png']
+
+    const productVideos: string[] = product.videos || []
+
+    // Build media items for the viewer (images + videos combined)
+    const allMedia: MediaItem[] = useMemo(() => {
+        return buildProductMedia(productImages, productVideos)
+    }, [productImages, productVideos])
+
+    const openViewer = (mediaIndex: number) => {
+        setViewerIndex(mediaIndex)
+        setViewerOpen(true)
+    }
 
     const chunkSize = isMobile ? 2 : 4
     const similarProductChunks = similarProducts.reduce((resultArray: any[][], item, index) => {
@@ -133,9 +196,12 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     </h1>
                 </div>
 
-                {/* Image Gallery */}
+                {/* Image & Video Gallery */}
                 <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-2 md:gap-4">
-                    <div className="relative aspect-square bg-white rounded-3xl md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-6 md:p-12 group/main-img">
+                    <div
+                        className="relative aspect-square bg-white rounded-3xl md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-6 md:p-12 group/main-img cursor-pointer"
+                        onClick={() => openViewer(activeImg)}
+                    >
                         <motion.div
                             key={activeImg}
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -159,21 +225,88 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 </span>
                             </div>
                         )}
+                        {/* Magnify icon on hover */}
+                        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center opacity-0 group-hover/main-img:opacity-100 transition-all shadow-lg border border-gray-100">
+                            <Maximize2 className="w-4 h-4 text-gray-600" />
+                        </div>
                     </div>
 
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        {productImages.map((img: string, idx: number) => (
-                            <button
-                                key={idx}
-                                onClick={() => setActiveImg(idx)}
-                                className={cn(
-                                    "relative w-16 h-16 md:w-24 md:h-24 shrink-0 bg-white rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all p-1.5 md:p-2",
-                                    activeImg === idx ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
-                                )}
-                            >
-                                <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
-                            </button>
-                        ))}
+                    <div className="flex flex-wrap gap-3 pb-2">
+                        {(() => {
+                            const MAX_THUMBS = 6;
+                            const totalMedia = productImages.length + productVideos.length;
+                            const showPlus = totalMedia > MAX_THUMBS;
+                            
+                            return Array.from({ length: Math.min(totalMedia, MAX_THUMBS) }).map((_, idx) => {
+                                const isImage = idx < productImages.length;
+                                const isLastThumb = showPlus && idx === MAX_THUMBS - 1;
+                                const remainingCount = totalMedia - MAX_THUMBS + 1;
+                                
+                                if (isImage) {
+                                    const img = productImages[idx];
+                                    return (
+                                        <button
+                                            key={`img-${idx}`}
+                                            onClick={() => isLastThumb ? openViewer(idx) : setActiveImg(idx)}
+                                            className={cn(
+                                                "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-white rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all p-1.5 md:p-2",
+                                                activeImg === idx && !isLastThumb ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
+                                            )}
+                                        >
+                                            <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
+                                            {isLastThumb && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center rounded-xl md:rounded-2xl">
+                                                    <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                } else {
+                                    const vidIdx = idx - productImages.length;
+                                    const vid = productVideos[vidIdx];
+                                    const ytId = getYouTubeId(vid);
+                                    const thumbSrc = ytId ? getYouTubeThumbnail(ytId) : undefined;
+                                    
+                                    return (
+                                        <button
+                                            key={`vid-${vidIdx}`}
+                                            onClick={() => openViewer(idx)}
+                                            className={cn(
+                                                "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-gray-900 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all group/vid",
+                                                "border-gray-100 hover:border-orange-400"
+                                            )}
+                                        >
+                                            {thumbSrc ? (
+                                                <img src={thumbSrc} alt="Video" className="w-full h-full object-cover opacity-80 group-hover/vid:opacity-100 transition-opacity" />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
+                                            )}
+                                            
+                                            {!isLastThumb && (
+                                                <>
+                                                    {/* Play button overlay */}
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">
+                                                            <Play className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-white fill-white ml-0.5" />
+                                                        </div>
+                                                    </div>
+                                                    {/* Badge */}
+                                                    <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/70 text-white text-[7px] md:text-[8px] font-black uppercase rounded tracking-wider">
+                                                        {ytId ? 'YT' : 'VID'}
+                                                    </span>
+                                                </>
+                                            )}
+                                            
+                                            {isLastThumb && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
+                                                    <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                }
+                            });
+                        })()}
                     </div>
                 </div>
 
@@ -218,11 +351,21 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
                         <div className="h-4 w-px bg-gray-200" />
                         <div className="flex items-center gap-4 md:gap-6 text-gray-500">
-                            <button className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest">
-                                <Heart className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:fill-primary transition-colors" />
-                                <span>Ma liste</span>
+                            <button 
+                                onClick={handleWishlistToggle}
+                                disabled={isWishlisting}
+                                className={cn(
+                                    "group transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest disabled:opacity-50",
+                                    isWishlisted ? "text-primary" : "hover:text-primary"
+                                )}
+                            >
+                                <Heart className={cn("w-3.5 h-3.5 md:w-4 md:h-4 transition-colors", isWishlisted ? "fill-primary" : "group-hover:fill-primary")} />
+                                <span>{isWishlisted ? "Dans ma liste" : "Ma liste"}</span>
                             </button>
-                            <button className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest">
+                            <button 
+                                onClick={handleShare}
+                                className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest"
+                            >
                                 <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                 <span>Partager</span>
                             </button>
@@ -712,6 +855,14 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Media Viewer Lightbox */}
+            <MediaViewer
+                media={allMedia}
+                initialIndex={viewerIndex}
+                isOpen={viewerOpen}
+                onClose={() => setViewerOpen(false)}
+            />
         </Container>
     )
 }
