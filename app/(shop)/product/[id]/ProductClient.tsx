@@ -562,8 +562,10 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 )}
                                 
                                 {product.detailedDescription && Array.isArray(product.detailedDescription) && product.detailedDescription.length > 0 && (
-                                    <div className="space-y-16 md:space-y-24 mb-8 md:mb-10">
-                                        {product.detailedDescription.map((block: any, idx: number) => {
+                                    <div className="space-y-4 md:space-y-6 mb-8 md:mb-10">
+                                        {(() => {
+                                            let imgTextCount = 0;
+                                            return product.detailedDescription.map((block: any, idx: number) => {
                                             switch (block.type) {
                                                 case 'LOGO':
                                                     return (
@@ -595,9 +597,11 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                             <Image src={block.image} alt="" fill className="object-cover" unoptimized />
                                                         </div>
                                                     );
-                                                case 'IMAGE_LEFT':
+                                                case 'IMAGE_LEFT': {
+                                                    const isGrey = imgTextCount % 2 === 0;
+                                                    imgTextCount++;
                                                     return (
-                                                        <div key={idx} className="flex flex-col md:flex-row items-center gap-6 md:gap-12 py-12 font-montserrat">
+                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
                                                             <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
                                                                 <Image src={block.image} alt="" fill className="object-contain" unoptimized />
                                                             </div>
@@ -612,9 +616,12 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                             </div>
                                                         </div>
                                                     );
-                                                case 'IMAGE_RIGHT':
+                                                }
+                                                case 'IMAGE_RIGHT': {
+                                                    const isGrey = imgTextCount % 2 === 0;
+                                                    imgTextCount++;
                                                     return (
-                                                        <div key={idx} className="flex flex-col-reverse md:flex-row items-center gap-6 md:gap-12 py-12 font-montserrat">
+                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
                                                             <div className="w-full md:w-1/2 space-y-6">
                                                                 <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
                                                                     {block.title}
@@ -629,10 +636,12 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                             </div>
                                                         </div>
                                                     );
+                                                }
                                                 default:
                                                     return null;
                                             }
-                                        })}
+                                        });
+                                        })()}
                                     </div>
                                 )}
 
