@@ -16,6 +16,7 @@ import { getStoresAction } from '@/lib/actions/store-actions'
 const MegaMenu = dynamic(() => import('@/features/home/components/MegaMenu').then(mod => mod.MegaMenu), { ssr: false })
 const CartToast = dynamic(() => import('@/components/CartToast').then(mod => mod.CartToast), { ssr: false })
 const MiniCart = dynamic(() => import('@/components/MiniCart').then(mod => mod.MiniCart), { ssr: false })
+import { BorderGlow } from '@/components/BorderGlow'
 
 const SUGGESTIONS = [
     { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000 CFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
@@ -382,23 +383,52 @@ export function Header() {
                 </div>
             </div>
 
-            {/* 3. Navigation Bar (Desktop) */}
-            {/* 3. Navigation Bar (Desktop) */}
             <div className="bg-black text-white border-t border-white/10 hidden md:block relative z-[90]">
-                <Container className="relative flex items-center h-[55px] lg:h-[60px]">
+                {/* Subtle Electronics & Computing Tech Pattern Background */}
+                <div className="absolute inset-0 pointer-events-none opacity-[0.22] select-none overflow-hidden">
+                    <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        {/* On va diminuer l'opacité du fond en 1/4 pour qu'il soit plus subtil */}
+                        <defs opacity="0.25">
+                            {/* Sleek micro-dot matrix pattern */}
+                            <pattern id="dot-matrix" width="16" height="16" patternUnits="userSpaceOnUse">
+                                <circle cx="8" cy="8" r="0.75" fill="rgba(255, 255, 255, 0.45)" />
+                            </pattern>
+                            {/* Premium carbon fiber diagonal tech stripes */}
+                            <pattern id="diagonal-stripes" width="10" height="10" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                                <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(255, 255, 255, 0.12)" strokeWidth="1.5" />
+                                <line x1="0" y1="0" x2="0" y2="10" stroke="rgba(249, 115, 22, 0.18)" strokeWidth="0.5" />
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#dot-matrix)" />
+                        <rect width="100%" height="100%" fill="url(#diagonal-stripes)" />
+                    </svg>
+                </div>
+                <Container className="relative flex items-center h-[55px] lg:h-[60px] z-10">
                     {/* Menu Categories - Fixed Left */}
                     <div
                         className="h-full flex items-center mr-2 md:mr-4 lg:mr-8 pr-2 md:pr-4 lg:pr-8 border-r border-white/10 cursor-pointer group shrink-0"
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
                     >
-                        <div className="flex items-center justify-between bg-primary text-white px-4 lg:px-6 w-auto h-[36px] md:h-[40px] lg:h-[48px] rounded-full font-black text-xs lg:text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(var(--primary),0.2)] gap-3">
-                            <div className="flex items-center gap-1.5 lg:gap-3">
-                                <Menu className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5" />
-                                <span className="whitespace-nowrap">Tous nos produits</span>
+                        <BorderGlow
+                            glowColor="28 91 54"
+                            backgroundColor="#F97316"
+                            borderRadius={9999}
+                            glowRadius={14}
+                            glowIntensity={1.6}
+                            colors={['#ea580c', '#ffffff', '#f97316']}
+                            animated={true}
+                            edgeSensitivity={20}
+                            className="text-white px-4 lg:px-6 w-auto h-[36px] md:h-[40px] lg:h-[48px] font-black text-xs lg:text-sm uppercase tracking-wide shadow-[0_0_15px_rgba(249,115,22,0.2)] transition-all overflow-visible flex items-center justify-center border-none"
+                        >
+                            <div className="flex items-center justify-between w-full h-full gap-3 py-1">
+                                <div className="flex items-center gap-1.5 lg:gap-3">
+                                    <Menu className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5" />
+                                    <span className="whitespace-nowrap">Tous nos produits</span>
+                                </div>
+                                <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
                             </div>
-                            <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
-                        </div>
+                        </BorderGlow>
                         <AnimatePresence>
                             {showMegaMenu && (
                                 <div className="absolute top-full left-0 w-full z-[120] px-4 md:px-6 lg:px-8">
