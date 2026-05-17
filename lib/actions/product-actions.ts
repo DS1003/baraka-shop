@@ -563,6 +563,7 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                     images: p.images ? (Array.isArray(p.images) ? p.images : p.images.split(',').map(img => img.trim())) : [],
                     videos: [],
                     storeId: p.metadata?.storeId || null,
+                    isPublished: false,
                     metadata: {
                         ...(p.metadata || {}),
                         importedAt: new Date().toISOString()

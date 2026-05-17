@@ -597,7 +597,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     );
                                                 case 'IMAGE_LEFT':
                                                     return (
-                                                        <div key={idx} className="flex flex-col md:flex-row items-center gap-12 md:gap-24 py-12 font-montserrat">
+                                                        <div key={idx} className="flex flex-col md:flex-row items-center gap-6 md:gap-12 py-12 font-montserrat">
                                                             <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
                                                                 <Image src={block.image} alt="" fill className="object-contain" unoptimized />
                                                             </div>
@@ -614,7 +614,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     );
                                                 case 'IMAGE_RIGHT':
                                                     return (
-                                                        <div key={idx} className="flex flex-col-reverse md:flex-row items-center gap-12 md:gap-24 py-12 font-montserrat">
+                                                        <div key={idx} className="flex flex-col-reverse md:flex-row items-center gap-6 md:gap-12 py-12 font-montserrat">
                                                             <div className="w-full md:w-1/2 space-y-6">
                                                                 <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
                                                                     {block.title}
@@ -653,11 +653,11 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                             "Service Après-Vente Local",
                                             "Authenticité Garantie"
                                         ]).map((feature: any, i: number) => (
-                                            <div key={i} className="flex items-center gap-2.5 md:gap-3 group">
-                                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-green-50 flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all">
+                                            <div key={i} className="flex items-start md:items-center gap-2.5 md:gap-3 group">
+                                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-green-50 flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all shrink-0 mt-0.5 md:mt-0">
                                                     <Zap className="w-3.5 h-3.5 md:w-4 md:h-4" fill="currentColor" />
                                                 </div>
-                                                <span className="text-[13px] md:text-[15px] font-bold text-[#1B1F3B]">{feature}</span>
+                                                <span className="text-[13px] md:text-[15px] font-bold text-[#1B1F3B] pt-0.5 md:pt-0 leading-snug">{feature}</span>
                                             </div>
                                         ))}
                                     </div>

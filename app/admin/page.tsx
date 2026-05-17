@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     CreditCard,
     TrendingUp,
@@ -44,6 +44,14 @@ import {
 
 const DASHBOARD_POLL_INTERVAL = 30_000; // 30 seconds
 
+const PERIODS = [
+    { id: '7D', label: '7 Derniers Jours' },
+    { id: '30D', label: '30 Derniers Jours' },
+    { id: 'THIS_MONTH', label: 'Ce Mois' },
+    { id: 'THIS_YEAR', label: 'Cette Année' },
+    { id: 'ALL', label: 'Toutes les données' }
+];
+
 export default function AdminDashboard() {
     const [chartMode, setChartMode] = useState<'revenues' | 'orders' | 'basket'>('revenues');
     const [stats, setStats] = useState<any>(null);
@@ -55,13 +63,17 @@ export default function AdminDashboard() {
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
     const isFirstLoadRef = useRef(true);
 
-    const loadData = useCallback(async () => {
+    const [selectedPeriod, setSelectedPeriod] = useState<string>('30D');
+    const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const loadData = useCallback(async (period: string = '30D') => {
         if (isFirstLoadRef.current) {
             setLoading(true);
         }
         try {
             const [dashStats, catRev, activities] = await Promise.all([
-                getDashboardStats(),
+                getDashboardStats(period),
                 getCategoryRevenue(),
                 getRecentActivity()
             ]);
@@ -80,16 +92,27 @@ export default function AdminDashboard() {
         }
     }, []);
 
-    // Initial load
+    // Handle click outside dropdown
     useEffect(() => {
-        loadData();
-    }, [loadData]);
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setPeriodDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Initial and period change load
+    useEffect(() => {
+        loadData(selectedPeriod);
+    }, [selectedPeriod, loadData]);
 
     // Polling interval
     useEffect(() => {
-        const timer = setInterval(loadData, DASHBOARD_POLL_INTERVAL);
+        const timer = setInterval(() => loadData(selectedPeriod), DASHBOARD_POLL_INTERVAL);
         return () => clearInterval(timer);
-    }, [loadData]);
+    }, [loadData, selectedPeriod]);
 
     if (loading) {
         return (
@@ -116,14 +139,46 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={() => alert("Le filtrage dynamique par date sera activé lors de la prochaine mise à jour de la base de données. Les données affichées sont actuellement globales.")}
-                        className="flex items-center gap-2.5 px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-[13px] hover:bg-slate-50 transition-all shadow-sm active:scale-95"
-                    >
-                        <Calendar size={18} className="text-slate-400" />
-                        <span className="uppercase">{new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
-                        <ChevronDown size={14} className="text-slate-300" />
-                    </button>
+                    <div className="relative" ref={dropdownRef}>
+                        <button 
+                            onClick={() => setPeriodDropdownOpen(!periodDropdownOpen)}
+                            className="flex items-center gap-2.5 px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-[13px] hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+                        >
+                            <Calendar size={18} className="text-slate-400" />
+                            <span className="uppercase">{PERIODS.find(p => p.id === selectedPeriod)?.label}</span>
+                            <ChevronDown size={14} className="text-slate-300 transition-transform duration-200" style={{ transform: periodDropdownOpen ? 'rotate(180deg)' : 'none' }} />
+                        </button>
+                        
+                        <AnimatePresence>
+                            {periodDropdownOpen && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute right-0 mt-2.5 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden py-1.5"
+                                >
+                                    {PERIODS.map((period) => (
+                                        <button
+                                            key={period.id}
+                                            onClick={() => {
+                                                setSelectedPeriod(period.id);
+                                                setPeriodDropdownOpen(false);
+                                            }}
+                                            className={cn(
+                                                "w-full text-left px-4 py-2.5 text-[12px] font-bold transition-all flex items-center justify-between",
+                                                selectedPeriod === period.id 
+                                                    ? "bg-orange-50 text-orange-600" 
+                                                    : "text-slate-600 hover:bg-slate-50"
+                                            )}
+                                        >
+                                            <span>{period.label}</span>
+                                            {selectedPeriod === period.id && <span className="w-1.5 h-1.5 rounded-full bg-orange-600" />}
+                                        </button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                     <button className="flex items-center gap-3 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold text-[13px] hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-200 transition-all shadow-lg shadow-orange-100 group">
                         <Download size={18} />
                         <span>Générer Rapport</span>

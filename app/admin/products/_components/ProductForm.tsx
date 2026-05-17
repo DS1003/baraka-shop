@@ -174,6 +174,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const videoFileInputRef = React.useRef<HTMLInputElement>(null);
+    const [isPublished, setIsPublished] = useState(editingProduct ? editingProduct.isPublished : false);
 
     // Categories
     const [categories, setCategories] = useState<any[]>([]);
@@ -248,6 +249,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             }
             setFormImages(editingProduct.images || []);
             setFormVideos(editingProduct.videos || []);
+            setIsPublished(editingProduct.isPublished !== undefined ? editingProduct.isPublished : false);
             setColorVariants(
                 (editingProduct.colorVariants || []).map((cv: any) => ({
                     id: cv.id,
@@ -290,6 +292,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             shortDescription: formData.get('shortDescription') as string || null,
             detailedDescription,
             features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
+            isPublished,
             metadata: (() => {
                 const raw = metadataText;
                 if (!raw || raw.trim() === '') return {};
@@ -1150,6 +1153,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     className="flex-1 px-6 py-3.5 bg-white border border-slate-200 rounded-xl font-bold text-[13px] text-slate-500 hover:bg-slate-50 transition-all shadow-sm"
                 >
                     Annuler
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setIsPublished(!isPublished)}
+                    className={cn(
+                        "px-6 py-3.5 border rounded-xl font-bold text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-95",
+                        isPublished 
+                            ? "bg-blue-50 text-blue-600 border-blue-100/50 hover:bg-blue-100" 
+                            : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
+                    )}
+                >
+                    <div className={cn("w-2 h-2 rounded-full", isPublished ? "bg-blue-500 animate-pulse" : "bg-slate-400")} />
+                    <span>{isPublished ? 'Statut: Publié' : 'Statut: Caché'}</span>
                 </button>
                 <button
                     type="submit"

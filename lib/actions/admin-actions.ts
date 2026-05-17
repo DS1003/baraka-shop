@@ -6,10 +6,30 @@ import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
 import { invalidatePrefix, invalidateCache } from '@/lib/redis';
 
-export async function getDashboardStats() {
+export async function getDashboardStats(period: string = 'ALL') {
     try {
+        const orderWhereClause: any = {};
+        const now = new Date();
+        
+        if (period === '7D') {
+            const dateLimit = new Date();
+            dateLimit.setDate(now.getDate() - 7);
+            orderWhereClause.createdAt = { gte: dateLimit };
+        } else if (period === '30D') {
+            const dateLimit = new Date();
+            dateLimit.setDate(now.getDate() - 30);
+            orderWhereClause.createdAt = { gte: dateLimit };
+        } else if (period === 'THIS_MONTH') {
+            const dateLimit = new Date(now.getFullYear(), now.getMonth(), 1);
+            orderWhereClause.createdAt = { gte: dateLimit };
+        } else if (period === 'THIS_YEAR') {
+            const dateLimit = new Date(now.getFullYear(), 0, 1);
+            orderWhereClause.createdAt = { gte: dateLimit };
+        }
+
         const [orders, customers, products, reviews] = await Promise.all([
             prisma.order.findMany({
+                where: orderWhereClause,
                 include: { items: true }
             }),
             prisma.user.count({ where: { role: 'USER' } }),
@@ -21,43 +41,62 @@ export async function getDashboardStats() {
         const orderCount = orders.length;
         const avgBasket = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-        // Month-over-month calculation (mocked trend for now but we'll fetch real data)
-        // In a real app we'd compare with last month's stats.
+        // Dynamic trends based on period
         const stats = {
             revenue: {
                 total: totalRevenue,
-                trend: "+12.5%", // Placeholder for now
+                trend: period === 'ALL' ? "+12.5%" : (period === '7D' ? "7 derniers jours" : "Période sélectionnée"),
                 lastMonth: totalRevenue * 0.9,
             },
             orders: {
                 total: orderCount,
-                trend: "+8.2%", // Placeholder
+                trend: period === 'ALL' ? "+8.2%" : "Commandes reçues",
             },
             customers: {
                 total: customers,
-                trend: "+15.3%", // Placeholder
+                trend: "+15.3%",
             },
             avgBasket: {
                 total: avgBasket,
-                trend: "+4.1%", // Placeholder
+                trend: "+4.1%",
             }
         };
 
-        // Revenue history for the chart (grouped by date)
-        // Group by day for the last 30 days
-        const last30Days = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (6 - i));
-            return d.toISOString().split('T')[0];
-        });
+        // Revenue history based on period
+        let historyLength = 7;
+        if (period === '30D') historyLength = 30;
+        else if (period === '7D') historyLength = 7;
+        else if (period === 'THIS_MONTH') {
+            historyLength = now.getDate(); // du 1er au jour actuel
+        } else if (period === 'THIS_YEAR') {
+            historyLength = 12; // par mois
+        }
 
-        const revenueHistory = last30Days.map(date => {
-            const dayOrders = orders.filter((o: any) => o.createdAt.toISOString().split('T')[0] === date);
-            return {
-                name: new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(new Date(date)),
-                value: dayOrders.reduce((acc: number, o: any) => acc + o.total, 0)
-            };
-        });
+        let revenueHistory = [];
+        if (period === 'THIS_YEAR') {
+            revenueHistory = Array.from({ length: 12 }, (_, i) => {
+                const monthOrders = orders.filter((o: any) => o.createdAt.getMonth() === i && o.createdAt.getFullYear() === now.getFullYear());
+                const monthName = new Intl.DateTimeFormat('fr-FR', { month: 'short' }).format(new Date(now.getFullYear(), i, 1));
+                return {
+                    name: monthName.toUpperCase(),
+                    value: monthOrders.reduce((acc: number, o: any) => acc + o.total, 0)
+                };
+            });
+        } else {
+            const days = Array.from({ length: historyLength }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (historyLength - 1 - i));
+                return d.toISOString().split('T')[0];
+            });
+
+            revenueHistory = days.map(date => {
+                const dayOrders = orders.filter((o: any) => o.createdAt.toISOString().split('T')[0] === date);
+                return {
+                    name: new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric' }).format(new Date(date)),
+                    value: dayOrders.reduce((acc: number, o: any) => acc + o.total, 0)
+                };
+            });
+        }
 
         return { stats, revenueHistory };
     } catch (error) {
