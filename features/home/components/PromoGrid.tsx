@@ -102,18 +102,21 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
     return (
         <section className="overflow-hidden py-10">
             <Container>
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-                    <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between mb-8 md:mb-10 gap-4 w-full">
+                    <div className="flex flex-col gap-1.5 md:gap-2">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-[2px] bg-primary rounded-full" />
                             <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
                         </div>
-                        <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
+                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
                             Nos <span className="text-primary italic">Incontournables</span>
                         </h2>
+                        <p className="text-slate-400 text-[11px] sm:text-xs md:text-sm font-medium mt-1.5 md:mt-2 max-w-sm md:max-w-xl leading-relaxed">
+                            Découvrez nos offres exceptionnelles et nos packs phares sélectionnés spécialement pour vous !
+                        </p>
                     </div>
-                    
-                    <div className="flex md:hidden gap-2.5">
+
+                    <div className="flex md:hidden gap-2.5 flex-shrink-0">
                         <button
                             onClick={slidePrev}
                             className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
@@ -129,50 +132,50 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                     </div>
                 </div>
 
-                    {/* Desktop Grid */}
-                    <div className="hidden md:grid grid-cols-4 gap-8">
-                        {promos.map((promo, idx) => (
-                            <PromoCard key={idx} promo={promo} />
+                {/* Desktop Grid */}
+                <div className="hidden md:grid grid-cols-4 gap-8">
+                    {promos.map((promo, idx) => (
+                        <PromoCard key={idx} promo={promo} />
+                    ))}
+                </div>
+
+                {/* Mobile Carousel */}
+                <div className="md:hidden relative">
+                    <div className="relative h-[560px] w-full mb-10">
+                        <AnimatePresence initial={false} custom={direction}>
+                            <motion.div
+                                key={currentIndex}
+                                custom={direction}
+                                variants={variants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{
+                                    x: { type: "spring", stiffness: 300, damping: 32 },
+                                    opacity: { duration: 0.3 }
+                                }}
+                                className="absolute inset-0"
+                            >
+                                <PromoCard promo={promos[currentIndex]} isMobile={true} />
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Pagination Dots */}
+                    <div className="flex justify-center gap-3">
+                        {promos.map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => {
+                                    setDirection(idx > currentIndex ? 1 : -1)
+                                    setCurrentIndex(idx)
+                                }}
+                                className={`h-1.5 rounded-full transition-all duration-500 ${currentIndex === idx ? "w-10 bg-[#1B1F3B]" : "w-1.5 bg-slate-200"
+                                    }`}
+                            />
                         ))}
                     </div>
-
-                    {/* Mobile Carousel */}
-                    <div className="md:hidden relative">
-                        <div className="relative h-[560px] w-full mb-10">
-                            <AnimatePresence initial={false} custom={direction}>
-                                <motion.div
-                                    key={currentIndex}
-                                    custom={direction}
-                                    variants={variants}
-                                    initial="enter"
-                                    animate="center"
-                                    exit="exit"
-                                    transition={{
-                                        x: { type: "spring", stiffness: 300, damping: 32 },
-                                        opacity: { duration: 0.3 }
-                                    }}
-                                    className="absolute inset-0"
-                                >
-                                    <PromoCard promo={promos[currentIndex]} isMobile={true} />
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Pagination Dots */}
-                        <div className="flex justify-center gap-3">
-                            {promos.map((_, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => {
-                                        setDirection(idx > currentIndex ? 1 : -1)
-                                        setCurrentIndex(idx)
-                                    }}
-                                    className={`h-1.5 rounded-full transition-all duration-500 ${currentIndex === idx ? "w-10 bg-[#1B1F3B]" : "w-1.5 bg-slate-200"
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
+                </div>
             </Container>
         </section>
     )

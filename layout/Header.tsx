@@ -283,8 +283,8 @@ export function Header() {
                                         className="w-full px-6 h-full bg-transparent outline-none text-base placeholder:text-gray-400 font-medium"
                                     />
                                     {searchQuery && (
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             onClick={() => setSearchQuery('')}
                                             className="absolute right-2 p-1.5 text-gray-400 hover:text-primary transition-colors"
                                         >
@@ -336,15 +336,15 @@ export function Header() {
                                                     </div>
                                                 )}
                                             </div>
-                                            <Link 
-                                                href={`/boutique?q=${searchQuery}`} 
+                                            <Link
+                                                href={`/boutique?q=${searchQuery}`}
                                                 className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
                                                 onClick={() => {
                                                     setIsSearchFocused(false)
                                                     setSearchQuery('')
                                                 }}
-                                            > 
-                                                Voir tous les résultats 
+                                            >
+                                                Voir tous les résultats
                                             </Link>
                                         </motion.div>
                                         <div className="fixed inset-0 z-[105] bg-black/5" onClick={() => setIsSearchFocused(false)} />
@@ -395,7 +395,7 @@ export function Header() {
                         <div className="flex items-center justify-between bg-primary text-white px-3 md:px-4 lg:px-6 w-[150px] md:w-[180px] lg:w-[240px] h-[36px] md:h-[40px] lg:h-[48px] rounded-full font-black text-[10px] md:text-xs lg:text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(var(--primary),0.2)]">
                             <div className="flex items-center gap-1.5 lg:gap-3">
                                 <Menu className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5" />
-                                <span>Catégories</span>
+                                <span>Tous nos produits</span>
                             </div>
                             <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
                         </div>
@@ -514,8 +514,8 @@ export function Header() {
                             onFocus={() => setIsSearchFocused(true)}
                         />
                         {searchQuery && (
-                            <button 
-                                type="button" 
+                            <button
+                                type="button"
                                 onClick={() => setSearchQuery('')}
                                 className="absolute right-1 p-2 text-gray-400"
                             >
@@ -566,15 +566,15 @@ export function Header() {
                                             </div>
                                         </Link>
                                     ))}
-                                    <Link 
-                                        href={`/boutique?q=${searchQuery}`} 
+                                    <Link
+                                        href={`/boutique?q=${searchQuery}`}
                                         className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
                                         onClick={() => {
                                             setIsSearchFocused(false)
                                             setSearchQuery('')
                                         }}
-                                    > 
-                                        Voir tous les résultats 
+                                    >
+                                        Voir tous les résultats
                                     </Link>
                                 </div>
                             ) : searchQuery.length > 1 ? (
