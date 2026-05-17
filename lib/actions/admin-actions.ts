@@ -914,19 +914,19 @@ export async function upsertProduct(data: any, id?: string) {
         if (categoryId) prismaData.category = { connect: { id: categoryId } };
         
         if (subCategoryId) prismaData.subCategory = { connect: { id: subCategoryId } };
-        else if (subCategoryId === null) prismaData.subCategory = { disconnect: true };
+        else if (subCategoryId === null && id) prismaData.subCategory = { disconnect: true };
 
         if (thirdLevelCategoryId) prismaData.thirdLevelCategory = { connect: { id: thirdLevelCategoryId } };
-        else if (thirdLevelCategoryId === null) prismaData.thirdLevelCategory = { disconnect: true };
+        else if (thirdLevelCategoryId === null && id) prismaData.thirdLevelCategory = { disconnect: true };
 
         if (brandId) prismaData.brand = { connect: { id: brandId } };
-        else if (brandId === null) prismaData.brand = { disconnect: true };
+        else if (brandId === null && id) prismaData.brand = { disconnect: true };
 
         if (storeId) prismaData.store = { connect: { id: storeId } };
-        else if (storeId === null) prismaData.store = { disconnect: true };
+        else if (storeId === null && id) prismaData.store = { disconnect: true };
 
         if (promotionId) prismaData.promotion = { connect: { id: promotionId } };
-        else if (promotionId === null) prismaData.promotion = { disconnect: true };
+        else if (promotionId === null && id) prismaData.promotion = { disconnect: true };
 
         let product;
         if (id) {

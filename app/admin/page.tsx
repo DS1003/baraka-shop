@@ -116,9 +116,12 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-2.5 px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-[13px] hover:bg-slate-50 transition-all shadow-sm">
+                    <button 
+                        onClick={() => alert("Le filtrage dynamique par date sera activé lors de la prochaine mise à jour de la base de données. Les données affichées sont actuellement globales.")}
+                        className="flex items-center gap-2.5 px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold text-[13px] hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+                    >
                         <Calendar size={18} className="text-slate-400" />
-                        <span>FÉVRIER 2026</span>
+                        <span className="uppercase">{new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
                         <ChevronDown size={14} className="text-slate-300" />
                     </button>
                     <button className="flex items-center gap-3 px-6 py-3 bg-orange-600 text-white rounded-xl font-bold text-[13px] hover:bg-orange-700 hover:shadow-xl hover:shadow-orange-200 transition-all shadow-lg shadow-orange-100 group">
