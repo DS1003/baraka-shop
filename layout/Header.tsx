@@ -392,10 +392,10 @@ export function Header() {
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
                     >
-                        <div className="flex items-center justify-between bg-primary text-white px-3 md:px-4 lg:px-6 w-[150px] md:w-[180px] lg:w-[240px] h-[36px] md:h-[40px] lg:h-[48px] rounded-full font-black text-[10px] md:text-xs lg:text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                        <div className="flex items-center justify-between bg-primary text-white px-4 lg:px-6 w-auto h-[36px] md:h-[40px] lg:h-[48px] rounded-full font-black text-xs lg:text-sm uppercase tracking-wide group-hover:bg-primary/90 transition-all shadow-[0_0_15px_rgba(var(--primary),0.2)] gap-3">
                             <div className="flex items-center gap-1.5 lg:gap-3">
                                 <Menu className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5" />
-                                <span>Tous nos produits</span>
+                                <span className="whitespace-nowrap">Tous nos produits</span>
                             </div>
                             <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
                         </div>
