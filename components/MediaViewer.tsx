@@ -84,14 +84,17 @@ export function MediaViewer({ media, initialIndex = 0, isOpen, onClose }: MediaV
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed inset-0 z-[9999] flex"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center p-4 py-8 md:p-10 lg:p-16"
                     onClick={onClose}
                 >
                     {/* Backdrop */}
-                    <div className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+                    <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
 
                     {/* Content */}
-                    <div className="relative flex w-full h-full" onClick={e => e.stopPropagation()}>
+                    <div 
+                        className="relative flex flex-col md:flex-row w-full h-full max-w-6xl max-h-[80vh] md:max-h-[85vh] bg-zinc-950/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden z-10" 
+                        onClick={e => e.stopPropagation()}
+                    >
 
                         {/* Left: Thumbnail strip */}
                         <div className="hidden md:flex flex-col w-[100px] bg-black/40 border-r border-white/5 py-4 overflow-y-auto scrollbar-hide gap-2 px-2">

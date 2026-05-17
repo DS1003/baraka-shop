@@ -198,115 +198,175 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                 {/* Image & Video Gallery */}
                 <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-2 md:gap-4">
-                    <div
-                        className="relative aspect-square bg-white rounded-3xl md:rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-6 md:p-12 group/main-img cursor-pointer"
-                        onClick={() => openViewer(activeImg)}
-                    >
-                        <motion.div
-                            key={activeImg}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.4 }}
-                            className="relative w-full h-full"
+                    {/* Desktop Gallery: Main Image + Thumbnails */}
+                    <div className="hidden md:flex flex-col gap-4">
+                        <div
+                            className="relative aspect-square bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center p-12 group/main-img cursor-pointer"
+                            onClick={() => openViewer(activeImg)}
                         >
-                            <Image
-                                src={productImages[activeImg]}
-                                alt={product.name}
-                                fill
-                                className="object-contain group-hover/main-img:scale-110 transition-transform duration-700"
-                                priority
-                                unoptimized
-                            />
-                        </motion.div>
+                            <motion.div
+                                key={activeImg}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.4 }}
+                                className="relative w-full h-full"
+                            >
+                                <Image
+                                    src={productImages[activeImg]}
+                                    alt={product.name}
+                                    fill
+                                    className="object-contain group-hover/main-img:scale-110 transition-transform duration-700"
+                                    priority
+                                    unoptimized
+                                />
+                            </motion.div>
+                            {product.oldPrice && (
+                                <div className="absolute top-8 left-8">
+                                    <span className="bg-primary text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-widest">
+                                        Promotion Flash
+                                    </span>
+                                </div>
+                            )}
+                            <div className="absolute bottom-6 right-6 w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center opacity-0 group-hover/main-img:opacity-100 transition-all shadow-lg border border-gray-100">
+                                <Maximize2 className="w-4 h-4 text-gray-600" />
+                            </div>
+                        </div>
+
+                        {/* Thumbnails */}
+                        <div className="flex flex-wrap gap-3 pb-2">
+                            {(() => {
+                                const MAX_THUMBS = 6;
+                                const totalMedia = productImages.length + productVideos.length;
+                                const showPlus = totalMedia > MAX_THUMBS;
+                                
+                                return Array.from({ length: Math.min(totalMedia, MAX_THUMBS) }).map((_, idx) => {
+                                    const isImage = idx < productImages.length;
+                                    const isLastThumb = showPlus && idx === MAX_THUMBS - 1;
+                                    const remainingCount = totalMedia - MAX_THUMBS + 1;
+                                    
+                                    if (isImage) {
+                                        const img = productImages[idx];
+                                        return (
+                                            <button
+                                                key={`img-${idx}`}
+                                                onClick={() => isLastThumb ? openViewer(idx) : setActiveImg(idx)}
+                                                className={cn(
+                                                    "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-white rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all p-1.5 md:p-2",
+                                                    activeImg === idx && !isLastThumb ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
+                                                )}
+                                            >
+                                                <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
+                                                {isLastThumb && (
+                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center rounded-xl md:rounded-2xl">
+                                                        <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    } else {
+                                        const vidIdx = idx - productImages.length;
+                                        const vid = productVideos[vidIdx];
+                                        const ytId = getYouTubeId(vid);
+                                        const thumbSrc = ytId ? getYouTubeThumbnail(ytId) : undefined;
+                                        
+                                        return (
+                                            <button
+                                                key={`vid-${vidIdx}`}
+                                                onClick={() => openViewer(idx)}
+                                                className={cn(
+                                                    "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-gray-900 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all group/vid",
+                                                    "border-gray-100 hover:border-orange-400"
+                                                )}
+                                            >
+                                                {thumbSrc ? (
+                                                    <img src={thumbSrc} alt="Video" className="w-full h-full object-cover opacity-80 group-hover/vid:opacity-100 transition-opacity" />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
+                                                )}
+                                                
+                                                {!isLastThumb && (
+                                                    <>
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">
+                                                                <Play className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-white fill-white ml-0.5" />
+                                                            </div>
+                                                        </div>
+                                                        <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/70 text-white text-[7px] md:text-[8px] font-black uppercase rounded tracking-wider">
+                                                            {ytId ? 'YT' : 'VID'}
+                                                        </span>
+                                                    </>
+                                                )}
+                                                
+                                                {isLastThumb && (
+                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
+                                                        <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    }
+                                });
+                            })()}
+                        </div>
+                    </div>
+
+                    {/* Mobile Gallery: Horizontal Swipeable Snap Scroll Carousel */}
+                    <div className="block md:hidden relative aspect-square w-full rounded-3xl overflow-hidden border border-gray-100 shadow-sm bg-white">
+                        <div 
+                            className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            onScroll={(e) => {
+                                const container = e.currentTarget;
+                                const width = container.clientWidth;
+                                const newIdx = Math.round(container.scrollLeft / width);
+                                if (newIdx !== activeImg) {
+                                    setActiveImg(newIdx);
+                                }
+                            }}
+                        >
+                            {productImages.map((img: string, idx: number) => (
+                                <div 
+                                    key={idx} 
+                                    className="w-full h-full flex-shrink-0 snap-start flex items-center justify-center p-6 relative cursor-pointer"
+                                    onClick={() => openViewer(idx)}
+                                >
+                                    <Image
+                                        src={img}
+                                        alt={`${product.name} - ${idx}`}
+                                        fill
+                                        className="object-contain p-4"
+                                        unoptimized
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
                         {product.oldPrice && (
-                            <div className="absolute top-6 left-6 md:top-8 md:left-8">
-                                <span className="bg-primary text-white text-[8px] md:text-[10px] font-black px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl shadow-xl shadow-primary/20 uppercase tracking-widest">
+                            <div className="absolute top-4 left-4 z-10">
+                                <span className="bg-primary text-white text-[8px] font-black px-2.5 py-1.5 rounded-lg shadow-lg shadow-primary/20 uppercase tracking-widest">
                                     Promotion Flash
                                 </span>
                             </div>
                         )}
-                        {/* Magnify icon on hover */}
-                        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center opacity-0 group-hover/main-img:opacity-100 transition-all shadow-lg border border-gray-100">
-                            <Maximize2 className="w-4 h-4 text-gray-600" />
-                        </div>
-                    </div>
 
-                    <div className="flex flex-wrap gap-3 pb-2">
-                        {(() => {
-                            const MAX_THUMBS = 6;
-                            const totalMedia = productImages.length + productVideos.length;
-                            const showPlus = totalMedia > MAX_THUMBS;
-                            
-                            return Array.from({ length: Math.min(totalMedia, MAX_THUMBS) }).map((_, idx) => {
-                                const isImage = idx < productImages.length;
-                                const isLastThumb = showPlus && idx === MAX_THUMBS - 1;
-                                const remainingCount = totalMedia - MAX_THUMBS + 1;
-                                
-                                if (isImage) {
-                                    const img = productImages[idx];
-                                    return (
-                                        <button
-                                            key={`img-${idx}`}
-                                            onClick={() => isLastThumb ? openViewer(idx) : setActiveImg(idx)}
-                                            className={cn(
-                                                "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-white rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all p-1.5 md:p-2",
-                                                activeImg === idx && !isLastThumb ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
-                                            )}
-                                        >
-                                            <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
-                                            {isLastThumb && (
-                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center rounded-xl md:rounded-2xl">
-                                                    <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
-                                                </div>
-                                            )}
-                                        </button>
-                                    );
-                                } else {
-                                    const vidIdx = idx - productImages.length;
-                                    const vid = productVideos[vidIdx];
-                                    const ytId = getYouTubeId(vid);
-                                    const thumbSrc = ytId ? getYouTubeThumbnail(ytId) : undefined;
-                                    
-                                    return (
-                                        <button
-                                            key={`vid-${vidIdx}`}
-                                            onClick={() => openViewer(idx)}
-                                            className={cn(
-                                                "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-gray-900 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all group/vid",
-                                                "border-gray-100 hover:border-orange-400"
-                                            )}
-                                        >
-                                            {thumbSrc ? (
-                                                <img src={thumbSrc} alt="Video" className="w-full h-full object-cover opacity-80 group-hover/vid:opacity-100 transition-opacity" />
-                                            ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
-                                            )}
-                                            
-                                            {!isLastThumb && (
-                                                <>
-                                                    {/* Play button overlay */}
-                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                        <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">
-                                                            <Play className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-white fill-white ml-0.5" />
-                                                        </div>
-                                                    </div>
-                                                    {/* Badge */}
-                                                    <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/70 text-white text-[7px] md:text-[8px] font-black uppercase rounded tracking-wider">
-                                                        {ytId ? 'YT' : 'VID'}
-                                                    </span>
-                                                </>
-                                            )}
-                                            
-                                            {isLastThumb && (
-                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
-                                                    <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
-                                                </div>
-                                            )}
-                                        </button>
-                                    );
-                                }
-                            });
-                        })()}
+                        <div className="absolute bottom-4 right-4 z-10 w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center shadow-md border border-gray-100" onClick={() => openViewer(activeImg)}>
+                            <Maximize2 className="w-3.5 h-3.5 text-gray-600" />
+                        </div>
+
+                        {/* Pagination Dots */}
+                        {productImages.length > 1 && (
+                            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+                                {productImages.map((_, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={cn(
+                                            "h-1.5 rounded-full transition-all duration-300",
+                                            activeImg === idx ? "w-4 bg-primary" : "w-1.5 bg-gray-300"
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -706,40 +766,52 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 exit={{ opacity: 0, y: -20 }}
                                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
                             >
-                                {product.metadata && typeof product.metadata === 'object' ? (
-                                    Object.entries(product.metadata)
-                                        .filter(([key]) => !['id', 'importedat', 'customfields', 'images', 'description'].includes(key.toLowerCase()))
-                                        .map(([key, value], i) => {
-                                            // Format key: Convert camelCase to Title Case but preserve normal words and acronyms
-                                            const formattedKey = key
-                                                // Only add space before a capital letter if it follows a lowercase letter (e.g. storageCapacity -> storage Capacity)
-                                                .replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                .replace(/^./, str => str.toUpperCase())
-                                                .replace('Subcategory 1', 'Sous-catégorie')
-                                                .replace('Subcategory 2', 'Type')
-                                                .replace('Category', 'Catégorie')
-                                                .replace('Price', 'Prix')
-                                                .replace('Name', 'Désignation')
-                                                .replace('Stock', 'État du stock');
+                                {product.metadata && typeof product.metadata === 'object' ? (() => {
+                                    const meta = product.metadata as any;
+                                    const order = meta._order as string[];
+                                    const entries = Object.entries(meta)
+                                        .filter(([key]) => !['id', 'importedat', 'customfields', 'images', 'description', '_order'].includes(key.toLowerCase()));
+                                    if (Array.isArray(order)) {
+                                        entries.sort((a, b) => {
+                                            const indexA = order.indexOf(a[0]);
+                                            const indexB = order.indexOf(b[0]);
+                                            if (indexA === -1 && indexB === -1) return 0;
+                                            if (indexA === -1) return 1;
+                                            if (indexB === -1) return -1;
+                                            return indexA - indexB;
+                                        });
+                                    }
+                                    return entries.map(([key, value], i) => {
+                                        // Format key: Convert camelCase to Title Case but preserve normal words and acronyms
+                                        const formattedKey = key
+                                            // Only add space before a capital letter if it follows a lowercase letter (e.g. storageCapacity -> storage Capacity)
+                                            .replace(/([a-z])([A-Z])/g, '$1 $2')
+                                            .replace(/^./, str => str.toUpperCase())
+                                            .replace('Subcategory 1', 'Sous-catégorie')
+                                            .replace('Subcategory 2', 'Type')
+                                            .replace('Category', 'Catégorie')
+                                            .replace('Price', 'Prix')
+                                            .replace('Name', 'Désignation')
+                                            .replace('Stock', 'État du stock');
 
-                                            // Format value
-                                            let formattedValue = String(value);
-                                            if (key.toLowerCase() === 'price') {
-                                                formattedValue = `${Number(value).toLocaleString()} CFA`;
-                                            } else if (key.toLowerCase().includes('date') || key.toLowerCase() === 'createdat') {
-                                                formattedValue = new Date(String(value)).toLocaleDateString('fr-FR');
-                                            } else if (typeof value === 'object') {
-                                                formattedValue = 'Détails disponibles';
-                                            }
+                                        // Format value
+                                        let formattedValue = String(value);
+                                        if (key.toLowerCase() === 'price') {
+                                            formattedValue = `${Number(value).toLocaleString()} CFA`;
+                                        } else if (key.toLowerCase().includes('date') || key.toLowerCase() === 'createdat') {
+                                            formattedValue = new Date(String(value)).toLocaleDateString('fr-FR');
+                                        } else if (typeof value === 'object') {
+                                            formattedValue = 'Détails disponibles';
+                                        }
 
-                                            return (
-                                                <div key={i} className="flex flex-col gap-1 p-5 md:p-6 bg-slate-50 border border-slate-100 rounded-[1.5rem] hover:border-orange-500/20 hover:bg-orange-50/50 transition-all">
-                                                    <span className="text-[10px] md:text-[11px] font-black text-gray-400 uppercase tracking-widest">{formattedKey}</span>
-                                                    <span className="text-sm md:text-base font-bold text-[#1B1F3B] leading-snug">{formattedValue}</span>
-                                                </div>
-                                            );
-                                        })
-                                ) : (
+                                        return (
+                                            <div key={i} className="flex flex-col gap-1 p-5 md:p-6 bg-slate-50 border border-slate-100 rounded-[1.5rem] hover:border-orange-500/20 hover:bg-orange-50/50 transition-all">
+                                                <span className="text-[10px] md:text-[11px] font-black text-gray-400 uppercase tracking-widest">{formattedKey}</span>
+                                                <span className="text-sm md:text-base font-bold text-[#1B1F3B] leading-snug">{formattedValue}</span>
+                                            </div>
+                                        );
+                                    });
+                                })() : (
                                     <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded-[2rem]">
                                         <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Fiche technique en cours de saisie...</p>
                                     </div>
