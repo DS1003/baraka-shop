@@ -112,7 +112,7 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                             Nos <span className="text-primary italic">Incontournables</span>
                         </h2>
                         <p className="text-slate-400 text-[11px] sm:text-xs md:text-sm font-medium mt-1.5 md:mt-2 max-w-sm md:max-w-xl leading-relaxed">
-                            Découvrez nos offres exceptionnelles et nos packs phares sélectionnés spécialement pour vous !
+                            Découvrez nos packs incontournables !
                         </p>
                     </div>
 
