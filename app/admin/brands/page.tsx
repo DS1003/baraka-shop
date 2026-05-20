@@ -191,24 +191,39 @@ export default function BrandsPage() {
                                         <Briefcase size={22} strokeWidth={2.5} />
                                     )}
                                 </div>
-                                <div className="relative group/opt">
-                                    <button className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-white hover:text-slate-900 transition-all border border-transparent hover:border-slate-200">
+                                <div className="relative">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === brand.id ? null : brand.id); }}
+                                        className={cn(
+                                            "w-9 h-9 flex items-center justify-center rounded-lg transition-all border",
+                                            activeMenuId === brand.id
+                                                ? "bg-white text-slate-900 border-slate-200 shadow-sm"
+                                                : "bg-slate-50 text-slate-400 border-transparent hover:bg-white hover:text-slate-900 hover:border-slate-200"
+                                        )}
+                                    >
                                         <MoreVertical size={16} />
                                     </button>
-                                    <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 group-hover/opt:opacity-100 pointer-events-none group-hover/opt:pointer-events-auto transition-all p-1 z-20">
-                                        <button
-                                            onClick={() => { setEditingBrand(brand); setIsModalOpen(true); }}
-                                            className="w-full text-left p-2 rounded-lg text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors flex items-center gap-2"
-                                        >
-                                            <Edit size={14} /> Modifier
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(brand.id)}
-                                            className="w-full text-left p-2 rounded-lg text-[12px] font-bold text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2"
-                                        >
-                                            <Trash2 size={14} /> Supprimer
-                                        </button>
-                                    </div>
+                                    {activeMenuId === brand.id && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setActiveMenuId(null)} />
+                                            <div className="absolute right-0 top-full mt-2 w-36 z-20 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                <div className="bg-white rounded-xl shadow-xl border border-slate-100 p-1">
+                                                    <button
+                                                        onClick={() => { setActiveMenuId(null); setEditingBrand(brand); setIsModalOpen(true); }}
+                                                        className="w-full text-left p-2.5 rounded-lg text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-colors flex items-center gap-2"
+                                                    >
+                                                        <Edit size={14} /> Modifier
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setActiveMenuId(null); handleDelete(brand.id); }}
+                                                        className="w-full text-left p-2.5 rounded-lg text-[12px] font-bold text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-2"
+                                                    >
+                                                        <Trash2 size={14} /> Supprimer
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
