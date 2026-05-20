@@ -281,7 +281,7 @@ export default function AccountContent({ user }: { user: any }) {
                                                             type="text"
                                                             value={profileData.username}
                                                             onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-orange-500 outline-none transition-all text-sm font-bold text-[#1B1F3B]"
+                                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-orange-500 outline-none transition-all text-base sm:text-sm font-bold text-[#1B1F3B]"
                                                             placeholder="Nom"
                                                         />
                                                     </div>
@@ -295,7 +295,7 @@ export default function AccountContent({ user }: { user: any }) {
                                                             type="text"
                                                             value={profileData.phone}
                                                             onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-orange-500 outline-none transition-all text-sm font-bold text-[#1B1F3B]"
+                                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-orange-500 outline-none transition-all text-base sm:text-sm font-bold text-[#1B1F3B]"
                                                             placeholder="+221 ..."
                                                         />
                                                     </div>
@@ -310,7 +310,7 @@ export default function AccountContent({ user }: { user: any }) {
                                                         rows={2}
                                                         value={profileData.address}
                                                         onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-orange-500 outline-none transition-all text-sm font-bold text-[#1B1F3B] resize-none"
+                                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-orange-500 outline-none transition-all text-base sm:text-sm font-bold text-[#1B1F3B] resize-none"
                                                         placeholder="Votre adresse complète..."
                                                     />
                                                 </div>
@@ -348,11 +348,11 @@ export default function AccountContent({ user }: { user: any }) {
                                                 <div className="space-y-4">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[10px] font-bold uppercase text-gray-500">Nouveau mot de passe</label>
-                                                        <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-orange-500 outline-none" />
+                                                        <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-base sm:text-sm focus:border-orange-500 outline-none" />
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-[10px] font-bold uppercase text-gray-500">Confirmer le mot de passe</label>
-                                                        <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:border-orange-500 outline-none" />
+                                                        <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-base sm:text-sm focus:border-orange-500 outline-none" />
                                                     </div>
                                                     <button onClick={() => toast.success("Le mot de passe sera mis à jour prochainement.")} className="mt-2 w-full h-10 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:border-orange-500 hover:text-orange-500 transition-colors">
                                                         Mettre à jour

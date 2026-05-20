@@ -891,8 +891,25 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         {formImages.length > 0 && (
                             <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/50">
                                 {formImages.map((img, i) => (
-                                    <div key={i} className="relative aspect-square group">
-                                        <div className="w-full h-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+                                    <div 
+                                        key={i} 
+                                        className="relative aspect-square group cursor-move"
+                                        draggable
+                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', i.toString())}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                                            if (fromIdx === i || isNaN(fromIdx)) return;
+                                            setFormImages(prev => {
+                                                const newImages = [...prev];
+                                                const [moved] = newImages.splice(fromIdx, 1);
+                                                newImages.splice(i, 0, moved);
+                                                return newImages;
+                                            });
+                                        }}
+                                    >
+                                        <div className="w-full h-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm pointer-events-none">
                                             <img src={img} alt="" className="w-full h-full object-cover" />
                                         </div>
                                         <button
@@ -1034,7 +1051,24 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     const thumbSrc = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : undefined;
 
                                     return (
-                                        <div key={i} className="relative aspect-video group rounded-xl overflow-hidden border border-slate-200 bg-gray-900 shadow-sm">
+                                        <div 
+                                            key={i} 
+                                            className="relative aspect-video group rounded-xl overflow-hidden border border-slate-200 bg-gray-900 shadow-sm cursor-move"
+                                            draggable
+                                            onDragStart={(e) => e.dataTransfer.setData('text/plain', i.toString())}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                                                if (fromIdx === i || isNaN(fromIdx)) return;
+                                                setFormVideos(prev => {
+                                                    const newVideos = [...prev];
+                                                    const [moved] = newVideos.splice(fromIdx, 1);
+                                                    newVideos.splice(i, 0, moved);
+                                                    return newVideos;
+                                                });
+                                            }}
+                                        >
                                             {thumbSrc ? (
                                                 <img src={thumbSrc} alt="YouTube" className="w-full h-full object-cover" />
                                             ) : (
@@ -1359,8 +1393,27 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                             {colorVariants[activeColorIdx].images.length > 0 && (
                                                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
                                                     {colorVariants[activeColorIdx].images.map((img, imgIdx) => (
-                                                        <div key={imgIdx} className="relative aspect-square group">
-                                                            <div className="w-full h-full rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm">
+                                                        <div 
+                                                            key={imgIdx} 
+                                                            className="relative aspect-square group cursor-move"
+                                                            draggable
+                                                            onDragStart={(e) => e.dataTransfer.setData('text/plain', imgIdx.toString())}
+                                                            onDragOver={(e) => e.preventDefault()}
+                                                            onDrop={(e) => {
+                                                                e.preventDefault();
+                                                                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                                                                if (fromIdx === imgIdx || isNaN(fromIdx)) return;
+                                                                const currentIdx = activeColorIdx;
+                                                                setColorVariants(prev => prev.map((cv, i) => {
+                                                                    if (i !== currentIdx) return cv;
+                                                                    const newImages = [...cv.images];
+                                                                    const [moved] = newImages.splice(fromIdx, 1);
+                                                                    newImages.splice(imgIdx, 0, moved);
+                                                                    return { ...cv, images: newImages };
+                                                                }));
+                                                            }}
+                                                        >
+                                                            <div className="w-full h-full rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm pointer-events-none">
                                                                 <img src={img} alt="" className="w-full h-full object-cover" />
                                                             </div>
                                                             <button

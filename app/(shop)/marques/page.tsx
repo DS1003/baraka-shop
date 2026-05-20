@@ -1,24 +1,37 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Container } from '@/ui/Container'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, Search, Award, ShieldCheck, Zap } from 'lucide-react'
+import { ChevronRight, Search, Award, ShieldCheck, Zap, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
-
-const MARQUES = [
-    { name: 'Apple', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg', category: 'Premium Reseller', description: 'Le meilleur de l\'écosystème Apple avec garantie 1 an.', count: 124 },
-    { name: 'Samsung', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Samsung_old_logo_before_year_2015.svg/1280px-Samsung_old_logo_before_year_2015.svg.png', category: 'Official Partner', description: 'Toute la gamme Galaxy et écrans haut de gamme.', count: 86 },
-    { name: 'Dell', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg', category: 'Authorized Reseller', description: 'Solutions informatiques pour professionnels et particuliers.', count: 42 },
-    { name: 'Sony', logo: 'https://www.freepnglogos.com/uploads/sony-png-logo/brand-sony-png-logo-5.png', category: 'Platinum Partner', description: 'L\'excellence en Image & Son et l\'univers PlayStation.', count: 58 },
-    { name: 'HP', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg', category: 'Authorized Reseller', description: 'Laptops performants et imprimantes dernière génération.', count: 31 },
-    { name: 'Canon', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Canon_logo_vector.png', category: 'Official Partner', description: 'Équipements photo et vidéo de haute volée.', count: 22 },
-    { name: 'Asus', logo: 'https://logos-world.net/wp-content/uploads/2020/07/Asus-Logo-1995-present.png', category: 'Gaming Partner', description: 'L\'innovation au service des gamers avec la gamme ROG.', count: 45 },
-    { name: 'Lenovo', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b8/Lenovo_logo_2015.svg', category: 'Authorized Reseller', description: 'Productivité et robustesse avec les séries ThinkPad.', count: 37 },
-]
+import { getBrandsAction } from '@/lib/actions/product-actions'
+import { getBrandLogoUrl } from '@/lib/brand-logos'
 
 export default function BrandsPage() {
+    const [brands, setBrands] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [searchQuery, setSearchQuery] = useState('')
+
+    useEffect(() => {
+        async function fetchBrands() {
+            try {
+                const data = await getBrandsAction()
+                setBrands(data)
+            } catch (err) {
+                console.error(err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchBrands()
+    }, [])
+
+    const filteredBrands = brands.filter(brand =>
+        brand.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
             {/* Page Header */}
@@ -49,7 +62,7 @@ export default function BrandsPage() {
                 <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm mb-12 flex flex-col lg:flex-row items-center justify-between gap-8">
                     <div className="flex items-center justify-around w-full lg:w-auto gap-4 md:gap-12">
                         <div className="flex flex-col items-center lg:items-start">
-                            <span className="text-2xl md:text-3xl font-black text-[#1B1F3B]">24+</span>
+                            <span className="text-2xl md:text-3xl font-black text-[#1B1F3B]">{brands.length}</span>
                             <span className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Marques</span>
                         </div>
                         <div className="w-px h-10 bg-gray-100" />
@@ -70,39 +83,63 @@ export default function BrandsPage() {
                             type="text"
                             placeholder="Rechercher une marque..."
                             className="w-full h-12 md:h-14 bg-gray-50 rounded-2xl border border-gray-100 pl-14 pr-6 outline-none focus:border-primary focus:bg-white transition-all text-sm font-bold"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                 </div>
 
                 {/* Brands Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-                    {MARQUES.map((brand, idx) => (
-                        <motion.div
-                            key={brand.name}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="group bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-100 transition-all duration-500 flex flex-col items-center text-center"
-                        >
-                            <div className="relative w-24 h-24 md:w-32 md:h-32 bg-gray-50 rounded-full flex items-center justify-center mb-6 overflow-hidden p-6 group-hover:scale-105 transition-transform duration-500">
-                                <Image src={brand.logo} alt={brand.name} fill className="object-contain p-4 md:p-6" />
+                {loading ? (
+                    <div className="h-[300px] flex flex-col items-center justify-center text-slate-400 gap-4">
+                        <Loader2 className="animate-spin text-primary" size={36} />
+                        <p className="font-bold uppercase tracking-widest text-[11px]">Chargement des marques partenaires...</p>
+                    </div>
+                ) : (
+                    <>
+                        {filteredBrands.length === 0 ? (
+                            <div className="h-[200px] flex items-center justify-center text-slate-400">
+                                <p className="font-bold">Aucune marque ne correspond à votre recherche.</p>
                             </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                                {filteredBrands.map((brand, idx) => {
+                                    const logoUrl = getBrandLogoUrl(brand.name, brand.image)
+                                    return (
+                                        <motion.div
+                                            key={brand.id ?? brand.name}
+                                            initial={{ opacity: 0, y: 30 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="group bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-100 transition-all duration-500 flex flex-col items-center text-center"
+                                        >
+                                            <div className="relative w-24 h-24 md:w-32 md:h-32 bg-gray-50 rounded-full flex items-center justify-center mb-6 overflow-hidden p-6 group-hover:scale-105 transition-transform duration-500">
+                                                {logoUrl ? (
+                                                    <Image src={logoUrl} alt={brand.name} fill className="object-contain p-4 md:p-6" unoptimized />
+                                                ) : (
+                                                    <Award className="w-12 h-12 text-slate-300" />
+                                                )}
+                                            </div>
 
-                            <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">{brand.category}</span>
-                            <h3 className="text-lg md:text-xl font-black text-[#1B1F3B] uppercase tracking-tight mb-3 md:mb-4">{brand.name}</h3>
-                            <p className="text-gray-400 text-[11px] md:text-xs font-medium leading-relaxed mb-6 md:mb-8 line-clamp-2 md:line-clamp-none">
-                                {brand.description}
-                            </p>
+                                            <span className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Partenaire Officiel</span>
+                                            <h3 className="text-lg md:text-xl font-black text-[#1B1F3B] uppercase tracking-tight mb-3 md:mb-4">{brand.name}</h3>
+                                            <p className="text-gray-400 text-[11px] md:text-xs font-medium leading-relaxed mb-6 md:mb-8 line-clamp-2 md:line-clamp-none">
+                                                Découvrez toute notre sélection exclusive et certifiée de la marque {brand.name}.
+                                            </p>
 
-                            <div className="mt-auto w-full flex flex-col gap-3 md:gap-4">
-                                <Link href={`/boutique?brand=${brand.name.toLowerCase()}`} className="w-full h-11 md:h-12 rounded-xl bg-[#1B1F3B] text-white font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-lg hover:shadow-primary/20">
-                                    Voir produits <ChevronRight className="w-3.5 h-3.5 text-primary" />
-                                </Link>
-                                <span className="text-[9px] font-bold text-gray-300 uppercase">{brand.count} Références</span>
+                                            <div className="mt-auto w-full flex flex-col gap-3 md:gap-4">
+                                                <Link href={`/boutique?brand=${brand.slug ?? brand.name.toLowerCase()}`} className="w-full h-11 md:h-12 rounded-xl bg-[#1B1F3B] text-white font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-lg hover:shadow-primary/20">
+                                                    Voir produits <ChevronRight className="w-3.5 h-3.5 text-primary" />
+                                                </Link>
+                                                <span className="text-[9px] font-bold text-gray-300 uppercase">{brand._count?.products || 0} Références</span>
+                                            </div>
+                                        </motion.div>
+                                    )
+                                })}
                             </div>
-                        </motion.div>
-                    ))}
-                </div>
+                        )}
+                    </>
+                )}
 
                 {/* Trust Footer */}
                 <div className="mt-16 md:mt-24 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">

@@ -29,6 +29,18 @@ import { useSession } from 'next-auth/react'
 import { createOrder } from '@/lib/actions/order-actions'
 import { useRouter } from 'next/navigation'
 import { DELIVERY_REGIONS, type DeliveryZone } from '@/lib/delivery-zones'
+import {
+    CheckoutBreadcrumb,
+    CheckoutStepper,
+    CheckoutSection,
+    CheckoutSectionHeader,
+    CheckoutNavButtons,
+    CheckoutError,
+    CheckoutOrderSummary,
+    CheckoutMobileBar,
+    FormInput,
+    PaymentOption,
+} from '@/features/checkout/CheckoutUI'
 
 export default function CheckoutPage() {
     const { data: session } = useSession()
@@ -66,6 +78,38 @@ export default function CheckoutPage() {
             zones: region.zones.filter(z => z.name.toLowerCase().includes(q))
         })).filter(r => r.zones.length > 0)
     }, [zoneSearch])
+
+    const goBack = () => {
+        setError('')
+        setStep((s) => Math.max(1, s - 1))
+    }
+
+    const goToNextStep = () => {
+        setError('')
+        if (step === 1) {
+            if (deliveryMethod === 'livraison' && !selectedZone) {
+                setError('Veuillez sélectionner votre zone de livraison.')
+                return
+            }
+            setStep(2)
+            return
+        }
+        if (step === 2) {
+            if (!formData.firstName || !formData.lastName || !formData.phone) {
+                setError('Veuillez remplir votre nom et téléphone.')
+                return
+            }
+            if (deliveryMethod === 'livraison' && !formData.address) {
+                setError('Veuillez indiquer votre adresse de livraison.')
+                return
+            }
+            setStep(3)
+            return
+        }
+        if (step === 3) {
+            setStep(4)
+        }
+    }
 
     const handleCheckout = async () => {
         if (!session) {
@@ -138,61 +182,32 @@ export default function CheckoutPage() {
     }
 
     return (
-        <main className="bg-[#f8f9fb] min-h-screen py-12">
-            <Container>
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-8">
-                    <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
-                    <ChevronRight className="w-3 h-3" />
-                    <Link href="/cart" className="hover:text-primary transition-colors">Panier</Link>
-                    <ChevronRight className="w-3 h-3" />
-                    <span className="text-[#1B1F3B]">Paiement & Livraison</span>
+        <main className="bg-[#f8f9fb] min-h-screen py-6 sm:py-10 lg:py-12 pb-28 lg:pb-12">
+            <Container className="px-4 sm:px-6">
+                <CheckoutBreadcrumb />
+
+                <h1 className="text-2xl sm:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight mb-4 sm:mb-6 lg:hidden">
+                    Finaliser la commande
+                </h1>
+
+                <CheckoutStepper step={step} onStepClick={setStep} />
+
+                <div className="lg:hidden mb-6">
+                    <CheckoutOrderSummary
+                        compact
+                        cartItems={cartItems}
+                        subtotal={subtotal}
+                        shipping={shipping}
+                        total={total}
+                        deliveryMethod={deliveryMethod}
+                        selectedZoneName={selectedZone?.name}
+                    />
                 </div>
 
-                {/* Visual Stepper */}
-                <div className="max-w-3xl mx-auto mb-16 px-4">
-                    <div className="flex items-center justify-between relative">
-                        {/* Progress Line */}
-                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0" />
-                        <motion.div
-                            className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 z-0"
-                            initial={{ width: '0%' }}
-                            animate={{ width: step === 1 ? '0%' : step === 2 ? '33%' : step === 3 ? '66%' : '100%' }}
-                            transition={{ duration: 0.5 }}
-                        />
 
-                        {/* Step Circles */}
-                        {[
-                            { id: 1, label: 'Mode', icon: Truck },
-                            { id: 2, label: 'Adresse', icon: Home },
-                            { id: 3, label: 'Paiement', icon: CreditCard },
-                            { id: 4, label: 'Confirmation', icon: ShieldCheck }
-                        ].map((s) => (
-                            <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
-                                <motion.button
-                                    onClick={() => s.id < step && setStep(s.id)}
-                                    animate={{
-                                        backgroundColor: step >= s.id ? '#F97316' : '#F1F5F9',
-                                        color: step >= s.id ? '#FFFFFF' : '#94A3B8',
-                                        scale: step === s.id ? 1.2 : 1
-                                    }}
-                                    className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors cursor-default"
-                                >
-                                    {step > s.id ? <CheckCircle2 className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
-                                </motion.button>
-                                <span className={cn(
-                                    "text-[10px] font-black uppercase tracking-widest",
-                                    step >= s.id ? "text-[#1B1F3B]" : "text-gray-400"
-                                )}>
-                                    {s.label}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 xl:gap-12">
                     {/* Checkout Form */}
-                    <div className="lg:col-span-7">
+                    <div className="lg:col-span-7 min-w-0">
                         <AnimatePresence mode="wait">
                             {/* STEP 1: Delivery Method Selection */}
                             {step === 1 && (
@@ -201,7 +216,7 @@ export default function CheckoutPage() {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
-                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                    className="bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-5 sm:p-8 lg:p-10 border border-gray-100 shadow-sm"
                                 >
                                     <div className="flex items-center gap-4 mb-10">
                                         <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
@@ -215,7 +230,7 @@ export default function CheckoutPage() {
                                         <button
                                             onClick={() => setDeliveryMethod('livraison')}
                                             className={cn(
-                                                "relative flex flex-col items-center gap-5 p-8 rounded-3xl border-2 transition-all text-center group overflow-hidden",
+                                                "relative flex flex-col items-center gap-4 sm:gap-5 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-2 transition-all text-center group overflow-hidden",
                                                 deliveryMethod === 'livraison'
                                                     ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
                                                     : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-md"
@@ -255,7 +270,7 @@ export default function CheckoutPage() {
                                                 setSelectedZone(null)
                                             }}
                                             className={cn(
-                                                "relative flex flex-col items-center gap-5 p-8 rounded-3xl border-2 transition-all text-center group overflow-hidden",
+                                                "relative flex flex-col items-center gap-4 sm:gap-5 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-2 transition-all text-center group overflow-hidden",
                                                 deliveryMethod === 'retrait'
                                                     ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
                                                     : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-md"
@@ -323,7 +338,7 @@ export default function CheckoutPage() {
                                                             value={zoneSearch}
                                                             onChange={(e) => setZoneSearch(e.target.value)}
                                                             placeholder="Rechercher votre quartier..."
-                                                            className="w-full h-14 bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-6 text-sm font-bold outline-none focus:bg-white focus:border-primary transition-all"
+                                                            className="w-full h-14 bg-gray-50 border border-gray-100 rounded-2xl pl-14 pr-6 text-base sm:text-sm font-bold outline-none focus:bg-white focus:border-primary transition-all"
                                                         />
                                                         {zoneSearch && (
                                                             <button
@@ -406,7 +421,7 @@ export default function CheckoutPage() {
                                                                                             onClick={() => setSelectedZone(zone)}
                                                                                             className={cn(
                                                                                                 "flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all min-w-0",
-                                                                                                "basis-[calc(50%-0.25rem)] shrink-0 grow-0",
+                                                                                                "w-full sm:basis-[calc(50%-0.25rem)] sm:w-auto shrink-0 grow-0",
                                                                                                 isSelected
                                                                                                     ? "bg-primary text-white shadow-md shadow-primary/20 border-2 border-primary"
                                                                                                     : "bg-white border-2 border-gray-100 hover:border-primary/30 hover:shadow-sm"
@@ -446,25 +461,10 @@ export default function CheckoutPage() {
                                         )}
                                     </AnimatePresence>
 
-                                    <Button
-                                        onClick={() => {
-                                            if (deliveryMethod === 'livraison' && !selectedZone) {
-                                                setError('Veuillez d\'abord sélectionner votre zone de livraison.')
-                                                return
-                                            }
-                                            setError('')
-                                            setStep(2)
-                                        }}
-                                        className="w-full h-16 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
-                                    >
-                                        Continuer <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </Button>
-
-                                    {error && step === 1 && (
-                                        <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center">
-                                            {error}
-                                        </div>
-                                    )}
+                                    <motion.div className="hidden lg:block">
+                                        <CheckoutNavButtons showBack={false} onNext={goToNextStep} nextLabel="Continuer" />
+                                    </motion.div>
+                                    <CheckoutError message={step === 1 ? error : ''} />
                                 </motion.section>
                             )}
 
@@ -475,7 +475,7 @@ export default function CheckoutPage() {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
-                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                    className="bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-5 sm:p-8 lg:p-10 border border-gray-100 shadow-sm"
                                 >
                                     <div className="flex items-center gap-4 mb-10">
                                         <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
@@ -562,20 +562,9 @@ export default function CheckoutPage() {
                                         </div>
                                     </form>
 
-                                    <div className="flex gap-4">
-                                        <Button
-                                            onClick={() => setStep(1)}
-                                            className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <ArrowLeft className="w-4 h-4" /> Retour
-                                        </Button>
-                                        <Button
-                                            onClick={() => setStep(3)}
-                                            className="flex-[2] h-16 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
-                                        >
-                                            Continuer vers le paiement <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                        </Button>
-                                    </div>
+                                    <motion.div className="hidden lg:block">
+                                        <CheckoutNavButtons onBack={goBack} onNext={goToNextStep} nextLabel="Continuer" />
+                                    </motion.div>
                                 </motion.section>
                             )}
 
@@ -586,7 +575,7 @@ export default function CheckoutPage() {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
-                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                    className="bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-5 sm:p-8 lg:p-10 border border-gray-100 shadow-sm"
                                 >
                                     <div className="flex items-center gap-4 mb-10">
                                         <div className="w-12 h-12 rounded-2xl bg-[#1B1F3B] flex items-center justify-center text-white">
@@ -619,20 +608,9 @@ export default function CheckoutPage() {
                                         />
                                     </div>
 
-                                    <div className="flex gap-4">
-                                        <Button
-                                            onClick={() => setStep(2)}
-                                            className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <ArrowLeft className="w-4 h-4" /> Retour
-                                        </Button>
-                                        <Button
-                                            onClick={() => setStep(4)}
-                                            className="flex-[2] h-14 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-primary transition-all flex items-center justify-center gap-3 group"
-                                        >
-                                            Vérifier la commande <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                        </Button>
-                                    </div>
+                                    <motion.div className="hidden lg:block">
+                                        <CheckoutNavButtons onBack={goBack} onNext={goToNextStep} nextLabel="Vérifier" />
+                                    </motion.div>
                                 </motion.section>
                             )}
 
@@ -643,7 +621,7 @@ export default function CheckoutPage() {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
-                                    className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm"
+                                    className="bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-5 sm:p-8 lg:p-10 border border-gray-100 shadow-sm"
                                 >
                                     <div className="flex items-center gap-4 mb-10">
                                         <div className="w-12 h-12 rounded-2xl bg-green-500 flex items-center justify-center text-white">
@@ -715,179 +693,84 @@ export default function CheckoutPage() {
                                         </p>
                                     </div>
 
-                                    <div className="flex gap-4 mt-10">
-                                        <Button
-                                            onClick={() => setStep(3)}
-                                            className="flex-1 h-14 bg-gray-100 text-[#1B1F3B] rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <ArrowLeft className="w-4 h-4" /> Retour
-                                        </Button>
-                                        <Button
-                                            onClick={handleCheckout}
-                                            disabled={isSubmitting}
-                                            className="flex-[2] h-14 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-primary/20 hover:bg-[#1B1F3B] transition-all flex items-center justify-center gap-3 group"
-                                        >
-                                            {isSubmitting ? 'Traitement...' : 'Confirmer la commande'} <CheckCircle2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                        </Button>
-                                    </div>
+                                    <motion.div className="hidden lg:block mt-8">
+                                        <CheckoutNavButtons
+                                            onBack={goBack}
+                                            onNext={handleCheckout}
+                                            nextLabel={isSubmitting ? 'Traitement…' : 'Confirmer'}
+                                        />
+                                    </motion.div>
+                                    <CheckoutError message={step === 4 ? error : ''} />
                                 </motion.section>
                             )}
                         </AnimatePresence>
                     </div>
 
-                    {/* Order Summary Sidebar */}
-                    <div className="lg:col-span-5">
-                        <div className="sticky top-24 flex flex-col gap-6">
-                            <div className="bg-[#1B1F3B] rounded-[2.5rem] p-10 shadow-2xl shadow-[#1B1F3B]/30 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                    {/* Récapitulatif — desktop */}
+                    <div className="hidden lg:block lg:col-span-5">
+                        <div className="sticky top-20 xl:top-24 flex flex-col gap-5">
+                            <CheckoutOrderSummary
+                                cartItems={cartItems}
+                                subtotal={subtotal}
+                                shipping={shipping}
+                                total={total}
+                                deliveryMethod={deliveryMethod}
+                                selectedZoneName={selectedZone?.name}
+                            />
 
-                                <h2 className="text-xl font-black text-white uppercase tracking-widest mb-10 pb-6 border-b border-white/10">Ma Commande</h2>
+                            {error && step !== 1 && step !== 4 && (
+                                <motion.div className="space-y-3">
+                                    <CheckoutError message={error} />
+                                    {error.includes('ne sont plus disponibles') && (
+                                        <Button
+                                            onClick={() => {
+                                                clearCart()
+                                                router.push('/')
+                                            }}
+                                            className="w-full bg-red-600 hover:bg-red-700 text-white h-12 rounded-xl font-black text-[10px] uppercase"
+                                        >
+                                            Vider le panier obsolète
+                                        </Button>
+                                    )}
+                                </motion.div>
+                            )}
 
-                                {/* Item List */}
-                                <div className="flex flex-col gap-6 mb-10 max-h-[300px] overflow-y-auto scrollbar-hide pr-2">
-                                    {cartItems.map((item) => (
-                                        <CompactItem
-                                            key={item.id}
-                                            name={item.name}
-                                            price={item.price}
-                                            qty={item.qty}
-                                            img={item.image}
-                                        />
-                                    ))}
-                                </div>
-
-                                <div className="flex flex-col gap-4 text-white mb-10">
-                                    <div className="flex justify-between text-sm font-bold opacity-60">
-                                        <span>Sous-total</span>
-                                        <span>{subtotal.toLocaleString()} CFA</span>
-                                    </div>
-                                    <div className="flex justify-between text-xs font-bold text-green-400">
-                                        <span className="flex items-center gap-2">
-                                            {deliveryMethod === 'livraison' ? (
-                                                <>
-                                                    <Truck className="w-3 h-3" />
-                                                    Livraison {selectedZone ? `(${selectedZone.name})` : ''}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Store className="w-3 h-3" />
-                                                    Retrait en boutique
-                                                </>
-                                            )}
-                                        </span>
-                                        <span className="uppercase">{shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} CFA`}</span>
-                                    </div>
-                                    <div className="h-px bg-white/10 my-2" />
-                                    <div className="flex justify-between items-end">
-                                        <span className="text-sm font-black uppercase tracking-widest">Total à payer</span>
-                                        <span className="text-3xl font-black tracking-tighter text-primary">{total.toLocaleString()} CFA</span>
-                                    </div>
-                                </div>
-
-                                {error && step !== 1 && (
-                                    <div className="mb-6 flex flex-col items-center gap-3 w-full">
-                                        <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-xs font-bold text-center leading-relaxed">
-                                            {error}
-                                        </div>
-                                        {error.includes("ne sont plus disponibles") && (
-                                            <Button
-                                                onClick={() => {
-                                                    clearCart();
-                                                    router.push('/');
-                                                }}
-                                                className="bg-red-600 hover:bg-red-700 text-white h-12 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors w-full"
-                                            >
-                                                Vider le panier obsolète
-                                            </Button>
-                                        )}
-                                    </div>
-                                )}
-
+                            {step === 4 && (
                                 <Button
                                     onClick={handleCheckout}
                                     disabled={isSubmitting}
-                                    className="w-full h-16 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] shadow-xl shadow-primary/20 hover:bg-white hover:text-[#1B1F3B] transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full h-14 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-[#1B1F3B] transition-all disabled:opacity-50"
                                 >
-                                    {isSubmitting ? 'Traitement...' : 'Finaliser l\'Achat'} <CheckCircle2 className="w-4 h-4 ml-2 group-hover:scale-125 transition-transform" />
+                                    {isSubmitting ? 'Traitement…' : 'Confirmer la commande'}
                                 </Button>
+                            )}
 
-                                <p className="mt-8 text-center text-[9px] text-white/40 uppercase font-black tracking-widest">
-                                    Paiement 100% sécurisé et garanti
-                                </p>
-                            </div>
-
-                            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 flex flex-col gap-6 font-sans">
-                                <div className="flex items-center gap-3">
-                                    <ShieldCheck className="w-5 h-5 text-primary" />
-                                    <p className="text-[10px] font-black text-[#1B1F3B] uppercase tracking-widest">Garantie Baraka Shop</p>
-                                </div>
+                            <div className="bg-white rounded-2xl p-5 border border-gray-100 flex gap-3">
+                                <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
                                 <p className="text-xs text-gray-500 font-medium leading-relaxed">
-                                    Votre commande est protégée. En cas de non-conformité, nous nous engageons à un échange ou un remboursement sous 7 jours.
+                                    Commande protégée — échange ou remboursement sous 7 jours.
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <CheckoutMobileBar
+                    step={step}
+                    total={total}
+                    itemCount={cartItems.length}
+                    isSubmitting={isSubmitting}
+                    onBack={goBack}
+                    onNext={goToNextStep}
+                    onConfirm={handleCheckout}
+                />
+
+                {error && step !== 1 && step !== 4 && (
+                    <motion.div className="lg:hidden mt-4">
+                        <CheckoutError message={error} />
+                    </motion.div>
+                )}
             </Container>
         </main>
-    )
-}
-
-function FormInput({ label, placeholder, value, onChange }: { label: string, placeholder: string, value: string, onChange: (val: string) => void }) {
-    return (
-        <div className="flex flex-col gap-3">
-            <span className="text-[10px] font-black text-[#1B1F3B] uppercase tracking-widest pl-2">{label}</span>
-            <input
-                type="text"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder}
-                className="w-full h-14 bg-gray-50 border border-gray-100 rounded-2xl px-6 text-sm font-bold outline-none focus:bg-white focus:border-primary transition-all"
-            />
-        </div>
-    )
-}
-
-function PaymentOption({ active, onClick, icon: Icon, title, desc }: { active: boolean, onClick: () => void, icon: any, title: string, desc: string }) {
-    return (
-        <button
-            onClick={onClick}
-            className={cn(
-                "flex items-center gap-6 p-6 rounded-2xl border transition-all text-left",
-                active ? "bg-primary/5 border-primary shadow-lg shadow-primary/5" : "bg-white border-gray-100 hover:border-gray-200"
-            )}
-        >
-            <div className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                active ? "bg-primary text-white" : "bg-gray-50 text-gray-400"
-            )}>
-                <Icon className="w-6 h-6" />
-            </div>
-            <div className="flex flex-col gap-1">
-                <span className={cn("text-sm font-black uppercase tracking-tight", active ? "text-primary" : "text-[#1B1F3B]")}>{title}</span>
-                <span className="text-xs text-gray-400 font-medium">{desc}</span>
-            </div>
-            <div className={cn(
-                "ml-auto w-6 h-6 rounded-full border-2 flex items-center justify-center",
-                active ? "border-primary bg-primary" : "border-gray-200"
-            )}>
-                {active && <CheckCircle2 className="w-4 h-4 text-white" />}
-            </div>
-        </button>
-    )
-}
-
-function CompactItem({ name, price, qty, img }: { name: string, price: number, qty: number, img: string }) {
-    return (
-        <div className="flex items-center gap-4 group">
-            <div className="relative w-14 h-14 bg-white/5 rounded-xl overflow-hidden p-2 group-hover:bg-white/10 transition-colors">
-                <Image src={img} alt={name} fill className="object-contain" />
-            </div>
-            <div className="flex flex-col flex-1">
-                <span className="text-[10px] font-bold text-white uppercase tracking-tight line-clamp-1 group-hover:text-primary transition-colors">{name}</span>
-                <span className="text-sm font-black text-primary tracking-tighter">{(price * qty).toLocaleString()} CFA</span>
-            </div>
-            <span className="text-[10px] font-black text-white/40">x{qty}</span>
-        </div>
     )
 }

@@ -817,7 +817,10 @@ export async function upsertBrand(data: any, id?: string) {
                 data
             });
         }
+        await invalidatePrefix('brands:');
         revalidatePath('/admin/brands');
+        revalidatePath('/');
+        revalidatePath('/marques');
         return { success: true };
     } catch (error) {
         return { success: false };
@@ -831,7 +834,10 @@ export async function deleteBrand(id: string) {
             return { success: false, message: "La marque contient des produits." };
         }
         await prisma.brand.delete({ where: { id } });
+        await invalidatePrefix('brands:');
         revalidatePath('/admin/brands');
+        revalidatePath('/');
+        revalidatePath('/marques');
         return { success: true };
     } catch (error) {
         return { success: false, message: "Erreur serveur." };

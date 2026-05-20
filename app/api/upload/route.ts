@@ -10,6 +10,18 @@ export async function POST(request: NextRequest) {
             api_secret: process.env.CLOUDINARY_API_SECRET
         });
 
+        // Get correct real world timestamp to override local clock skew
+        let timestamp = Math.floor(Date.now() / 1000);
+        try {
+            const timeCheck = await fetch('https://www.google.com', { method: 'HEAD' });
+            const dateHeader = timeCheck.headers.get('date');
+            if (dateHeader) {
+                timestamp = Math.floor(new Date(dateHeader).getTime() / 1000);
+            }
+        } catch (err) {
+            console.error('Error syncing real-world time for Cloudinary:', err);
+        }
+
         const formData = await request.formData();
         const files = formData.getAll('files') as File[];
 
@@ -41,7 +53,8 @@ export async function POST(request: NextRequest) {
             const uploadResponse = await new Promise((resolve, reject) => {
                 cloudinary.uploader.upload_stream({
                     folder: 'products_baraka',
-                    resource_type: 'auto'
+                    resource_type: 'auto',
+                    timestamp: timestamp
                 }, (error, result) => {
                     if (error) reject(error);
                     else resolve(result);

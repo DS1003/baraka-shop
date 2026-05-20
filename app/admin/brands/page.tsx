@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Plus,
     Search,
@@ -11,7 +11,8 @@ import {
     Loader2,
     X,
     Save,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
@@ -28,10 +29,23 @@ export default function BrandsPage() {
     const [mounted, setMounted] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
+    // Upload Logo States
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     useEffect(() => {
         setMounted(true);
         loadBrands();
     }, []);
+
+    useEffect(() => {
+        if (editingBrand) {
+            setLogoUrl(editingBrand.image || null);
+        } else {
+            setLogoUrl(null);
+        }
+    }, [editingBrand]);
 
     async function loadBrands() {
         setLoading(true);
@@ -45,6 +59,12 @@ export default function BrandsPage() {
         }
     }
 
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingBrand(null);
+        setLogoUrl(null);
+    };
+
     const handleDelete = async (id: string) => {
         if (confirm("Supprimer cette marque ?")) {
             const res = await deleteBrand(id);
@@ -56,6 +76,35 @@ export default function BrandsPage() {
         }
     };
 
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const fd = new FormData();
+            fd.append('files', file);
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: fd,
+            });
+            const data = await res.json();
+
+            if (data.urls && data.urls.length > 0) {
+                setLogoUrl(data.urls[0]);
+            } else {
+                alert(data.error || "Erreur lors de l'upload.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors de l'upload du logo.");
+        } finally {
+            setIsUploading(false);
+            if (e.target) e.target.value = '';
+        }
+    };
+
     const handleUpsert = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSaving(true);
@@ -64,13 +113,12 @@ export default function BrandsPage() {
         const data = {
             name,
             slug: name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-            image: formData.get('image') as string || null,
+            image: logoUrl,
         };
 
         const res = await upsertBrand(data, editingBrand?.id);
         if (res.success) {
-            setIsModalOpen(false);
-            setEditingBrand(null);
+            handleCloseModal();
             loadBrands();
         } else {
             alert("Erreur lors de la sauvegarde.");
@@ -96,7 +144,7 @@ export default function BrandsPage() {
                 </div>
 
                 <button
-                    onClick={() => { setEditingBrand(null); setIsModalOpen(true); }}
+                    onClick={() => { setEditingBrand(null); setLogoUrl(null); setIsModalOpen(true); }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-[#1B1F3B] text-white rounded-lg font-bold text-[12px] hover:bg-primary hover:shadow-xl transition-all shadow-lg group"
                 >
                     <Plus size={16} />
@@ -136,8 +184,12 @@ export default function BrandsPage() {
                             className="bg-white p-6 rounded-2xl border border-slate-200/50 shadow-sm transition-all group overflow-hidden relative min-h-[200px] flex flex-col justify-between"
                         >
                             <div className="flex justify-between items-start mb-6 relative z-10">
-                                <div className="w-12 h-12 rounded-xl flex items-center justify-center border bg-slate-50 text-slate-400 transition-all duration-500 group-hover:scale-110 group-hover:bg-primary/5 group-hover:text-primary">
-                                    <Briefcase size={22} strokeWidth={2.5} />
+                                <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center border bg-slate-50 text-slate-400 transition-all duration-500 group-hover:scale-110 group-hover:bg-primary/5 group-hover:text-primary">
+                                    {brand.image ? (
+                                        <img src={brand.image} alt={brand.name} className="w-full h-full object-contain p-1.5" />
+                                    ) : (
+                                        <Briefcase size={22} strokeWidth={2.5} />
+                                    )}
                                 </div>
                                 <div className="relative group/opt">
                                     <button className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-white hover:text-slate-900 transition-all border border-transparent hover:border-slate-200">
@@ -173,7 +225,7 @@ export default function BrandsPage() {
                     ))}
 
                     <button
-                        onClick={() => { setEditingBrand(null); setIsModalOpen(true); }}
+                        onClick={() => { setEditingBrand(null); setLogoUrl(null); setIsModalOpen(true); }}
                         className="border-2 border-dashed border-slate-200/60 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 group hover:border-primary/20 hover:bg-primary/5 transition-all text-slate-400 hover:text-primary"
                     >
                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg border border-slate-100 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500">
@@ -192,11 +244,11 @@ export default function BrandsPage() {
                 <AnimatePresence>
                     {isModalOpen && (
                         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleCloseModal} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white w-full max-w-md rounded-2xl shadow-2xl relative z-10 overflow-hidden">
                                 <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                                     <h3 className="text-[18px] font-bold text-slate-900">{editingBrand ? 'Modifier' : 'Nouvelle'} Marque</h3>
-                                    <button onClick={() => setIsModalOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100/50 text-slate-400 hover:text-rose-500 transition-colors">
+                                    <button onClick={handleCloseModal} className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100/50 text-slate-400 hover:text-rose-500 transition-colors">
                                         <X size={18} />
                                     </button>
                                 </div>
@@ -211,21 +263,57 @@ export default function BrandsPage() {
                                             placeholder="Ex: Apple, Samsung, etc."
                                         />
                                     </div>
+                                    
                                     <div className="space-y-1.5">
-                                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">URL du Logo (Optionnel)</label>
-                                        <div className="relative">
-                                            <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                                            <input
-                                                name="image"
-                                                defaultValue={editingBrand?.image}
-                                                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all font-bold text-[14px]"
-                                                placeholder="https://..."
-                                            />
-                                        </div>
+                                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Logo de la Marque</label>
+                                        
+                                        {logoUrl ? (
+                                            <div className="relative group/logo border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center p-4 h-32">
+                                                <img src={logoUrl} alt="Logo Preview" className="h-full object-contain" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setLogoUrl(null)}
+                                                    className="absolute top-2 right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/logo:opacity-100 transition-all scale-75 group-hover/logo:scale-100"
+                                                >
+                                                    <X size={14} strokeWidth={3} />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className={cn(
+                                                    "border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/20 hover:bg-slate-50 transition-all min-h-[128px] text-slate-400",
+                                                    isUploading && "pointer-events-none opacity-60"
+                                                )}
+                                            >
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                                                    className="hidden"
+                                                    onChange={handleLogoUpload}
+                                                />
+                                                {isUploading ? (
+                                                    <>
+                                                        <Loader2 size={24} className="animate-spin text-primary" />
+                                                        <span className="text-[11px] font-bold text-slate-500">Upload en cours...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Upload size={24} />
+                                                        <div className="text-center">
+                                                            <span className="block text-[11px] font-bold uppercase tracking-widest">Sélectionner un logo</span>
+                                                            <span className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WebP • Max 5 MB</span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
+
                                     <div className="flex gap-3 pt-2">
-                                        <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 border border-slate-200 rounded-xl font-bold text-[12px] text-slate-500 hover:bg-slate-50 transition-all">Annuler</button>
-                                        <button type="submit" disabled={isSaving} className="flex-[2] py-3.5 bg-[#1B1F3B] text-white rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-primary shadow-lg transition-all">
+                                        <button type="button" onClick={handleCloseModal} className="flex-1 py-3.5 border border-slate-200 rounded-xl font-bold text-[12px] text-slate-500 hover:bg-slate-50 transition-all">Annuler</button>
+                                        <button type="submit" disabled={isSaving || isUploading} className="flex-[2] py-3.5 bg-[#1B1F3B] text-white rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-primary shadow-lg transition-all disabled:opacity-75">
                                             {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                                             {editingBrand ? 'Sauvegarder' : 'Créer'}
                                         </button>

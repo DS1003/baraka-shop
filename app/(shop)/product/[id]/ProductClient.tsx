@@ -235,77 +235,79 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         {/* Thumbnails */}
                         <div className="flex flex-wrap gap-3 pb-2">
                             {(() => {
-                                const MAX_THUMBS = 6;
-                                const totalMedia = productImages.length + productVideos.length;
-                                const showPlus = totalMedia > MAX_THUMBS;
-                                
-                                return Array.from({ length: Math.min(totalMedia, MAX_THUMBS) }).map((_, idx) => {
-                                    const isImage = idx < productImages.length;
-                                    const isLastThumb = showPlus && idx === MAX_THUMBS - 1;
-                                    const remainingCount = totalMedia - MAX_THUMBS + 1;
-                                    
-                                    if (isImage) {
-                                        const img = productImages[idx];
-                                        return (
-                                            <button
-                                                key={`img-${idx}`}
-                                                onClick={() => isLastThumb ? openViewer(idx) : setActiveImg(idx)}
-                                                className={cn(
-                                                    "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-white rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all p-1.5 md:p-2",
-                                                    activeImg === idx && !isLastThumb ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
-                                                )}
-                                            >
-                                                <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
-                                                {isLastThumb && (
-                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center rounded-xl md:rounded-2xl">
-                                                        <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
-                                                    </div>
-                                                )}
-                                            </button>
-                                        );
-                                    } else {
-                                        const vidIdx = idx - productImages.length;
-                                        const vid = productVideos[vidIdx];
-                                        const ytId = getYouTubeId(vid);
-                                        const thumbSrc = ytId ? getYouTubeThumbnail(ytId) : undefined;
-                                        
-                                        return (
-                                            <button
-                                                key={`vid-${vidIdx}`}
-                                                onClick={() => openViewer(idx)}
-                                                className={cn(
-                                                    "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-gray-900 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all group/vid",
-                                                    "border-gray-100 hover:border-orange-400"
-                                                )}
-                                            >
-                                                {thumbSrc ? (
-                                                    <img src={thumbSrc} alt="Video" className="w-full h-full object-cover opacity-80 group-hover/vid:opacity-100 transition-opacity" />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
-                                                )}
-                                                
-                                                {!isLastThumb && (
-                                                    <>
-                                                        <div className="absolute inset-0 flex items-center justify-center">
-                                                            <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">
-                                                                <Play className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-white fill-white ml-0.5" />
-                                                            </div>
-                                                        </div>
-                                                        <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/70 text-white text-[7px] md:text-[8px] font-black uppercase rounded tracking-wider">
-                                                            {ytId ? 'YT' : 'VID'}
-                                                        </span>
-                                                    </>
-                                                )}
-                                                
-                                                {isLastThumb && (
-                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
-                                                        <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{remainingCount}</span>
-                                                    </div>
-                                                )}
-                                            </button>
-                                        );
-                                    }
-                                });
+                                const MAX_IMAGES = 4;
+                                const visibleImagesCount = Math.min(productImages.length, MAX_IMAGES);
+                                const extraImagesCount = productImages.length - MAX_IMAGES;
+
+                                const thumbs = [];
+
+                                // 1. Render Image Thumbnails (Max 4)
+                                for (let idx = 0; idx < visibleImagesCount; idx++) {
+                                    const img = productImages[idx];
+                                    const isLastVisibleImage = idx === MAX_IMAGES - 1;
+                                    const hasExtraImages = extraImagesCount > 0;
+                                    const showOverlay = isLastVisibleImage && hasExtraImages;
+
+                                    thumbs.push(
+                                        <button
+                                            key={`img-${idx}`}
+                                            onClick={() => showOverlay ? openViewer(idx) : setActiveImg(idx)}
+                                            className={cn(
+                                                "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-white rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all p-1.5 md:p-2",
+                                                activeImg === idx && !showOverlay ? "border-primary shadow-lg shadow-primary/10" : "border-gray-100 hover:border-gray-200"
+                                            )}
+                                        >
+                                            <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
+                                            {showOverlay && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
+                                                    <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{extraImagesCount}</span>
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                }
+
+                                // 2. Render Video Thumbnail (Max 1)
+                                if (productVideos.length > 0) {
+                                    const vid = productVideos[0];
+                                    const ytId = getYouTubeId(vid);
+                                    const thumbSrc = ytId ? getYouTubeThumbnail(ytId) : undefined;
+                                    const hasExtraVideos = productVideos.length > 1;
+
+                                    thumbs.push(
+                                        <button
+                                            key={`vid-0`}
+                                            onClick={() => openViewer(productImages.length)}
+                                            className={cn(
+                                                "relative w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 shrink-0 bg-gray-900 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all group/vid",
+                                                "border-gray-100 hover:border-orange-400"
+                                            )}
+                                        >
+                                            {thumbSrc ? (
+                                                <img src={thumbSrc} alt="Video" className="w-full h-full object-cover opacity-80 group-hover/vid:opacity-100 transition-opacity" />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
+                                            )}
+                                            
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">
+                                                    <Play className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-white fill-white ml-0.5" />
+                                                </div>
+                                            </div>
+                                            <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/70 text-white text-[7px] md:text-[8px] font-black uppercase rounded tracking-wider">
+                                                {ytId ? 'YT' : 'VID'}
+                                            </span>
+
+                                            {hasExtraVideos && (
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
+                                                    <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{productVideos.length - 1}</span>
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                }
+
+                                return thumbs;
                             })()}
                         </div>
                     </div>
@@ -516,8 +518,17 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 </button>
                                 <span className="w-14 text-center font-black text-xl text-white">{quantity}</span>
                                 <button
-                                    onClick={() => setQuantity(quantity + 1)}
-                                    className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-90"
+                                    onClick={() => {
+                                        if (quantity < product.stock) {
+                                            setQuantity(quantity + 1);
+                                        } else {
+                                            toast.error(`Stock maximum atteint (${product.stock} disponibles)`);
+                                        }
+                                    }}
+                                    className={cn(
+                                        "w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white transition-all",
+                                        quantity >= product.stock ? "opacity-50 cursor-not-allowed" : "hover:bg-white/10 active:scale-90"
+                                    )}
                                 >
                                     <Plus className="w-4 h-4" />
                                 </button>
@@ -546,6 +557,17 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 </Button>
                             </div>
                         </div>
+
+                        {quantity >= product.stock && product.stock > 0 && (
+                            <div className="mt-3 text-center sm:text-left">
+                                <span className="text-orange-400 text-[10px] md:text-[11px] font-bold tracking-wide flex items-center justify-center sm:justify-start gap-1.5">
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Quantité maximale disponible atteinte ({product.stock} en stock)
+                                </span>
+                            </div>
+                        )}
 
                         <div className="mt-6 pt-6 border-t border-white/5 flex flex-col items-center">
                             <a

@@ -103,6 +103,10 @@ async function main() {
         { name: "Dell", image: "https://upload.wikimedia.org/wikipedia/commons/1/18/Dell_logo_2016.svg" },
         { name: "HP", image: "https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg" },
         { name: "LG", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/LG_logo_%282014%29.svg/1280px-LG_logo_%282014%29.svg.png" },
+        { name: "ASUS", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/ASUS_Logo.svg/512px-ASUS_Logo.svg.png" },
+        { name: "LOGITECH", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Logitech_logo.svg/512px-Logitech_logo.svg.png" },
+        { name: "TP-LINK", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/TP-Link_logo.svg/512px-TP-Link_logo.svg.png" },
+        { name: "BARAKA SN", image: "https://baraka.sn/wp-content/uploads/2025/11/WhatsApp-Image-2025-08-30-at-22.56.22-2.png" },
     ];
 
     console.log('Seeding Brands...');

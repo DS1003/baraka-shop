@@ -53,7 +53,7 @@ export default function ContactPage() {
                                         <input
                                             type="text"
                                             placeholder="Ex: Abdoulaye Diop"
-                                            className="h-16 bg-gray-50 rounded-2xl border border-gray-100 px-6 outline-none focus:border-primary focus:bg-white transition-all text-sm font-bold"
+                                            className="h-16 bg-gray-50 rounded-2xl border border-gray-100 px-6 outline-none focus:border-primary focus:bg-white transition-all text-base sm:text-sm font-bold"
                                         />
                                     </div>
                                     <div className="flex flex-col gap-2">
@@ -61,12 +61,12 @@ export default function ContactPage() {
                                         <input
                                             type="email"
                                             placeholder="Ex: abdoulaye@example.com"
-                                            className="h-16 bg-gray-50 rounded-2xl border border-gray-100 px-6 outline-none focus:border-primary focus:bg-white transition-all text-sm font-bold"
+                                            className="h-16 bg-gray-50 rounded-2xl border border-gray-100 px-6 outline-none focus:border-primary focus:bg-white transition-all text-base sm:text-sm font-bold"
                                         />
                                     </div>
                                     <div className="flex flex-col gap-2 md:col-span-2">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">Sujet</label>
-                                        <select className="h-16 bg-gray-50 rounded-2xl border border-gray-100 px-6 outline-none focus:border-primary focus:bg-white transition-all text-sm font-bold appearance-none">
+                                        <select className="h-16 bg-gray-50 rounded-2xl border border-gray-100 px-6 outline-none focus:border-primary focus:bg-white transition-all text-base sm:text-sm font-bold appearance-none">
                                             <option>Conseil Achat</option>
                                             <option>Suivi de commande</option>
                                             <option>Service Après-Vente</option>
@@ -78,7 +78,7 @@ export default function ContactPage() {
                                         <textarea
                                             rows={6}
                                             placeholder="Dites-nous comment nous pouvons vous aider..."
-                                            className="bg-gray-50 rounded-3xl border border-gray-100 p-6 outline-none focus:border-primary focus:bg-white transition-all text-sm font-bold resize-none"
+                                            className="bg-gray-50 rounded-3xl border border-gray-100 p-6 outline-none focus:border-primary focus:bg-white transition-all text-base sm:text-sm font-bold resize-none"
                                         />
                                     </div>
 

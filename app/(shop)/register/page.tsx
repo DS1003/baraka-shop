@@ -11,12 +11,10 @@ import {
     Lock,
     Loader2,
     AlertCircle,
-    ShieldCheck,
     Eye,
     EyeOff,
     ArrowRight,
-    CheckCircle2,
-    Shield
+    CheckCircle2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -57,7 +55,7 @@ export default function RegisterPage() {
             } else {
                 setIsSuccess(true);
                 // Auto-login
-                const loginRes = await signIn('credentials', {
+                await signIn('credentials', {
                     redirect: false,
                     email: formData.email,
                     password: formData.password,
@@ -75,123 +73,156 @@ export default function RegisterPage() {
         }
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05,
+                delayChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        show: { 
+            opacity: 1, 
+            y: 0,
+            transition: {
+                type: "spring" as const,
+                stiffness: 100,
+                damping: 15
+            }
+        }
+    };
+
     if (isSuccess) {
         return (
-            <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6">
+            <div className="relative min-h-[calc(100vh-180px)] flex flex-col items-center justify-start pt-16 pb-16 px-4 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(#E2E8F0_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white p-12 rounded-[3rem] shadow-2xl text-center max-w-sm"
+                    className="bg-white/95 backdrop-blur-md p-8 sm:p-10 rounded-2xl border border-gray-100/80 shadow-[0_12px_40px_-12px_rgba(27,31,59,0.08)] text-center max-w-[390px] w-full relative z-10"
                 >
-                    <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500">
-                        <CheckCircle2 size={48} />
+                    <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
+                        <CheckCircle2 size={36} />
                     </div>
-                    <h2 className="text-2xl font-bold text-[#1B1F3B] mb-2">Compte créé !</h2>
-                    <p className="text-gray-500 mb-8">Vous allez être redirigé vers la page de connexion...</p>
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-green-500" />
+                    <h2 className="text-xl font-bold text-[#1B1F3B] mb-1">Compte créé !</h2>
+                    <p className="text-gray-500 text-xs mb-6">Vous allez être redirigé vers la boutique...</p>
+                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-green-500" />
                 </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6 bg-[radial-gradient(#E2E8F0_1px,transparent_1px)] [background-size:20px_20px]">
+        <div className="relative min-h-[calc(100vh-180px)] flex flex-col items-center justify-start pt-8 sm:pt-12 pb-16 px-4 sm:px-6 overflow-hidden">
+            {/* Glowing background shapes */}
+            <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#1B1F3B]/5 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
+            
+            {/* Dotted pattern overlay */}
+            <div className="absolute inset-0 bg-[radial-gradient(#E2E8F0_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
+
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md"
+                initial="hidden"
+                animate="show"
+                variants={containerVariants}
+                className="w-full max-w-[390px] relative z-10"
             >
-                {/* Banner/Logo */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-[#1B1F3B] rounded-2xl shadow-xl shadow-gray-200 mb-4">
-                        <ShieldCheck size={32} className="text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-[#1B1F3B] tracking-tight">Inscription</h1>
-                    <p className="text-[#64748B] mt-2 font-medium">Rejoignez la communauté Baraka Shop</p>
-                </div>
+                {/* Heading */}
+                <motion.div variants={itemVariants} className="text-center mb-6 flex flex-col items-center">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1B1F3B] tracking-tight">Inscription</h1>
+                    <p className="text-[#64748B] text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mt-2">Rejoignez la communauté Baraka Shop</p>
+                </motion.div>
 
                 {/* Form Card */}
-                <div className="bg-white p-8 rounded-[2.5rem] border border-[#E2E8F0] shadow-2xl shadow-gray-200/50 relative overflow-hidden">
+                <motion.div 
+                    variants={itemVariants}
+                    className="bg-white/95 backdrop-blur-md p-6 sm:p-7 rounded-2xl border border-gray-100/80 shadow-[0_12px_40px_-12px_rgba(27,31,59,0.08)] relative overflow-hidden"
+                >
                     <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -translate-x-12 -translate-y-12" />
 
-                    <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+                    <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
                         {error && (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-medium"
+                                className="flex items-center gap-3 p-3 bg-red-50/80 border border-red-100 rounded-xl text-red-600 text-xs font-medium"
                             >
-                                <AlertCircle size={18} />
-                                {error}
+                                <AlertCircle size={16} className="shrink-0" />
+                                <span>{error}</span>
                             </motion.div>
                         )}
 
-                        <div>
-                            <label className="block text-sm font-bold text-[#1B1F3B] mb-2 px-1">Nom d'utilisateur</label>
+                        <motion.div variants={itemVariants}>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 px-1">Nom d'utilisateur</label>
                             <div className="relative group">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-[#1B1F3B]" size={20} />
+                                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#1B1F3B]" size={16} />
                                 <input
                                     type="text"
                                     name="username"
                                     placeholder="ex: baraka_user"
                                     required
-                                    className="w-full pl-12 pr-4 py-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-[15px] focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all font-medium"
+                                    className="w-full h-11 pl-10 pr-4 bg-slate-50/50 focus:bg-white border border-slate-200 rounded-lg text-base sm:text-sm focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all duration-300 font-medium text-[#1B1F3B] placeholder-gray-400"
                                     value={formData.username}
                                     onChange={handleChange}
                                 />
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-[#1B1F3B] mb-2 px-1">Email</label>
+                        <motion.div variants={itemVariants}>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 px-1">Email</label>
                             <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-[#1B1F3B]" size={20} />
+                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#1B1F3B]" size={16} />
                                 <input
                                     type="email"
                                     name="email"
                                     placeholder="votre@email.com"
                                     required
-                                    className="w-full pl-12 pr-4 py-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-[15px] focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all font-medium"
+                                    className="w-full h-11 pl-10 pr-4 bg-slate-50/50 focus:bg-white border border-slate-200 rounded-lg text-base sm:text-sm focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all duration-300 font-medium text-[#1B1F3B] placeholder-gray-400"
                                     value={formData.email}
                                     onChange={handleChange}
                                 />
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-[#1B1F3B] mb-2 px-1">Téléphone (Optionnel)</label>
+                        <motion.div variants={itemVariants}>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 px-1">Téléphone (Optionnel)</label>
                             <div className="relative group">
-                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-[#1B1F3B]" size={20} />
+                                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#1B1F3B]" size={16} />
                                 <input
                                     type="tel"
                                     name="phone"
                                     placeholder="77 000 00 00"
-                                    className="w-full pl-12 pr-4 py-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-[15px] focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all font-medium"
+                                    className="w-full h-11 pl-10 pr-4 bg-slate-50/50 focus:bg-white border border-slate-200 rounded-lg text-base sm:text-sm focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all duration-300 font-medium text-[#1B1F3B] placeholder-gray-400"
                                     value={formData.phone}
                                     onChange={handleChange}
                                 />
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-[#1B1F3B] mb-2 px-1 text-xs">Mot de passe</label>
+                        <motion.div variants={itemVariants}>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1.5 px-1">Mot de passe</label>
                             <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8] transition-colors group-focus-within:text-[#1B1F3B]" size={20} />
+                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-[#1B1F3B]" size={16} />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     name="password"
                                     placeholder="••••••••"
                                     required
-                                    className="w-full pl-12 pr-12 py-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-[15px] focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all font-medium"
+                                    className="w-full h-11 pl-10 pr-10 bg-slate-50/50 focus:bg-white border border-slate-200 rounded-lg text-base sm:text-sm focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all duration-300 font-medium text-[#1B1F3B] placeholder-gray-400"
                                     value={formData.password}
                                     onChange={handleChange}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#1B1F3B] transition-colors"
+                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1B1F3B] transition-colors"
                                 >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
 
@@ -202,7 +233,7 @@ export default function RegisterPage() {
                                     animate={{ opacity: 1, height: 'auto' }}
                                     className="mt-3 px-1"
                                 >
-                                    <div className="flex gap-1.5 h-1.5">
+                                    <div className="flex gap-1.5 h-1">
                                         {[1, 2, 3, 4].map((step) => {
                                             const strength = formData.password.length > 8 ? 4 : formData.password.length > 5 ? 3 : formData.password.length > 3 ? 2 : 1;
                                             return (
@@ -218,39 +249,47 @@ export default function RegisterPage() {
                                             );
                                         })}
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-2 block">
+                                    <span className="text-[9px] font-black uppercase tracking-wider text-gray-400 mt-1.5 block">
                                         {formData.password.length > 8 ? "Sécurisé" : formData.password.length > 5 ? "Normal" : "Trop court"}
                                     </span>
                                 </motion.div>
                             )}
-                        </div>
+                        </motion.div>
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-[#1B1F3B] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-[#2D3663] transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 shadow-xl shadow-[#1B1F3B]/20 pt-6"
-                        >
-                            {isLoading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                                <>
-                                    <span>S'inscrire</span>
-                                    <ArrowRight size={18} />
-                                </>
-                            )}
-                        </button>
+                        <motion.div variants={itemVariants}>
+                            <motion.button
+                                type="submit"
+                                disabled={isLoading}
+                                whileHover={{ y: -1, boxShadow: "0 12px 20px -8px rgba(27, 31, 59, 0.25)" }}
+                                whileTap={{ scale: 0.98 }}
+                                className="w-full h-11 bg-[#1B1F3B] hover:bg-[#2D3663] text-white rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-colors disabled:opacity-70 disabled:pointer-events-none"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <span>S'inscrire</span>
+                                        <ArrowRight size={14} />
+                                    </>
+                                )}
+                            </motion.button>
+                        </motion.div>
                     </form>
 
-                    <div className="mt-8 pt-6 border-t border-[#E2E8F0] text-center">
-                        <p className="text-[#64748B] text-sm font-medium">
+                    <motion.div variants={itemVariants} className="mt-5 pt-4 border-t border-slate-100 text-center">
+                        <p className="text-[#64748B] text-xs font-medium">
                             Déjà membre ?{' '}
-                            <Link href="/login" className="text-[#1B1F3B] font-bold hover:text-primary transition-colors inline-flex items-center gap-1 group">
+                            <Link href="/login" className="text-[#1B1F3B] font-bold hover:text-primary transition-colors inline-flex items-center gap-0.5 group">
                                 Se connecter
-                                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform duration-300" />
                             </Link>
                         </p>
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
+
+                <motion.div variants={itemVariants} className="mt-5 text-center text-[#94A3B8] text-[9px] font-black uppercase tracking-[0.15em] opacity-80">
+                    &copy; 2024 Baraka Shop Senegal - Tous droits réservés
+                </motion.div>
             </motion.div>
         </div>
     );
