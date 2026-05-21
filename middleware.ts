@@ -17,25 +17,11 @@ function bypassesMaintenance(pathname: string) {
 async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
     if (process.env.MAINTENANCE_MODE === 'true') return true
 
-    const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? 'localhost:3000'
-    const protocol = req.nextUrl.protocol
-    const base = `${protocol}//${host}`
+    const origin = req.nextUrl.origin
 
+    // Primary: DB via API (reliable on Vercel; static maintenance.json is build-time only)
     try {
-        const fileRes = await fetch(`${base}/maintenance.json`, {
-            cache: 'no-store',
-            headers: { Accept: 'application/json' },
-        })
-        if (fileRes.ok) {
-            const data = await fileRes.json()
-            return !!data.maintenanceMode
-        }
-    } catch {
-        /* try API fallback */
-    }
-
-    try {
-        const res = await fetch(`${base}/api/site-status`, {
+        const res = await fetch(`${origin}/api/site-status`, {
             cache: 'no-store',
             headers: { Accept: 'application/json' },
         })
@@ -44,7 +30,23 @@ async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
             return !!data.maintenanceMode
         }
     } catch {
-        /* ignore */
+        /* dev fallback below */
+    }
+
+    // Dev fallback when API is down (e.g. corrupt .next cache)
+    if (process.env.NODE_ENV === 'development') {
+        try {
+            const fileRes = await fetch(`${origin}/maintenance.json`, {
+                cache: 'no-store',
+                headers: { Accept: 'application/json' },
+            })
+            if (fileRes.ok) {
+                const data = await fileRes.json()
+                return !!data.maintenanceMode
+            }
+        } catch {
+            /* ignore */
+        }
     }
 
     return false

@@ -13,10 +13,17 @@ export function readMaintenanceFlagFile(): boolean {
     }
 }
 
+/** Dev-only fallback for middleware when /api/site-status is unavailable. */
 export function writeMaintenanceFlagFile(enabled: boolean) {
-    writeFileSync(
-        FILE_PATH,
-        JSON.stringify({ maintenanceMode: enabled }, null, 0),
-        'utf-8'
-    )
+    if (process.env.NODE_ENV !== 'development') return
+
+    try {
+        writeFileSync(
+            FILE_PATH,
+            JSON.stringify({ maintenanceMode: enabled }, null, 0),
+            'utf-8'
+        )
+    } catch (error) {
+        console.warn('[maintenance] could not write maintenance.json:', error)
+    }
 }

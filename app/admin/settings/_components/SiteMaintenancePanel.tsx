@@ -152,6 +152,11 @@ export function SiteMaintenancePanel() {
                                     ? 'Les visiteurs accèdent normalement à la boutique.'
                                     : 'Les visiteurs voient la page de maintenance. Vous (admin) y accédez toujours.'}
                             </p>
+                            {!isOnline && (
+                                <p className="text-[10px] text-amber-700/90 font-medium mt-2 max-w-md">
+                                    Test : ouvrez le site en navigation privée (sans être connecté admin).
+                                </p>
+                            )}
                             {lastChanged && (
                                 <div className="flex items-center gap-1.5 mt-2 text-slate-400">
                                     <Clock className="w-3 h-3" />
