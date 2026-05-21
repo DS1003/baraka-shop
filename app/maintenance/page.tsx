@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { ShieldCheck, RefreshCw, Clock, ArrowRight, Settings2, User, Lock, Eye, EyeOff, Loader2, X, AlertCircle } from 'lucide-react'
 import { signIn } from 'next-auth/react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 
 export const dynamic = 'force-dynamic'
 
@@ -132,7 +132,7 @@ export default function MaintenancePage() {
     if (!mounted) return null
 
     // Motion variants for the modal content
-    const containerVariants = {
+    const containerVariants: Variants = {
         hidden: { opacity: 0 },
         show: {
             opacity: 1,
@@ -143,13 +143,13 @@ export default function MaintenancePage() {
         }
     }
 
-    const itemVariants = {
+    const itemVariants: Variants = {
         hidden: { opacity: 0, y: 15 },
-        show: { 
-            opacity: 1, 
+        show: {
+            opacity: 1,
             y: 0,
             transition: {
-                type: "spring",
+                type: 'spring',
                 stiffness: 100,
                 damping: 15
             }
