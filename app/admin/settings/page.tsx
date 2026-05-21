@@ -9,6 +9,7 @@ import {
     CreditCard,
     User,
     Shield,
+    Store,
     Smartphone,
     Mail,
     ChevronRight,
@@ -30,9 +31,10 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getUserSettings, updateUserSettings } from '@/lib/actions/user-actions';
 import { signOut } from 'next-auth/react';
+import { SiteMaintenancePanel } from './_components/SiteMaintenancePanel';
 
 export default function SettingsPage() {
-    const [activeSection, setActiveSection] = useState('Profil');
+    const [activeSection, setActiveSection] = useState('Boutique');
     const [isSaving, setIsSaving] = useState(false);
     const [loading, setLoading] = useState(true);
     const [mounted, setMounted] = useState(false);
@@ -129,6 +131,7 @@ export default function SettingsPage() {
     if (!mounted) return null;
 
     const sections = [
+        { id: 'Boutique', icon: Store, label: 'Site & Boutique', desc: 'Maintenance et disponibilité du site' },
         { id: 'Profil', icon: User, label: 'Profil Personnel', desc: 'Identité et informations de contact' },
         { id: 'Notifications', icon: Bell, label: 'Notifications', desc: 'Alertes et préférences d\'envoi' },
         { id: 'Sécurité', icon: Lock, label: 'Sécurité & Accès', desc: 'Mots de passe et authentification' },
@@ -233,6 +236,8 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div className="p-10">
+                                    {activeSection === 'Boutique' && <SiteMaintenancePanel />}
+
                                     {activeSection === 'Profil' && (
                                         <div className="space-y-12">
                                             {/* Avatar Section */}

@@ -436,7 +436,7 @@ export function FormInput({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="w-full h-12 sm:h-14 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl px-4 sm:px-6 text-base sm:text-sm font-bold outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                className="w-full h-12 sm:h-14 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl px-4 sm:px-6 text-base font-bold outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
             />
         </label>
     )

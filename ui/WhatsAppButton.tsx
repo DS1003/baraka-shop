@@ -11,7 +11,7 @@ export function WhatsAppButton() {
     const message = encodeURIComponent("Bonjour Baraka Shop, j'aimerais avoir plus d'informations sur vos produits.")
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
 
-    if (pathname?.startsWith('/admin')) {
+    if (pathname?.startsWith('/admin') || pathname === '/maintenance') {
         return null
     }
 

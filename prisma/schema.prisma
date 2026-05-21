@@ -265,6 +265,14 @@ model BigBanner {
   updatedAt   DateTime @updatedAt
 }
 
+model SiteConfig {
+  id                 String   @id @default("singleton")
+  maintenanceMode    Boolean  @default(false)
+  maintenanceTitle   String   @default("Site en maintenance")
+  maintenanceMessage String   @default("Nous effectuons des améliorations. Le site sera de retour très bientôt.")
+  updatedAt          DateTime @updatedAt
+}
+
 enum Role {
   USER
   ADMIN

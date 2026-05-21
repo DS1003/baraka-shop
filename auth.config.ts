@@ -8,29 +8,7 @@ export const authConfig = {
         strategy: "jwt",
     },
     callbacks: {
-        authorized({ auth, request: { nextUrl } }) {
-            const isLoggedIn = !!auth?.user;
-            const isAdminRoute = nextUrl.pathname.startsWith("/admin");
-            const isLoginRoute = nextUrl.pathname === "/login";
-
-            if (isAdminRoute) {
-                if (isLoggedIn) {
-                    // Check role if needed, but 'auth' here might not have role yet if it's too early
-                    // Usually role is in the token/session
-                    if (auth?.user?.role === "ADMIN") return true;
-                    return Response.redirect(new URL("/", nextUrl));
-                }
-                return false; // Redirect to login
-            }
-
-            if (isLoginRoute && isLoggedIn) {
-                const userRole = (auth?.user as any)?.role;
-                const redirectUrl = userRole === "ADMIN" ? "/admin" : "/";
-                return Response.redirect(new URL(redirectUrl, nextUrl));
-            }
-
-            return true;
-        },
+        authorized: () => true,
         async jwt({ token, user }: any) {
             if (user) {
                 token.role = user.role;
@@ -48,5 +26,5 @@ export const authConfig = {
             return session;
         },
     },
-    providers: [], // Add providers with setup in auth.ts
+    providers: [],
 } satisfies NextAuthConfig;
