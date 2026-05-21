@@ -107,22 +107,16 @@ export default function MaintenancePage() {
                 identifier,
                 password,
                 redirect: false,
+                redirectTo: '/admin/settings',
             })
 
             if (result?.error) {
                 setError('Identifiants invalides.')
                 setIsLoading(false)
-            } else {
-                const sessionResponse = await fetch('/api/auth/session')
-                const session = await sessionResponse.json()
-
-                if (session?.user?.role === 'ADMIN') {
-                    window.location.href = '/admin/settings'
-                } else {
-                    setError('Accès refusé. Vous n\'êtes pas administrateur.')
-                    setIsLoading(false)
-                }
+                return
             }
+
+            window.location.href = '/admin/settings'
         } catch (err) {
             setError('Une erreur est survenue.')
             setIsLoading(false)

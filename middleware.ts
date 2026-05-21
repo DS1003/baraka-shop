@@ -1,8 +1,8 @@
 import NextAuth from 'next-auth'
 import { authConfig } from './auth.config'
+import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
 
 const { auth } = NextAuth(authConfig)
 
@@ -67,9 +67,11 @@ export default auth(async (req) => {
     const token = await getToken({
         req,
         secret: process.env.AUTH_SECRET,
+        secureCookie: process.env.NODE_ENV === 'production',
     })
-    const isAdmin = token?.role === 'ADMIN'
-    const isLoggedIn = !!token
+    const role = req.auth?.user?.role ?? token?.role
+    const isAdmin = role === 'ADMIN'
+    const isLoggedIn = !!req.auth?.user || !!token?.sub
 
     // ── Maintenance mode check for public routes ──
     if (!bypassesMaintenance(pathname) && !isAdmin) {

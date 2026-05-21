@@ -28,36 +28,34 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            const result = await signIn('credentials', {
+            const searchParams = new URLSearchParams(window.location.search);
+            const rawCallback = searchParams.get('callbackUrl');
+            let redirectTo = '/';
+
+            if (rawCallback) {
+                try {
+                    const url = new URL(rawCallback, window.location.origin);
+                    if (url.origin === window.location.origin) {
+                        redirectTo = url.pathname + url.search;
+                    }
+                } catch {
+                    /* keep default */
+                }
+            }
+
+            await signIn('credentials', {
                 identifier,
                 password,
                 redirect: false,
-            });
-
-            if (result?.error) {
-                setError('Identifiants invalides. Veuillez réessayer.');
-                setIsLoading(false);
-            } else {
-                // Récupérer les paramètres de l'URL pour gérer le callbackUrl
-                const searchParams = new URLSearchParams(window.location.search);
-                const callbackUrl = searchParams.get('callbackUrl');
-
-                // Si on a un callbackUrl spécifique, on l'utilise
-                if (callbackUrl && callbackUrl !== '/') {
-                    window.location.href = callbackUrl;
+                redirectTo,
+            }).then((result) => {
+                if (result?.error) {
+                    setError('Identifiants invalides. Veuillez réessayer.');
+                    setIsLoading(false);
                     return;
                 }
-
-                // Sinon, on vérifie le rôle pour la redirection par défaut
-                const sessionResponse = await fetch('/api/auth/session');
-                const session = await sessionResponse.json();
-
-                if (session?.user?.role === 'ADMIN') {
-                    window.location.href = '/admin';
-                } else {
-                    window.location.href = '/';
-                }
-            }
+                window.location.href = redirectTo;
+            });
         } catch (err) {
             setError('Une erreur est survenue.');
             setIsLoading(false);
