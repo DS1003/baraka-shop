@@ -1306,7 +1306,7 @@ export async function initializeHomePromos() {
         },
         {
             badge: "Nouveau",
-            title: "Son & Image High-End",
+            title: "SON & IMAGE",
             subtitle: "Le cinéma à la maison",
             image: "https://media.ldlc.com/encart/p/28829_b.jpg",
             bg: "bg-[#F5FFF9]",

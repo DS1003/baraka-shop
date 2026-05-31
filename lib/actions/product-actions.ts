@@ -10,6 +10,7 @@ import path from 'path';
 export async function getProductsAction(options: {
     query?: string;
     category?: string;
+    subCategory?: string;
     brand?: string;
     store?: string;
     minPrice?: number;
@@ -23,6 +24,7 @@ export async function getProductsAction(options: {
     const {
         query,
         category,
+        subCategory,
         brand,
         store,
         minPrice,
@@ -56,6 +58,10 @@ export async function getProductsAction(options: {
 
         if (category) {
             where.category = { slug: category };
+        }
+
+        if (subCategory) {
+            where.subCategory = { slug: subCategory };
         }
 
         if (brand) {
@@ -204,12 +210,13 @@ export async function getSimilarProductsAction(productId: string, categoryId: st
 
 export async function getCategoriesAction() {
     try {
-        const cacheKey = 'categories:all';
+        const cacheKey = 'categories:all:with_sub';
         const cached = await getCache<any>(cacheKey);
         if (cached) return cached;
 
         const categories = await prisma.category.findMany({
             include: {
+                subCategories: true,
                 _count: {
                     select: { products: true }
                 }

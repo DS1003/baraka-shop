@@ -29,6 +29,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
 
     // Get filters from URL
     const category = params.category || ''
+    const subCategory = params.subCategory || ''
     const brand = params.brand || ''
     const sort = params.sort || 'newest'
     const page = Number(params.page) || 1
@@ -40,6 +41,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     const [result, categories, brands] = await Promise.all([
         getProductsAction({
             category,
+            subCategory,
             brand,
             sort,
             page,

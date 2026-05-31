@@ -53,6 +53,17 @@ const DEFAULT_PROMOS = [
         size: "md:col-span-1",
         href: "/boutique?category=connectique",
         order: 3
+    },
+    {
+        badge: "Nouveau",
+        title: "SON & IMAGE",
+        subtitle: "Le cinéma à la maison",
+        image: "https://media.ldlc.com/encart/p/28829_b.jpg",
+        bg: "bg-[#F5FFF9]",
+        border: "border-emerald-100/50",
+        size: "md:col-span-2",
+        href: "/boutique?category=image-son",
+        order: 4
     }
 ];
 
