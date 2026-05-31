@@ -2,6 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Container } from '@/ui/Container'
+import { Logo } from '@/ui/Logo'
 import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, Youtube, ArrowRight } from 'lucide-react'
 
 export function Footer() {
@@ -25,14 +26,7 @@ export function Footer() {
                     {/* Brand Section */}
                     <div className="mb-16 md:mb-20 flex flex-col items-center max-w-2xl px-4">
                         <Link href="/" className="mb-8 block">
-                            <div className="relative w-[380px] md:w-[550px] h-[130px] md:h-[180px]">
-                                <Image
-                                    src="https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png"
-                                    alt="Baraka Shop"
-                                    fill
-                                    className="object-contain"
-                                />
-                            </div>
+                            <Logo variant="dark" />
                         </Link>
                         <p className="text-gray-400 text-sm md:text-base leading-relaxed tracking-wide">
                             Votre destination premium pour l'électronique de pointe au Sénégal.

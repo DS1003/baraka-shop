@@ -221,6 +221,8 @@ export function CategoryCarousel({
 }
 
 function UniverseCard({ item, idx }: { item: any, idx: number }) {
+    const imageSrc = item.image || CLEAN_IMAGES[(item.name || '').trim().toUpperCase()] || CLEAN_IMAGES['DEFAULT'];
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -247,7 +249,7 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
                 <div className="relative flex-1 flex items-center justify-center my-1 md:my-2">
                     <div className="relative w-full h-[110px] md:h-[150px] transform transition-all duration-500 group-hover:scale-110">
                         <Image
-                            src={item.image}
+                            src={imageSrc}
                             alt={item.name}
                             fill
                             className="object-contain"

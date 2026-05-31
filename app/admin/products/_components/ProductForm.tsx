@@ -23,6 +23,7 @@ import {
     Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { RichTextEditor } from '@/ui/RichTextEditor';
 import { ProductDescriptionBuilder, DescriptionBlock } from './ProductDescriptionBuilder';
@@ -32,7 +33,8 @@ import {
     getAdminBrands as getBrands,
     getAdminStores,
     getSubCategories,
-    getThirdLevelCategories
+    getThirdLevelCategories,
+    upsertBrand
 } from '@/lib/actions/admin-actions';
 import { toast } from 'sonner';
 
@@ -179,6 +181,15 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const videoFileInputRef = React.useRef<HTMLInputElement>(null);
     const [isPublished, setIsPublished] = useState(editingProduct ? editingProduct.isPublished : false);
 
+    // Brand Modal States
+    const [mounted, setMounted] = useState(false);
+    const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
+    const [brandName, setBrandName] = useState('');
+    const [brandLogoUrl, setBrandLogoUrl] = useState<string | null>(null);
+    const [isUploadingBrandLogo, setIsUploadingBrandLogo] = useState(false);
+    const [isSavingBrand, setIsSavingBrand] = useState(false);
+    const brandLogoInputRef = React.useRef<HTMLInputElement>(null);
+
     // Categories
     const [categories, setCategories] = useState<any[]>([]);
     const [subCategories, setSubCategories] = useState<any[]>([]);
@@ -230,6 +241,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     );
 
     useEffect(() => {
+        setMounted(true);
         const loadMetadata = async () => {
             const [cats, brs, sts] = await Promise.all([
                 getAdminCategories(),
@@ -522,6 +534,62 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                     </div>
                                                 );
                                             }
+                                            case 'VIDEO_LEFT': {
+                                                const isGrey = imgTextCount % 2 === 0;
+                                                imgTextCount++;
+                                                return (
+                                                    <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-10 py-6 md:py-8 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                        <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl bg-black">
+                                                            {(() => {
+                                                                const url = block.video || '';
+                                                                const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+                                                                if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
+                                                                const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                                if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
+                                                                if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
+                                                                return <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">Aucune vidéo</div>;
+                                                            })()}
+                                                        </div>
+                                                        <div className="w-full md:w-1/2 space-y-4">
+                                                            <h3 className="text-[16px] md:text-[18px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                                {block.title}
+                                                            </h3>
+                                                            <div 
+                                                                className="text-[#505050] text-[13px] leading-[1.7] font-normal whitespace-pre-wrap"
+                                                                dangerouslySetInnerHTML={{ __html: block.text }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            case 'VIDEO_RIGHT': {
+                                                const isGrey = imgTextCount % 2 === 0;
+                                                imgTextCount++;
+                                                return (
+                                                    <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-4 md:gap-10 py-6 md:py-8 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                        <div className="w-full md:w-1/2 space-y-4">
+                                                            <h3 className="text-[16px] md:text-[18px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                                {block.title}
+                                                            </h3>
+                                                            <div 
+                                                                className="text-[#505050] text-[13px] leading-[1.7] font-normal whitespace-pre-wrap"
+                                                                dangerouslySetInnerHTML={{ __html: block.text }}
+                                                            />
+                                                        </div>
+                                                        <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl bg-black">
+                                                            {(() => {
+                                                                const url = block.video || '';
+                                                                const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+                                                                if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
+                                                                const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                                if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
+                                                                if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
+                                                                return <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">Aucune vidéo</div>;
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
                                             default:
                                                 return null;
                                         }
@@ -564,6 +632,78 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 </div>
             </div>
         );
+    };
+
+    const handleBrandLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploadingBrandLogo(true);
+        try {
+            const fd = new FormData();
+            fd.append('files', file);
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: fd,
+            });
+            const data = await res.json();
+
+            if (data.urls && data.urls.length > 0) {
+                setBrandLogoUrl(data.urls[0]);
+                toast.success("Logo mis en ligne avec succès !");
+            } else {
+                toast.error(data.error || "Erreur lors de l'upload.");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Erreur lors de l'upload du logo.");
+        } finally {
+            setIsUploadingBrandLogo(false);
+            if (e.target) e.target.value = '';
+        }
+    };
+
+    const handleCreateBrand = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!brandName.trim()) {
+            toast.error("Le nom de la marque est requis.");
+            return;
+        }
+        setIsSavingBrand(true);
+        try {
+            const data = {
+                name: brandName.trim(),
+                slug: brandName.trim().toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+                image: brandLogoUrl,
+            };
+
+            const res = await upsertBrand(data);
+            if (res.success) {
+                toast.success("Marque créée avec succès !");
+                // Reload brands list
+                const updatedBrands = await getBrands();
+                setBrands(updatedBrands);
+                
+                // Find the newly created brand by name or slug
+                const newBrand = updatedBrands.find((b: any) => b.name.toLowerCase() === data.name.toLowerCase());
+                if (newBrand) {
+                    setBrandId(newBrand.id);
+                }
+                
+                // Reset states and close modal
+                setBrandName("");
+                setBrandLogoUrl(null);
+                setIsBrandModalOpen(false);
+            } else {
+                toast.error("Erreur lors de la création de la marque. Le nom est peut-être déjà utilisé.");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Erreur serveur lors de la création de la marque.");
+        } finally {
+            setIsSavingBrand(false);
+        }
     };
 
     const handleUpsert = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -712,6 +852,111 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-[13px]"
                             />
                         </div>
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-center">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Marque</label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setBrandName("");
+                                        setBrandLogoUrl(null);
+                                        setIsBrandModalOpen(true);
+                                    }}
+                                    className="text-[11px] text-orange-600 font-bold hover:text-orange-700 transition-colors flex items-center gap-1"
+                                >
+                                    <Plus size={12} />
+                                    <span>Nouvelle marque</span>
+                                </button>
+                            </div>
+                            <select
+                                key={`brand-${brands.length}`}
+                                name="brandId"
+                                value={brandId}
+                                onChange={(e) => setBrandId(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
+                            >
+                                <option value="">Aucune</option>
+                                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="space-y-4">
+                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
+                        Contenu Détaillé
+                    </h4>
+                    
+                    <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Courte</label>
+                        <textarea
+                            name="shortDescription"
+                            defaultValue={editingProduct?.shortDescription}
+                            rows={2}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed text-[13px]"
+                            placeholder="Résumé accrocheur pour le haut de page..."
+                        />
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Classique (HTML)</label>
+                        </div>
+                        <RichTextEditor
+                            name="description"
+                            defaultValue={editingProduct?.description || ""}
+                        />
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Visuelle (Apple Style)</label>
+                            <span className="text-[9px] font-medium text-slate-400 italic">Glissez-déposez pour réorganiser</span>
+                        </div>
+                        <ProductDescriptionBuilder 
+                            initialData={detailedDescription}
+                            onChange={setDetailedDescription}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Caractéristiques (1 par ligne)</label>
+                            <textarea
+                                name="features"
+                                defaultValue={Array.isArray(editingProduct?.features) ? editingProduct.features.join('\n') : ""}
+                                rows={6}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
+                                placeholder="Ex: Coton 100%&#10;Lavage 30°C&#10;Coupe ajustée"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fiche Technique (Key: Value)</label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const parsed = smartParseMetadata(metadataText);
+                                        const formatted = Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
+                                        setMetadataText(formatted);
+                                        toast.info("🪄 Fiche technique adaptée !");
+                                    }}
+                                    className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5 hover:text-orange-700 transition-colors"
+                                >
+                                    <span>Adapter</span>
+                                    <Palette size={10} />
+                                </button>
+                            </div>
+                            <textarea
+                                name="metadata"
+                                value={metadataText}
+                                onChange={(e) => setMetadataText(e.target.value)}
+                                rows={6}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
+                                placeholder="Collez ici vos spécifications en vrac..."
+                            />
+                        </div>
                     </div>
                 </section>
 
@@ -777,19 +1022,6 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             </select>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Marque</label>
-                            <select
-                                key={`brand-${brands.length}`}
-                                name="brandId"
-                                value={brandId}
-                                onChange={(e) => setBrandId(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
-                            >
-                                <option value="">Aucune</option>
-                                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                            </select>
-                        </div>
 
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Boutique (Vendor)</label>
@@ -1445,83 +1677,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     )}
                 </section>
 
-                <section className="space-y-4">
-                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
-                        <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
-                        Contenu Détaillé
-                    </h4>
-                    
-                    <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Courte</label>
-                        <textarea
-                            name="shortDescription"
-                            defaultValue={editingProduct?.shortDescription}
-                            rows={2}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed text-[13px]"
-                            placeholder="Résumé accrocheur pour le haut de page..."
-                        />
-                    </div>
 
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Classique (HTML)</label>
-                        </div>
-                        <RichTextEditor
-                            name="description"
-                            defaultValue={editingProduct?.description || ""}
-                        />
-                    </div>
-
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Visuelle (Apple Style)</label>
-                            <span className="text-[9px] font-medium text-slate-400 italic">Glissez-déposez pour réorganiser</span>
-                        </div>
-                        <ProductDescriptionBuilder 
-                            initialData={detailedDescription}
-                            onChange={setDetailedDescription}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Caractéristiques (1 par ligne)</label>
-                            <textarea
-                                name="features"
-                                defaultValue={Array.isArray(editingProduct?.features) ? editingProduct.features.join('\n') : ""}
-                                rows={6}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
-                                placeholder="Ex: Coton 100%&#10;Lavage 30°C&#10;Coupe ajustée"
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fiche Technique (Key: Value)</label>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const parsed = smartParseMetadata(metadataText);
-                                        const formatted = Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
-                                        setMetadataText(formatted);
-                                        toast.info("🪄 Fiche technique adaptée !");
-                                    }}
-                                    className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5 hover:text-orange-700 transition-colors"
-                                >
-                                    <span>Adapter</span>
-                                    <Palette size={10} />
-                                </button>
-                            </div>
-                            <textarea
-                                name="metadata"
-                                value={metadataText}
-                                onChange={(e) => setMetadataText(e.target.value)}
-                                rows={6}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
-                                placeholder="Collez ici vos spécifications en vrac..."
-                            />
-                        </div>
-                    </div>
-                </section>
             </div>
             <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
                 <button
@@ -1701,6 +1857,119 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 </div>
             )}
         </AnimatePresence>
+
+        {/* Brand Creation Modal */}
+        {mounted && createPortal(
+            <AnimatePresence>
+                {isBrandModalOpen && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+                        <motion.div 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }} 
+                            exit={{ opacity: 0 }} 
+                            onClick={() => setIsBrandModalOpen(false)} 
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" 
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }} 
+                            animate={{ opacity: 1, scale: 1 }} 
+                            exit={{ opacity: 0, scale: 0.95 }} 
+                            className="bg-white w-full max-w-md rounded-2xl shadow-2xl relative z-10 overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+                                <h3 className="text-[18px] font-bold text-slate-900">Nouvelle Marque</h3>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsBrandModalOpen(false)} 
+                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100/50 text-slate-400 hover:text-rose-500 transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                            <form onSubmit={handleCreateBrand} className="p-6 space-y-6">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Nom de la Marque</label>
+                                    <input
+                                        name="brandNameInput"
+                                        value={brandName}
+                                        onChange={(e) => setBrandName(e.target.value)}
+                                        required
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-bold text-[14px]"
+                                        placeholder="Ex: Apple, Samsung, etc."
+                                    />
+                                </div>
+                                
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Logo de la Marque</label>
+                                    
+                                    {brandLogoUrl ? (
+                                        <div className="relative group/logo border border-slate-200 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center p-4 h-32">
+                                            <img src={brandLogoUrl} alt="Logo Preview" className="h-full object-contain" />
+                                            <button
+                                                type="button"
+                                                onClick={() => setBrandLogoUrl(null)}
+                                                className="absolute top-2 right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover/logo:opacity-100 transition-all scale-75 group-hover/logo:scale-100"
+                                            >
+                                                <X size={14} strokeWidth={3} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            onClick={() => brandLogoInputRef.current?.click()}
+                                            className={cn(
+                                                "border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-orange-300 hover:bg-orange-50/10 transition-all min-h-[128px] text-slate-400",
+                                                isUploadingBrandLogo && "pointer-events-none opacity-60"
+                                            )}
+                                        >
+                                            <input
+                                                ref={brandLogoInputRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                                                className="hidden"
+                                                onChange={handleBrandLogoUpload}
+                                            />
+                                            {isUploadingBrandLogo ? (
+                                                <>
+                                                    <Loader2 size={24} className="animate-spin text-orange-500" />
+                                                    <span className="text-[11px] font-bold text-slate-500">Upload en cours...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Upload size={24} />
+                                                    <div className="text-center">
+                                                        <span className="block text-[11px] font-bold uppercase tracking-widest text-slate-500">Sélectionner un logo</span>
+                                                        <span className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WebP • Max 5 MB</span>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setIsBrandModalOpen(false)} 
+                                        className="flex-1 py-3.5 border border-slate-200 rounded-xl font-bold text-[12px] text-slate-500 hover:bg-slate-50 transition-all"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        disabled={isSavingBrand || isUploadingBrandLogo} 
+                                        className="flex-[2] py-3.5 bg-[#1B1F3B] text-white rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 hover:bg-orange-600 hover:shadow-lg transition-all disabled:opacity-75"
+                                    >
+                                        {isSavingBrand ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                        Créer
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>,
+            document.body
+        )}
         </>
     );
 }

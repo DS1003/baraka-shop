@@ -37,9 +37,6 @@ import {
     deleteThirdLevelCategory,
     getCategoryStats
 } from '@/lib/actions/admin-actions';
-import { uploadToCloudinaryAction } from '@/lib/actions/media-actions';
-import { uploadToCloudinaryAction as mediaUploadAction } from '@/lib/actions/media-actions';
-
 export default function CategoriesPage() {
     const [view, setView] = useState<'l1' | 'l2' | 'l3'>('l1');
     const [selectedL1, setSelectedL1] = useState<any>(null);
@@ -112,18 +109,39 @@ export default function CategoriesPage() {
         // Handle File Upload if present
         const imageFile = formData.get('imageFile') as File;
         if (imageFile && imageFile.size > 0) {
+            if (imageFile.size > 5 * 1024 * 1024) {
+                alert("Veuillez choisir une image de moins de 5 Mo.");
+                setIsSaving(false);
+                return;
+            }
+
             setIsUploading(true);
             const uploadFormData = new FormData();
-            uploadFormData.append('file', imageFile);
-            const uploadRes = await uploadToCloudinaryAction(uploadFormData);
-            if (uploadRes.success && uploadRes.media?.url) {
-                imageUrl = uploadRes.media.url;
-            } else {
-                alert("Échec de l'upload de l'image"); // Replaced toast.error with alert
+            uploadFormData.append('files', imageFile);
+
+            try {
+                const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: uploadFormData,
+                });
+                const result = await uploadResponse.json();
+
+                if (!uploadResponse.ok || !result.urls || result.urls.length === 0) {
+                    alert("Échec de l'upload de l'image.");
+                    setIsUploading(false);
+                    setIsSaving(false);
+                    return;
+                }
+
+                imageUrl = result.urls[0];
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert("Échec de l'upload de l'image.");
                 setIsUploading(false);
                 setIsSaving(false);
                 return;
             }
+
             setIsUploading(false);
         }
 

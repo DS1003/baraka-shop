@@ -13,7 +13,9 @@ import {
     AlignCenter,
     X,
     Upload,
-    Loader2
+    Loader2,
+    Video,
+    Play
 } from 'lucide-react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -21,10 +23,11 @@ import { uploadToCloudinaryAction } from '@/lib/actions/media-actions';
 
 export type DescriptionBlock = {
     id: string;
-    type: 'TITLE_CENTERED' | 'TEXT_CENTERED' | 'IMAGE_FULL' | 'IMAGE_LEFT' | 'IMAGE_RIGHT' | 'LOGO';
+    type: 'TITLE_CENTERED' | 'TEXT_CENTERED' | 'IMAGE_FULL' | 'IMAGE_LEFT' | 'IMAGE_RIGHT' | 'LOGO' | 'VIDEO_LEFT' | 'VIDEO_RIGHT';
     title?: string;
     text?: string;
     image?: string;
+    video?: string;
 };
 
 interface ProductDescriptionBuilderProps {
@@ -39,6 +42,8 @@ const BLOCK_TYPES = [
     { type: 'IMAGE_FULL', label: 'Image Large', icon: ImageIcon },
     { type: 'IMAGE_LEFT', label: 'Image Gauche + Texte', icon: AlignLeft },
     { type: 'IMAGE_RIGHT', label: 'Texte + Image Droite', icon: AlignRight },
+    { type: 'VIDEO_LEFT', label: 'Vidéo Gauche + Texte', icon: Video },
+    { type: 'VIDEO_RIGHT', label: 'Texte + Vidéo Droite', icon: Video },
 ];
 
 export function ProductDescriptionBuilder({ initialData = [], onChange }: ProductDescriptionBuilderProps) {
@@ -67,7 +72,8 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
             type,
             title: '',
             text: '',
-            image: ''
+            image: '',
+            video: ''
         };
         setBlocks([...blocks, newBlock]);
     };
@@ -153,7 +159,7 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
                                         "space-y-4",
                                         (block.type === 'TITLE_CENTERED' || block.type === 'TEXT_CENTERED' || block.type === 'LOGO' || block.type === 'IMAGE_FULL') && "md:col-span-2 max-w-2xl mx-auto w-full"
                                     )}>
-                                        {(block.type === 'TITLE_CENTERED' || block.type === 'IMAGE_LEFT' || block.type === 'IMAGE_RIGHT') && (
+                                        {(block.type === 'TITLE_CENTERED' || block.type === 'IMAGE_LEFT' || block.type === 'IMAGE_RIGHT' || block.type === 'VIDEO_LEFT' || block.type === 'VIDEO_RIGHT') && (
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Titre / Accroche (Court)</label>
                                                 <input
@@ -166,7 +172,7 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
                                             </div>
                                         )}
 
-                                        {(block.type === 'TEXT_CENTERED' || block.type === 'IMAGE_LEFT' || block.type === 'IMAGE_RIGHT') && (
+                                        {(block.type === 'TEXT_CENTERED' || block.type === 'IMAGE_LEFT' || block.type === 'IMAGE_RIGHT' || block.type === 'VIDEO_LEFT' || block.type === 'VIDEO_RIGHT') && (
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paragraphe / Description (Détails)</label>
                                                 <textarea
@@ -220,6 +226,65 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
                                                             {isUploading === block.id ? "Envoi..." : "Ajouter Image"}
                                                             <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(block.id, e)} />
                                                         </label>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {(block.type === 'VIDEO_LEFT' || block.type === 'VIDEO_RIGHT') && (
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">URL de la Vidéo (YouTube, Vimeo, MP4...)</label>
+                                            <input
+                                                type="text"
+                                                value={block.video || ''}
+                                                onChange={(e) => updateBlock(block.id, { video: e.target.value })}
+                                                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[13px] font-medium"
+                                                placeholder="https://www.youtube.com/watch?v=... ou lien .mp4"
+                                            />
+                                            <div className={cn(
+                                                "relative bg-slate-900 border-2 border-dashed border-slate-700 rounded-2xl overflow-hidden flex items-center justify-center min-h-[180px] aspect-video"
+                                            )}>
+                                                {block.video ? (
+                                                    (() => {
+                                                        const url = block.video;
+                                                        // YouTube embed
+                                                        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+                                                        if (ytMatch) {
+                                                            return (
+                                                                <iframe
+                                                                    src={`https://www.youtube.com/embed/${ytMatch[1]}`}
+                                                                    className="w-full h-full absolute inset-0"
+                                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                    allowFullScreen
+                                                                    title="Video preview"
+                                                                />
+                                                            );
+                                                        }
+                                                        // Vimeo embed
+                                                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                        if (vimeoMatch) {
+                                                            return (
+                                                                <iframe
+                                                                    src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                                                                    className="w-full h-full absolute inset-0"
+                                                                    allow="autoplay; fullscreen; picture-in-picture"
+                                                                    allowFullScreen
+                                                                    title="Video preview"
+                                                                />
+                                                            );
+                                                        }
+                                                        // Direct video URL
+                                                        return (
+                                                            <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />
+                                                        );
+                                                    })()
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-3 text-slate-500">
+                                                        <div className="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center">
+                                                            <Play size={28} className="text-slate-400" />
+                                                        </div>
+                                                        <span className="text-[11px] font-bold uppercase tracking-widest">Collez un lien vidéo ci-dessus</span>
                                                     </div>
                                                 )}
                                             </div>

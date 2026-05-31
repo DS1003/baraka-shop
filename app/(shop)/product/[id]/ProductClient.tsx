@@ -719,6 +719,62 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                         </div>
                                                     );
                                                 }
+                                                case 'VIDEO_LEFT': {
+                                                    const isGrey = imgTextCount % 2 === 0;
+                                                    imgTextCount++;
+                                                    return (
+                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
+                                                                {(() => {
+                                                                    const url = block.video || '';
+                                                                    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+                                                                    if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
+                                                                    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                                    if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
+                                                                    if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
+                                                                    return null;
+                                                                })()}
+                                                            </div>
+                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                                    {block.title}
+                                                                </h3>
+                                                                <div 
+                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                case 'VIDEO_RIGHT': {
+                                                    const isGrey = imgTextCount % 2 === 0;
+                                                    imgTextCount++;
+                                                    return (
+                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                                    {block.title}
+                                                                </h3>
+                                                                <div 
+                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                />
+                                                            </div>
+                                                            <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
+                                                                {(() => {
+                                                                    const url = block.video || '';
+                                                                    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+                                                                    if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
+                                                                    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                                    if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
+                                                                    if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
+                                                                    return null;
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
                                                 default:
                                                     return null;
                                             }
