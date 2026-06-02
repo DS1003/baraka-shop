@@ -1,0 +1,5 @@
+INSERT INTO "PhysicalStore" (id, name, slug, image, description, address, phone, hours, type, city, "mapUrl", "isClickCollect", "isSav", "isPublished", "order", "createdAt", "updatedAt")
+VALUES
+(gen_random_uuid(), 'Baraka Shop - Plateau', 'baraka-shop-plateau', NULL, 'Notre boutique flagship au coeur de Dakar Plateau', 'Avenue Lamine Gueye x Rue Sandiniery, Dakar', '+221 33 821 44 44', 'Mon-Sat: 09:00 - 19:30', 'Flagship Store', 'Dakar Plateau', NULL, true, true, true, 1, NOW(), NOW()),
+(gen_random_uuid(), 'Baraka Shop - Sea Plaza', 'baraka-shop-sea-plaza', NULL, 'Notre concept store au centre commercial Sea Plaza', 'Centre Commercial Sea Plaza, Corniche Ouest', '+221 33 864 12 12', 'Mon-Sun: 10:00 - 21:00', 'Concept Store', 'Corniche Ouest', NULL, true, true, true, 2, NOW(), NOW()),
+(gen_random_uuid(), 'Baraka Shop - Almadies', 'baraka-shop-almadies', NULL, 'Notre boutique express aux Almadies', 'Route des Almadies, en face de l''Ambassade des USA', '+221 33 820 99 99', 'Mon-Sat: 09:00 - 20:00', 'Express Store', 'Almadies', NULL, true, true, true, 3, NOW(), NOW());

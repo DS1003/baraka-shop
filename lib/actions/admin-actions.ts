@@ -1443,3 +1443,19 @@ export async function globalTogglePublishProducts(isPublished: boolean) {
         return { success: false, message: "Erreur lors de la modification de tout le catalogue" };
     }
 }
+
+export async function toggleCategoryPublish(id: string, isPublished: boolean) {
+    try {
+        await prisma.category.update({
+            where: { id },
+            data: { isPublished }
+        });
+        
+        revalidatePath('/admin/categories');
+        revalidatePath('/');
+        return { success: true };
+    } catch (error) {
+        console.error("Toggle category publish error:", error);
+        return { success: false, message: "Erreur lors de la modification du statut" };
+    }
+}

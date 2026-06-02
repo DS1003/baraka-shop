@@ -125,6 +125,15 @@ export default function StoresPage() {
             logo_detail: logoDetailUrl,
             slug: slugify(name),
             description: formData.get('description') as string,
+            address: formData.get('address') as string,
+            phone: formData.get('phone') as string,
+            hours: formData.get('hours') as string,
+            type: formData.get('type') as string,
+            city: formData.get('city') as string,
+            mapUrl: formData.get('mapUrl') as string,
+            isClickCollect: formData.get('isClickCollect') === 'on',
+            isSav: formData.get('isSav') === 'on',
+            isBarakaShop: formData.get('isBarakaShop') === 'on',
         };
         
         const res = await fetch('/api/admin/stores', {
@@ -393,6 +402,83 @@ export default function StoresPage() {
                                                 placeholder="Ex: Boutique de cosmétiques..."
                                             />
                                         </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Type de boutique</label>
+                                            <input
+                                                name="type"
+                                                defaultValue={editingItem?.type}
+                                                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
+                                                placeholder="Ex: Flagship Store, Concept Store..."
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Ville / Quartier</label>
+                                            <input
+                                                name="city"
+                                                defaultValue={editingItem?.city}
+                                                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
+                                                placeholder="Ex: Dakar Plateau"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Adresse complète</label>
+                                        <input
+                                            name="address"
+                                            defaultValue={editingItem?.address}
+                                            className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
+                                            placeholder="Ex: Avenue Lamine Gueye x Rue Sandiniery, Dakar"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Téléphone</label>
+                                            <input
+                                                name="phone"
+                                                defaultValue={editingItem?.phone}
+                                                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
+                                                placeholder="Ex: +221 33 821 44 44"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Horaires</label>
+                                            <input
+                                                name="hours"
+                                                defaultValue={editingItem?.hours}
+                                                className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
+                                                placeholder="Ex: Mon-Sat: 09:00 - 19:30"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Lien Google Maps</label>
+                                        <input
+                                            name="mapUrl"
+                                            defaultValue={editingItem?.mapUrl}
+                                            className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium"
+                                            placeholder="Ex: https://maps.app.goo.gl/..."
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-6 pt-2">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="isClickCollect" defaultChecked={editingItem?.isClickCollect} className="w-5 h-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+                                            <span className="text-[13px] font-bold text-slate-700">Click & Collect</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="isSav" defaultChecked={editingItem?.isSav} className="w-5 h-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+                                            <span className="text-[13px] font-bold text-slate-700">S.A.V Officiel</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="isBarakaShop" defaultChecked={editingItem?.isBarakaShop ?? true} className="w-5 h-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+                                            <span className="text-[13px] font-bold text-slate-700">Afficher sur Nos Boutiques</span>
+                                        </label>
                                     </div>
                                     
                                     <div className="grid grid-cols-2 gap-6">

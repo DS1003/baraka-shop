@@ -13,12 +13,19 @@ interface ProductCardProps {
     priority?: boolean;
 }
 
+function stripHtml(html: string) {
+    if (!html) return '';
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+}
+
 export function ProductCard({ product, viewMode = 'grid', priority = false }: ProductCardProps) {
     const { addToCart } = useCart()
 
     const displayImage = product.images?.[0] || product.image || '/placeholder.png'
     const categoryName = product.category && typeof product.category === 'object' ? product.category.name : (product.category || 'Non classé')
     const brandName = product.brand && typeof product.brand === 'object' ? product.brand.name : (product.brand || 'Sans marque')
+
+    const cleanDescription = stripHtml(product.shortDescription || product.description || "Découvrez la performance chez Baraka Shop.")
 
     if (viewMode === 'list') {
         return (
@@ -51,13 +58,21 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                             {product.name}
                         </h3>
                     </Link>
-                    <p className="text-gray-400 text-xs mb-6 leading-relaxed line-clamp-2">
-                        {product.shortDescription || product.description || "Découvrez la performance et l'élégance de ce produit d'exception chez Baraka Shop."}
+                    <p 
+                        className="text-gray-400 text-xs mb-6 leading-relaxed"
+                        style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {cleanDescription}
                     </p>
                     <div className="flex items-center justify-between mt-auto">
                         <div className="flex flex-col">
-                            {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-300 text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} CFA</span>}
-                            <span className="text-xl font-black text-[#1B1F3B] tracking-tighter">{product.price.toLocaleString()} <span className="text-[10px]">CFA</span></span>
+                            {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-300 text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} F CFA</span>}
+                            <span className="text-xl font-black text-[#1B1F3B] tracking-tighter">{product.price.toLocaleString()} <span className="text-[10px]">F CFA</span></span>
                         </div>
                         <button
                             onClick={(e) => {
@@ -78,7 +93,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
     return (
         <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-gray-200/50 border border-gray-50 p-2">
             {/* Image Area */}
-            <div className="relative aspect-square bg-[#fff] rounded-xl overflow-hidden group/img border border-gray-50">
+            <div className="relative w-full aspect-square bg-[#fff] rounded-xl overflow-hidden group/img border border-gray-50">
                 <Link href={`/product/${product.id}`} className="absolute inset-0 z-10">
                     <span className="sr-only">Voir {product.name}</span>
                 </Link>
@@ -143,21 +158,37 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     </div>
                 </div>
 
-                <Link href={`/product/${product.id}`}>
-                    <h3 className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-snug line-clamp-2 uppercase tracking-tight">
+                <Link href={`/product/${product.id}`} className="block h-[32px] md:h-[36px] overflow-hidden">
+                    <h3 
+                        className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[16px] md:leading-[18px] uppercase tracking-tight"
+                        style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                        }}
+                    >
                         {product.name}
                     </h3>
                 </Link>
 
-                <p className="text-gray-400 text-[8px] md:text-[9px] leading-tight line-clamp-2 mt-1 flex-1">
-                    {product.shortDescription || product.description?.substring(0, 60) + "..." || "Découvrez la performance chez Baraka Shop."}
+                <p 
+                    className="text-gray-400 text-[8px] md:text-[9px] leading-[12px] md:leading-[14px] mt-1 h-[24px] md:h-[28px] overflow-hidden"
+                    style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                    }}
+                >
+                    {cleanDescription}
                 </p>
 
                 <div className="mt-4 md:mt-6 flex items-center justify-between">
                     <div className="flex flex-col">
-                        {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-400 text-[8px] md:text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} CFA</span>}
+                        {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-400 text-[8px] md:text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} F CFA</span>}
                         <span className="text-[#1B1F3B] font-black text-[14px] md:text-[17px] tracking-tight">
-                            {product.price.toLocaleString()} <span className="text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">CFA</span>
+                            {product.price.toLocaleString()} <span className="text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">F CFA</span>
                         </span>
                     </div>
 

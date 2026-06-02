@@ -29,6 +29,15 @@ export async function GET() {
             banner: row.banner,
             logo_detail: row.logo_detail,
             description: row.description,
+            address: row.address,
+            phone: row.phone,
+            hours: row.hours,
+            type: row.type,
+            city: row.city,
+            mapUrl: row.mapUrl,
+            isClickCollect: row.isClickCollect,
+            isSav: row.isSav,
+            isBarakaShop: row.isBarakaShop,
             createdAt: row.createdAt,
             updatedAt: row.updatedAt,
             _count: { products: row.product_count }
@@ -61,8 +70,8 @@ export async function POST(request: Request) {
             if (id) {
                 // Update
                 await pool.query(
-                    `UPDATE "Store" SET name = $1, slug = $2, logo = $3, banner = $4, logo_detail = $5, description = $6, "updatedAt" = NOW() WHERE id = $7`,
-                    [data.name, data.slug, data.logo || null, data.banner || null, data.logo_detail || null, data.description || null, id]
+                    `UPDATE "Store" SET name = $1, slug = $2, logo = $3, banner = $4, logo_detail = $5, description = $6, address = $7, phone = $8, hours = $9, type = $10, city = $11, "mapUrl" = $12, "isClickCollect" = $13, "isSav" = $14, "isBarakaShop" = $15, "updatedAt" = NOW() WHERE id = $16`,
+                    [data.name, data.slug, data.logo || null, data.banner || null, data.logo_detail || null, data.description || null, data.address || null, data.phone || null, data.hours || null, data.type || null, data.city || null, data.mapUrl || null, data.isClickCollect || false, data.isSav || false, data.isBarakaShop ?? true, id]
                 );
             } else {
                 // Check for duplicates
@@ -78,8 +87,8 @@ export async function POST(request: Request) {
                 }
                 // Create
                 await pool.query(
-                    `INSERT INTO "Store" (id, name, slug, logo, banner, logo_detail, description, "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW(), NOW())`,
-                    [data.name, data.slug, data.logo || null, data.banner || null, data.logo_detail || null, data.description || null]
+                    `INSERT INTO "Store" (id, name, slug, logo, banner, logo_detail, description, address, phone, hours, type, city, "mapUrl", "isClickCollect", "isSav", "isBarakaShop", "createdAt", "updatedAt") VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW())`,
+                    [data.name, data.slug, data.logo || null, data.banner || null, data.logo_detail || null, data.description || null, data.address || null, data.phone || null, data.hours || null, data.type || null, data.city || null, data.mapUrl || null, data.isClickCollect || false, data.isSav || false, data.isBarakaShop ?? true]
                 );
             }
             

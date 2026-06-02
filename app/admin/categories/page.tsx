@@ -35,7 +35,8 @@ import {
     getThirdLevelCategories,
     upsertThirdLevelCategory,
     deleteThirdLevelCategory,
-    getCategoryStats
+    getCategoryStats,
+    toggleCategoryPublish
 } from '@/lib/actions/admin-actions';
 export default function CategoriesPage() {
     const [view, setView] = useState<'l1' | 'l2' | 'l3'>('l1');
@@ -96,6 +97,16 @@ export default function CategoriesPage() {
             } else {
                 alert(res.message);
             }
+        }
+    };
+
+    const handleTogglePublish = async (id: string, isPublished: boolean) => {
+        if (view !== 'l1') return; // Only L1 categories have isPublished
+        const res = await toggleCategoryPublish(id, isPublished);
+        if (res.success) {
+            setItems(prev => prev.map(c => c.id === id ? { ...c, isPublished } : c));
+        } else {
+            alert(res.message);
         }
     };
 
@@ -337,9 +348,19 @@ export default function CategoriesPage() {
                                 <div>
                                     <div className="flex justify-between items-start">
                                         <h3 className={cn(
-                                            "font-bold text-slate-900 tracking-tight group-hover:text-orange-600 transition-colors",
+                                            "font-bold text-slate-900 tracking-tight group-hover:text-orange-600 transition-colors flex items-center gap-2",
                                             view === 'l1' ? "text-[24px]" : "text-[20px]"
-                                        )}>{item.name}</h3>
+                                        )}>
+                                            {item.name}
+                                            {view === 'l1' && (
+                                                <span className={cn(
+                                                    "text-[10px] px-2 py-0.5 rounded-full font-bold leading-none flex items-center",
+                                                    item.isPublished ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"
+                                                )}>
+                                                    {item.isPublished ? "Publié" : "Caché"}
+                                                </span>
+                                            )}
+                                        </h3>
                                         
                                         <div className="relative">
                                             <button 
@@ -388,6 +409,18 @@ export default function CategoriesPage() {
                                                         >
                                                             <Trash2 size={14} /> Supprimer
                                                         </button>
+                                                        {view === 'l1' && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleTogglePublish(item.id, !item.isPublished);
+                                                                    setActiveMenuId(null);
+                                                                }}
+                                                                className="w-full text-left p-2.5 rounded-lg text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-orange-600 transition-colors flex items-center gap-2"
+                                                            >
+                                                                {item.isPublished ? <><X size={14} /> Cacher</> : <><PackageCheck size={14} /> Publier</>}
+                                                            </button>
+                                                        )}
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>

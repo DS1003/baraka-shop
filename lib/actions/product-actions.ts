@@ -215,6 +215,7 @@ export async function getCategoriesAction() {
         if (cached) return cached;
 
         const categories = await prisma.category.findMany({
+            where: { isPublished: true },
             include: {
                 subCategories: true,
                 _count: {
@@ -259,8 +260,8 @@ export async function getCategoryBySlugAction(slug: string) {
         const cached = await getCache<any>(cacheKey);
         if (cached) return cached;
 
-        const category = await prisma.category.findUnique({
-            where: { slug },
+        const category = await prisma.category.findFirst({
+            where: { slug, isPublished: true },
             include: {
                 _count: {
                     select: { products: true }
@@ -287,6 +288,7 @@ export async function getMegaMenuAction() {
         }
 
         const categories = await prisma.category.findMany({
+            where: { isPublished: true },
             include: {
                 subCategories: {
                     include: {

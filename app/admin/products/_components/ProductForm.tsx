@@ -171,6 +171,7 @@ function smartParseMetadata(text: string) {
 export default function ProductForm({ editingProduct }: { editingProduct?: any }) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
+    const [shouldClose, setShouldClose] = useState(false);
     const [formImages, setFormImages] = useState<string[]>([]);
     const [formVideos, setFormVideos] = useState<string[]>([]);
     const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -771,8 +772,15 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         const res = await upsertProduct(data, editingProduct?.id);
         if (res.success) {
             toast.success(editingProduct ? '✅ Produit mis à jour !' : '✅ Produit créé !');
-            router.push('/admin/products');
-            router.refresh();
+            if (shouldClose) {
+                router.push('/admin/products');
+            } else {
+                if (!editingProduct && res.product?.id) {
+                    router.push(`/admin/products/${res.product.id}/edit`);
+                } else {
+                    router.refresh();
+                }
+            }
         } else {
             toast.error("Erreur lors de la sauvegarde.");
         }
@@ -1770,11 +1778,21 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 </button>
                 <button
                     type="submit"
+                    onClick={() => setShouldClose(false)}
                     disabled={isSaving}
-                    className="flex-[2] px-6 py-3.5 bg-orange-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-3 hover:bg-orange-700 shadow-lg shadow-orange-100 transition-all disabled:opacity-50"
+                    className="px-6 py-3.5 bg-orange-50 border border-orange-200 text-orange-600 hover:bg-orange-100 rounded-xl font-bold text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-95 disabled:opacity-50"
                 >
-                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                    <span>{editingProduct ? 'Mettre à jour le Produit' : 'Créer le Produit'}</span>
+                    {isSaving && !shouldClose ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    <span>Enregistrer</span>
+                </button>
+                <button
+                    type="submit"
+                    onClick={() => setShouldClose(true)}
+                    disabled={isSaving}
+                    className="flex-[2] px-6 py-3.5 bg-orange-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-3 hover:bg-orange-700 shadow-lg shadow-orange-100 transition-all disabled:opacity-50 active:scale-95"
+                >
+                    {isSaving && shouldClose ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                    <span>Enregistrer & fermer</span>
                 </button>
             </div>
         </form>

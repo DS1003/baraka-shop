@@ -89,6 +89,7 @@ model Category {
   name          String        @unique
   slug          String        @unique
   image         String?
+  isPublished   Boolean       @default(true)
   products      Product[]
   subCategories SubCategory[]
 }
@@ -212,16 +213,25 @@ model Promotion {
 }
 
 model Store {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  slug        String    @unique
-  logo        String?
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  banner      String?
-  logo_detail String?
-  products    Product[]
+  id             String    @id @default(uuid())
+  name           String    @unique
+  slug           String    @unique
+  logo           String?
+  description    String?
+  address        String?
+  phone          String?
+  hours          String?
+  type           String?
+  city           String?
+  mapUrl         String?
+  isClickCollect Boolean   @default(false)
+  isSav          Boolean   @default(false)
+  isBarakaShop   Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  banner         String?
+  logo_detail    String?
+  products       Product[]
 }
 
 model PopularUniverse {
@@ -284,4 +294,24 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+model PhysicalStore {
+  id             String   @id @default(uuid())
+  name           String
+  slug           String   @unique
+  image          String?
+  description    String?
+  address        String?
+  phone          String?
+  hours          String?
+  type           String?
+  city           String?
+  mapUrl         String?
+  isClickCollect Boolean  @default(false)
+  isSav          Boolean  @default(false)
+  isPublished    Boolean  @default(true)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
