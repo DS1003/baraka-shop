@@ -1439,12 +1439,25 @@ export async function globalTogglePublishProducts(isPublished: boolean) {
 
 export async function toggleCategoryPublish(id: string, isPublished: boolean) {
     try {
+        // 1. Update the category itself
         await prisma.category.update({
             where: { id },
             data: { isPublished }
         });
+
+        // 2. Also update all products in this category
+        await prisma.product.updateMany({
+            where: { categoryId: id },
+            data: { isPublished }
+        });
+
+        // 3. Invalidate caches
+        const { invalidatePrefix } = await import('@/lib/redis');
+        await invalidatePrefix('products:');
+        await invalidatePrefix('categories:');
         
         revalidatePath('/admin/categories');
+        revalidatePath('/admin/products');
         revalidatePath('/');
         return { success: true };
     } catch (error) {
