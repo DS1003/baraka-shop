@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
     Plus,
     Search,
@@ -52,12 +53,16 @@ import { testConnection } from '@/lib/actions/debug-actions';
 import { toast } from 'sonner';
 
 export default function ProductsPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+
     const [debugInfo, setDebugInfo] = useState<any>(null);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [products, setProducts] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [stats, setStats] = useState({ activeCount: 0, lowStockCount: 0, categoriesCount: 0 });
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
     const pageSize = 12;
 
     const [loading, setLoading] = useState(true);
@@ -83,7 +88,14 @@ export default function ProductsPage() {
         brandId?: string;
         stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
         publishStatus?: 'published' | 'hidden';
-    }>({});
+    }>({
+        categoryId: searchParams.get('categoryId') || undefined,
+        subCategoryId: searchParams.get('subCategoryId') || undefined,
+        thirdLevelCategoryId: searchParams.get('thirdLevelCategoryId') || undefined,
+        brandId: searchParams.get('brandId') || undefined,
+        stockStatus: (searchParams.get('stockStatus') as any) || undefined,
+        publishStatus: (searchParams.get('publishStatus') as any) || undefined,
+    });
 
     // Form fields
     const [categories, setCategories] = useState<any[]>([]);
@@ -112,6 +124,30 @@ export default function ProductsPage() {
         const timer = setTimeout(loadProducts, 300);
         return () => clearTimeout(timer);
     }, [searchQuery, page, activeFilters]);
+
+    // Sync state to URL
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        const params = new URLSearchParams();
+        if (searchQuery) params.set('search', searchQuery);
+        if (page > 1) params.set('page', page.toString());
+        if (activeFilters.categoryId) params.set('categoryId', activeFilters.categoryId);
+        if (activeFilters.subCategoryId) params.set('subCategoryId', activeFilters.subCategoryId);
+        if (activeFilters.thirdLevelCategoryId) params.set('thirdLevelCategoryId', activeFilters.thirdLevelCategoryId);
+        if (activeFilters.brandId) params.set('brandId', activeFilters.brandId);
+        if (activeFilters.stockStatus) params.set('stockStatus', activeFilters.stockStatus);
+        if (activeFilters.publishStatus) params.set('publishStatus', activeFilters.publishStatus);
+
+        const newUrl = `${pathname}?${params.toString()}`;
+        // Only update if it actually changed to avoid loop
+        if (newUrl !== `${pathname}?${searchParams.toString()}`) {
+            router.replace(newUrl, { scroll: false });
+        }
+    }, [searchQuery, page, activeFilters, pathname, router, searchParams]);
 
     // Reset selection on page change OR search change
     useEffect(() => {

@@ -54,7 +54,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                         </div>
                     </div>
                     <Link href={`/product/${product.id}`}>
-                        <h3 className="text-lg font-black text-[#1B1F3B] mb-3 hover:text-primary transition-colors cursor-pointer leading-tight uppercase tracking-tight">
+                        <h3 className="text-lg font-black text-[#1B1F3B] mb-3 hover:text-primary transition-colors cursor-pointer leading-tight tracking-tight">
                             {product.name}
                         </h3>
                     </Link>
@@ -160,7 +160,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
 
                 <Link href={`/product/${product.id}`} className="block h-[32px] md:h-[36px] overflow-hidden">
                     <h3 
-                        className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[16px] md:leading-[18px] uppercase tracking-tight"
+                        className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[16px] md:leading-[18px] tracking-tight"
                         style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,

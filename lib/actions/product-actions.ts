@@ -53,6 +53,7 @@ export async function getProductsAction(options: {
             where.OR = [
                 { name: { contains: query, mode: 'insensitive' } },
                 { description: { contains: query, mode: 'insensitive' } },
+                { reference: { contains: query, mode: 'insensitive' } },
             ];
         }
 

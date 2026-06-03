@@ -847,7 +847,8 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 type="number"
                                 defaultValue={editingProduct?.price}
                                 required
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-[13px]"
+                                readOnly
+                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-slate-500 cursor-not-allowed text-[13px]"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -857,11 +858,12 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 type="number"
                                 defaultValue={editingProduct?.stock}
                                 required
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-[13px]"
+                                readOnly
+                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-slate-500 cursor-not-allowed text-[13px]"
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center h-[24px]">
                                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Marque</label>
                                 <button
                                     type="button"
@@ -885,6 +887,21 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             >
                                 <option value="">Aucune</option>
                                 {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-center h-[24px]">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Boutique (Vendor)</label>
+                            </div>
+                            <select
+                                key={`store-${stores.length}`}
+                                name="storeId"
+                                value={storeId}
+                                onChange={(e) => setStoreId(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
+                            >
+                                <option value="">Aucune (Baraka General)</option>
+                                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
                     </div>
@@ -976,9 +993,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Catégorie (L1)</label>
+                            <input type="hidden" name="categoryId" value={categoryId} />
                             <select
                                 key={`cat-${categories.length}`}
-                                name="categoryId"
+                                disabled
                                 value={categoryId}
                                 required
                                 onChange={(e) => {
@@ -989,7 +1007,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     getSubCategories(catId).then(setSubCategories);
                                     setThirdCategories([]);
                                 }}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
+                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-slate-500 cursor-not-allowed text-[13px]"
                             >
                                 <option value="">Sélectionner</option>
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -998,9 +1016,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sous-catégorie (L2)</label>
+                            <input type="hidden" name="subCategoryId" value={subCategoryId} />
                             <select
                                 key={`subcat-${subCategories.length}`}
-                                name="subCategoryId"
+                                disabled
                                 value={subCategoryId}
                                 onChange={(e) => {
                                     const subId = e.target.value;
@@ -1009,7 +1028,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     if (subId) getThirdLevelCategories(subId).then(setThirdCategories);
                                     else setThirdCategories([]);
                                 }}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
+                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-slate-500 cursor-not-allowed text-[13px]"
                             >
                                 <option value="">Aucune</option>
                                 {subCategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -1018,30 +1037,16 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sous-sous (L3)</label>
+                            <input type="hidden" name="thirdLevelCategoryId" value={thirdLevelCategoryId} />
                             <select
                                 key={`thirdcat-${thirdCategories.length}`}
-                                name="thirdLevelCategoryId"
+                                disabled
                                 value={thirdLevelCategoryId}
                                 onChange={(e) => setThirdLevelCategoryId(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
+                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-slate-500 cursor-not-allowed text-[13px]"
                             >
                                 <option value="">Aucune</option>
                                 {thirdCategories.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                            </select>
-                        </div>
-
-
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Boutique (Vendor)</label>
-                            <select
-                                key={`store-${stores.length}`}
-                                name="storeId"
-                                value={storeId}
-                                onChange={(e) => setStoreId(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
-                            >
-                                <option value="">Aucune (Baraka General)</option>
-                                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </div>
                     </div>

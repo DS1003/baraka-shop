@@ -243,6 +243,7 @@ export async function getAdminProducts(
                 OR: [
                     { name: { contains: query, mode: 'insensitive' } },
                     { description: { contains: query, mode: 'insensitive' } },
+                    { reference: { contains: query, mode: 'insensitive' } },
                     { brand: { name: { contains: query, mode: 'insensitive' } } }
                 ]
             });
@@ -401,7 +402,6 @@ export async function updateProductStock(productId: string, stock: number) {
             data: { stock }
         });
         revalidatePath('/admin/inventory');
-        revalidatePath('/admin/products');
         return { success: true };
     } catch (error) {
         return { success: false };
@@ -710,7 +710,6 @@ export async function deleteBulkProducts(ids: string[]) {
                 }
             }
         });
-        revalidatePath('/admin/products');
         revalidatePath('/admin/inventory');
         return { success: true };
     } catch (error) {
@@ -724,7 +723,6 @@ export async function deleteProduct(id: string) {
         await prisma.product.delete({
             where: { id }
         });
-        revalidatePath('/admin/products');
         revalidatePath('/admin/inventory');
         return { success: true };
     } catch (error) {
@@ -736,7 +734,6 @@ export async function deleteProduct(id: string) {
 export async function deleteAllProducts() {
     try {
         await prisma.product.deleteMany({});
-        revalidatePath('/admin/products');
         revalidatePath('/admin/inventory');
         return { success: true };
     } catch (error) {
@@ -752,7 +749,6 @@ export async function updateProduct(id: string, data: any) {
             data,
         });
 
-        revalidatePath('/admin/products');
         revalidatePath('/admin/promotions');
         revalidatePath('/boutique');
         return { success: true, product };
@@ -1400,7 +1396,6 @@ export async function toggleProductPublish(id: string, isPublished: boolean) {
         });
         
         await invalidatePrefix('products:');
-        revalidatePath('/admin/products');
         revalidatePath('/');
         return { success: true };
     } catch (error) {
@@ -1419,7 +1414,6 @@ export async function bulkTogglePublishProducts(ids: string[], isPublished: bool
         });
         
         await invalidatePrefix('products:');
-        revalidatePath('/admin/products');
         revalidatePath('/');
         return { success: true };
     } catch (error) {
@@ -1435,7 +1429,6 @@ export async function globalTogglePublishProducts(isPublished: boolean) {
         });
         
         await invalidatePrefix('products:');
-        revalidatePath('/admin/products');
         revalidatePath('/');
         return { success: true };
     } catch (error) {

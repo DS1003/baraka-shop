@@ -20,6 +20,7 @@ import {
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { uploadToCloudinaryAction } from '@/lib/actions/media-actions';
+import { RichTextEditor } from '@/ui/RichTextEditor';
 
 export type DescriptionBlock = {
     id: string;
@@ -175,16 +176,11 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
                                         {(block.type === 'TEXT_CENTERED' || block.type === 'IMAGE_LEFT' || block.type === 'IMAGE_RIGHT' || block.type === 'VIDEO_LEFT' || block.type === 'VIDEO_RIGHT') && (
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paragraphe / Description (Détails)</label>
-                                                <textarea
-                                                    value={block.text}
-                                                    onChange={(e) => updateBlock(block.id, { text: e.target.value })}
-                                                    rows={4}
-                                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all text-[14px] font-medium leading-relaxed"
+                                                <RichTextEditor
+                                                    defaultValue={block.text}
+                                                    onChange={(val) => updateBlock(block.id, { text: val })}
                                                     placeholder="Écrivez le texte détaillé ici..."
                                                 />
-                                                <p className="text-[10px] text-slate-400 mt-1">
-                                                    Astuce : Utilisez <b>&lt;b&gt;texte en gras&lt;/b&gt;</b> pour le gras et <b>&lt;br&gt;</b> pour un saut de ligne.
-                                                </p>
                                             </div>
                                         )}
                                     </div>

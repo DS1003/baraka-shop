@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 import { signOut } from 'next-auth/react';
 import { getAdminNotifications } from '@/lib/actions/admin-actions';
 import { ImportToast } from '@/features/admin/components/ImportToast';
+import { GlobalSearchModal } from '@/features/admin/components/GlobalSearchModal';
 import { Toaster } from 'sonner';
 
 const sidebarGroups = [
@@ -82,8 +83,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [hoveredTooltip, setHoveredTooltip] = useState<{label: string, top: number, left: number} | null>(null);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                setIsSearchOpen(true);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     useEffect(() => {
         async function loadNotifications() {
@@ -220,13 +233,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {/* Elevated Topbar - Compact */}
                 <header className="h-[72px] flex items-center justify-between px-8 z-20 bg-white border-b border-slate-200/50 transition-all">
                     <div className="flex-1 max-w-xl">
-                        <div className="relative group flex items-center">
-                            <Search className="absolute left-3.5 text-slate-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" size={14} strokeWidth={2} />
-                            <input
-                                type="text"
-                                placeholder="Recherche globale..."
-                                className="w-full pl-10 pr-12 py-2 bg-slate-50 border border-slate-200/60 rounded-lg focus:outline-none focus:bg-white focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all text-[13px] font-medium placeholder:text-slate-400"
-                            />
+                        <div 
+                            className="relative group flex items-center cursor-pointer"
+                            onClick={() => setIsSearchOpen(true)}
+                        >
+                            <Search className="absolute left-3.5 text-slate-400 group-hover:text-orange-500 transition-colors pointer-events-none" size={14} strokeWidth={2} />
+                            <div className="w-full pl-10 pr-12 py-2 bg-slate-50 border border-slate-200/60 rounded-lg hover:bg-white hover:border-orange-500/30 transition-all flex items-center">
+                                <span className="text-[13px] font-medium text-slate-400">Recherche globale...</span>
+                            </div>
                             <div className="absolute right-4 flex items-center gap-1.5 text-slate-300 pointer-events-none border border-slate-200 rounded-lg px-2 py-0.5 bg-white">
                                 <Command size={10} strokeWidth={2.5} />
                                 <span className="text-[10px] font-bold">K</span>
@@ -371,6 +385,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </motion.div>
                 </div>
                 <ImportToast />
+                <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
                 <Toaster
                     position="bottom-right"
                     richColors

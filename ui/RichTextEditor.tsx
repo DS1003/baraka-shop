@@ -5,27 +5,38 @@ import { Bold, Italic, Underline } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
-    name: string;
+    name?: string;
     defaultValue?: string;
+    value?: string;
+    onChange?: (value: string) => void;
     placeholder?: string;
 }
 
-export function RichTextEditor({ name, defaultValue = '', placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ name, defaultValue = '', value, onChange, placeholder }: RichTextEditorProps) {
     const editorRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (editorRef.current && defaultValue) {
-            editorRef.current.innerHTML = defaultValue;
-            if (inputRef.current) {
-                inputRef.current.value = defaultValue;
+        if (editorRef.current) {
+            const initialValue = value !== undefined ? value : defaultValue;
+            if (initialValue) {
+                editorRef.current.innerHTML = initialValue;
+            }
+            if (inputRef.current && initialValue) {
+                inputRef.current.value = initialValue;
             }
         }
-    }, [defaultValue]);
+    }, [defaultValue]); // Only run on mount or when defaultValue changes
 
     const handleInput = () => {
-        if (editorRef.current && inputRef.current) {
-            inputRef.current.value = editorRef.current.innerHTML;
+        if (editorRef.current) {
+            const html = editorRef.current.innerHTML;
+            if (inputRef.current) {
+                inputRef.current.value = html;
+            }
+            if (onChange) {
+                onChange(html);
+            }
         }
     };
 
@@ -37,7 +48,7 @@ export function RichTextEditor({ name, defaultValue = '', placeholder }: RichTex
 
     return (
         <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-orange-500/5 focus-within:border-orange-500/20 transition-all">
-            <input type="hidden" name={name} ref={inputRef} defaultValue={defaultValue} />
+            {name && <input type="hidden" name={name} ref={inputRef} defaultValue={defaultValue} />}
             <div className="flex items-center gap-1 p-2 border-b border-slate-200 bg-white">
                 <button
                     type="button"
