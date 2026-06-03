@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
@@ -53,6 +53,18 @@ import { testConnection } from '@/lib/actions/debug-actions';
 import { toast } from 'sonner';
 
 export default function ProductsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-[60vh]">
+                <Loader2 className="animate-spin text-orange-500" size={32} />
+            </div>
+        }>
+            <ProductsPageContent />
+        </Suspense>
+    );
+}
+
+function ProductsPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
