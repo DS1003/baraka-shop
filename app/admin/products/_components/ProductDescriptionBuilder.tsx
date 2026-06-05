@@ -218,10 +218,15 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
                                                         <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-300">
                                                             {isUploading === block.id ? <Loader2 size={24} className="animate-spin text-orange-600" /> : <Upload size={24} />}
                                                         </div>
-                                                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-orange-600">
-                                                            {isUploading === block.id ? "Envoi..." : "Ajouter Image"}
-                                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(block.id, e)} />
-                                                        </label>
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-orange-600">
+                                                                {isUploading === block.id ? "Envoi..." : "Ajouter Image"}
+                                                                <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(block.id, e)} />
+                                                            </label>
+                                                            {(block.type === 'IMAGE_LEFT' || block.type === 'IMAGE_RIGHT') && (
+                                                                <span className="text-[10px] text-slate-400 mt-1">Taille recommandée : 600x600 px</span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

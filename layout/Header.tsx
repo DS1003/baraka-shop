@@ -103,6 +103,10 @@ export function Header() {
         if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
         menuTimeoutRef.current = setTimeout(() => {
             setShowMegaMenu(true)
+            // Re-fetch categories each time the menu opens to ensure dynamic content
+            getMegaMenuAction().then(data => {
+                if (data && data.length > 0) setCategories(data)
+            }).catch(() => {})
         }, 250) // S'ouvre après 250ms de survol (intent delay)
     }
 
@@ -115,13 +119,6 @@ export function Header() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // Simple session-level cache to prevent re-fetching on every navigation
-            if ((window as any).__headerDataCache) {
-                setCategories((window as any).__headerDataCache.categories);
-                setStores((window as any).__headerDataCache.stores);
-                return;
-            }
-
             try {
                 const [categoriesData, storesRes] = await Promise.all([
                     getMegaMenuAction(),
@@ -130,12 +127,6 @@ export function Header() {
 
                 setCategories(categoriesData);
                 setStores(storesRes.stores || []);
-
-                // Save to cache
-                (window as any).__headerDataCache = {
-                    categories: categoriesData,
-                    stores: storesRes.stores || []
-                };
             } catch (err) {
                 console.error('Header fetch error:', err);
             }
@@ -196,6 +187,10 @@ export function Header() {
     React.useEffect(() => {
         if (isMenuOpen) {
             document.body.style.overflow = 'hidden'
+            // Re-fetch categories when mobile menu opens
+            getMegaMenuAction().then(data => {
+                if (data && data.length > 0) setCategories(data)
+            }).catch(() => {})
         } else {
             document.body.style.overflow = 'auto'
         }
@@ -705,10 +700,7 @@ export function Header() {
                                                             return idxA - idxB;
                                                         });
 
-                                                        // Filter out duplicates or unwanted
-                                                        cats = cats.filter(c => c.name.toUpperCase() !== 'CABLE');
-
-                                                        let finalDisplay = cats.slice(0, 10);
+                                                        let finalDisplay = cats;
 
                                                         return finalDisplay.map((cat, idx) => {
                                                             const catKey = cat.name.trim().toUpperCase();

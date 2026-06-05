@@ -765,7 +765,14 @@ export async function deleteCategory(id: string) {
             return { success: false, message: "La catégorie contient des produits." };
         }
         await prisma.category.delete({ where: { id } });
+        try {
+            await invalidatePrefix('categories:');
+            await invalidatePrefix('megamenu:');
+        } catch (e) {
+            console.warn('[Redis] Cache invalidation failed:', e);
+        }
         revalidatePath('/admin/categories');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         return { success: false, message: "Erreur serveur." };
@@ -868,7 +875,14 @@ export async function upsertSubCategory(data: any, id?: string) {
                 data
             });
         }
+        try {
+            await invalidatePrefix('categories:');
+            await invalidatePrefix('megamenu:');
+        } catch (e) {
+            console.warn('[Redis] Cache invalidation failed:', e);
+        }
         revalidatePath('/admin/categories');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         return { success: false };
@@ -886,7 +900,14 @@ export async function deleteSubCategory(id: string) {
             return { success: false, message: "Cette catégorie contient des sous-sous-catégories." };
         }
         await prisma.subCategory.delete({ where: { id } });
+        try {
+            await invalidatePrefix('categories:');
+            await invalidatePrefix('megamenu:');
+        } catch (e) {
+            console.warn('[Redis] Cache invalidation failed:', e);
+        }
         revalidatePath('/admin/categories');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         return { success: false };
@@ -921,7 +942,14 @@ export async function upsertThirdLevelCategory(data: any, id?: string) {
                 data
             });
         }
+        try {
+            await invalidatePrefix('categories:');
+            await invalidatePrefix('megamenu:');
+        } catch (e) {
+            console.warn('[Redis] Cache invalidation failed:', e);
+        }
         revalidatePath('/admin/categories');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         return { success: false };
@@ -935,7 +963,14 @@ export async function deleteThirdLevelCategory(id: string) {
             return { success: false, message: "Cette catégorie contient des produits." };
         }
         await (prisma as any).thirdLevelCategory.delete({ where: { id } });
+        try {
+            await invalidatePrefix('categories:');
+            await invalidatePrefix('megamenu:');
+        } catch (e) {
+            console.warn('[Redis] Cache invalidation failed:', e);
+        }
         revalidatePath('/admin/categories');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         return { success: false };
@@ -1043,7 +1078,14 @@ export async function upsertCategory(data: any, id?: string) {
                 data
             });
         }
+        try {
+            await invalidatePrefix('categories:');
+            await invalidatePrefix('megamenu:');
+        } catch (e) {
+            console.warn('[Redis] Cache invalidation failed:', e);
+        }
         revalidatePath('/admin/categories');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error("Upsert category error:", error);

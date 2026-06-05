@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, ClipboardEvent } from 'react';
 import { Bold, Italic, Underline } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +42,30 @@ export function RichTextEditor({ name, defaultValue = '', value, onChange, place
         }
     }, [onChange]);
 
+    const handlePaste = useCallback((e: ClipboardEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const text = e.clipboardData.getData('text/plain');
+        if (!text) return;
+
+        const currentContent = editorRef.current?.innerText?.trim() || '';
+        
+        let htmlToInsert = text.replace(/\n/g, '<br>');
+        
+        if (!currentContent && name === 'description') {
+            // "description classique": first sentence bold and uppercase, followed by a line break
+            const match = text.match(/^([^.!?\n]+(?:[.!?]|\n|$))([\s\S]*)$/);
+            if (match) {
+                let firstSentence = match[1].trim().toUpperCase();
+                let rest = match[2].trim();
+                
+                htmlToInsert = `<b>${firstSentence}</b><br><br>${rest ? rest.replace(/\n/g, '<br>') : ''}`;
+            }
+        }
+
+        document.execCommand('insertHTML', false, htmlToInsert);
+        handleInput();
+    }, [handleInput, name]);
+
     const formatText = (command: string) => {
         document.execCommand(command, false, undefined);
         editorRef.current?.focus();
@@ -82,6 +106,7 @@ export function RichTextEditor({ name, defaultValue = '', value, onChange, place
                 contentEditable
                 onInput={handleInput}
                 onBlur={handleInput}
+                onPaste={handlePaste}
                 className="w-full px-5 py-4 min-h-[140px] max-h-[400px] overflow-y-auto font-medium leading-relaxed outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400 [&>b]:font-bold [&>strong]:font-bold [&>i]:italic [&>em]:italic [&>u]:underline [&>div]:mb-2 [&>p]:mb-2"
                 data-placeholder={placeholder}
             />

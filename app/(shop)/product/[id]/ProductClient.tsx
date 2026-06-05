@@ -326,19 +326,34 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 }
                             }}
                         >
-                            {productImages.map((img: string, idx: number) => (
+                            {allMedia.map((media: any, idx: number) => (
                                 <div 
                                     key={idx} 
                                     className="w-full h-full flex-shrink-0 snap-start flex items-center justify-center p-6 relative cursor-pointer"
                                     onClick={() => openViewer(idx)}
                                 >
-                                    <Image
-                                        src={img}
-                                        alt={`${product.name} - ${idx}`}
-                                        fill
-                                        className="object-contain p-4"
-                                        unoptimized
-                                    />
+                                    {media.type === 'image' ? (
+                                        <Image
+                                            src={media.url}
+                                            alt={`${product.name} - ${idx}`}
+                                            fill
+                                            className="object-contain p-4"
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-900 border border-gray-100 flex items-center justify-center group/vid">
+                                            {media.thumbnailUrl ? (
+                                                <img src={media.thumbnailUrl} alt="Video" className="w-full h-full object-cover opacity-80" />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
+                                            )}
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <div className="w-12 h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                                                    <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -356,9 +371,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
 
                         {/* Pagination Dots */}
-                        {productImages.length > 1 && (
+                        {allMedia.length > 1 && (
                             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none">
-                                {productImages.map((_, idx) => (
+                                {allMedia.map((_, idx) => (
                                     <div
                                         key={idx}
                                         className={cn(
@@ -397,11 +412,6 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider">
                             {product.category?.name || product.category}
                         </div>
-                        {product.reference && (
-                            <div className="px-3 py-1 bg-gray-50 border border-gray-100 rounded-xl">
-                                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider">Réf: {product.reference}</span>
-                            </div>
-                        )}
                     </div>
 
                     <div className="flex items-center gap-6 md:gap-8 mb-3 md:mb-4 pb-3 md:pb-4 border-b border-gray-100/60">
@@ -589,7 +599,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
             </div>
 
             <div className="mt-4 md:mt-8 px-0 md:px-0">
-                <div className="flex p-1 bg-gray-50 rounded-2xl md:rounded-[2rem] border border-gray-100 mb-6 md:mb-8 w-full scrollbar-hide">
+                <div className="sticky top-[60px] md:top-[85px] z-40 flex p-1 bg-white/80 backdrop-blur-xl rounded-2xl md:rounded-[2rem] border border-gray-200 mb-6 md:mb-8 w-full scrollbar-hide shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
@@ -684,8 +694,10 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     imgTextCount++;
                                                     return (
                                                         <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
-                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                            <div className="w-full md:w-1/2 flex justify-center">
+                                                                <div className="relative w-full max-w-[600px] aspect-square overflow-hidden">
+                                                                    <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                                </div>
                                                             </div>
                                                             <div className="w-full md:w-1/2 space-y-6">
                                                                 <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
@@ -713,8 +725,10 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                                     dangerouslySetInnerHTML={{ __html: block.text }}
                                                                 />
                                                             </div>
-                                                            <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
-                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                            <div className="w-full md:w-1/2 flex justify-center">
+                                                                <div className="relative w-full max-w-[600px] aspect-square overflow-hidden">
+                                                                    <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );

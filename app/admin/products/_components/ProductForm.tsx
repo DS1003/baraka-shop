@@ -500,8 +500,10 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                 imgTextCount++;
                                                 return (
                                                     <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-10 py-6 md:py-8 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                        <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
-                                                            <img src={block.image} alt="" className="w-full h-full object-contain" />
+                                                        <div className="w-full md:w-1/2 flex justify-center">
+                                                            <div className="relative w-full max-w-[600px] aspect-square overflow-hidden">
+                                                                <img src={block.image} alt="" className="w-full h-full object-contain" />
+                                                            </div>
                                                         </div>
                                                         <div className="w-full md:w-1/2 space-y-4">
                                                             <h3 className="text-[16px] md:text-[18px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
@@ -1180,11 +1182,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
                         <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
                         Vidéos du Produit
-                        <span className="text-[9px] text-slate-300 font-medium italic normal-case tracking-normal ml-1">(YouTube ou fichier vidéo court)</span>
+                        <span className="text-[9px] text-slate-300 font-medium italic normal-case tracking-normal ml-1">(YouTube, Vimeo, TikTok, MP4...)</span>
                     </h4>
 
                     <div className="space-y-4">
-                        {/* YouTube URL input */}
+                        {/* Video URL input */}
                         <div className="flex items-center gap-3">
                             <div className="relative flex-1">
                                 <LinkIcon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -1192,7 +1194,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     type="url"
                                     value={youtubeUrl}
                                     onChange={(e) => setYoutubeUrl(e.target.value)}
-                                    placeholder="https://www.youtube.com/watch?v=... ou https://youtu.be/..."
+                                    placeholder="Lien de la vidéo (YouTube, Vimeo, TikTok...)"
                                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:border-red-500/20 transition-all font-medium text-[13px]"
                                 />
                             </div>
@@ -1200,16 +1202,9 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 type="button"
                                 onClick={() => {
                                     if (!youtubeUrl.trim()) return;
-                                    // Validate YouTube URL
-                                    const ytPatterns = [
-                                        /youtube\.com\/watch\?v=/,
-                                        /youtube\.com\/embed\//,
-                                        /youtu\.be\//,
-                                        /youtube\.com\/shorts\//,
-                                    ];
-                                    const isYT = ytPatterns.some(p => p.test(youtubeUrl));
-                                    if (!isYT) {
-                                        toast.error("URL YouTube invalide. Utilisez un lien youtube.com ou youtu.be.");
+                                    
+                                    if (!youtubeUrl.trim().startsWith('http')) {
+                                        toast.error("Veuillez entrer une URL valide (commençant par http ou https).");
                                         return;
                                     }
                                     if (formVideos.includes(youtubeUrl.trim())) {
@@ -1218,12 +1213,12 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     }
                                     setFormVideos(prev => [...prev, youtubeUrl.trim()]);
                                     setYoutubeUrl('');
-                                    toast.success('✅ Vidéo YouTube ajoutée !');
+                                    toast.success('✅ Lien vidéo ajouté !');
                                 }}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg font-bold text-[12px] hover:bg-red-700 transition-all shadow-sm"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 text-white rounded-lg font-bold text-[12px] hover:bg-slate-900 transition-all shadow-sm"
                             >
-                                <Play size={14} className="fill-white" />
-                                Ajouter YT
+                                <LinkIcon size={14} className="text-white" />
+                                Ajouter Lien
                             </button>
                         </div>
 
