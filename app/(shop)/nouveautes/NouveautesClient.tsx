@@ -141,7 +141,7 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
 
                 {/* Price */}
                 <div className="space-y-4">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Prix (CFA)</label>
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Prix (FCFA)</label>
                     <div className="flex items-center gap-3">
                         <input
                             type="number"

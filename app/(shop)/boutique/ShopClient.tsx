@@ -58,12 +58,22 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                 params.set(key, String(value))
             }
         })
+        
+        let shouldScroll = false;
         if (!updates.page) {
             params.set('page', '1')
+        } else {
+            shouldScroll = true;
         }
+
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
 
-        // We trust Next.js to re-render, but we give it a tiny bit of time to look pending
+        if (shouldScroll) {
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+        }
+
         setTimeout(() => setIsPending(false), 300)
     }
 
@@ -97,7 +107,7 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
             {/* Price Filter */}
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
                 <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-widest mb-6 border-b border-gray-50 pb-4">
-                    Prix (CFA)
+                    Prix (FCFA)
                 </h3>
                 <div className="px-2 py-4 flex flex-col gap-6">
                     <div className="flex flex-col gap-4">

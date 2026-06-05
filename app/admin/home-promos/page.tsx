@@ -375,7 +375,7 @@ export default function HomePromosPage() {
                                             value={price}
                                             onChange={(e) => setPrice(e.target.value)}
                                             className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-[16px] focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all text-[14px] font-medium"
-                                            placeholder="Ex: 499.000 CFA"
+                                            placeholder="Ex: 499.000FCFA"
                                         />
                                     </div>
                                     <div className="space-y-2">

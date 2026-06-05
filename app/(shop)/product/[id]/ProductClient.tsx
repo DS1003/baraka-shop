@@ -235,13 +235,13 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         {/* Thumbnails */}
                         <div className="flex flex-wrap gap-3 pb-2">
                             {(() => {
-                                const MAX_IMAGES = 4;
+                                const MAX_IMAGES = productVideos.length > 0 ? 4 : 5;
                                 const visibleImagesCount = Math.min(productImages.length, MAX_IMAGES);
                                 const extraImagesCount = productImages.length - MAX_IMAGES;
 
                                 const thumbs = [];
 
-                                // 1. Render Image Thumbnails (Max 4)
+                                // 1. Render Image Thumbnails
                                 for (let idx = 0; idx < visibleImagesCount; idx++) {
                                     const img = productImages[idx];
                                     const isLastVisibleImage = idx === MAX_IMAGES - 1;
@@ -483,11 +483,11 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 <span className="text-gray-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">Prix de vente officiel</span>
                                 <div className="flex items-baseline gap-3 md:gap-4">
                                     <span className="text-2xl md:text-5xl font-black text-white tracking-tighter">
-                                        {product.price.toLocaleString()} <span className="text-sm uppercase font-black text-primary italic">CFA</span>
+                                        {product.price.toLocaleString()} <span className="text-sm uppercase font-black text-primary italic">FCFA</span>
                                     </span>
                                     {product.oldPrice && (
                                         <span className="text-sm md:text-xl font-bold text-gray-500 line-through tracking-tighter italic">
-                                            {product.oldPrice.toLocaleString()} CFA
+                                            {product.oldPrice.toLocaleString()} FCFA
                                         </span>
                                     )}
                                 </div>
@@ -571,7 +571,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                         <div className="mt-6 pt-6 border-t border-white/5 flex flex-col items-center">
                             <a
-                                href={`https://wa.me/221770000000?text=${encodeURIComponent(`Bonjour Baraka Shop, je souhaiterais commander le produit : ${product.name} (Prix: ${product.price.toLocaleString()} CFA)`)}`}
+                                href={`https://wa.me/221770000000?text=${encodeURIComponent(`Bonjour Baraka Shop, je souhaiterais commander le produit : ${product.name} (Prix: ${product.price.toLocaleString()} FCFA)`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-3 text-[#25D366] font-black text-[11px] uppercase tracking-[0.2em] hover:scale-105 transition-transform group"
@@ -875,7 +875,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         // Format value
                                         let formattedValue = String(value);
                                         if (key.toLowerCase() === 'price') {
-                                            formattedValue = `${Number(value).toLocaleString()} CFA`;
+                                            formattedValue = `${Number(value).toLocaleString()} FCFA`;
                                         } else if (key.toLowerCase().includes('date') || key.toLowerCase() === 'createdat') {
                                             formattedValue = new Date(String(value)).toLocaleDateString('fr-FR');
                                         } else if (typeof value === 'object') {
@@ -985,7 +985,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                     <div className="flex flex-col items-end">
                                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prix Total</span>
                                         <span className="text-xl md:text-2xl font-black text-[#1B1F3B] tracking-tighter">
-                                            {(product.price * quantity).toLocaleString()} <span className="text-[10px] text-primary italic lowercase">cfa</span>
+                                            {(product.price * quantity).toLocaleString()} <span className="text-[10px] text-primary italic lowercase">FCFA</span>
                                         </span>
                                     </div>
 

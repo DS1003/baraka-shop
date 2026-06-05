@@ -86,8 +86,8 @@ export default function CartPage() {
 
                                     <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-4 md:gap-6 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-gray-50">
                                         <div className="flex flex-col items-start sm:items-end">
-                                            <span className="text-lg md:text-2xl font-black text-[#1B1F3B] tracking-tighter">{(item.price * item.qty).toLocaleString()} CFA</span>
-                                            <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden md:block">{item.price.toLocaleString()} CFA / unité</span>
+                                            <span className="text-lg md:text-2xl font-black text-[#1B1F3B] tracking-tighter">{(item.price * item.qty).toLocaleString()} FCFA</span>
+                                            <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden md:block">{item.price.toLocaleString()} FCFA / unité</span>
                                         </div>
 
                                         <div className="flex items-center gap-4 md:gap-6">
@@ -125,7 +125,7 @@ export default function CartPage() {
                                 <div className="flex flex-col gap-6 mb-10">
                                     <div className="flex items-center justify-between text-sm font-bold text-gray-400">
                                         <span>Sous-total</span>
-                                        <span className="text-white">{subtotal.toLocaleString()} CFA</span>
+                                        <span className="text-white">{subtotal.toLocaleString()} FCFA</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm font-bold text-gray-400">
                                         <span>Livraison</span>
@@ -134,7 +134,7 @@ export default function CartPage() {
                                     <div className="w-full h-px bg-white/10" />
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-black uppercase tracking-widest">Total</span>
-                                        <span className="text-3xl font-black tracking-tighter text-primary">{total.toLocaleString()} CFA</span>
+                                        <span className="text-3xl font-black tracking-tighter text-primary">{total.toLocaleString()} FCFA</span>
                                     </div>
                                 </div>
 

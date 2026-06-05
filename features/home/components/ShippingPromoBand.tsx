@@ -20,7 +20,7 @@ export function ShippingPromoBand() {
                         </div>
 
                         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 mt-6">
-                            <p className="text-gray-400 text-sm max-w-[200px] text-center md:text-left">Sur toutes les commandes de plus de <span className="text-white font-bold">500.000 CFA</span></p>
+                            <p className="text-gray-400 text-sm max-w-[200px] text-center md:text-left">Sur toutes les commandes de plus de <span className="text-white font-bold">500.000FCFA</span></p>
                             <div className="px-6 py-2 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
                                 Code: EXPRESS24
                             </div>

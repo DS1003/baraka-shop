@@ -393,7 +393,7 @@ export default function PromotionsCampaignsPage() {
                                                 </div>
                                                 <div>
                                                     <p className="text-[13px] font-bold text-white leading-tight mb-0.5">{prod.name}</p>
-                                                    <p className="text-[11px] text-slate-400">{prod.price.toLocaleString()} CFA</p>
+                                                    <p className="text-[11px] text-slate-400">{prod.price.toLocaleString()} FCFA</p>
                                                 </div>
                                             </div>
                                             <button

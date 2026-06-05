@@ -8,7 +8,7 @@ const features = [
     {
         icon: Truck,
         title: "Livraison Gratuite",
-        description: "Dès 200.000 CFA d'achat"
+        description: "Dès 200.000FCFA d'achat"
     },
     {
         icon: RotateCcw,

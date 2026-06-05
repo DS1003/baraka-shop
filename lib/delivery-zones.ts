@@ -1,5 +1,5 @@
 // Zones de livraison Baraka Shop — Dakar & banlieue
-// Chaque zone a un nom et un prix de livraison en F CFA
+// Chaque zone a un nom et un prix de livraison en FCFA
 
 export interface DeliveryZone {
     name: string;

@@ -400,7 +400,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 {name || "Nom du Produit..."}
                             </h1>
                             <p className={cn("font-black text-orange-600 font-montserrat", isMobile ? "text-lg" : "text-xl lg:text-2xl")}>
-                                {price ? price.toLocaleString('fr-FR') : '0'} CFA
+                                {price ? price.toLocaleString('fr-FR') : '0'} FCFA
                             </p>
                         </div>
 
@@ -841,7 +841,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             </div>
                         )}
                         <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prix (F CFA)</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prix (FCFA)</label>
                             <input
                                 name="price"
                                 type="number"

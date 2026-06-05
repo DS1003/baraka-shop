@@ -19,10 +19,10 @@ const MiniCart = dynamic(() => import('@/components/MiniCart').then(mod => mod.M
 import { BorderGlow } from '@/components/BorderGlow'
 
 const SUGGESTIONS = [
-    { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000 CFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
-    { id: 2, name: "iPhone 15 Pro Titanium", category: "TELEPHONE & TABLETTE", price: "850 000 CFA", image: "https://media.ldlc.com/encart/p/28828_b.jpg" },
-    { id: 3, name: "Sony WH-1000XM5 Black", category: "IMAGE & SON", price: "250 000 CFA", image: "https://media.ldlc.com/encart/p/28829_b.jpg" },
-    { id: 4, name: "Canon EOS R6 Mark II", category: "IMAGE & SON", price: "1 800 000 CFA", image: "https://media.ldlc.com/encart/p/22889_b.jpg" },
+    { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000FCFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
+    { id: 2, name: "iPhone 15 Pro Titanium", category: "TELEPHONE & TABLETTE", price: "850 000FCFA", image: "https://media.ldlc.com/encart/p/28828_b.jpg" },
+    { id: 3, name: "Sony WH-1000XM5 Black", category: "IMAGE & SON", price: "250 000FCFA", image: "https://media.ldlc.com/encart/p/28829_b.jpg" },
+    { id: 4, name: "Canon EOS R6 Mark II", category: "IMAGE & SON", price: "1 800 000FCFA", image: "https://media.ldlc.com/encart/p/22889_b.jpg" },
 ]
 
 const CLEAN_IMAGES: Record<string, string> = {
@@ -328,7 +328,7 @@ export function Header() {
                                                             <span className="text-sm font-bold text-[#1B1F3B] group-hover:text-primary transition-colors">{item.name}</span>
                                                             <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category?.name || item.category}</span>
                                                         </div>
-                                                        <span className="ml-auto text-sm font-black text-[#1B1F3B]">{item.price.toLocaleString()} CFA</span>
+                                                        <span className="ml-auto text-sm font-black text-[#1B1F3B]">{item.price.toLocaleString()} FCFA</span>
                                                     </Link>
                                                 ))}
                                                 {searchSuggestions.length === 0 && (
@@ -375,7 +375,7 @@ export function Header() {
                                 </div>
                                 <div className="hidden lg:flex flex-col ml-3 pl-3 border-l border-gray-200">
                                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Panier</span>
-                                    <span className="text-[12px] font-black text-[#1B1F3B] group-hover:text-primary transition-colors">{subtotal.toLocaleString()} CFA</span>
+                                    <span className="text-[12px] font-black text-[#1B1F3B] group-hover:text-primary transition-colors">{subtotal.toLocaleString()} FCFA</span>
                                 </div>
                             </div>
                         </div>
@@ -592,7 +592,7 @@ export function Header() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="text-sm font-bold text-[#1B1F3B] truncate group-hover:text-primary transition-colors uppercase tracking-tight">{item.name}</h4>
-                                                <p className="text-[10px] font-black text-primary">{item.price.toLocaleString()} CFA</p>
+                                                <p className="text-[10px] font-black text-primary">{item.price.toLocaleString()} FCFA</p>
                                             </div>
                                         </Link>
                                     ))}

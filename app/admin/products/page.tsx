@@ -804,7 +804,7 @@ function ProductsPageContent() {
 
                                         <div className="flex items-center gap-2 mb-8">
                                             <p className="text-[28px] font-black text-orange-600">{detailProduct.price.toLocaleString()} F</p>
-                                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[13px] font-bold">CFA</span>
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[13px] font-bold">FCFA</span>
                                         </div>
 
                                         <div className="space-y-6 mb-10">

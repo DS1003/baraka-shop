@@ -83,7 +83,7 @@ export function CartToast({ product, isVisible, onClose, itemCount, subtotal }: 
                                     {product.name}
                                 </h4>
                                 <p className="text-sm font-black text-primary mt-1 tracking-tighter">
-                                    {product.price.toLocaleString()} CFA
+                                    {product.price.toLocaleString()} FCFA
                                 </p>
                             </div>
                         </div>
@@ -97,7 +97,7 @@ export function CartToast({ product, isVisible, onClose, itemCount, subtotal }: 
                                 </span>
                             </div>
                             <span className="text-xs font-black text-[#1B1F3B] tracking-tighter">
-                                {subtotal.toLocaleString()} CFA
+                                {subtotal.toLocaleString()} FCFA
                             </span>
                         </div>
 

@@ -363,7 +363,7 @@ export default function CheckoutPage() {
                                                                 </div>
                                                                 <div>
                                                                     <p className="text-sm font-black text-[#1B1F3B]">{selectedZone.name}</p>
-                                                                    <p className="text-xs font-bold text-primary">{selectedZone.price.toLocaleString()} F CFA</p>
+                                                                    <p className="text-xs font-bold text-primary">{selectedZone.price.toLocaleString()} FCFA</p>
                                                                 </div>
                                                             </div>
                                                             <button
@@ -643,7 +643,7 @@ export default function CheckoutPage() {
                                                 </p>
                                                 {deliveryMethod === 'livraison' && selectedZone && (
                                                     <p className="text-xs text-primary font-bold mt-1">
-                                                        🗺️ {selectedZone.name} — {selectedZone.price.toLocaleString()} F CFA
+                                                        🗺️ {selectedZone.name} — {selectedZone.price.toLocaleString()} FCFA
                                                     </p>
                                                 )}
                                                 {deliveryMethod === 'retrait' && (

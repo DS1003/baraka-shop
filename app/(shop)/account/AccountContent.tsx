@@ -428,7 +428,7 @@ function OrderCard({ order }: { order: any }) {
 
                 <div className="flex items-center justify-between md:justify-end gap-6 border-t border-gray-50 md:border-t-0 pt-4 md:pt-0">
                     <span className="text-lg font-black text-[#1B1F3B]">
-                        {order.total.toLocaleString()} CFA
+                        {order.total.toLocaleString()} FCFA
                     </span>
                     <button className={cn("w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-all", expanded && "rotate-180 bg-orange-50 text-orange-600")}>
                         <ChevronDown className="w-4 h-4" />
@@ -456,7 +456,7 @@ function OrderCard({ order }: { order: any }) {
                                                 </div>
                                                 <span className="font-medium text-[#1B1F3B]">{item.product?.name || "Produit supprimé"}</span>
                                             </div>
-                                            <span className="font-bold text-gray-600">{(item.price * item.quantity).toLocaleString()} CFA</span>
+                                            <span className="font-bold text-gray-600">{(item.price * item.quantity).toLocaleString()} FCFA</span>
                                         </div>
                                     ))}
                                 </div>

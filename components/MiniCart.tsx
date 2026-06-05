@@ -113,7 +113,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                                                         </button>
                                                     </div>
                                                     <span className="text-sm font-black text-primary tracking-tighter">
-                                                        {(item.price * item.qty).toLocaleString()} CFA
+                                                        {(item.price * item.qty).toLocaleString()} FCFA
                                                     </span>
                                                 </div>
                                             </div>
@@ -145,7 +145,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em]">
                                         <span>Sous-total</span>
-                                        <span className="text-[#1B1F3B] tracking-normal">{subtotal.toLocaleString()} CFA</span>
+                                        <span className="text-[#1B1F3B] tracking-normal">{subtotal.toLocaleString()} FCFA</span>
                                     </div>
                                     <div className="flex justify-between items-center text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em]">
                                         <span>Livraison</span>
@@ -153,7 +153,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                                     </div>
                                     <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
                                         <span className="text-xs font-black text-[#1B1F3B] uppercase tracking-widest">Total</span>
-                                        <span className="text-2xl font-black text-primary tracking-tighter">{subtotal.toLocaleString()} CFA</span>
+                                        <span className="text-2xl font-black text-primary tracking-tighter">{subtotal.toLocaleString()} FCFA</span>
                                     </div>
                                 </div>
 

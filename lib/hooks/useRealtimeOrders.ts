@@ -85,7 +85,7 @@ export function useRealtimeOrders({
             toast.success(
               `🛒 Nouvelle commande de ${clientName}`,
               {
-                description: `Montant: ${total} F CFA • ${order.items?.length || 0} article(s)`,
+                description: `Montant: ${total} FCFA • ${order.items?.length || 0} article(s)`,
                 duration: 8000,
                 action: {
                   label: 'Voir',

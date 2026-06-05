@@ -187,7 +187,7 @@ export default function OrdersPage() {
                             </div>
                             ${order.deliveryMethod === 'livraison' && order.deliveryZone ? `
                                 <div style="font-size: 13px; font-weight: 700; color: #F97316; margin-top: 4px;">
-                                    Zone: ${order.deliveryZone} — ${(order.shippingCost || 0).toLocaleString()} F CFA
+                                    Zone: ${order.deliveryZone} — ${(order.shippingCost || 0).toLocaleString()} FCFA
                                 </div>
                             ` : ''}
                         </div>
@@ -216,7 +216,7 @@ export default function OrdersPage() {
                         `).join('')}
                         <tr class="total-row">
                             <td colspan="3" style="text-align: right;">Montant Net à Payer :</td>
-                            <td style="text-align: right; color: #F97316;">${order.total.toLocaleString()} CFA</td>
+                            <td style="text-align: right; color: #F97316;">${order.total.toLocaleString()} FCFA</td>
                         </tr>
                     </tbody>
                 </table>
@@ -572,7 +572,7 @@ export default function OrdersPage() {
                                                     <p className="text-[13px] font-bold text-orange-600">{selectedOrder.deliveryZone}</p>
                                                     {selectedOrder.shippingCost != null && (
                                                         <p className="text-[11px] font-black text-emerald-600 mt-0.5">
-                                                            Frais: {selectedOrder.shippingCost.toLocaleString()} F CFA
+                                                            Frais: {selectedOrder.shippingCost.toLocaleString()} FCFA
                                                         </p>
                                                     )}
                                                 </div>

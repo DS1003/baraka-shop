@@ -315,7 +315,7 @@ export function CheckoutOrderSummary({
                                     {item.name}
                                 </p>
                                 <p className="text-xs sm:text-sm font-black text-primary mt-0.5">
-                                    {(item.price * item.qty).toLocaleString()} CFA
+                                    {(item.price * item.qty).toLocaleString()} FCFA
                                 </p>
                             </div>
                             <span className="text-[10px] font-black text-white/40 shrink-0">×{item.qty}</span>
@@ -327,7 +327,7 @@ export function CheckoutOrderSummary({
             <div className="flex flex-col gap-2 sm:gap-3 text-white relative z-10">
                 <div className="flex justify-between text-xs sm:text-sm font-bold text-white/60">
                     <span>Sous-total</span>
-                    <span>{subtotal.toLocaleString()} CFA</span>
+                    <span>{subtotal.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between text-xs font-bold text-green-400 gap-2">
                     <span className="flex items-center gap-1.5 min-w-0">
@@ -346,14 +346,14 @@ export function CheckoutOrderSummary({
                         )}
                     </span>
                     <span className="shrink-0 uppercase">
-                        {shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} CFA`}
+                        {shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} FCFA`}
                     </span>
                 </div>
                 <div className="h-px bg-white/10 my-1" />
                 <div className="flex justify-between items-end gap-2">
                     <span className="text-xs sm:text-sm font-black uppercase tracking-widest">Total</span>
                     <span className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tighter text-primary">
-                        {total.toLocaleString()} CFA
+                        {total.toLocaleString()} FCFA
                     </span>
                 </div>
             </div>
@@ -388,7 +388,7 @@ export function CheckoutMobileBar({
                         {itemCount} article{itemCount > 1 ? 's' : ''} · Étape {step}/4
                     </p>
                     <p className="text-lg font-black text-[#1B1F3B] tracking-tight truncate">
-                        {total.toLocaleString()} <span className="text-xs text-primary">CFA</span>
+                        {total.toLocaleString()} <span className="text-xs text-primary">FCFA</span>
                     </p>
                 </div>
                 {step > 1 && (
