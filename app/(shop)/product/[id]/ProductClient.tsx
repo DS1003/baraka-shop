@@ -654,7 +654,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 )}
                                 
                                 {product.detailedDescription && Array.isArray(product.detailedDescription) && product.detailedDescription.length > 0 && (
-                                    <div className="space-y-4 md:space-y-6 mb-8 md:mb-10">
+                                    <div className="space-y-0 mb-6 md:mb-8">
                                         {(() => {
                                             let imgTextCount = 0;
                                             return product.detailedDescription.map((block: any, idx: number) => {
@@ -669,7 +669,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     );
                                                 case 'TITLE_CENTERED':
                                                     return (
-                                                        <div key={idx} className="text-center max-w-4xl mx-auto py-12 font-montserrat">
+                                                        <div key={idx} className="text-center max-w-4xl mx-auto py-6 md:py-8 font-montserrat">
                                                             <h2 className="text-[20px] md:text-[24px] font-bold text-[#282828] uppercase tracking-[0.1em] leading-tight">
                                                                 {block.title}
                                                             </h2>
@@ -693,13 +693,13 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 flex justify-center">
-                                                                <div className="relative w-full max-w-[600px] aspect-square overflow-hidden">
+                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full md:w-1/2 flex justify-start">
+                                                                <div className="relative w-full max-w-[600px] aspect-[4/3] overflow-hidden">
                                                                     <Image src={block.image} alt="" fill className="object-contain" unoptimized />
                                                                 </div>
                                                             </div>
-                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                            <div className="w-full md:w-1/2 space-y-3">
                                                                 <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
                                                                     {block.title}
                                                                 </h3>
@@ -715,8 +715,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full md:w-1/2 space-y-3">
                                                                 <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
                                                                     {block.title}
                                                                 </h3>
@@ -726,7 +726,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                                 />
                                                             </div>
                                                             <div className="w-full md:w-1/2 flex justify-center">
-                                                                <div className="relative w-full max-w-[600px] aspect-square overflow-hidden">
+                                                                <div className="relative w-full max-w-[600px] aspect-[4/3] overflow-hidden">
                                                                     <Image src={block.image} alt="" fill className="object-contain" unoptimized />
                                                                 </div>
                                                             </div>
@@ -737,7 +737,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
                                                             <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
                                                                 {(() => {
                                                                     const url = block.video || '';
@@ -749,7 +749,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                                     return null;
                                                                 })()}
                                                             </div>
-                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                            <div className="w-full md:w-1/2 space-y-3">
                                                                 <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
                                                                     {block.title}
                                                                 </h3>
@@ -765,8 +765,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-6 md:gap-12 py-6 md:py-8 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 space-y-6">
+                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full md:w-1/2 space-y-3">
                                                                 <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
                                                                     {block.title}
                                                                 </h3>
