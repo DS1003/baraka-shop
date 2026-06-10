@@ -51,23 +51,38 @@ const config: Config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
-                baraka: {
-                    50: '#fff7ed',
-                    100: '#ffedd5',
-                    200: '#fed7aa',
-                    300: '#fdba74',
-                    400: '#fb923c',
-                    500: '#F58320', // Primary Brand Color
-                    600: '#ea580c',
-                    700: '#c2410c',
-                    800: '#9a3412',
-                    900: '#7c2d12',
-                    950: '#431407',
+                orange: {
+                    50: '#fdf3ed',
+                    100: '#fae3d2',
+                    200: '#f4c4a2',
+                    300: '#eea06b',
+                    400: '#eb823f',
+                    500: '#E8621A', // Primary Brand Color
+                    600: '#d95213',
+                    700: '#b43f11',
+                    800: '#8e3412',
+                    900: '#722d12',
+                    950: '#3d1406',
                 },
-                'baraka-dark': '#1B1F3B',
+                baraka: {
+                    50: '#fdf3ed',
+                    100: '#fae3d2',
+                    200: '#f4c4a2',
+                    300: '#eea06b',
+                    400: '#eb823f',
+                    500: '#E8621A', // Primary Brand Color (Orange Baraka)
+                    600: '#d95213',
+                    700: '#b43f11',
+                    800: '#8e3412',
+                    900: '#722d12',
+                    950: '#3d1406',
+                },
+                'baraka-dark': '#0A0C10', // Bleu Nuit
                 'baraka-red': '#FF4747',
-                'baraka-blue': '#007BFF',
-                'baraka-yellow': '#FFD700',
+                'baraka-blue': '#0A0C10', // Updated to Bleu Nuit
+                'baraka-yellow': '#C8973A', // Updated to Or (Accent)
+                'baraka-paper': '#F5F2ED', // Papier
+                'baraka-smoke': '#2A3040', // Fumée
             },
             borderRadius: {
                 lg: "var(--radius)",

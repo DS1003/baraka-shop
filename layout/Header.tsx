@@ -406,15 +406,15 @@ export function Header() {
                         onMouseLeave={handleMenuLeave}
                     >
                         <BorderGlow
-                            glowColor="28 91 54"
-                            backgroundColor="#F97316"
+                            glowColor="21 82 51"
+                            backgroundColor="#E8621A"
                             borderRadius={9999}
                             glowRadius={14}
                             glowIntensity={1.6}
-                            colors={['#ea580c', '#ffffff', '#f97316']}
+                            colors={['#d95213', '#ffffff', '#E8621A']}
                             animated={true}
                             edgeSensitivity={20}
-                            className="text-white px-4 lg:px-6 w-auto h-[36px] md:h-[40px] lg:h-[48px] font-black text-xs lg:text-sm uppercase tracking-wide shadow-[0_0_15px_rgba(249,115,22,0.2)] transition-all overflow-visible flex items-center justify-center border-none"
+                            className="text-white px-4 lg:px-6 w-auto h-[36px] md:h-[40px] lg:h-[48px] font-black text-xs lg:text-sm uppercase tracking-wide shadow-[0_0_15px_rgba(232,98,26,0.2)] transition-all overflow-visible flex items-center justify-center border-none"
                         >
                             <div className="flex items-center justify-between w-full h-full gap-3 py-1">
                                 <div className="flex items-center gap-1.5 lg:gap-3">

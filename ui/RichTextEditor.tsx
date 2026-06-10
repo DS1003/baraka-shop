@@ -49,16 +49,30 @@ export function RichTextEditor({ name, defaultValue = '', value, onChange, place
 
         const currentContent = editorRef.current?.innerText?.trim() || '';
         
-        let htmlToInsert = text.replace(/\n/g, '<br>');
+        // Normalize pasted text:
+        // 1. Replace \r\n with \n
+        // 2. Collapse 2+ newlines into a paragraph break marker
+        // 3. Replace remaining single newlines with a space (they're just visual wraps from the source)
+        // 4. Convert paragraph break markers to <br><br>
+        const PARA_MARKER = '\u0000PARA\u0000';
+        let normalized = text
+            .replace(/\r\n/g, '\n')
+            .replace(/\n{2,}/g, PARA_MARKER)
+            .replace(/\n/g, ' ')
+            .replace(/\u0000PARA\u0000/g, '\n\n')
+            .replace(/ {2,}/g, ' ')
+            .trim();
+
+        let htmlToInsert = normalized.replace(/\n\n/g, '<br><br>');
         
         if (!currentContent && name === 'description') {
             // "description classique": first sentence bold and uppercase, followed by a line break
-            const match = text.match(/^([^.!?\n]+(?:[.!?]|\n|$))([\s\S]*)$/);
+            const match = normalized.match(/^([^.!?\n]+(?:[.!?]|\n|$))([\s\S]*)$/);
             if (match) {
                 let firstSentence = match[1].trim().toUpperCase();
                 let rest = match[2].trim();
                 
-                htmlToInsert = `<b>${firstSentence}</b><br><br>${rest ? rest.replace(/\n/g, '<br>') : ''}`;
+                htmlToInsert = `<b>${firstSentence}</b><br><br>${rest ? rest.replace(/\n\n/g, '<br><br>') : ''}`;
             }
         }
 

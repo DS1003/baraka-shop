@@ -693,18 +693,16 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 flex justify-start">
-                                                                <div className="relative w-full max-w-[600px] aspect-[4/3] overflow-hidden">
-                                                                    <Image src={block.image} alt="" fill className="object-contain" unoptimized />
-                                                                </div>
+                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full relative aspect-[4/3] overflow-hidden">
+                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
                                                             </div>
-                                                            <div className="w-full md:w-1/2 space-y-3">
-                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                            <div className="w-full space-y-4 md:space-y-5">
+                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                     {block.title}
                                                                 </h3>
                                                                 <div 
-                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                     dangerouslySetInnerHTML={{ __html: block.text }}
                                                                 />
                                                             </div>
@@ -715,20 +713,18 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 space-y-3">
-                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
+                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                     {block.title}
                                                                 </h3>
                                                                 <div 
-                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                     dangerouslySetInnerHTML={{ __html: block.text }}
                                                                 />
                                                             </div>
-                                                            <div className="w-full md:w-1/2 flex justify-center">
-                                                                <div className="relative w-full max-w-[600px] aspect-[4/3] overflow-hidden">
-                                                                    <Image src={block.image} alt="" fill className="object-contain" unoptimized />
-                                                                </div>
+                                                            <div className="w-full relative aspect-[4/3] overflow-hidden order-1 md:order-2">
+                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
                                                             </div>
                                                         </div>
                                                     );
@@ -737,8 +733,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
+                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
                                                                 {(() => {
                                                                     const url = block.video || '';
                                                                     const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
@@ -749,12 +745,12 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                                     return null;
                                                                 })()}
                                                             </div>
-                                                            <div className="w-full md:w-1/2 space-y-3">
-                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                            <div className="w-full space-y-4 md:space-y-5">
+                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                     {block.title}
                                                                 </h3>
                                                                 <div 
-                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                     dangerouslySetInnerHTML={{ __html: block.text }}
                                                                 />
                                                             </div>
@@ -765,17 +761,17 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                     const isGrey = imgTextCount % 2 === 0;
                                                     imgTextCount++;
                                                     return (
-                                                        <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-4 md:gap-6 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full md:w-1/2 space-y-3">
-                                                                <h3 className="text-[18px] md:text-[20px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                            <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
+                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                     {block.title}
                                                                 </h3>
                                                                 <div 
-                                                                    className="text-[#505050] text-[14px] leading-[1.8] font-normal whitespace-pre-wrap"
+                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                     dangerouslySetInnerHTML={{ __html: block.text }}
                                                                 />
                                                             </div>
-                                                            <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
+                                                            <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg order-1 md:order-2">
                                                                 {(() => {
                                                                     const url = block.video || '';
                                                                     const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);

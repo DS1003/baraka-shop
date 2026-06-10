@@ -499,18 +499,16 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                 const isGrey = imgTextCount % 2 === 0;
                                                 imgTextCount++;
                                                 return (
-                                                    <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-10 py-6 md:py-8 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                        <div className="w-full md:w-1/2 flex justify-center">
-                                                            <div className="relative w-full max-w-[600px] aspect-square overflow-hidden">
-                                                                <img src={block.image} alt="" className="w-full h-full object-contain" />
-                                                            </div>
+                                                    <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                        <div className="w-full relative aspect-[4/3] overflow-hidden">
+                                                            <img src={block.image} alt="" className="w-full h-full object-contain" />
                                                         </div>
-                                                        <div className="w-full md:w-1/2 space-y-4">
-                                                            <h3 className="text-[16px] md:text-[18px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                        <div className="w-full space-y-4 md:space-y-5">
+                                                            <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                 {block.title}
                                                             </h3>
                                                             <div 
-                                                                className="text-[#505050] text-[13px] leading-[1.7] font-normal whitespace-pre-wrap"
+                                                                className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                 dangerouslySetInnerHTML={{ __html: block.text }}
                                                             />
                                                         </div>
@@ -521,17 +519,17 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                 const isGrey = imgTextCount % 2 === 0;
                                                 imgTextCount++;
                                                 return (
-                                                    <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-4 md:gap-10 py-6 md:py-8 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                        <div className="w-full md:w-1/2 space-y-4">
-                                                            <h3 className="text-[16px] md:text-[18px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                    <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                        <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
+                                                            <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                 {block.title}
                                                             </h3>
                                                             <div 
-                                                                className="text-[#505050] text-[13px] leading-[1.7] font-normal whitespace-pre-wrap"
+                                                                className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                 dangerouslySetInnerHTML={{ __html: block.text }}
                                                             />
                                                         </div>
-                                                        <div className="w-full md:w-1/2 relative aspect-[16/10] overflow-hidden">
+                                                        <div className="w-full relative aspect-[4/3] overflow-hidden order-1 md:order-2">
                                                             <img src={block.image} alt="" className="w-full h-full object-contain" />
                                                         </div>
                                                     </div>
@@ -541,8 +539,8 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                 const isGrey = imgTextCount % 2 === 0;
                                                 imgTextCount++;
                                                 return (
-                                                    <div key={idx} className={cn("flex flex-col md:flex-row items-center gap-4 md:gap-10 py-6 md:py-8 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                        <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl bg-black">
+                                                    <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                        <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
                                                             {(() => {
                                                                 const url = block.video || '';
                                                                 const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
@@ -553,12 +551,12 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                                 return <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">Aucune vidéo</div>;
                                                             })()}
                                                         </div>
-                                                        <div className="w-full md:w-1/2 space-y-4">
-                                                            <h3 className="text-[16px] md:text-[18px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                        <div className="w-full space-y-4 md:space-y-5">
+                                                            <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                 {block.title}
                                                             </h3>
                                                             <div 
-                                                                className="text-[#505050] text-[13px] leading-[1.7] font-normal whitespace-pre-wrap"
+                                                                className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                 dangerouslySetInnerHTML={{ __html: block.text }}
                                                             />
                                                         </div>
@@ -569,17 +567,17 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                 const isGrey = imgTextCount % 2 === 0;
                                                 imgTextCount++;
                                                 return (
-                                                    <div key={idx} className={cn("flex flex-col-reverse md:flex-row items-center gap-4 md:gap-10 py-6 md:py-8 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                        <div className="w-full md:w-1/2 space-y-4">
-                                                            <h3 className="text-[16px] md:text-[18px] font-bold text-[#282828] uppercase tracking-wider leading-snug">
+                                                    <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-6 md:-mx-10 px-6 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                        <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
+                                                            <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
                                                                 {block.title}
                                                             </h3>
                                                             <div 
-                                                                className="text-[#505050] text-[13px] leading-[1.7] font-normal whitespace-pre-wrap"
+                                                                className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
                                                                 dangerouslySetInnerHTML={{ __html: block.text }}
                                                             />
                                                         </div>
-                                                        <div className="w-full md:w-1/2 relative aspect-video overflow-hidden rounded-2xl bg-black">
+                                                        <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg order-1 md:order-2">
                                                             {(() => {
                                                                 const url = block.video || '';
                                                                 const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
@@ -791,7 +789,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
     return (
         <>
-        <form onSubmit={handleUpsert} className="bg-white rounded-2xl shadow-sm border border-slate-200/50 flex flex-col max-w-5xl mx-auto overflow-hidden">
+        <form onSubmit={handleUpsert} className="bg-white rounded-2xl shadow-sm border border-slate-200/50 flex flex-col overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
                 <div className="flex items-center gap-4">
                     <button
