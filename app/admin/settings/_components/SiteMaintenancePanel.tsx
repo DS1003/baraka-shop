@@ -34,6 +34,9 @@ export function SiteMaintenancePanel() {
         maintenanceTitle: 'Site en maintenance',
         maintenanceMessage:
             'Nous effectuons des améliorations. Le site sera de retour très bientôt.',
+        headerLogo: null,
+        footerLogo: null,
+        loaderLogo: null,
     })
     const [showConfirm, setShowConfirm] = useState<'online' | 'maintenance' | null>(null)
     const [confirmText, setConfirmText] = useState('')

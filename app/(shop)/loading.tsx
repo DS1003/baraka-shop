@@ -3,8 +3,10 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 
 export default function Loading() {
+    const { loaderLogo } = useSiteLogos()
     return (
         <div className="min-h-[70vh] flex flex-col items-center justify-center bg-white relative overflow-hidden">
             {/* Soft background glow */}
@@ -40,7 +42,7 @@ export default function Loading() {
                             className="relative w-full h-full flex items-center justify-center"
                         >
                             <Image 
-                                src="/logo.png" 
+                                src={loaderLogo} 
                                 alt="Baraka Shop Logo" 
                                 fill
                                 className="object-contain" 

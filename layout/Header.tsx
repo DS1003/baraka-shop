@@ -13,6 +13,7 @@ import { useCart } from '@/context/CartContext'
 import { useRouter } from 'next/navigation'
 import { getProductsAction, getMegaMenuAction } from '@/lib/actions/product-actions'
 import { getStoresAction } from '@/lib/actions/store-actions'
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 const MegaMenu = dynamic(() => import('@/features/home/components/MegaMenu').then(mod => mod.MegaMenu), { ssr: false })
 const CartToast = dynamic(() => import('@/components/CartToast').then(mod => mod.CartToast), { ssr: false })
 const MiniCart = dynamic(() => import('@/components/MiniCart').then(mod => mod.MiniCart), { ssr: false })
@@ -86,6 +87,7 @@ export function Header() {
     const { data: session, status } = useSession()
     const isLoggedIn = status === "authenticated"
     const { itemCount, subtotal, lastAddedItem, isToastVisible, hideToast } = useCart()
+    const { headerLogo } = useSiteLogos()
 
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isCartOpen, setIsCartOpen] = useState(false) // Pour le MiniCart futur
@@ -243,24 +245,12 @@ export function Header() {
                     scrolled ? "fixed top-0 left-0 right-0 shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2.5 backdrop-blur-xl bg-white/95" : "relative"
                 )}>
                     <Container className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <Link href="/" className="flex-shrink-0">
-                            <motion.div
-                                animate={{
-                                    scale: scrolled ? 0.85 : 1,
-                                    y: scrolled ? -2 : 0
-                                }}
-                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                className="relative w-[180px] h-[50px] md:w-[240px] md:h-[65px]"
-                            >
-                                <Image
-                                    src="/logo.png"
-                                    alt="Baraka Shop"
-                                    fill
-                                    className="object-contain object-left"
-                                    priority
-                                    unoptimized
-                                />
-                            </motion.div>
+                        <Link href="/" className="shrink-0 flex items-center">
+                            <img
+                                src={headerLogo}
+                                alt="Baraka Shop"
+                                className="h-10 md:h-14 w-auto object-contain"
+                            />
                         </Link>
 
                         <div className="flex-1 w-full max-w-2xl px-4 relative">
@@ -507,9 +497,7 @@ export function Header() {
                     <Menu className="w-6 h-6 text-[#1B1F3B]" />
                 </button>
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2">
-                    <div className="relative w-[210px] h-[60px]">
-                        <Image src="/logo.png" alt="Baraka Shop" fill className="object-contain" priority unoptimized />
-                    </div>
+                    <img src={headerLogo} alt="Baraka Shop" className="h-12 md:h-16 w-auto object-contain" />
                 </Link>
                 <div className="flex items-center gap-2">
                     <Link href="/login" className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
@@ -646,9 +634,7 @@ export function Header() {
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Retour</span>
                                     </motion.button>
                                 ) : (
-                                    <div className="relative w-[110px] h-[35px]">
-                                        <Image src="/logo.png" alt="Baraka" fill className="object-contain object-left" unoptimized />
-                                    </div>
+                                    <img src={headerLogo} alt="Baraka" className="h-10 md:h-12 w-auto object-contain" />
                                 )}
 
                                 <button

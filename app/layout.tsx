@@ -51,12 +51,16 @@ import { ScrollToTop } from '@/ui/ScrollToTop'
 import { WhatsAppButton } from '@/ui/WhatsAppButton'
 
 import { OrientationBlocker } from '@/components/OrientationBlocker'
+import { getSiteLogos } from '@/lib/actions/site-config-actions'
+import { SiteLogosProvider } from '@/lib/hooks/useSiteLogos'
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const initialLogos = await getSiteLogos()
+
   return (
     <html lang="fr" className="h-full antialiased scroll-smooth" suppressHydrationWarning>
       <head />
@@ -70,12 +74,14 @@ export default function RootLayout({
         )}
         suppressHydrationWarning
       >
-        <Providers>
-          <OrientationBlocker />
-          {children}
-          <WhatsAppButton />
-          <ScrollToTop />
-        </Providers>
+        <SiteLogosProvider initialLogos={initialLogos}>
+          <Providers>
+            <OrientationBlocker />
+            {children}
+            <WhatsAppButton />
+            <ScrollToTop />
+          </Providers>
+        </SiteLogosProvider>
       </body>
     </html>
   )

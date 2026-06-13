@@ -37,6 +37,7 @@ import { getAdminNotifications } from '@/lib/actions/admin-actions';
 import { ImportToast } from '@/features/admin/components/ImportToast';
 import { GlobalSearchModal } from '@/features/admin/components/GlobalSearchModal';
 import { Toaster } from 'sonner';
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
 
 const sidebarGroups = [
     {
@@ -84,6 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const { headerLogo } = useSiteLogos();
     const [notifications, setNotifications] = useState<any[]>([]);
     const [hoveredTooltip, setHoveredTooltip] = useState<{label: string, top: number, left: number} | null>(null);
 
@@ -119,7 +121,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="px-4 h-[72px] flex items-center justify-center border-b border-slate-200/40 overflow-hidden">
                     <Link href="/admin" className="flex items-center justify-center w-full h-full">
                         <img
-                            src="/logo.png"
+                            src={headerLogo}
                             alt="Baraka Shop"
                             className={cn(
                                 "object-contain transition-all duration-300",

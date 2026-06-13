@@ -773,7 +773,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         if (res.success) {
             toast.success(editingProduct ? '✅ Produit mis à jour !' : '✅ Produit créé !');
             if (shouldClose) {
-                router.push('/admin/products');
+                if (editingProduct) {
+                    router.back();
+                } else {
+                    router.push('/admin/products');
+                }
             } else {
                 if (!editingProduct && res.product?.id) {
                     router.push(`/admin/products/${res.product.id}/edit`);

@@ -109,7 +109,7 @@ export default function ContactPage() {
                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Suivez-nous</span>
                                     <div className="flex gap-4">
                                         <SocialIcon icon={Facebook} />
-                                        <SocialIcon icon={Instagram} />
+                                        <SocialIcon icon={Instagram} href="https://www.instagram.com/baraka.sn/" />
                                         <SocialIcon icon={Twitter} />
                                         <SocialIcon icon={Youtube} />
                                     </div>
@@ -148,9 +148,9 @@ function ContactDetail({ icon: Icon, label, value }: { icon: any, label: string,
     )
 }
 
-function SocialIcon({ icon: Icon }: { icon: any }) {
+function SocialIcon({ icon: Icon, href = "#" }: { icon: any, href?: string }) {
     return (
-        <a href="#" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all">
+        <a href={href} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all">
             <Icon className="w-5 h-5" />
         </a>
     )

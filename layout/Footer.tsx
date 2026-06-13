@@ -1,11 +1,15 @@
+'use client'
+
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Container } from '@/ui/Container'
 import { Logo } from '@/ui/Logo'
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, Youtube, ArrowRight } from 'lucide-react'
 
 export function Footer() {
+    const { footerLogo } = useSiteLogos()
     return (
         <footer className="relative bg-[#0A0B14] text-white pt-20 pb-10 overflow-hidden border-t border-white/5">
             {/* Background Pattern */}
@@ -26,7 +30,7 @@ export function Footer() {
                     {/* Brand Section */}
                     <div className="mb-16 md:mb-20 flex flex-col items-center max-w-2xl px-4">
                         <Link href="/" className="mb-8 block">
-                            <Logo variant="dark" />
+                            <img src={footerLogo} alt="Baraka Shop" className="h-14 md:h-20 w-auto object-contain" />
                         </Link>
                         <p className="text-gray-400 text-sm md:text-base leading-relaxed tracking-wide">
                             Votre destination premium pour l'électronique de pointe au Sénégal.
@@ -87,7 +91,7 @@ export function Footer() {
                     {/* Social Section */}
                     <div className="flex flex-col items-center mb-16">
                         <div className="flex gap-10 items-center">
-                            <SocialLink href="#" icon={Instagram} />
+                            <SocialLink href="https://www.instagram.com/baraka.sn/" icon={Instagram} />
                             <SocialLink href="#" icon={Facebook} />
                             <SocialLink href="#" icon={Twitter} />
                             <SocialLink href="#" icon={Youtube} />
@@ -115,6 +119,8 @@ function SocialLink({ href, icon: Icon }: { href: string; icon: any }) {
     return (
         <a
             href={href}
+            target="_blank"
+            rel="noopener noreferrer"
             className="group relative"
         >
             <div className="absolute -inset-2 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />

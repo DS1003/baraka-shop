@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ShieldCheck, RefreshCw, Clock, ArrowRight, Settings2, User, Lock, Eye, EyeOff, Loader2, X, AlertCircle } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +65,7 @@ function useAutoRefresh() {
 export default function MaintenancePage() {
     const config = useMaintenanceConfig()
     const countdown = useAutoRefresh()
+    const { loaderLogo } = useSiteLogos()
     const [mounted, setMounted] = useState(false)
 
     // Login Modal State
@@ -170,7 +172,7 @@ export default function MaintenancePage() {
             <header className="w-full relative z-10 pt-6 sm:pt-8 px-6 sm:px-10 flex items-center justify-between">
                 <div className="relative w-32 h-10 sm:w-44 sm:h-12">
                     <Image
-                        src="/logo.png"
+                        src={loaderLogo}
                         alt="Baraka Shop"
                         fill
                         className="object-contain object-left"

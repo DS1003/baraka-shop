@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { getUserSettings, updateUserSettings } from '@/lib/actions/user-actions';
 import { signOut } from 'next-auth/react';
 import { SiteMaintenancePanel } from './_components/SiteMaintenancePanel';
+import { SiteLogosPanel } from './_components/SiteLogosPanel';
 
 export default function SettingsPage() {
     const [activeSection, setActiveSection] = useState('Boutique');
@@ -236,7 +237,14 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div className="p-10">
-                                    {activeSection === 'Boutique' && <SiteMaintenancePanel />}
+                                    {activeSection === 'Boutique' && (
+                                        <div className="space-y-10">
+                                            <SiteMaintenancePanel />
+                                            <div className="border-t border-slate-100 pt-10">
+                                                <SiteLogosPanel />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {activeSection === 'Profil' && (
                                         <div className="space-y-12">
