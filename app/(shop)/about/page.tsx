@@ -8,7 +8,7 @@ import { motion } from 'framer-motion'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 
 export default function AboutPage() {
-    const { headerLogo, favicon } = useSiteLogos()
+    const { headerLogo, loaderLogo } = useSiteLogos()
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen pb-32">
@@ -31,7 +31,7 @@ export default function AboutPage() {
                             className="flex flex-col gap-8"
                         >
                             <div className="flex items-center gap-4">
-                                {favicon && <img src={favicon} alt="Icon" className="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-[0_0_15px_rgba(255,165,0,0.5)]" />}
+                                {loaderLogo && <img src={loaderLogo} alt="Icon" className="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-[0_0_15px_rgba(255,165,0,0.5)]" />}
                                 <div className="w-12 h-1 bg-primary rounded-full" />
                                 <span className="text-primary font-black text-xs uppercase tracking-[0.3em]">Notre Histoire</span>
                             </div>
