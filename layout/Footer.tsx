@@ -29,8 +29,19 @@ export function Footer() {
                 <div className="flex flex-col items-center text-center">
                     {/* Brand Section */}
                     <div className="mb-16 md:mb-20 flex flex-col items-center max-w-2xl px-4">
-                        <Link href="/" className="mb-8 block">
-                            <img src={footerLogo} alt="Baraka Shop" className="h-14 md:h-20 w-auto object-contain" />
+                        <Link href="/" className="mb-8 flex flex-col items-center group cursor-pointer">
+                            {/* Pictogramme en haut avec rotation complète (720 degrés) */}
+                            <img 
+                                src="/logo-icon.png" 
+                                alt="Baraka Shop Icon" 
+                                className="h-14 md:h-16 w-auto object-contain transition-transform duration-1000 ease-in-out group-hover:rotate-[720deg]" 
+                            />
+                            {/* Texte en bas */}
+                            <img 
+                                src="/logo-text.png" 
+                                alt="Baraka Shop Text" 
+                                className="h-10 md:h-14 w-auto object-contain mt-2" 
+                            />
                         </Link>
                         <p className="text-gray-400 text-sm md:text-base leading-relaxed tracking-wide">
                             Votre destination premium pour l'électronique de pointe au Sénégal.
@@ -99,15 +110,28 @@ export function Footer() {
                     </div>
 
                     {/* Bottom Bar */}
-                    <div className="w-full pt-12 border-t border-white/5 flex flex-col items-center gap-8">
-                        <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-                            <Image src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" width={80} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
-                            <Image src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" width={50} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
-                            <Image src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" width={40} height={20} className=" hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
-                        </div>
-                        <p className="text-[10px] md:text-xs text-gray-600 tracking-widest uppercase font-bold" suppressHydrationWarning={true}>
-                            © {new Date().getFullYear()} <span className="text-gray-400">Baraka Shop Senegal</span>. Crafted for Excellence.
+                    <div className="w-full pt-8 pb-4 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+                        <p className="text-[10px] md:text-xs text-gray-500 tracking-wider font-medium" suppressHydrationWarning={true}>
+                            © {new Date().getFullYear()} <span className="text-gray-300 font-bold">Baraka Shop Senegal</span>. Tous droits réservés.
                         </p>
+                        
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <span className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">Paiement Sécurisé</span>
+                            <div className="flex items-center gap-2">
+                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4 w-auto object-contain" />
+                                </div>
+                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Visa_Logo.svg" alt="Visa" className="h-3.5 w-auto object-contain" />
+                                </div>
+                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-4 w-auto object-contain" />
+                                </div>
+                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-4 w-auto object-contain" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </Container>

@@ -211,7 +211,7 @@ export async function getSimilarProductsAction(productId: string, categoryId: st
 
 export async function getCategoriesAction() {
     try {
-        const cacheKey = 'categories:all:with_sub';
+        const cacheKey = 'categories:all:with_sub_v2';
         const cached = await getCache<any>(cacheKey);
         if (cached) return cached;
 
@@ -220,7 +220,7 @@ export async function getCategoriesAction() {
             include: {
                 subCategories: true,
                 _count: {
-                    select: { products: true }
+                    select: { products: { where: { isPublished: true } } }
                 }
             },
             orderBy: { name: 'asc' }
@@ -235,14 +235,14 @@ export async function getCategoriesAction() {
 
 export async function getBrandsAction() {
     try {
-        const cacheKey = 'brands:all';
+        const cacheKey = 'brands:all_v2';
         const cached = await getCache<any>(cacheKey);
         if (cached) return cached;
 
         const brands = await prisma.brand.findMany({
             include: {
                 _count: {
-                    select: { products: true }
+                    select: { products: { where: { isPublished: true } } }
                 }
             },
             orderBy: { name: 'asc' }
@@ -257,7 +257,7 @@ export async function getBrandsAction() {
 
 export async function getCategoryBySlugAction(slug: string) {
     try {
-        const cacheKey = `category:${slug}`;
+        const cacheKey = `category_v2:${slug}`;
         const cached = await getCache<any>(cacheKey);
         if (cached) return cached;
 
@@ -265,7 +265,7 @@ export async function getCategoryBySlugAction(slug: string) {
             where: { slug, isPublished: true },
             include: {
                 _count: {
-                    select: { products: true }
+                    select: { products: { where: { isPublished: true } } }
                 }
             }
         });
