@@ -6,11 +6,11 @@ import type { NextRequest } from 'next/server'
 
 const { auth } = NextAuth(authConfig)
 
-const MAINTENANCE_BYPASS = ['/maintenance', '/maintenance.json', '/login', '/api', '/admin', '/_next']
+const MAINTENANCE_BYPASS = ['/maintenance', '/maintenance.json', '/login', '/api', '/admin', '/_next', '/sitemap.xml', '/robots.txt']
 
 function bypassesMaintenance(pathname: string) {
     if (MAINTENANCE_BYPASS.some((p) => pathname.startsWith(p))) return true
-    if (/\.(ico|png|jpg|jpeg|svg|webp|gif|woff2?|css|js)$/i.test(pathname)) return true
+    if (/\.(ico|png|jpg|jpeg|svg|webp|gif|woff2?|css|js|xml|txt)$/i.test(pathname)) return true
     return false
 }
 
@@ -123,5 +123,5 @@ export default auth(async (req) => {
 })
 
 export const config = {
-    matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
+    matcher: ['/((?!api|_next/static|_next/image|sitemap\\.xml|robots\\.txt|.*\\.png$).*)'],
 }
