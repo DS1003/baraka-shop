@@ -5,8 +5,10 @@ const nextConfig: NextConfig = {
   compress: true,
   reactStrictMode: true,
   images: {
-    unoptimized: true,
-    minimumCacheTTL: 60,
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2592000,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: 'https',
@@ -18,7 +20,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com', // For dummy data
+        hostname: 'images.unsplash.com',
       },
       {
         protocol: 'https',
@@ -31,10 +33,6 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'baraka.sn',
-      },
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
       },
       {
         protocol: 'https',
@@ -71,6 +69,10 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'img.youtube.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.pravatar.cc',
       }
     ],
   },
