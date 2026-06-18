@@ -72,25 +72,48 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
             url: shareUrl,
         }
 
+        const copyToClipboard = () => {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        toast.success("Lien copié dans le presse-papiers !")
+                    }).catch(() => fallbackCopy())
+                } else {
+                    fallbackCopy()
+                }
+            } catch (err) {
+                fallbackCopy()
+            }
+        }
+
+        const fallbackCopy = () => {
+            try {
+                const textArea = document.createElement("textarea")
+                textArea.value = shareUrl
+                textArea.style.position = "fixed"
+                textArea.style.left = "-9999px"
+                document.body.appendChild(textArea)
+                textArea.select()
+                document.execCommand("copy")
+                textArea.remove()
+                toast.success("Lien copié dans le presse-papiers !")
+            } catch (err) {
+                toast.error("Impossible de copier le lien.")
+            }
+        }
+
         try {
-            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            // Sur mobile ou si l'API est dispo, on utilise le partage natif
+            if (navigator.share) {
                 await navigator.share(shareData)
             } else {
-                // Fallback: copy to clipboard
-                await navigator.clipboard.writeText(shareUrl)
-                toast.success("Lien copié dans le presse-papiers !")
+                copyToClipboard()
             }
         } catch (error: any) {
-            // User cancelled the share dialog - ignore silently
+            // Si l'utilisateur annule le partage (AbortError), on ne fait rien
             if (error?.name === 'AbortError') return
-            
-            // Any other error: try clipboard as last resort
-            try {
-                await navigator.clipboard.writeText(shareUrl)
-                toast.success("Lien copié dans le presse-papiers !")
-            } catch {
-                toast.error("Impossible de partager ce produit.")
-            }
+            // Si le partage natif échoue pour une autre raison, on force la copie
+            copyToClipboard()
         }
     }
     const [activeImg, setActiveImg] = useState(0)
