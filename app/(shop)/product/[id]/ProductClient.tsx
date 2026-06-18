@@ -65,19 +65,32 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
     }
 
     const handleShare = async () => {
+        const shareUrl = window.location.href
+        const shareData = {
+            title: product.name,
+            text: `Découvrez ${product.name} sur Baraka Shop !`,
+            url: shareUrl,
+        }
+
         try {
-            if (navigator.share) {
-                await navigator.share({
-                    title: product.name,
-                    text: `Découvrez ${product.name} sur Baraka Shop !`,
-                    url: window.location.href,
-                })
+            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                await navigator.share(shareData)
             } else {
-                await navigator.clipboard.writeText(window.location.href)
+                // Fallback: copy to clipboard
+                await navigator.clipboard.writeText(shareUrl)
                 toast.success("Lien copié dans le presse-papiers !")
             }
-        } catch (error) {
-            console.error("Erreur lors du partage", error)
+        } catch (error: any) {
+            // User cancelled the share dialog - ignore silently
+            if (error?.name === 'AbortError') return
+            
+            // Any other error: try clipboard as last resort
+            try {
+                await navigator.clipboard.writeText(shareUrl)
+                toast.success("Lien copié dans le presse-papiers !")
+            } catch {
+                toast.error("Impossible de partager ce produit.")
+            }
         }
     }
     const [activeImg, setActiveImg] = useState(0)
