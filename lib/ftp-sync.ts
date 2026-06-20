@@ -42,9 +42,9 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         })
 
         // 4. Download product file
-        const tempDir = path.join(process.cwd(), 'tmp')
-        await fs.mkdir(tempDir, { recursive: true }).catch(() => {})
-        const articlesPath = path.join(tempDir, 'ARTICLES_BARAKA.xlsx')
+        // On Vercel, process.cwd() is read-only. We MUST use os.tmpdir() which maps to the writable /tmp folder.
+        const tempDir = os.tmpdir()
+        const articlesPath = path.join(tempDir, `ARTICLES_BARAKA_${Date.now()}.xlsx`)
 
         // Construct remote path
         const ftpDir = config.ftpPath || '/'

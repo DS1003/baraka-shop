@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { X, ChevronLeft, ChevronRight, Play, Maximize2, Minimize2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
+import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 
 export type MediaItem = {
     type: 'image' | 'video' | 'youtube'
@@ -45,6 +47,7 @@ interface MediaViewerProps {
 
 export function MediaViewer({ media, initialIndex = 0, isOpen, onClose }: MediaViewerProps) {
     const [activeIndex, setActiveIndex] = useState(initialIndex)
+    const { headerLogo } = useSiteLogos()
 
     useEffect(() => {
         setActiveIndex(initialIndex)
@@ -195,15 +198,18 @@ export function MediaViewer({ media, initialIndex = 0, isOpen, onClose }: MediaV
                                         className="w-full h-full flex items-center justify-center"
                                     >
                                         {current.type === 'image' && (
-                                            <div className="relative w-full h-full max-w-[90%] max-h-[85vh]">
-                                                <Image
-                                                    src={current.url}
-                                                    alt=""
-                                                    fill
-                                                    className="object-contain"
-                                                    unoptimized
-                                                    priority
-                                                />
+                                            <div className="relative w-full h-full max-w-[90%] max-h-[85vh] flex items-center justify-center overflow-hidden rounded-xl">
+                                                <div className="relative w-full h-full">
+                                                    <WatermarkOverlay logoUrl={headerLogo} />
+                                                    <Image
+                                                        src={current.url}
+                                                        alt=""
+                                                        fill
+                                                        className="object-contain"
+                                                        unoptimized
+                                                        priority
+                                                    />
+                                                </div>
                                             </div>
                                         )}
 

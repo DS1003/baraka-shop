@@ -28,6 +28,8 @@ import { useCart } from '@/context/CartContext'
 import { MediaViewer, buildProductMedia, getYouTubeId, getYouTubeThumbnail } from '@/components/MediaViewer'
 import type { MediaItem } from '@/components/MediaViewer'
 import { useSession } from 'next-auth/react'
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
+import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 import { toast } from 'sonner'
 import { checkWishlistAction, toggleWishlistAction } from '@/lib/actions/user-actions'
 
@@ -38,6 +40,7 @@ interface ProductClientProps {
 
 export function ProductClient({ product, similarProducts }: ProductClientProps) {
     const { addToCart } = useCart()
+    const { headerLogo } = useSiteLogos()
     const { data: session } = useSession()
     const [isWishlisted, setIsWishlisted] = useState(false)
     const [isWishlisting, setIsWishlisting] = useState(false)
@@ -247,6 +250,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 transition={{ duration: 0.4 }}
                                 className="relative w-full h-full"
                             >
+                                <WatermarkOverlay logoUrl={headerLogo} />
                                 <Image
                                     src={productImages[activeImg]}
                                     alt={product.name}
@@ -365,9 +369,10 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                             {allMedia.map((media: any, idx: number) => (
                                 <div 
                                     key={idx} 
-                                    className="w-full h-full flex-shrink-0 snap-start flex items-center justify-center p-6 relative cursor-pointer"
+                                    className="w-full h-full flex-shrink-0 snap-start flex items-center justify-center p-6 relative cursor-pointer overflow-hidden"
                                     onClick={() => openViewer(idx)}
                                 >
+                                    <WatermarkOverlay logoUrl={headerLogo} />
                                     {media.type === 'image' ? (
                                         <Image
                                             src={media.url}
