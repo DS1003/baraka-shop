@@ -18,11 +18,11 @@ const prismaClientSingleton = () => {
 };
 
 declare global {
-    var prisma: any;
+    var prismaGlobal: any;
 }
 
-const prisma: any = prismaClientSingleton();
+const prisma: any = globalThis.prismaGlobal ?? prismaClientSingleton();
 
 export default prisma;
 
-// if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
+if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
