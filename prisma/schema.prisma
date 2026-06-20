@@ -88,6 +88,7 @@ model Category {
   id            String        @id @default(uuid())
   name          String        @unique
   slug          String        @unique
+  reference     String?       @unique
   image         String?
   isPublished   Boolean       @default(true)
   products      Product[]
@@ -317,4 +318,26 @@ model PhysicalStore {
   order          Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model SyncConfig {
+  id              String   @id @default("singleton")
+  ftpServer       String   @default("rs5.cloudlws.com")
+  ftpUser         String?
+  ftpPassword     String?
+  ftpPath         String   @default("/files/BARAKA/")
+  scheduleTimes   String[] @default(["00:00", "12:00"])
+  isActive        Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+}
+
+model SyncHistory {
+  id                String    @id @default(uuid())
+  status            String    @default("PENDING") // PENDING, SUCCESS, ERROR
+  type              String    @default("MANUAL") // MANUAL, SCHEDULED
+  productsUpdated   Int       @default(0)
+  categoriesUpdated Int       @default(0)
+  errorDetails      String?
+  startedAt         DateTime  @default(now())
+  completedAt       DateTime?
 }

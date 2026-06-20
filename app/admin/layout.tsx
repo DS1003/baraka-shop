@@ -28,7 +28,8 @@ import {
     Tag,
     Zap,
     Store,
-    Maximize
+    Maximize,
+    Server
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -75,6 +76,7 @@ const sidebarGroups = [
         label: "Système",
         items: [
             { icon: Settings, label: 'Configuration', href: '/admin/settings' },
+            { icon: Server, label: 'Synchro FTP', href: '/admin/sync' },
         ]
     }
 ];
