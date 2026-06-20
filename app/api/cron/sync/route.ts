@@ -24,8 +24,7 @@ export async function GET(req: Request) {
 
         // 2. Check the current time against scheduled times (skip if forced)
         if (!force) {
-            const scheduledTimesStr = config.scheduleTimes || ''
-            const schedules = scheduledTimesStr.split(',').map(t => t.trim()).filter(t => t)
+            const schedules = Array.isArray(config.scheduleTimes) ? config.scheduleTimes : []
 
             if (schedules.length > 0) {
                 // Heure locale du serveur (HH:mm)

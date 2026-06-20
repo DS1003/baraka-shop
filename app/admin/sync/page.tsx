@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Server, Settings, RotateCw, History, CheckCircle2, XCircle, AlertCircle, Clock, Play, Terminal } from 'lucide-react'
+import { Server, Settings, RotateCw, History, CheckCircle2, XCircle, AlertCircle, Clock, Play, Terminal, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,6 +19,7 @@ export default function FtpSyncPage() {
     const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
     const lastStepRef = useRef('')
     const logsEndRef = useRef<HTMLDivElement | null>(null)
+    const [newTime, setNewTime] = useState('12:00')
 
     const SYNC_STEPS = [
         { at: 5,  label: 'Connexion au serveur FTP...' },
@@ -345,21 +346,56 @@ export default function FtpSyncPage() {
                             </div>
 
                             <div className="pt-6 border-t border-slate-100">
-                                <div className="space-y-2">
+                                <div className="space-y-4">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                                        <Clock className="w-3 h-3" /> Planification (Heures)
+                                        <Clock className="w-3 h-3" /> Planification (Heures de synchronisation automatique)
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all text-[14px] font-bold text-slate-900"
-                                        placeholder="00:00, 12:00"
-                                        value={config?.scheduleTimes?.join(', ') || ''}
-                                        onChange={e => {
-                                            const times = e.target.value.split(',').map(t => t.trim()).filter(Boolean)
-                                            setConfig({...config, scheduleTimes: times})
-                                        }}
-                                    />
-                                    <p className="text-[11px] text-slate-400 font-medium ml-1">Séparez les heures par des virgules (ex: 00:00, 12:00, 18:00)</p>
+                                    
+                                    <div className="flex flex-wrap gap-2">
+                                        {config?.scheduleTimes?.map((time: string) => (
+                                            <div key={time} className="flex items-center gap-2 bg-orange-50 border border-orange-200/60 text-orange-700 px-3 py-1.5 rounded-lg text-[13px] font-bold shadow-sm">
+                                                <span>{time}</span>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const times = config.scheduleTimes.filter((t: string) => t !== time)
+                                                        setConfig({...config, scheduleTimes: times})
+                                                    }}
+                                                    className="hover:bg-orange-200/50 p-0.5 rounded-md transition-colors"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        
+                                        {(!config?.scheduleTimes || config.scheduleTimes.length === 0) && (
+                                            <span className="text-[13px] text-slate-400 font-medium py-1.5 italic">Aucune heure configurée</span>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <input 
+                                            type="time" 
+                                            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/30 transition-all text-[14px] font-bold text-slate-900 cursor-pointer"
+                                            value={newTime}
+                                            onChange={e => setNewTime(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!newTime) return
+                                                const currentTimes = config?.scheduleTimes || []
+                                                if (!currentTimes.includes(newTime)) {
+                                                    const newTimes = [...currentTimes, newTime].sort()
+                                                    setConfig({...config, scheduleTimes: newTimes})
+                                                }
+                                            }}
+                                            className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[13px] font-bold transition-colors"
+                                        >
+                                            <Plus className="w-4 h-4" /> Ajouter
+                                        </button>
+                                    </div>
+                                    <p className="text-[11px] text-slate-400 font-medium ml-1">L'application synchronisera automatiquement vos produits à ces heures précises tous les jours.</p>
                                 </div>
                             </div>
 
