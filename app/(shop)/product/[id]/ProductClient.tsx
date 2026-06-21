@@ -298,6 +298,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                             )}
                                         >
                                             <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
+                                            <WatermarkOverlay logoUrl={headerLogo} isThumbnail />
                                             {showOverlay && (
                                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
                                                     <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{extraImagesCount}</span>
@@ -328,6 +329,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                             ) : (
                                                 <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
                                             )}
+                                            <WatermarkOverlay logoUrl={headerLogo} isThumbnail />
                                             
                                             <div className="absolute inset-0 flex items-center justify-center">
                                                 <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">

@@ -34,7 +34,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
         return (
             <div className="group flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500">
                 <Link href={`/product/${product.id}`} className="relative w-full md:w-[260px] aspect-square bg-white flex items-center justify-center p-8 shrink-0 overflow-hidden">
-                    <WatermarkOverlay logoUrl={headerLogo} />
+                    <WatermarkOverlay logoUrl={headerLogo} isCard />
                     <Image src={displayImage} alt={product.name} fill className="object-contain p-8 group-hover:scale-105 transition-transform duration-500 z-10" priority={priority} unoptimized />
                 </Link>
                 <div className="p-8 flex flex-col justify-center flex-1">
@@ -98,7 +98,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
         <div className="group flex flex-col h-full bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-gray-200/50 border border-gray-50 p-2">
             {/* Image Area */}
             <div className="relative w-full aspect-square bg-[#fff] rounded-xl overflow-hidden group/img border border-gray-50">
-                <WatermarkOverlay logoUrl={headerLogo} />
+                <WatermarkOverlay logoUrl={headerLogo} isCard />
                 <Link href={`/product/${product.id}`} className="absolute inset-0 z-40">
                     <span className="sr-only">Voir {product.name}</span>
                 </Link>
