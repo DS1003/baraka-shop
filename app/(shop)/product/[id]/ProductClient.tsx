@@ -689,7 +689,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 
                                 {product.description && (
                                     <div
-                                        className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium mb-6 md:mb-8 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-2 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
+                                        className="w-full max-w-none text-gray-500 text-sm md:text-base lg:text-lg leading-relaxed md:leading-[1.8] font-medium mb-6 md:mb-8 text-justify hyphens-auto [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-3 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child]:text-left [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
+                                        style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                                         dangerouslySetInnerHTML={{ __html: product.description }}
                                     />
                                 )}
