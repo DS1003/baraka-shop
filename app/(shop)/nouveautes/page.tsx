@@ -30,8 +30,7 @@ export default async function NouveautesPage({ searchParams }: { searchParams: P
             minPrice,
             maxPrice,
             query,
-            isNew: true, // Special filter for this page
-            limit: 20
+            limit: 50
         }),
         getCategoriesAction(),
         getBrandsAction()

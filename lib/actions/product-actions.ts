@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
 import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -619,5 +620,104 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
     } catch (error: any) {
         console.error('[Import Error Detail]:', error);
         throw error;
+    }
+}
+
+export async function addReviewAction(productId: string, rating: number, comment?: string) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return { success: false, message: "Vous devez être connecté pour laisser un avis." };
+        }
+
+        // Vérifier si l'utilisateur a déjà laissé un avis sur ce produit
+        const existingReview = await prisma.review.findFirst({
+            where: {
+                productId,
+                userId: session.user.id
+            }
+        });
+
+        if (existingReview) {
+            return { success: false, message: "Vous avez déjà laissé un avis sur ce produit." };
+        }
+
+        await prisma.review.create({
+            data: {
+                productId,
+                userId: session.user.id,
+                rating,
+                comment
+            }
+        });
+
+        await invalidatePrefix(`product:${productId}`);
+        revalidatePath(`/product/${productId}`);
+
+        return { success: true, message: "Avis ajouté avec succès !" };
+    } catch (error) {
+        console.error("[Add Review Error]:", error);
+        return { success: false, message: "Erreur lors de l'ajout de l'avis." };
+    }
+}
+
+export async function voteReviewAction(reviewId: string, type: 'helpful' | 'unhelpful', productId?: string) {
+    try {
+        if (type === 'helpful') {
+            await prisma.review.update({
+                where: { id: reviewId },
+                data: { helpfulCount: { increment: 1 } }
+            });
+        } else {
+            await prisma.review.update({
+                where: { id: reviewId },
+                data: { unhelpfulCount: { increment: 1 } }
+            });
+        }
+        
+        if (productId) {
+            await invalidatePrefix(`product:${productId}`);
+            revalidatePath(`/product/${productId}`);
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("[Vote Review Error]:", error);
+        return { success: false };
+    }
+}
+
+export async function reportReviewAction(reviewId: string, reason: string, comment?: string) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return { success: false, message: "Vous devez être connecté pour signaler un avis." };
+        }
+
+        // Check if user already reported this review
+        const existingReport = await prisma.report.findFirst({
+            where: {
+                reviewId,
+                userId: session.user.id
+            }
+        });
+
+        if (existingReport) {
+            return { success: false, message: "Vous avez déjà signalé cet avis." };
+        }
+
+        await prisma.report.create({
+            data: {
+                reason,
+                comment,
+                reviewId,
+                userId: session.user.id
+            }
+        });
+
+        return { success: true, message: "Signalement envoyé avec succès." };
+    } catch (error) {
+        console.error("[Report Review Error]:", error);
+        return { success: false, message: "Erreur lors de l'envoi du signalement." };
     }
 }

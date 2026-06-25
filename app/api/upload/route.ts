@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
                 continue; // Skip invalid files silently
             }
 
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
+            // Validate file size (max 20MB)
+            if (file.size > 20 * 1024 * 1024) {
                 continue;
             }
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
         if (uploadedUrls.length === 0) {
             return NextResponse.json(
-                { error: 'Aucun fichier valide. Formats acceptés : JPG, PNG, WebP, GIF. Max 5MB.' },
+                { error: 'Aucun fichier valide. Formats acceptés : JPG, PNG, WebP, GIF, AVIF. Max 20MB.' },
                 { status: 400 }
             );
         }

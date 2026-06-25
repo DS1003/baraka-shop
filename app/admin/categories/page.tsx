@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 import {
     Plus,
     Search,
@@ -94,8 +95,9 @@ export default function CategoriesPage() {
 
             if (res.success) {
                 setItems(prev => prev.filter(c => c.id !== id));
+                toast.success("Élément supprimé.");
             } else {
-                alert(res.message);
+                toast.error(res.message || "Erreur lors de la suppression.");
             }
         }
     };
@@ -105,8 +107,9 @@ export default function CategoriesPage() {
         const res = await toggleCategoryPublish(id, isPublished);
         if (res.success) {
             setItems(prev => prev.map(c => c.id === id ? { ...c, isPublished } : c));
+            toast.success(isPublished ? "Rayon publié." : "Rayon masqué.");
         } else {
-            alert(res.message);
+            toast.error(res.message || "Erreur de mise à jour.");
         }
     };
 
@@ -120,8 +123,8 @@ export default function CategoriesPage() {
         // Handle File Upload if present
         const imageFile = formData.get('imageFile') as File;
         if (imageFile && imageFile.size > 0) {
-            if (imageFile.size > 5 * 1024 * 1024) {
-                alert("Veuillez choisir une image de moins de 5 Mo.");
+            if (imageFile.size > 20 * 1024 * 1024) {
+                toast.error("Veuillez choisir une image de moins de 20 Mo.");
                 setIsSaving(false);
                 return;
             }
@@ -138,7 +141,7 @@ export default function CategoriesPage() {
                 const result = await uploadResponse.json();
 
                 if (!uploadResponse.ok || !result.urls || result.urls.length === 0) {
-                    alert("Échec de l'upload de l'image.");
+                    toast.error("Échec de l'upload de l'image.");
                     setIsUploading(false);
                     setIsSaving(false);
                     return;
@@ -147,7 +150,7 @@ export default function CategoriesPage() {
                 imageUrl = result.urls[0];
             } catch (error) {
                 console.error('Upload error:', error);
-                alert("Échec de l'upload de l'image.");
+                toast.error("Échec de l'upload de l'image.");
                 setIsUploading(false);
                 setIsSaving(false);
                 return;
@@ -176,8 +179,9 @@ export default function CategoriesPage() {
             setEditingItem(null);
             setPreviewImage(null); // Clear preview image on success
             loadItems();
+            toast.success("Enregistrement réussi !");
         } else {
-            alert("Erreur lors de la sauvegarde.");
+            toast.error(res.message || "Erreur lors de la sauvegarde.");
         }
         setIsSaving(false);
     };

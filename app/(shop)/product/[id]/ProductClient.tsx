@@ -19,7 +19,11 @@ import {
     Info,
     LayoutGrid,
     Play,
-    Maximize2
+    Maximize2,
+    CheckCircle2,
+    ThumbsUp,
+    ThumbsDown,
+    Flag
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -32,6 +36,7 @@ import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 import { toast } from 'sonner'
 import { checkWishlistAction, toggleWishlistAction } from '@/lib/actions/user-actions'
+import { addReviewAction, voteReviewAction, reportReviewAction } from '@/lib/actions/product-actions'
 
 interface ProductClientProps {
     product: any
@@ -44,6 +49,92 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
     const { data: session } = useSession()
     const [isWishlisted, setIsWishlisted] = useState(false)
     const [isWishlisting, setIsWishlisting] = useState(false)
+    const [reviewRating, setReviewRating] = useState(0)
+    const [reviewComment, setReviewComment] = useState('')
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false)
+    const [votedReviews, setVotedReviews] = useState<Set<string>>(new Set())
+    const [reportedReviews, setReportedReviews] = useState<Set<string>>(new Set())
+    const [reviews, setReviews] = useState(product.reviews || [])
+
+    // Report Modal State
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+    const [reportingReviewId, setReportingReviewId] = useState<string | null>(null)
+    const [reportReason, setReportReason] = useState('spam')
+    const [reportComment, setReportComment] = useState('')
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false)
+
+    // Update reviews when product changes
+    useEffect(() => {
+        setReviews(product.reviews || [])
+    }, [product.reviews])
+
+    const handleReviewVote = async (reviewId: string, type: 'helpful' | 'unhelpful') => {
+        if (votedReviews.has(reviewId)) {
+            toast.info("Vous avez déjà voté pour cet avis.");
+            return;
+        }
+        setVotedReviews(prev => new Set(prev).add(reviewId));
+        
+        // Optimistic local update
+        setReviews(currentReviews => 
+            currentReviews.map(review => {
+                if (review.id === reviewId) {
+                    return {
+                        ...review,
+                        helpfulCount: type === 'helpful' ? (review.helpfulCount || 0) + 1 : review.helpfulCount,
+                        unhelpfulCount: type === 'unhelpful' ? (review.unhelpfulCount || 0) + 1 : review.unhelpfulCount
+                    }
+                }
+                return review;
+            })
+        )
+
+        const res = await voteReviewAction(reviewId, type, product.id);
+        if (res.success) {
+            toast.success("Merci pour votre retour !");
+        } else {
+            toast.error("Une erreur est survenue.");
+            setVotedReviews(prev => {
+                const next = new Set(prev);
+                next.delete(reviewId);
+                return next;
+            });
+            // Revert optimistic update
+            setReviews(product.reviews || []);
+        }
+    }
+
+    const openReportModal = (reviewId: string) => {
+        if (!session?.user?.id) {
+            toast.info("Vous devez être connecté pour signaler un avis.");
+            return;
+        }
+        if (reportedReviews.has(reviewId)) {
+            toast.info("Avis déjà signalé.");
+            return;
+        }
+        setReportingReviewId(reviewId);
+        setReportReason('spam');
+        setReportComment('');
+        setIsReportModalOpen(true);
+    }
+
+    const submitReport = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!reportingReviewId) return;
+
+        setIsSubmittingReport(true);
+        const res = await reportReviewAction(reportingReviewId, reportReason, reportComment);
+        setIsSubmittingReport(false);
+
+        if (res.success) {
+            toast.success("Avis signalé aux modérateurs avec succès.");
+            setReportedReviews(prev => new Set(prev).add(reportingReviewId));
+            setIsReportModalOpen(false);
+        } else {
+            toast.error(res.message || "Une erreur est survenue.");
+        }
+    }
 
     useEffect(() => {
         if (session?.user?.id) {
@@ -219,6 +310,29 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
         })
     }
 
+    const handleReviewSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!session?.user?.id) {
+            toast.error("Veuillez vous connecter pour laisser un avis.")
+            return
+        }
+        if (reviewRating === 0) {
+            toast.error("Veuillez sélectionner une note.")
+            return
+        }
+
+        setIsSubmittingReview(true)
+        const res = await addReviewAction(product.id, reviewRating, reviewComment)
+        if (res.success) {
+            toast.success(res.message)
+            setReviewRating(0)
+            setReviewComment('')
+        } else {
+            toast.error(res.message)
+        }
+        setIsSubmittingReview(false)
+    }
+
     const tabs = [
         { id: 'description', label: 'Description', icon: Info },
         { id: 'specs', label: 'Fiche Technique', icon: LayoutGrid },
@@ -330,7 +444,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                                 <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
                                             )}
                                             <WatermarkOverlay logoUrl={headerLogo} isThumbnail />
-                                            
+
                                             <div className="absolute inset-0 flex items-center justify-center">
                                                 <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">
                                                     <Play className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-white fill-white ml-0.5" />
@@ -356,7 +470,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
                     {/* Mobile Gallery: Horizontal Swipeable Snap Scroll Carousel */}
                     <div className="block md:hidden relative aspect-square w-full rounded-3xl overflow-hidden border border-gray-100 shadow-sm bg-white">
-                        <div 
+                        <div
                             className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth [&::-webkit-scrollbar]:hidden"
                             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                             onScroll={(e) => {
@@ -369,8 +483,8 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                             }}
                         >
                             {allMedia.map((media: any, idx: number) => (
-                                <div 
-                                    key={idx} 
+                                <div
+                                    key={idx}
                                     className="w-full h-full flex-shrink-0 snap-start flex items-center justify-center p-6 relative cursor-pointer overflow-hidden"
                                     onClick={() => openViewer(idx)}
                                 >
@@ -466,7 +580,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                         </div>
                         <div className="h-4 w-px bg-gray-200" />
                         <div className="flex items-center gap-4 md:gap-6 text-gray-500">
-                            <button 
+                            <button
                                 onClick={handleWishlistToggle}
                                 disabled={isWishlisting}
                                 className={cn(
@@ -477,7 +591,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 <Heart className={cn("w-3.5 h-3.5 md:w-4 md:h-4 transition-colors", isWishlisted ? "fill-primary" : "group-hover:fill-primary")} />
                                 <span>{isWishlisted ? "Dans ma liste" : "Ma liste"}</span>
                             </button>
-                            <button 
+                            <button
                                 onClick={handleShare}
                                 className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest"
                             >
@@ -501,21 +615,21 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                             key={idx}
                                             onClick={() => {
                                                 setSelectedColor(color);
-                                                setActiveImg(0); 
+                                                setActiveImg(0);
                                             }}
                                             className={cn(
                                                 "relative w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl border-2 transition-all p-1 bg-white overflow-hidden group",
-                                                selectedColor?.id === color.id 
-                                                    ? "border-[#1B1F3B] shadow-lg scale-105" 
+                                                selectedColor?.id === color.id
+                                                    ? "border-[#1B1F3B] shadow-lg scale-105"
                                                     : "border-gray-100 hover:border-gray-300"
                                             )}
                                             title={color.colorName}
                                         >
                                             <div className="relative w-full h-full">
-                                                <Image 
-                                                    src={variantImage} 
-                                                    alt={color.colorName} 
-                                                    fill 
+                                                <Image
+                                                    src={variantImage}
+                                                    alt={color.colorName}
+                                                    fill
                                                     className="object-contain p-1 group-hover:scale-110 transition-transform duration-500"
                                                     unoptimized
                                                 />
@@ -688,7 +802,7 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {product.description && (
                                     <div
                                         className="w-full max-w-none text-gray-500 text-sm md:text-base lg:text-lg leading-relaxed md:leading-[1.8] font-medium mb-6 md:mb-8 text-justify hyphens-auto [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-3 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child]:text-left [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
@@ -696,143 +810,143 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         dangerouslySetInnerHTML={{ __html: product.description }}
                                     />
                                 )}
-                                
+
                                 {product.detailedDescription && Array.isArray(product.detailedDescription) && product.detailedDescription.length > 0 && (
                                     <div className="space-y-0 mb-6 md:mb-8">
                                         {(() => {
                                             let imgTextCount = 0;
                                             return product.detailedDescription.map((block: any, idx: number) => {
-                                            switch (block.type) {
-                                                case 'LOGO':
-                                                    return (
-                                                        <div key={idx} className="flex justify-center">
-                                                            <div className="relative w-32 h-12 md:w-48 md:h-20">
-                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                switch (block.type) {
+                                                    case 'LOGO':
+                                                        return (
+                                                            <div key={idx} className="flex justify-center">
+                                                                <div className="relative w-32 h-12 md:w-48 md:h-20">
+                                                                    <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    );
-                                                case 'TITLE_CENTERED':
-                                                    return (
-                                                        <div key={idx} className="text-center max-w-4xl mx-auto py-6 md:py-8 font-montserrat">
-                                                            <h2 className="text-[20px] md:text-[24px] font-bold text-[#282828] uppercase tracking-[0.1em] leading-tight">
-                                                                {block.title}
-                                                            </h2>
-                                                        </div>
-                                                    );
-                                                case 'TEXT_CENTERED':
-                                                    return (
-                                                        <div key={idx} className="text-center max-w-2xl mx-auto">
-                                                            <p className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium">
-                                                                {block.text}
-                                                            </p>
-                                                        </div>
-                                                    );
-                                                case 'IMAGE_FULL':
-                                                    return (
-                                                        <div key={idx} className="relative w-full aspect-[16/7] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-slate-50 shadow-sm border border-slate-100">
-                                                            <Image src={block.image} alt="" fill className="object-cover" unoptimized />
-                                                        </div>
-                                                    );
-                                                case 'IMAGE_LEFT': {
-                                                    const isGrey = imgTextCount % 2 === 0;
-                                                    imgTextCount++;
-                                                    return (
-                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full relative aspect-[4/3] overflow-hidden">
-                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
-                                                            </div>
-                                                            <div className="w-full space-y-4 md:space-y-5">
-                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
+                                                        );
+                                                    case 'TITLE_CENTERED':
+                                                        return (
+                                                            <div key={idx} className="text-center max-w-4xl mx-auto py-6 md:py-8 font-montserrat">
+                                                                <h2 className="text-[20px] md:text-[24px] font-bold text-[#282828] uppercase tracking-[0.1em] leading-tight">
                                                                     {block.title}
-                                                                </h3>
-                                                                <div 
-                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
-                                                                />
+                                                                </h2>
                                                             </div>
-                                                        </div>
-                                                    );
+                                                        );
+                                                    case 'TEXT_CENTERED':
+                                                        return (
+                                                            <div key={idx} className="text-center max-w-2xl mx-auto">
+                                                                <p className="text-gray-500 text-sm md:text-lg leading-relaxed font-medium">
+                                                                    {block.text}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    case 'IMAGE_FULL':
+                                                        return (
+                                                            <div key={idx} className="relative w-full aspect-[16/7] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-slate-50 shadow-sm border border-slate-100">
+                                                                <Image src={block.image} alt="" fill className="object-cover" unoptimized />
+                                                            </div>
+                                                        );
+                                                    case 'IMAGE_LEFT': {
+                                                        const isGrey = imgTextCount % 2 === 0;
+                                                        imgTextCount++;
+                                                        return (
+                                                            <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                                <div className="w-full relative aspect-[4/3] overflow-hidden">
+                                                                    <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                                </div>
+                                                                <div className="w-full space-y-4 md:space-y-5">
+                                                                    <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
+                                                                        {block.title}
+                                                                    </h3>
+                                                                    <div
+                                                                        className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
+                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    case 'IMAGE_RIGHT': {
+                                                        const isGrey = imgTextCount % 2 === 0;
+                                                        imgTextCount++;
+                                                        return (
+                                                            <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                                <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
+                                                                    <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
+                                                                        {block.title}
+                                                                    </h3>
+                                                                    <div
+                                                                        className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
+                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                    />
+                                                                </div>
+                                                                <div className="w-full relative aspect-[4/3] overflow-hidden order-1 md:order-2">
+                                                                    <Image src={block.image} alt="" fill className="object-contain" unoptimized />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    case 'VIDEO_LEFT': {
+                                                        const isGrey = imgTextCount % 2 === 0;
+                                                        imgTextCount++;
+                                                        return (
+                                                            <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                                <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
+                                                                    {(() => {
+                                                                        const url = block.video || '';
+                                                                        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+                                                                        if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
+                                                                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                                        if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
+                                                                        if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
+                                                                        return null;
+                                                                    })()}
+                                                                </div>
+                                                                <div className="w-full space-y-4 md:space-y-5">
+                                                                    <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
+                                                                        {block.title}
+                                                                    </h3>
+                                                                    <div
+                                                                        className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
+                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    case 'VIDEO_RIGHT': {
+                                                        const isGrey = imgTextCount % 2 === 0;
+                                                        imgTextCount++;
+                                                        return (
+                                                            <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
+                                                                <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
+                                                                    <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
+                                                                        {block.title}
+                                                                    </h3>
+                                                                    <div
+                                                                        className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
+                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                    />
+                                                                </div>
+                                                                <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg order-1 md:order-2">
+                                                                    {(() => {
+                                                                        const url = block.video || '';
+                                                                        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+                                                                        if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
+                                                                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                                                                        if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
+                                                                        if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
+                                                                        return null;
+                                                                    })()}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    default:
+                                                        return null;
                                                 }
-                                                case 'IMAGE_RIGHT': {
-                                                    const isGrey = imgTextCount % 2 === 0;
-                                                    imgTextCount++;
-                                                    return (
-                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
-                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
-                                                                    {block.title}
-                                                                </h3>
-                                                                <div 
-                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
-                                                                />
-                                                            </div>
-                                                            <div className="w-full relative aspect-[4/3] overflow-hidden order-1 md:order-2">
-                                                                <Image src={block.image} alt="" fill className="object-contain" unoptimized />
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                }
-                                                case 'VIDEO_LEFT': {
-                                                    const isGrey = imgTextCount % 2 === 0;
-                                                    imgTextCount++;
-                                                    return (
-                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg">
-                                                                {(() => {
-                                                                    const url = block.video || '';
-                                                                    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
-                                                                    if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
-                                                                    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-                                                                    if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
-                                                                    if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
-                                                                    return null;
-                                                                })()}
-                                                            </div>
-                                                            <div className="w-full space-y-4 md:space-y-5">
-                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
-                                                                    {block.title}
-                                                                </h3>
-                                                                <div 
-                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                }
-                                                case 'VIDEO_RIGHT': {
-                                                    const isGrey = imgTextCount % 2 === 0;
-                                                    imgTextCount++;
-                                                    return (
-                                                        <div key={idx} className={cn("grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-10 py-0 font-montserrat -mx-4 md:-mx-10 px-4 md:px-10 transition-colors duration-300", isGrey ? "bg-gray-50 border-y border-gray-100/50" : "bg-white")}>
-                                                            <div className="w-full space-y-4 md:space-y-5 order-2 md:order-1">
-                                                                <h3 className="text-[18px] md:text-[22px] font-black text-[#1B1F3B] uppercase tracking-wide leading-snug">
-                                                                    {block.title}
-                                                                </h3>
-                                                                <div 
-                                                                    className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                    dangerouslySetInnerHTML={{ __html: block.text }}
-                                                                />
-                                                            </div>
-                                                            <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg order-1 md:order-2">
-                                                                {(() => {
-                                                                    const url = block.video || '';
-                                                                    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
-                                                                    if (ytMatch) return <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video" />;
-                                                                    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-                                                                    if (vimeoMatch) return <iframe src={`https://player.vimeo.com/video/${vimeoMatch[1]}`} className="w-full h-full absolute inset-0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video" />;
-                                                                    if (url) return <video src={url} controls className="w-full h-full absolute inset-0 object-contain bg-black" />;
-                                                                    return null;
-                                                                })()}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                }
-                                                default:
-                                                    return null;
-                                            }
-                                        });
+                                            });
                                         })()}
                                     </div>
                                 )}
@@ -957,11 +1071,169 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="flex flex-col items-center justify-center text-center py-20"
+                                className="space-y-12"
                             >
-                                <MessageSquare className="w-12 h-12 text-gray-200 mb-6" />
-                                <h4 className="text-xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-2">Avis clients</h4>
-                                <p className="text-gray-400 text-sm mb-8">Service bientôt disponible.</p>
+                                <div className="flex flex-col md:flex-row gap-12">
+                                    {/* Left: Reviews List & Stats */}
+                                    <div className="flex-1 space-y-10">
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+                                            <h3 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tight flex items-center gap-3">
+                                                <MessageSquare className="text-orange-500" size={28} />
+                                                Avis Clients
+                                            </h3>
+                                            <div className="bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 flex items-center gap-2 shadow-sm">
+                                                <span className="font-black text-xl text-[#1B1F3B]">
+                                                    {reviews?.length > 0 
+                                                        ? (reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length).toFixed(1)
+                                                        : '0.0'}
+                                                </span>
+                                                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                                                <div className="w-px h-6 bg-slate-200 mx-1"></div>
+                                                <span className="text-sm font-bold text-slate-500">
+                                                    {reviews?.length || 0} {reviews?.length > 1 ? 'avis' : 'avis'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {!reviews || reviews.length === 0 ? (
+                                            <div className="py-12 text-center border-2 border-dashed border-slate-200/60 rounded-[1.5rem] bg-gradient-to-b from-slate-50/50 to-transparent">
+                                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-4">
+                                                    <Star className="w-6 h-6 text-slate-300" />
+                                                </div>
+                                                <p className="text-[#1B1F3B] font-bold text-base mb-1">Aucun avis pour le moment</p>
+                                                <p className="text-slate-400 text-xs font-medium">Soyez le premier à partager votre expérience !</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {reviews.map((review: any) => (
+                                                    <motion.div 
+                                                        key={review.id} 
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className="group p-4 sm:p-5 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm hover:shadow-md hover:border-orange-500/10 transition-all duration-300"
+                                                    >
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-100 to-slate-50 flex items-center justify-center overflow-hidden border border-slate-100 shadow-sm relative">
+                                                                    {review.user?.image ? (
+                                                                        <img src={review.user.image} alt={review.user.username || 'User'} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <span className="font-bold text-slate-400 text-sm">{review.user?.username?.charAt(0)?.toUpperCase() || 'U'}</span>
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                                        <p className="font-bold text-[#1B1F3B] text-sm">{review.user?.username || 'Utilisateur'}</p>
+                                                                        <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase tracking-widest">
+                                                                            <CheckCircle2 size={10} strokeWidth={2.5} />
+                                                                            Achat vérifié
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-[11px] text-slate-400 font-medium">Posté le {new Date(review.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-0.5 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
+                                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                                    <Star key={star} size={12} className={star <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-200"} />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {review.comment && (
+                                                            <div className="pl-0 sm:pl-12">
+                                                                <p className="text-slate-600 text-[13px] leading-relaxed">{review.comment}</p>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="pl-0 sm:pl-12 mt-4 pt-3 border-t border-slate-50 flex items-center gap-3">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">Cet avis vous a-t-il aidé ?</span>
+                                                            <button 
+                                                                type="button"
+                                                                disabled={votedReviews.has(review.id)}
+                                                                onClick={() => handleReviewVote(review.id, 'helpful')}
+                                                                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md transition-colors ${votedReviews.has(review.id) ? 'text-orange-500 bg-orange-50 cursor-not-allowed' : 'text-slate-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                                                            >
+                                                                <ThumbsUp size={12} strokeWidth={2.5} />
+                                                                Utile ({review.helpfulCount || 0})
+                                                            </button>
+                                                            <button 
+                                                                type="button"
+                                                                disabled={votedReviews.has(review.id)}
+                                                                onClick={() => handleReviewVote(review.id, 'unhelpful')}
+                                                                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md transition-colors ${votedReviews.has(review.id) ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'}`}
+                                                            >
+                                                                <ThumbsDown size={12} strokeWidth={2.5} />
+                                                            </button>
+                                                            <div className="flex-1"></div>
+                                                            <button 
+                                                                type="button"
+                                                                disabled={reportedReviews.has(review.id)}
+                                                                onClick={() => openReportModal(review.id)}
+                                                                className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${reportedReviews.has(review.id) ? 'text-rose-500 cursor-not-allowed' : 'text-slate-300 hover:text-slate-500'}`}
+                                                            >
+                                                                <Flag size={10} strokeWidth={2.5} />
+                                                                {reportedReviews.has(review.id) ? 'Signalé' : 'Signaler'}
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Right: Review Form */}
+                                    <div className="md:w-1/3 w-full">
+                                        <div className="bg-slate-50 rounded-[2rem] p-6 lg:p-8 border border-slate-100 sticky top-24">
+                                            <h4 className="text-lg font-black text-[#1B1F3B] uppercase tracking-tight mb-6">Laisser un avis</h4>
+
+                                            {!session ? (
+                                                <div className="text-center py-6">
+                                                    <p className="text-sm text-gray-500 mb-4 font-medium">Vous devez être connecté pour partager votre expérience.</p>
+                                                    <Link href="/login" className="inline-flex items-center justify-center w-full bg-orange-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-orange-700 transition-colors shadow-lg shadow-orange-600/20">
+                                                        Se connecter
+                                                    </Link>
+                                                </div>
+                                            ) : (
+                                                <form onSubmit={handleReviewSubmit} className="space-y-5">
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Votre note</label>
+                                                        <div className="flex gap-2">
+                                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                                <button
+                                                                    key={star}
+                                                                    type="button"
+                                                                    onClick={() => setReviewRating(star)}
+                                                                    className="focus:outline-none transition-transform hover:scale-110"
+                                                                >
+                                                                    <Star
+                                                                        size={28}
+                                                                        className={star <= reviewRating ? "text-yellow-400 fill-yellow-400 drop-shadow-sm" : "text-gray-200 hover:text-yellow-200"}
+                                                                    />
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Votre commentaire (optionnel)</label>
+                                                        <textarea
+                                                            value={reviewComment}
+                                                            onChange={(e) => setReviewComment(e.target.value)}
+                                                            placeholder="Partagez votre avis sur ce produit..."
+                                                            className="w-full bg-white border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all min-h-[120px] resize-y"
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        type="submit"
+                                                        disabled={isSubmittingReview || reviewRating === 0}
+                                                        className="w-full h-12 bg-[#1B1F3B] hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-lg disabled:opacity-50"
+                                                    >
+                                                        {isSubmittingReview ? "Envoi en cours..." : "Publier mon avis"}
+                                                    </Button>
+                                                </form>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -1076,6 +1348,83 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                 isOpen={viewerOpen}
                 onClose={() => setViewerOpen(false)}
             />
+
+            {/* Report Modal overlay */}
+            {isReportModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-white rounded-[2rem] w-full max-w-md p-6 sm:p-8 shadow-2xl relative"
+                    >
+                        <button 
+                            onClick={() => setIsReportModalOpen(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
+                        >
+                            <X size={20} strokeWidth={2.5} />
+                        </button>
+                        
+                        <div className="mb-6">
+                            <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mb-4">
+                                <Flag size={24} strokeWidth={2.5} />
+                            </div>
+                            <h3 className="text-xl font-black text-[#1B1F3B] uppercase tracking-tight">Signaler cet avis</h3>
+                            <p className="text-sm text-gray-500 font-medium mt-1">Aidez-nous à maintenir une communauté saine. Pourquoi signalez-vous cet avis ?</p>
+                        </div>
+
+                        <form onSubmit={submitReport} className="space-y-5">
+                            <div className="space-y-3">
+                                {[
+                                    { id: 'spam', label: 'Spam ou publicité' },
+                                    { id: 'inappropriate', label: 'Contenu inapproprié ou injurieux' },
+                                    { id: 'fake', label: 'Faux avis ou tromperie' },
+                                    { id: 'other', label: 'Autre raison' },
+                                ].map((reason) => (
+                                    <label key={reason.id} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${reportReason === reason.id ? 'border-orange-500 bg-orange-50' : 'border-gray-100 hover:border-gray-200 bg-white'}`}>
+                                        <input 
+                                            type="radio" 
+                                            name="reportReason" 
+                                            value={reason.id} 
+                                            checked={reportReason === reason.id} 
+                                            onChange={(e) => setReportReason(e.target.value)}
+                                            className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                                        />
+                                        <span className={`text-sm font-bold ${reportReason === reason.id ? 'text-orange-700' : 'text-[#1B1F3B]'}`}>
+                                            {reason.label}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Commentaire (Optionnel)</label>
+                                <textarea 
+                                    value={reportComment}
+                                    onChange={(e) => setReportComment(e.target.value)}
+                                    placeholder="Précisez votre signalement..."
+                                    className="w-full min-h-[80px] p-3 rounded-xl bg-slate-50 border-none focus:ring-2 focus:ring-orange-500 resize-none text-sm font-medium"
+                                />
+                            </div>
+
+                            <Button 
+                                type="submit" 
+                                disabled={isSubmittingReport}
+                                className="w-full h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-rose-600/20 disabled:opacity-50 mt-2"
+                            >
+                                {isSubmittingReport ? (
+                                    <span className="flex items-center gap-2">
+                                        <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+                                        Envoi en cours...
+                                    </span>
+                                ) : (
+                                    "Envoyer le signalement"
+                                )}
+                            </Button>
+                        </form>
+                    </motion.div>
+                </div>
+            )}
         </Container>
     )
 }

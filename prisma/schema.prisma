@@ -20,6 +20,7 @@ model User {
   metadata  Json?     @default("{}")
   orders    Order[]
   reviews   Review[]
+  reports   Report[]
   wishlist  Product[] @relation("Wishlist")
 }
 
@@ -156,11 +157,27 @@ model Review {
   id        String   @id @default(uuid())
   rating    Int
   comment   String?
+  userId         String
+  productId      String
+  helpfulCount   Int      @default(0)
+  unhelpfulCount Int      @default(0)
+  createdAt      DateTime @default(now())
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id])
+  reports        Report[]
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  reason    String
+  comment   String?
+  status    String   @default("PENDING") // PENDING, RESOLVED, IGNORED
   userId    String
-  productId String
+  reviewId  String
   createdAt DateTime @default(now())
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 }
 
 model ImportJob {

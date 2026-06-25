@@ -180,7 +180,7 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                             </div>
                             <div>
                                 <h2 className="text-xl md:text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter">
-                                    {pagination.total} Nouveautés <span className="text-primary italic">correspondent</span>
+                                    Les {initialProducts.length} dernières <span className="text-primary italic">nouveautés</span>
                                 </h2>
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Derniers arrivages mis à jour</p>
                             </div>
@@ -206,9 +206,9 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                 onChange={(e) => updateFilters({ sort: e.target.value })}
                                 className="h-11 bg-white border border-gray-100 rounded-xl px-4 text-[11px] font-black uppercase tracking-widest text-[#1B1F3B] outline-none focus:border-primary transition-all shadow-sm"
                             >
-                                <option value="newest text-slate-900">Trier par : Nouveautés</option>
-                                <option value="price_asc text-slate-900">Prix : Croissant</option>
-                                <option value="price_desc text-slate-900">Prix : Décroissant</option>
+                                <option value="newest">Trier par : Nouveautés</option>
+                                <option value="price_asc">Prix : Croissant</option>
+                                <option value="price_desc">Prix : Décroissant</option>
                             </select>
                         </div>
                     </div>
@@ -252,39 +252,7 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                         )}
                     </div>
 
-                    {/* Pagination */}
-                    {pagination.pages > 1 && (
-                        <div className="flex justify-center pt-12">
-                            <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-                                <button
-                                    onClick={() => updateFilters({ page: pagination.currentPage - 1 })}
-                                    disabled={pagination.currentPage === 1}
-                                    className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-primary disabled:opacity-20 transition-all"
-                                >
-                                    <ChevronLeft size={20} />
-                                </button>
-                                {[...Array(pagination.pages)].map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => updateFilters({ page: i + 1 })}
-                                        className={cn(
-                                            "w-10 h-10 rounded-xl text-[11px] font-black transition-all",
-                                            pagination.currentPage === i + 1 ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-400 hover:text-[#1B1F3B] hover:bg-gray-50"
-                                        )}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => updateFilters({ page: pagination.currentPage + 1 })}
-                                    disabled={pagination.currentPage === pagination.pages}
-                                    className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-400 hover:text-primary disabled:opacity-20 transition-all"
-                                >
-                                    <ChevronRight size={20} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    {/* Pagination removed as per request to only show the 20 latest products */}
                 </div>
             </div>
         </Container>

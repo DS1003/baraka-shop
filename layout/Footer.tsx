@@ -17,8 +17,9 @@ export function Footer() {
                 className="absolute inset-0 opacity-[0.03] pointer-events-none"
                 style={{
                     backgroundImage: 'url("https://res.cloudinary.com/dgro5x4h8/image/upload/v1768669738/pattern_2_kln9c6.png")',
-                    backgroundSize: '400px',
-                    backgroundRepeat: 'repeat'
+                    backgroundSize: 'cover',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center'
                 }}
             />
 

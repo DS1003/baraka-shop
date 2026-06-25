@@ -29,7 +29,8 @@ import {
     Zap,
     Store,
     Maximize,
-    Server
+    Server,
+    MessageSquareWarning
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -70,6 +71,7 @@ const sidebarGroups = [
             { icon: ShoppingCart, label: 'Commandes', href: '/admin/orders' },
             { icon: Package, label: 'Stock & Inventaire', href: '/admin/inventory' },
             { icon: Users, label: 'Gestion Clients', href: '/admin/customers' },
+            { icon: MessageSquareWarning, label: 'Modération Avis', href: '/admin/reviews' },
         ]
     },
     {
