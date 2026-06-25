@@ -23,7 +23,8 @@ import {
     CheckCircle2,
     ThumbsUp,
     ThumbsDown,
-    Flag
+    Flag,
+    X
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
