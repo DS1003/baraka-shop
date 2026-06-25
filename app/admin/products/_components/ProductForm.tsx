@@ -171,6 +171,7 @@ function smartParseMetadata(text: string) {
 export default function ProductForm({ editingProduct }: { editingProduct?: any }) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [shouldClose, setShouldClose] = useState(false);
     const [formImages, setFormImages] = useState<string[]>([]);
     const [formVideos, setFormVideos] = useState<string[]>([]);
@@ -709,11 +710,47 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
     const handleUpsert = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setIsSaving(true);
         const formData = new FormData(e.currentTarget);
+        
+        const nameVal = formData.get('name') as string;
+        const priceVal = formData.get('price') as string;
+        const stockVal = formData.get('stock') as string;
+        const categoryIdVal = formData.get('categoryId') as string;
+
+        const newErrors: Record<string, string> = {};
+
+        if (!nameVal || nameVal.trim().length < 2) {
+            newErrors.name = "Le nom du produit est requis (min 2 caractères).";
+        }
+        if (!priceVal || isNaN(parseFloat(priceVal)) || parseFloat(priceVal) <= 0) {
+            newErrors.price = "Un prix valide supérieur à 0 est requis.";
+        }
+        if (!stockVal || isNaN(parseInt(stockVal)) || parseInt(stockVal) < 0) {
+            newErrors.stock = "Le stock doit être un nombre positif ou nul.";
+        }
+        if (!categoryIdVal) {
+            newErrors.categoryId = "La catégorie principale est obligatoire.";
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            const errorDetails = Object.values(newErrors).map(msg => `• ${msg}`).join("\n");
+            toast.error(
+                <div className="space-y-1">
+                    <p className="font-bold text-sm">Veuillez corriger les erreurs :</p>
+                    <p className="text-xs whitespace-pre-line leading-relaxed">{errorDetails}</p>
+                </div>,
+                { duration: 5000 }
+            );
+            return;
+        }
+
+        setErrors({});
+        setIsSaving(true);
+
         const data = {
-            name: formData.get('name') as string,
-            slug: (formData.get('name') as string).toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+            name: nameVal,
+            slug: nameVal.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
             description: (formData.get('description') as string) || "",
             price: parseFloat(formData.get('price') as string),
             stock: parseInt(formData.get('stock') as string),
@@ -793,7 +830,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
     return (
         <>
-        <form onSubmit={handleUpsert} className="bg-white rounded-2xl shadow-sm border border-slate-200/50 flex flex-col overflow-hidden">
+        <form noValidate onSubmit={handleUpsert} className="bg-white rounded-2xl shadow-sm border border-slate-200/50 flex flex-col overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
                 <div className="flex items-center gap-4">
                     <button
@@ -825,14 +862,15 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     </h4>
                     <div className="grid grid-cols-2 gap-6">
                         <div className={editingProduct?.reference ? "space-y-1.5 col-span-1" : "space-y-1.5 col-span-2"}>
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nom du Produit</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nom du Produit <span className="text-red-500">*</span></label>
                             <input
                                 name="name"
                                 defaultValue={editingProduct?.name}
                                 required
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-[13px]"
+                                className={cn("w-full px-4 py-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:ring-4 transition-all font-medium text-[13px]", errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-slate-200 focus:ring-orange-500/5 focus:border-orange-500/20")}
                                 placeholder="Ex: Abaya Silk Premium"
                             />
+                            {errors.name && <p className="text-red-500 text-[10px] mt-1 font-medium">{errors.name}</p>}
                         </div>
                         {editingProduct?.reference && (
                             <div className="space-y-1.5 col-span-1">
@@ -845,26 +883,28 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             </div>
                         )}
                         <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prix (FCFA)</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prix (FCFA) <span className="text-red-500">*</span></label>
                             <input
                                 name="price"
                                 type="number"
                                 defaultValue={editingProduct?.price}
                                 required
-                                readOnly
-                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-slate-500 cursor-not-allowed text-[13px]"
+                                readOnly={editingProduct?.reference ? true : false}
+                                className={cn("w-full px-4 py-2.5 bg-slate-100 border rounded-lg focus:outline-none focus:ring-4 transition-all font-medium text-[13px]", errors.price ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-slate-200 focus:ring-orange-500/5 focus:border-orange-500/20", editingProduct?.reference ? "text-slate-500 cursor-not-allowed" : "bg-slate-50")}
                             />
+                            {errors.price && <p className="text-red-500 text-[10px] mt-1 font-medium">{errors.price}</p>}
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Stock Initial</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Stock Initial <span className="text-red-500">*</span></label>
                             <input
                                 name="stock"
                                 type="number"
                                 defaultValue={editingProduct?.stock}
                                 required
-                                readOnly
-                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all font-medium text-slate-500 cursor-not-allowed text-[13px]"
+                                readOnly={editingProduct?.reference ? true : false}
+                                className={cn("w-full px-4 py-2.5 bg-slate-100 border rounded-lg focus:outline-none focus:ring-4 transition-all font-medium text-[13px]", errors.stock ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-slate-200 focus:ring-orange-500/5 focus:border-orange-500/20", editingProduct?.reference ? "text-slate-500 cursor-not-allowed" : "bg-slate-50")}
                             />
+                            {errors.stock && <p className="text-red-500 text-[10px] mt-1 font-medium">{errors.stock}</p>}
                         </div>
                         <div className="space-y-1.5">
                             <div className="flex justify-between items-center h-[24px]">
@@ -996,11 +1036,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Catégorie (L1)</label>
+                            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Catégorie (L1) <span className="text-red-500">*</span></label>
                             <input type="hidden" name="categoryId" value={categoryId} />
                             <select
                                 key={`cat-${categories.length}`}
-                                disabled
+                                disabled={editingProduct?.reference ? true : false}
                                 value={categoryId}
                                 required
                                 onChange={(e) => {
@@ -1011,11 +1051,12 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     getSubCategories(catId).then(setSubCategories);
                                     setThirdCategories([]);
                                 }}
-                                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-slate-500 cursor-not-allowed text-[13px]"
+                                className={cn("w-full px-4 py-2.5 bg-slate-100 border rounded-lg focus:outline-none focus:ring-4 transition-all font-medium appearance-none text-[13px]", errors.categoryId ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-slate-200 focus:ring-orange-500/5", editingProduct?.reference ? "text-slate-500 cursor-not-allowed" : "bg-slate-50")}
                             >
                                 <option value="">Sélectionner</option>
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
+                            {errors.categoryId && <p className="text-red-500 text-[10px] mt-1 font-medium">{errors.categoryId}</p>}
                         </div>
 
                         <div className="space-y-1.5">
@@ -1689,11 +1730,20 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
 
             </div>
-            <div className="p-6 border-t border-slate-100 flex gap-3 bg-slate-50/50">
+        </form>
+
+        {/* Floating Action Bar */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+            <motion.div
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 25, delay: 0.3 }}
+                className="flex items-center gap-2 px-3 py-2 bg-slate-900 rounded-full shadow-2xl shadow-slate-900/30 border border-slate-700/50"
+            >
                 <button
                     type="button"
                     onClick={() => router.back()}
-                    className="flex-1 px-6 py-3.5 bg-white border border-slate-200 rounded-xl font-bold text-[13px] text-slate-500 hover:bg-slate-50 transition-all shadow-sm"
+                    className="px-5 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white rounded-full font-bold text-[12px] transition-all"
                 >
                     Annuler
                 </button>
@@ -1707,6 +1757,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             const price = parseFloat(formData.get('price') as string) || 0;
                             const stock = parseInt(formData.get('stock') as string) || 0;
                             const shortDescription = formData.get('shortDescription') as string || "";
+                            const description = formData.get('description') as string || "";
                             const featuresRaw = formData.get('features') as string || "";
                             const features = featuresRaw.split('\n').filter(f => f.trim() !== "");
                             
@@ -1746,58 +1797,85 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 return parsed;
                             })();
 
-                            setPreviewData({
+                            // Build the full product object for the preview
+                            const selectedCategory = categories.find((c: any) => c.id === categoryId);
+                            const selectedBrand = brands.find((b: any) => b.id === brandId);
+
+                            const previewProduct = {
+                                id: editingProduct?.id || 'preview-' + Date.now(),
                                 name,
+                                slug: name?.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') || '',
                                 price,
                                 stock,
+                                description,
                                 shortDescription,
                                 features,
                                 metadata: metaParsed,
                                 images: formImages,
-                                detailedDescription
-                            });
-                            setActivePreviewImageIdx(0);
-                            setPreviewOpen(true);
+                                videos: formVideos,
+                                detailedDescription,
+                                isPublished,
+                                colorVariants: colorVariants.filter(cv => cv.colorName.trim() !== ''),
+                                category: selectedCategory ? { id: selectedCategory.id, name: selectedCategory.name, slug: selectedCategory.slug } : editingProduct?.category || null,
+                                brand: selectedBrand ? { id: selectedBrand.id, name: selectedBrand.name, slug: selectedBrand.slug, image: selectedBrand.image } : editingProduct?.brand || null,
+                                reviews: editingProduct?.reviews || [],
+                                _count: editingProduct?._count || { reviews: 0 },
+                                createdAt: editingProduct?.createdAt || new Date().toISOString(),
+                            };
+
+                            localStorage.setItem('baraka-product-preview', JSON.stringify(previewProduct));
+                            window.open('/admin/products/preview', '_blank');
+                            toast.success("Aperçu ouvert dans un nouvel onglet !");
                         }
                     }}
-                    className="px-6 py-3.5 bg-slate-800 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2.5 hover:bg-slate-900 transition-all shadow-sm active:scale-95"
+                    className="px-5 py-2.5 bg-slate-100 text-slate-800 rounded-full font-bold text-[12px] flex items-center gap-2 hover:bg-white transition-all active:scale-95"
                 >
-                    <Eye size={16} />
+                    <Eye size={14} />
                     <span>Aperçu</span>
                 </button>
+                <div className="w-px h-6 bg-slate-700/50 mx-0.5" />
                 <button
                     type="button"
                     onClick={() => setIsPublished(!isPublished)}
                     className={cn(
-                        "px-6 py-3.5 border rounded-xl font-bold text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-95",
+                        "px-5 py-2.5 rounded-full font-bold text-[12px] flex items-center gap-2 transition-all active:scale-95",
                         isPublished 
-                            ? "bg-blue-50 text-blue-600 border-blue-100/50 hover:bg-blue-100" 
-                            : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
+                            ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30" 
+                            : "bg-slate-700/50 text-slate-400 hover:bg-slate-700"
                     )}
                 >
-                    <div className={cn("w-2 h-2 rounded-full", isPublished ? "bg-blue-500 animate-pulse" : "bg-slate-400")} />
-                    <span>{isPublished ? 'Statut: Publié' : 'Statut: Caché'}</span>
+                    <div className={cn("w-2 h-2 rounded-full", isPublished ? "bg-emerald-400 animate-pulse" : "bg-slate-500")} />
+                    <span>{isPublished ? 'Publié' : 'Caché'}</span>
                 </button>
+                <div className="w-px h-6 bg-slate-700/50 mx-0.5" />
                 <button
-                    type="submit"
-                    onClick={() => setShouldClose(false)}
+                    type="button"
+                    onClick={() => {
+                        setShouldClose(false);
+                        const form = document.querySelector('form');
+                        if (form) form.requestSubmit();
+                    }}
                     disabled={isSaving}
-                    className="px-6 py-3.5 bg-orange-50 border border-orange-200 text-orange-600 hover:bg-orange-100 rounded-xl font-bold text-[13px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                    className="px-5 py-2.5 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded-full font-bold text-[12px] flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {isSaving && !shouldClose ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    {isSaving && !shouldClose ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                     <span>Enregistrer</span>
                 </button>
                 <button
-                    type="submit"
-                    onClick={() => setShouldClose(true)}
+                    type="button"
+                    onClick={() => {
+                        setShouldClose(true);
+                        const form = document.querySelector('form');
+                        if (form) form.requestSubmit();
+                    }}
                     disabled={isSaving}
-                    className="flex-[2] px-6 py-3.5 bg-orange-600 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-3 hover:bg-orange-700 shadow-lg shadow-orange-100 transition-all disabled:opacity-50 active:scale-95"
+                    className="px-6 py-2.5 bg-orange-600 text-white rounded-full font-bold text-[12px] flex items-center gap-2 hover:bg-orange-500 shadow-lg shadow-orange-600/20 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {isSaving && shouldClose ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                    {isSaving && shouldClose ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                     <span>Enregistrer & fermer</span>
                 </button>
-            </div>
-        </form>
+            </motion.div>
+        </div>
 
         {/* Live Preview Modal */}
         <AnimatePresence>
