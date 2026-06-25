@@ -92,7 +92,7 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
 
         for (const row of prodData) {
             const ref = row['AR_Ref'] || row['Reference'] || row['Ref'] || row['REFERENCE'] || row['reference'] || row['Code']
-            const price = row['PV_CAT_02'] || row['Price'] || row['Prix'] || row['PRICE'] || row['prix']
+            const price = row['PV_CAT_01'] || row['Price'] || row['Prix'] || row['PRICE'] || row['prix']
             const stock = row['STOCK'] || row['Stock'] || row['Quantite'] || row['Qte'] || row['stock'] || row['Quantity']
             
             if (ref) {

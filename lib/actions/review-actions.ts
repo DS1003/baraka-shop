@@ -22,11 +22,6 @@ export async function getAdminReviews(page = 1, pageSize = 20) {
             take: pageSize,
             orderBy: [
                 {
-                    reports: {
-                        _count: 'desc'
-                    }
-                },
-                {
                     createdAt: 'desc'
                 }
             ],
