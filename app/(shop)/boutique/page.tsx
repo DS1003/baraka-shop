@@ -30,6 +30,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     // Get filters from URL
     const category = params.category || ''
     const subCategory = params.subCategory || ''
+    const thirdLevelCategory = params.thirdLevelCategory || ''
     const brand = params.brand || ''
     const sort = params.sort || 'newest'
     const page = Number(params.page) || 1
@@ -42,6 +43,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         getProductsAction({
             category,
             subCategory,
+            thirdLevelCategory,
             brand,
             sort,
             page,

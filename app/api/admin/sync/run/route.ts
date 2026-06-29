@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { runFtpSync } from '@/lib/ftp-sync'
 
+// Augmenter le timeout sur Vercel (jusqu'à 5 minutes sur Pro, 10-60s sur Hobby)
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
     const session = await auth()
     if (!session || session?.user?.role !== 'ADMIN') {

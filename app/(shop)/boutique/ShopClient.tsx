@@ -41,6 +41,7 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
 
     const currentCategory = searchParams.get('category') || ''
     const currentSubCategory = searchParams.get('subCategory') || ''
+    const currentThirdLevelCategory = searchParams.get('thirdLevelCategory') || ''
     const currentBrand = searchParams.get('brand') || ''
     const currentSort = searchParams.get('sort') || 'newest'
     const currentPage = Number(searchParams.get('page')) || 1
@@ -86,7 +87,7 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                 </h3>
                 <div className="flex flex-col gap-3">
                     <button
-                        onClick={() => updateFilters({ category: '', subCategory: '' })}
+                        onClick={() => updateFilters({ category: '', subCategory: '', thirdLevelCategory: '' })}
                         className={cn("text-left text-sm font-bold transition-colors hover:text-primary", !currentCategory ? "text-primary" : "text-gray-500")}
                     >
                         Toutes les catégories
@@ -94,7 +95,7 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                     {categories.map((cat) => (
                         <button
                             key={cat.id}
-                            onClick={() => updateFilters({ category: cat.slug, subCategory: '' })}
+                            onClick={() => updateFilters({ category: cat.slug, subCategory: '', thirdLevelCategory: '' })}
                             className={cn("flex items-center justify-between group cursor-pointer text-left", currentCategory === cat.slug ? "text-primary" : "text-gray-500 hover:text-[#1B1F3B]")}
                         >
                             <span className="text-sm font-bold transition-colors">{cat.name}</span>
@@ -238,31 +239,52 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
                             {(() => {
                                 const activeCategoryObj = categories.find(c => c.slug === currentCategory);
                                 const availableSubCategories = activeCategoryObj?.subCategories || [];
                                 
                                 if (availableSubCategories.length === 0) return null;
 
+                                const activeSubCategoryObj = availableSubCategories.find((s: any) => s.slug === currentSubCategory);
+                                const availableThirdCategories = activeSubCategoryObj?.thirdLevelCategories || [];
+
                                 return (
-                                    <div className="relative flex-1 sm:min-w-[200px]">
-                                        <select
-                                            value={currentSubCategory}
-                                            onChange={(e) => updateFilters({ subCategory: e.target.value })}
-                                            className="w-full h-11 bg-gray-50 border border-gray-100 rounded-xl px-4 text-xs font-bold text-[#1B1F3B] outline-none appearance-none focus:border-primary transition-all pr-10"
-                                        >
-                                            <option value="">Sous-catégories</option>
-                                            {availableSubCategories.map((sub: any) => (
-                                                <option key={sub.id} value={sub.slug}>{sub.name}</option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                                    </div>
+                                    <>
+                                        <div className="relative flex-1 sm:min-w-[160px]">
+                                            <select
+                                                value={currentSubCategory}
+                                                onChange={(e) => updateFilters({ subCategory: e.target.value, thirdLevelCategory: '' })}
+                                                className="w-full h-11 bg-gray-50 border border-gray-100 rounded-xl px-4 text-xs font-bold text-[#1B1F3B] outline-none appearance-none focus:border-primary transition-all pr-10"
+                                            >
+                                                <option value="">Sous-catégories</option>
+                                                {availableSubCategories.map((sub: any) => (
+                                                    <option key={sub.id} value={sub.slug}>{sub.name}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                        </div>
+
+                                        {availableThirdCategories.length > 0 && (
+                                            <div className="relative flex-1 sm:min-w-[160px]">
+                                                <select
+                                                    value={currentThirdLevelCategory}
+                                                    onChange={(e) => updateFilters({ thirdLevelCategory: e.target.value })}
+                                                    className="w-full h-11 bg-gray-50 border border-gray-100 rounded-xl px-4 text-xs font-bold text-[#1B1F3B] outline-none appearance-none focus:border-primary transition-all pr-10"
+                                                >
+                                                    <option value="">Filtrer par type</option>
+                                                    {availableThirdCategories.map((third: any) => (
+                                                        <option key={third.id} value={third.slug}>{third.name}</option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                            </div>
+                                        )}
+                                    </>
                                 );
                             })()}
 
-                            <div className="relative flex-1 sm:min-w-[200px]">
+                            <div className="relative flex-1 sm:min-w-[160px]">
                                 <select
                                     value={currentSort}
                                     onChange={(e) => updateFilters({ sort: e.target.value })}
@@ -308,7 +330,7 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                                 <h3 className="text-xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-2">Aucun produit trouvé</h3>
                                 <p className="text-gray-400 text-sm max-w-xs mx-auto">Essayez de modifier vos filtres ou votre recherche pour trouver ce que vous cherchez.</p>
                                 <button
-                                    onClick={() => updateFilters({ category: '', subCategory: '', brand: '', q: '', minPrice: '', maxPrice: '', page: 1 })}
+                                    onClick={() => updateFilters({ category: '', subCategory: '', thirdLevelCategory: '', brand: '', q: '', minPrice: '', maxPrice: '', page: 1 })}
                                     className="mt-8 px-8 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20"
                                 >
                                     Réinitialiser tout

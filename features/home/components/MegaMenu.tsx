@@ -81,7 +81,7 @@ export function MegaMenu({ categories, onClose }: MegaMenuProps) {
                             {activeCategory?.subCategories?.map((sub: any, idx: number) => (
                                 <div key={sub.id} className="flex flex-col gap-4">
                                     <div
-                                        onClick={() => handleLinkClick(`/boutique?category=${activeCategory.slug}&sub=${sub.slug}`)}
+                                        onClick={() => handleLinkClick(`/boutique?category=${activeCategory.slug}&subCategory=${sub.slug}`)}
                                         className="text-[12px] font-black uppercase text-[#1B1F3B] tracking-wider pb-2 border-b border-gray-200 hover:text-primary transition-colors cursor-pointer"
                                     >
                                         {sub.name}
@@ -90,7 +90,7 @@ export function MegaMenu({ categories, onClose }: MegaMenuProps) {
                                         {sub.thirdLevelCategories?.map((third: any) => (
                                             <li key={third.id}>
                                                 <div
-                                                    onClick={() => handleLinkClick(`/boutique?category=${activeCategory.slug}&sub=${sub.slug}&third=${third.slug}`)}
+                                                    onClick={() => handleLinkClick(`/boutique?category=${activeCategory.slug}&subCategory=${sub.slug}&thirdLevelCategory=${third.slug}`)}
                                                     className="text-[13px] text-gray-500 hover:text-primary transition-colors uppercase font-medium cursor-pointer"
                                                 >
                                                     {third.name}

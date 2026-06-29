@@ -119,7 +119,22 @@ export default function FtpSyncPage() {
         startProgressSimulation()
         try {
             const res = await fetch('/api/admin/sync/run', { method: 'POST' })
-            const data = await res.json()
+            
+            let data;
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                console.error("Non-JSON response:", text);
+                let errorMessage = `Erreur serveur (${res.status}): Réponse invalide.`;
+                if (res.status === 504) {
+                    errorMessage = "Délai d'attente dépassé (Timeout). L'opération prend trop de temps pour ce serveur.";
+                } else if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                    errorMessage = `Erreur système (${res.status}): Le serveur a renvoyé une page HTML au lieu de JSON (possible timeout ou erreur de configuration).`;
+                }
+                throw new Error(errorMessage);
+            }
             
             if (!res.ok) throw new Error(data.error || "Erreur inconnue")
             

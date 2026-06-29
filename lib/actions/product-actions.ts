@@ -12,6 +12,7 @@ export async function getProductsAction(options: {
     query?: string;
     category?: string;
     subCategory?: string;
+    thirdLevelCategory?: string;
     brand?: string;
     store?: string;
     minPrice?: number;
@@ -26,6 +27,7 @@ export async function getProductsAction(options: {
         query,
         category,
         subCategory,
+        thirdLevelCategory,
         brand,
         store,
         minPrice,
@@ -64,6 +66,10 @@ export async function getProductsAction(options: {
 
         if (subCategory) {
             where.subCategory = { slug: subCategory };
+        }
+
+        if (thirdLevelCategory) {
+            where.thirdLevelCategory = { slug: thirdLevelCategory };
         }
 
         if (brand) {
@@ -212,14 +218,18 @@ export async function getSimilarProductsAction(productId: string, categoryId: st
 
 export async function getCategoriesAction() {
     try {
-        const cacheKey = 'categories:all:with_sub_v2';
+        const cacheKey = 'categories:all:with_sub_v3';
         const cached = await getCache<any>(cacheKey);
         if (cached) return cached;
 
         const categories = await prisma.category.findMany({
             where: { isPublished: true },
             include: {
-                subCategories: true,
+                subCategories: {
+                    include: {
+                        thirdLevelCategories: true
+                    }
+                },
                 _count: {
                     select: { products: { where: { isPublished: true } } }
                 }
