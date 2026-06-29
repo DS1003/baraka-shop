@@ -27,9 +27,8 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         }
     })
 
-    const client = new Client()
+    const client = new Client(60000) // 60 seconds timeout instead of default 30s
     client.ftp.verbose = false // Set to true for deep debugging if needed in prod
-    client.ftp.timeout = 60000 // 60 seconds timeout instead of default 30s
 
     let productsUpdatedCount = 0
 
