@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 
 // Images locales dans /public/categories/ - garanties d'affichage (Fallback)
 const CLEAN_IMAGES: Record<string, string> = {
@@ -75,13 +75,16 @@ export function CategoryCarousel({
     let displayItems: any[] = [];
     
     if (hasManagedUniverses) {
-        displayItems = initialUniverses.map(u => ({
-            id: u.id,
-            name: u.name,
-            subtitle: u.subtitle,
-            image: u.image,
-            href: u.href
-        }));
+        displayItems = initialUniverses.map(u => {
+            const slug = u.href ? u.href.split('/').pop() : '';
+            return {
+                id: u.id,
+                name: u.name,
+                subtitle: u.subtitle,
+                image: u.image,
+                href: `/univers/${slug}`
+            };
+        });
     } else if (initialCategories && initialCategories.length > 0) {
         // Fallback logic
         let categories = [...initialCategories];
@@ -98,7 +101,7 @@ export function CategoryCarousel({
                 name: cat.name,
                 subtitle: SUBTITLES[catKey] || 'Découvrez nos offres',
                 image: CLEAN_IMAGES[catKey] || CLEAN_IMAGES['DEFAULT'],
-                href: `/category/${cat.slug}`
+                href: `/univers/${cat.slug}`
             };
         });
     }
@@ -146,8 +149,8 @@ export function CategoryCarousel({
                                 Univers <span className="text-primary italic">Populaires</span>
                             </h2>
                             
-                            {/* Mobile Arrows */}
-                            <div className="flex md:hidden gap-2">
+                            {/* Mobile Arrows + Button */}
+                            <div className="flex md:hidden gap-2 items-center">
                                 <button
                                     onClick={slidePrev}
                                     className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all"
@@ -167,6 +170,30 @@ export function CategoryCarousel({
                         </p>
                     </div>
 
+                    {/* Desktop Arrows + See All Button */}
+                    <div className="hidden md:flex items-center gap-3">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={slidePrev}
+                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={slideNext}
+                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <Link
+                            href="/univers"
+                            className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary"
+                            title="Voir tous les univers"
+                        >
+                            <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Desktop Grid */}
