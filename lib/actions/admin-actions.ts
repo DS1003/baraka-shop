@@ -342,6 +342,64 @@ export async function getAdminProducts(
     }
 }
 
+export async function getAllFilteredProductIds(
+    query?: string,
+    filters?: {
+        categoryId?: string;
+        subCategoryId?: string;
+        thirdLevelCategoryId?: string;
+        brandId?: string;
+        stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+        publishStatus?: 'published' | 'hidden';
+    }
+) {
+    try {
+        const where: any = {};
+        const andFilters: any[] = [];
+
+        if (query) {
+            andFilters.push({
+                OR: [
+                    { name: { contains: query, mode: 'insensitive' } },
+                    { description: { contains: query, mode: 'insensitive' } },
+                    { reference: { contains: query, mode: 'insensitive' } },
+                    { brand: { name: { contains: query, mode: 'insensitive' } } }
+                ]
+            });
+        }
+
+        if (filters?.categoryId) andFilters.push({ categoryId: filters.categoryId });
+        if (filters?.subCategoryId) andFilters.push({ subCategoryId: filters.subCategoryId });
+        if (filters?.thirdLevelCategoryId) andFilters.push({ thirdLevelCategoryId: filters.thirdLevelCategoryId });
+        if (filters?.brandId) andFilters.push({ brandId: filters.brandId });
+
+        if (filters?.stockStatus) {
+            if (filters.stockStatus === 'in_stock') andFilters.push({ stock: { gt: 10 } });
+            else if (filters.stockStatus === 'low_stock') andFilters.push({ stock: { gt: 0, lt: 10 } });
+            else if (filters.stockStatus === 'out_of_stock') andFilters.push({ stock: 0 });
+        }
+
+        if (filters?.publishStatus) {
+            if (filters.publishStatus === 'published') andFilters.push({ isPublished: true });
+            else if (filters.publishStatus === 'hidden') andFilters.push({ isPublished: false });
+        }
+
+        if (andFilters.length > 0) {
+            where.AND = andFilters;
+        }
+
+        const products = await prisma.product.findMany({
+            where,
+            select: { id: true }
+        });
+
+        return products.map((p: { id: string }) => p.id);
+    } catch (error) {
+        console.error("getAllFilteredProductIds Error:", error);
+        return [];
+    }
+}
+
 export async function getAdminOrders(status?: string) {
     try {
         const orders = await prisma.order.findMany({

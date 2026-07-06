@@ -43,10 +43,9 @@ import {
     getAdminStores,
     getSubCategories,
     getThirdLevelCategories,
-    deleteAllProducts,
     toggleProductPublish,
     bulkTogglePublishProducts,
-    globalTogglePublishProducts
+    getAllFilteredProductIds
 } from '@/lib/actions/admin-actions';
 import { clearImportJobs } from '@/lib/actions/import-bg-actions';
 import { testConnection } from '@/lib/actions/debug-actions';
@@ -83,8 +82,8 @@ function ProductsPageContent() {
 
     // Selection
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
-    const [isGlobalSelected, setIsGlobalSelected] = useState(false);
     const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+    const [isSelectingAll, setIsSelectingAll] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -161,10 +160,8 @@ function ProductsPageContent() {
         }
     }, [searchQuery, page, activeFilters, pathname, router, searchParams]);
 
-    // Reset selection on page change OR search change
     useEffect(() => {
         setSelectedIds([]);
-        setIsGlobalSelected(false);
     }, [page, searchQuery, activeFilters]);
 
     useEffect(() => {
@@ -216,43 +213,27 @@ function ProductsPageContent() {
     };
 
     const handleBulkDelete = async () => {
-        if (!isGlobalSelected && selectedIds.length === 0) return;
+        if (selectedIds.length === 0) {
+            toast.info("Veuillez sélectionner au moins un produit.");
+            return;
+        }
 
-        const message = isGlobalSelected
-            ? `⚠️ ATTENTION : Supprimer DÉFINITIVEMENT TOUS les produits (${total}) du catalogue ? Cette action est irréversible.`
-            : `Supprimer définitivement les ${selectedIds.length} produits sélectionnés ?`;
+        const message = `Vous êtes sur le point de supprimer ${selectedIds.length} produit(s). Confirmer ?`;
 
         if (confirm(message)) {
             setIsDeletingBulk(true);
             try {
-                let res;
-                if (isGlobalSelected) {
-                    res = await deleteAllProducts();
-                    if (res?.success !== false) {
-                        await clearImportJobs(); // Nettoie aussi les jobs coincés
-                    }
-                } else {
-                    res = await deleteBulkProducts(selectedIds);
-                }
+                const res = await deleteBulkProducts(selectedIds);
 
                 if (res && res.success === false) {
                     toast.error(res.message || "Erreur lors de la suppression.");
                     return;
                 }
 
-                if (isGlobalSelected) {
-                    setProducts([]);
-                    setTotal(0);
-                } else {
-                    setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
-                    setTotal(prev => prev - selectedIds.length);
-                }
+                setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
+                setTotal(prev => prev - selectedIds.length);
                 setSelectedIds([]);
-                setIsGlobalSelected(false);
-                toast.success(isGlobalSelected
-                    ? '🗑️ Catalogue vidé avec succès.'
-                    : `🗑️ ${selectedIds.length} produit${selectedIds.length > 1 ? 's' : ''} supprimé${selectedIds.length > 1 ? 's' : ''}.`
-                );
+                toast.success(`🗑️ ${selectedIds.length} produit(s) supprimé(s) avec succès.`);
             } catch (err) {
                 toast.error("Erreur lors de la suppression.");
             } finally {
@@ -276,28 +257,20 @@ function ProductsPageContent() {
     };
 
     const handleBulkPublish = async (isPublished: boolean) => {
-        if (selectedIds.length === 0 && !isGlobalSelected) return;
+        if (selectedIds.length === 0) {
+            toast.info("Veuillez sélectionner au moins un produit.");
+            return;
+        }
+        
         setIsDeletingBulk(true);
         try {
-            if (isGlobalSelected) {
-                const res = await globalTogglePublishProducts(isPublished);
-                if (res.success) {
-                    setProducts(prev => prev.map(p => ({ ...p, isPublished })));
-                    toast.success(`Le catalogue ENTIER (${total} produits) a été ${isPublished ? 'publié' : 'dépublié'}.`);
-                    setSelectedIds([]);
-                    setIsGlobalSelected(false);
-                } else {
-                    toast.error(res.message);
-                }
+            const res = await bulkTogglePublishProducts(selectedIds, isPublished);
+            if (res.success) {
+                setProducts(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, isPublished } : p));
+                toast.success(`${selectedIds.length} produit(s) ${isPublished ? 'publié(s)' : 'dépublié(s)'}.`);
+                setSelectedIds([]);
             } else {
-                const res = await bulkTogglePublishProducts(selectedIds, isPublished);
-                if (res.success) {
-                    setProducts(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, isPublished } : p));
-                    toast.success(`${selectedIds.length} produit(s) ${isPublished ? 'publié(s)' : 'dépublié(s)'}.`);
-                    setSelectedIds([]);
-                } else {
-                    toast.error(res.message);
-                }
+                toast.error(res.message);
             }
         } catch (error) {
             toast.error("Erreur serveur.");
@@ -307,17 +280,23 @@ function ProductsPageContent() {
     };
 
     const toggleSelectAll = () => {
-        if (isGlobalSelected) {
-            setIsGlobalSelected(false);
+        if (selectedIds.length >= products.length && products.length > 0) {
             setSelectedIds([]);
-            return;
-        }
-
-        if (selectedIds.length === products.length && products.length > 0) {
-            setSelectedIds([]);
-            setIsGlobalSelected(false);
         } else {
             setSelectedIds(products.map(p => p.id));
+        }
+    };
+
+    const handleSelectAllFiltered = async () => {
+        setIsSelectingAll(true);
+        try {
+            const allIds = await getAllFilteredProductIds(searchQuery, activeFilters);
+            setSelectedIds(allIds);
+            toast.success(`Sélection de ${allIds.length} produits réussie.`);
+        } catch (error) {
+            toast.error("Erreur lors de la sélection.");
+        } finally {
+            setIsSelectingAll(false);
         }
     };
 
@@ -511,28 +490,29 @@ function ProductsPageContent() {
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {/* Banner for Global Selection */}
-                                {selectedIds.length === products.length && total > products.length && !isGlobalSelected && (
+                                {selectedIds.length === products.length && total > products.length && selectedIds.length < total && (
                                     <tr>
                                         <td colSpan={10} className="px-6 py-3 bg-orange-50 border-b border-orange-100 text-center">
-                                            <p className="text-[13px] font-medium text-orange-800">
+                                            <p className="text-[13px] font-medium text-orange-800 flex items-center justify-center gap-2">
                                                 Les {products.length} produits de cette page sont sélectionnés.
                                                 <button
-                                                    onClick={() => setIsGlobalSelected(true)}
-                                                    className="ml-2 font-black underline hover:text-orange-900 transition-colors"
+                                                    onClick={handleSelectAllFiltered}
+                                                    disabled={isSelectingAll}
+                                                    className="font-black underline hover:text-orange-900 transition-colors disabled:opacity-50"
                                                 >
-                                                    Sélectionner les {total} produits du catalogue
+                                                    {isSelectingAll ? "Sélection en cours..." : `Sélectionner les ${total} produits correspondants`}
                                                 </button>
                                             </p>
                                         </td>
                                     </tr>
                                 )}
-                                {isGlobalSelected && (
+                                {selectedIds.length === total && total > products.length && (
                                     <tr>
                                         <td colSpan={10} className="px-6 py-3 bg-orange-100 border-b border-orange-200 text-center">
                                             <p className="text-[13px] font-black text-orange-900">
-                                                ⚠️ Sélection globale active : TOUS les {total} produits du catalogue sont sélectionnés.
+                                                ✅ Tous les {total} produits correspondants sont sélectionnés.
                                                 <button
-                                                    onClick={() => { setIsGlobalSelected(false); setSelectedIds([]); }}
+                                                    onClick={() => setSelectedIds([])}
                                                     className="ml-4 text-orange-700 underline font-bold"
                                                 >
                                                     Désélectionner tout
@@ -920,10 +900,10 @@ function ProductsPageContent() {
                         >
                             <div className="flex items-center gap-4 border-r border-white/10 pr-10">
                                 <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center font-black text-white text-[15px] shadow-lg shadow-orange-500/20">
-                                    {isGlobalSelected ? total : selectedIds.length}
+                                    {selectedIds.length}
                                 </div>
                                 <span className="text-white font-bold text-[14px] whitespace-nowrap">
-                                    {isGlobalSelected ? "TOUS les produits sélectionnés" : "Produits sélectionnés"}
+                                    Produit(s) sélectionné(s)
                                 </span>
                             </div>
 

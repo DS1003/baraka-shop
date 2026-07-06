@@ -45,8 +45,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         notFound()
     }
 
-    // Fetch similar products based on the same category
-    const similarProducts = await getSimilarProductsAction(id, product.categoryId, 8)
+    // Fetch similar products based on the full category hierarchy (intelligent matching)
+    const similarProducts = await getSimilarProductsAction(product, 8)
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen">

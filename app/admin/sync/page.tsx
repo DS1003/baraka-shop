@@ -140,11 +140,20 @@ export default function FtpSyncPage() {
             
             stopProgressSimulation(true)
             addLog(`✅ ${data.productsUpdatedCount} produit(s) mis à jour avec succès`, 'success')
-            if (data.productsUpdatedCount === 0) {
-                addLog('ℹ️ Aucun produit correspondant trouvé dans la base de données', 'info')
+            if (data.productsCreatedCount > 0) {
+                addLog(`✨ ${data.productsCreatedCount} nouveau(x) produit(s) créé(s)`, 'success')
+            }
+            if (data.categoriesSyncedCount > 0) {
+                addLog(`🗂️ ${data.categoriesSyncedCount} catégorie(s) de l'arborescence créée(s) ou mise(s) à jour`, 'success')
+            }
+            if (data.categoriesReassignedCount > 0) {
+                addLog(`📂 ${data.categoriesReassignedCount} produit(s) réassigné(s) à leur vraie catégorie hiérarchique`, 'success')
+            }
+            if (data.productsUpdatedCount === 0 && (!data.productsCreatedCount || data.productsCreatedCount === 0)) {
+                addLog('ℹ️ Aucun produit mis à jour ou créé', 'info')
             }
             addLog('Synchronisation terminée sans erreur.', 'success')
-            toast.success(`Synchronisation réussie ! ${data.productsUpdatedCount} produit(s) mis à jour.`)
+            toast.success(`Synchronisation réussie ! ${data.productsUpdatedCount} mis à jour, ${data.productsCreatedCount || 0} créés, ${data.categoriesSyncedCount || 0} catégories synchronisées.`)
             fetchData()
         } catch (error: any) {
             stopProgressSimulation(false)
@@ -480,11 +489,11 @@ export default function FtpSyncPage() {
                                     {item.status === 'SUCCESS' && (
                                         <div className="flex gap-2">
                                             <div className="flex-1 bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-center">
-                                                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Produits</span>
+                                                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Mis à jour</span>
                                                 <span className="text-[14px] font-black text-slate-900">{item.productsUpdated}</span>
                                             </div>
                                             <div className="flex-1 bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-center">
-                                                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Catégories</span>
+                                                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Nouveaux</span>
                                                 <span className="text-[14px] font-black text-slate-900">{item.categoriesUpdated}</span>
                                             </div>
                                         </div>

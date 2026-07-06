@@ -187,29 +187,67 @@ export async function getProductByIdAction(id: string) {
     }
 }
 
-export async function getSimilarProductsAction(productId: string, categoryId: string, limit: number = 8) {
+export async function getSimilarProductsAction(product: any, limit: number = 8) {
+    if (!product || !product.id) return [];
+    
     try {
-        const cacheKey = `similar:${productId}:${categoryId}:${limit}`;
+        const cacheKey = `similar_v5:${product.id}:${product.categoryId}:${product.subCategoryId}:${product.thirdLevelCategoryId}:${limit}`;
         const cached = await getCache<any>(cacheKey);
         if (cached) return cached;
 
-        const products = await prisma.product.findMany({
-            where: {
-                categoryId,
-                id: { not: productId },
-                stock: { gt: 0 },
-                isPublished: true
-            },
-            include: {
-                category: true,
-                brand: true
-            },
-            take: limit,
-            orderBy: { createdAt: 'desc' }
-        });
+        const baseWhere = {
+            id: { not: product.id },
+            stock: { gt: 0 },
+            isPublished: true
+        };
 
-        await setCache(cacheKey, products, 1800); // 30 min cache
-        return products;
+        let similarProducts: any[] = [];
+
+        // 1. Priorité absolue : même sous-catégorie niveau 2 (thirdLevelCategory)
+        if (product.thirdLevelCategoryId) {
+            const thirdLevelProducts = await prisma.product.findMany({
+                where: { ...baseWhere, thirdLevelCategoryId: product.thirdLevelCategoryId },
+                include: { category: true, brand: true },
+                take: limit,
+                orderBy: { createdAt: 'desc' }
+            });
+            similarProducts = [...thirdLevelProducts];
+        }
+
+        // 2. Si on n'a pas atteint la limite, on complète avec la sous-catégorie niveau 1 (subCategory)
+        if (similarProducts.length < limit && product.subCategoryId) {
+            const excludeIds = similarProducts.map(p => p.id);
+            const subCatProducts = await prisma.product.findMany({
+                where: { 
+                    ...baseWhere, 
+                    subCategoryId: product.subCategoryId,
+                    id: { notIn: [product.id, ...excludeIds] }
+                },
+                include: { category: true, brand: true },
+                take: limit - similarProducts.length,
+                orderBy: { createdAt: 'desc' }
+            });
+            similarProducts = [...similarProducts, ...subCatProducts];
+        }
+
+        // 3. Si toujours pas assez de produits, on complète avec la catégorie principale
+        if (similarProducts.length < limit && product.categoryId) {
+            const excludeIds = similarProducts.map(p => p.id);
+            const catProducts = await prisma.product.findMany({
+                where: { 
+                    ...baseWhere, 
+                    categoryId: product.categoryId,
+                    id: { notIn: [product.id, ...excludeIds] }
+                },
+                include: { category: true, brand: true },
+                take: limit - similarProducts.length,
+                orderBy: { createdAt: 'desc' }
+            });
+            similarProducts = [...similarProducts, ...catProducts];
+        }
+
+        await setCache(cacheKey, similarProducts, 600); // 10 min cache
+        return similarProducts;
     } catch (error) {
         console.error('[Get Similar Products Error]:', error);
         return [];

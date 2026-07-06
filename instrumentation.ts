@@ -46,7 +46,13 @@ export async function register() {
                         console.log(`✅ [CRON] Synchronisation automatique terminée avec succès.`)
                     }
                 } catch (e: any) {
-                    console.error('❌ [CRON] Erreur lors de la synchronisation automatique:', e)
+                    // Ignore les erreurs de connexion temporaires (Neon serverless wake-up delay, pool timeout, etc.)
+                    if (e.code === 'P1001' || e.code === 'P2024' || e.message?.includes("Can't reach database server") || e.message?.includes("connect ETIMEDOUT")) {
+                        // Base de données injoignable temporairement, on ignore silencieusement.
+                        // La boucle setInterval réessaiera dans 30s de toute façon.
+                        return
+                    }
+                    console.error('❌ [CRON] Erreur lors de la synchronisation automatique:', e.message || e)
                 } finally {
                     isRunning = false
                 }

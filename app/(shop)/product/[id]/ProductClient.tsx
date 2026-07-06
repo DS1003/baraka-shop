@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+
 import { Container } from '@/ui/Container'
 import { Button } from '@/ui/Button'
 import {
@@ -159,28 +160,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
         setIsWishlisting(false)
     }
 
-    const handleShare = async () => {
+    const handleCopyLink = () => {
         const shareUrl = window.location.href
-        const shareData = {
-            title: product.name,
-            text: `Découvrez ${product.name} sur Baraka Shop !`,
-            url: shareUrl,
-        }
-
-        const copyToClipboard = () => {
-            try {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(shareUrl).then(() => {
-                        toast.success("Lien copié dans le presse-papiers !")
-                    }).catch(() => fallbackCopy())
-                } else {
-                    fallbackCopy()
-                }
-            } catch (err) {
-                fallbackCopy()
-            }
-        }
-
+        
         const fallbackCopy = () => {
             try {
                 const textArea = document.createElement("textarea")
@@ -198,17 +180,38 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
         }
 
         try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    toast.success("Lien copié dans le presse-papiers !")
+                }).catch(() => fallbackCopy())
+            } else {
+                fallbackCopy()
+            }
+        } catch (err) {
+            fallbackCopy()
+        }
+    }
+
+    const handleShare = async () => {
+        const shareUrl = window.location.href
+        const shareData = {
+            title: product.name,
+            text: `Découvrez ${product.name} sur Baraka Shop !`,
+            url: shareUrl,
+        }
+
+        try {
             // Sur mobile ou si l'API est dispo, on utilise le partage natif
             if (navigator.share) {
                 await navigator.share(shareData)
             } else {
-                copyToClipboard()
+                handleCopyLink()
             }
         } catch (error: any) {
             // Si l'utilisateur annule le partage (AbortError), on ne fait rien
             if (error?.name === 'AbortError') return
             // Si le partage natif échoue pour une autre raison, on force la copie
-            copyToClipboard()
+            handleCopyLink()
         }
     }
     const [activeImg, setActiveImg] = useState(0)
@@ -217,6 +220,19 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
     const [showStickyBar, setShowStickyBar] = useState(false)
     const [viewerOpen, setViewerOpen] = useState(false)
     const [viewerIndex, setViewerIndex] = useState(0)
+    const [showShareMenu, setShowShareMenu] = useState(false)
+    const shareMenuRef = useRef<HTMLDivElement>(null)
+
+    // Handle outside click for share menu
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
+                setShowShareMenu(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     useEffect(() => {
         const handleScroll = () => {
@@ -592,13 +608,64 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                 <Heart className={cn("w-3.5 h-3.5 md:w-4 md:h-4 transition-colors", isWishlisted ? "fill-primary" : "group-hover:fill-primary")} />
                                 <span>{isWishlisted ? "Dans ma liste" : "Ma liste"}</span>
                             </button>
-                            <button
-                                onClick={handleShare}
-                                className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest"
-                            >
-                                <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                                <span>Partager</span>
-                            </button>
+                            <div className="relative" ref={shareMenuRef}>
+                                <button
+                                    onClick={() => setShowShareMenu(!showShareMenu)}
+                                    className="group hover:text-primary transition-all flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest"
+                                >
+                                    <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                                    <span>Partager</span>
+                                </button>
+
+                                {/* Share Dropdown */}
+                                <AnimatePresence>
+                                    {showShareMenu && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-50"
+                                        >
+                                            <div className="flex flex-col gap-1">
+                                                <a 
+                                                    href={`https://wa.me/?text=${encodeURIComponent(`Découvrez ${product.name} sur Baraka Shop ! ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-[#25D366]/10 hover:text-[#25D366] rounded-lg transition-colors"
+                                                    onClick={() => setShowShareMenu(false)}
+                                                >
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                                                    WhatsApp
+                                                </a>
+                                                <a 
+                                                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-[#1877F2]/10 hover:text-[#1877F2] rounded-lg transition-colors"
+                                                    onClick={() => setShowShareMenu(false)}
+                                                >
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                                    Facebook
+                                                </a>
+                                                <button
+                                                    onClick={() => {
+                                                        handleCopyLink();
+                                                        setShowShareMenu(false);
+                                                    }}
+                                                    className="flex items-center gap-3 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors text-left"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                                    Copier le lien
+                                                </button>
+                                            </div>
+                                            
+                                            {/* Petite flèche en bas */}
+                                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-gray-100 rotate-45" />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     </div>
 
