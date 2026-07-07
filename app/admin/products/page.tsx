@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
@@ -50,6 +50,7 @@ import {
 import { clearImportJobs } from '@/lib/actions/import-bg-actions';
 import { testConnection } from '@/lib/actions/debug-actions';
 import { toast } from 'sonner';
+import { SearchableDropdown } from './_components/SearchableDropdown';
 
 export default function ProductsPage() {
     return (
@@ -118,6 +119,9 @@ function ProductsPageContent() {
     const [filterSubCategories, setFilterSubCategories] = useState<any[]>([]);
     const [filterThirdCategories, setFilterThirdCategories] = useState<any[]>([]);
 
+    const [allSubCategories, setAllSubCategories] = useState<any[]>([]);
+    const [allThirdCategories, setAllThirdCategories] = useState<any[]>([]);
+
     useEffect(() => {
         async function loadProducts() {
             setLoading(true);
@@ -170,14 +174,18 @@ function ProductsPageContent() {
 
     useEffect(() => {
         const loadMetadata = async () => {
-            const [cats, brs, sts] = await Promise.all([
+            const [cats, brs, sts, allN2, allN3] = await Promise.all([
                 getAdminCategories(), 
                 getBrands(),
-                getAdminStores()
+                getAdminStores(),
+                getSubCategories(),
+                getThirdLevelCategories()
             ]);
             setCategories(cats);
             setBrands(brs);
             setStores(sts);
+            setAllSubCategories(allN2);
+            setAllThirdCategories(allN3);
         };
         loadMetadata();
     }, []);
@@ -187,7 +195,7 @@ function ProductsPageContent() {
             getSubCategories(activeFilters.categoryId).then(setFilterSubCategories);
         } else {
             setFilterSubCategories([]);
-            setActiveFilters(prev => ({ ...prev, subCategoryId: undefined, thirdLevelCategoryId: undefined }));
+            // Don't auto-reset subCategory filters so the user can filter by subcategory directly
         }
     }, [activeFilters.categoryId]);
 
@@ -196,9 +204,35 @@ function ProductsPageContent() {
             getThirdLevelCategories(activeFilters.subCategoryId).then(setFilterThirdCategories);
         } else {
             setFilterThirdCategories([]);
-            setActiveFilters(prev => ({ ...prev, thirdLevelCategoryId: undefined }));
         }
     }, [activeFilters.subCategoryId]);
+
+    const categoryOptions = useMemo(() => {
+        return categories.map(c => ({ id: c.id, name: c.name, type: 'Catégorie N1' }));
+    }, [categories]);
+
+    const combinedSubCategoriesOptions = useMemo(() => {
+        const n2 = allSubCategories.map(c => ({ id: `n2-${c.id}`, name: c.name, type: 'Sous-catégorie (N2)' }));
+        const n3 = allThirdCategories.map(c => ({ id: `n3-${c.id}`, name: c.name, type: 'Catégorie N3' }));
+        return [...n2, ...n3].sort((a, b) => a.name.localeCompare(b.name));
+    }, [allSubCategories, allThirdCategories]);
+
+    const getCombinedSelectedId = () => {
+        if (activeFilters.subCategoryId) return `n2-${activeFilters.subCategoryId}`;
+        if (activeFilters.thirdLevelCategoryId) return `n3-${activeFilters.thirdLevelCategoryId}`;
+        return '';
+    };
+
+    const handleCombinedCategoryChange = (val: string) => {
+        if (!val) {
+            setActiveFilters(prev => ({ ...prev, subCategoryId: undefined, thirdLevelCategoryId: undefined }));
+        } else if (val.startsWith('n2-')) {
+            setActiveFilters(prev => ({ ...prev, subCategoryId: val.replace('n2-', ''), thirdLevelCategoryId: undefined }));
+        } else if (val.startsWith('n3-')) {
+            setActiveFilters(prev => ({ ...prev, thirdLevelCategoryId: val.replace('n3-', ''), subCategoryId: undefined }));
+        }
+    };
+
 
     const handleDelete = async (id: string) => {
         if (confirm("Supprimer ce produit définitivement ?")) {
@@ -370,29 +404,24 @@ function ProductsPageContent() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex-1 min-w-[150px]">
-                            <select
-                                className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
+                        <div className="flex-1 min-w-[200px] relative z-[41]">
+                            <SearchableDropdown
+                                options={categoryOptions}
                                 value={activeFilters.categoryId || ''}
-                                onChange={(e) => setActiveFilters(prev => ({ ...prev, categoryId: e.target.value || undefined, subCategoryId: undefined, thirdLevelCategoryId: undefined }))}
-                            >
-                                <option value="">Toutes Catégories</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                                onChange={(val) => setActiveFilters(prev => ({ ...prev, categoryId: val || undefined }))}
+                                placeholder="Toutes Catégories"
+                                defaultLabel="Toutes Catégories"
+                            />
                         </div>
 
-                        {filterSubCategories.length > 0 && (
-                            <div className="flex-1 min-w-[150px]">
-                                <select
-                                    className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
-                                    value={activeFilters.subCategoryId || ''}
-                                    onChange={(e) => setActiveFilters(prev => ({ ...prev, subCategoryId: e.target.value || undefined, thirdLevelCategoryId: undefined }))}
-                                >
-                                    <option value="">Sous-catégories</option>
-                                    {filterSubCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                            </div>
-                        )}
+                        <div className="flex-1 min-w-[200px] relative z-[40]">
+                            <SearchableDropdown
+                                options={combinedSubCategoriesOptions}
+                                value={getCombinedSelectedId()}
+                                onChange={handleCombinedCategoryChange}
+                                placeholder="Toutes Sous-catégories"
+                            />
+                        </div>
 
                         <div className="flex-1 min-w-[130px]">
                             <select

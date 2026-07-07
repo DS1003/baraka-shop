@@ -850,9 +850,8 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
             </div>
 
             <div className="mt-4 md:mt-8 px-0 md:px-0">
-                <div className="sticky top-[60px] md:top-[85px] z-40 w-full bg-white/80 backdrop-blur-xl py-4 md:py-6 -mx-4 px-4 md:mx-0 md:px-8 rounded-2xl md:rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-6 md:mb-10 transition-all">
+                <div className="sticky top-[60px] md:top-[85px] z-40 w-full bg-[#f8f9fb] py-4 md:py-6 -mx-4 px-4 md:mx-0 md:px-8 mb-6 md:mb-10 transition-all">
                     <div className="flex flex-col gap-2 w-full md:w-auto">
-                        <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.5em] mb-1">Informations</span>
                         <div className="flex items-center gap-x-5 md:gap-x-6 lg:gap-x-8 overflow-x-auto overflow-y-hidden pt-2 pb-2 scrollbar-hide [&::-webkit-scrollbar]:hidden">
                         {tabs.map((tab) => {
                             const words = tab.label.split(' ');
@@ -1080,16 +1079,16 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
 
                                 {Array.isArray(product.packageContent) && product.packageContent.length > 0 && (
                                     <div className="pt-6 md:pt-8 mt-6 md:mt-8 border-t border-gray-100">
-                                        <div className="bg-[#EAF5F8] p-4 md:p-6 rounded-2xl flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center">
+                                        <div className="bg-orange-50/70 p-4 md:p-6 rounded-2xl flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center">
                                             <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 flex items-center justify-center">
-                                                <Package size={32} className="text-[#0EA5E9] stroke-[1.5]" />
+                                                <Package size={32} className="text-orange-500 stroke-[1.5]" />
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="text-sm md:text-base font-bold text-[#0EA5E9] mb-3">Contenu du packaging</h4>
+                                                <h4 className="text-sm md:text-base font-bold text-orange-600 mb-3">Contenu du packaging</h4>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                                                     {product.packageContent.map((item: string, i: number) => (
                                                         <div key={i} className="flex items-start gap-2">
-                                                            <div className="w-1 h-1 rounded-full bg-[#0EA5E9] mt-2 shrink-0" />
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500 mt-1.5 shrink-0" />
                                                             <span className="text-xs md:text-sm text-gray-700 font-medium leading-snug">{item}</span>
                                                         </div>
                                                     ))}
