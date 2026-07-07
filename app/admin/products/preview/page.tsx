@@ -87,6 +87,7 @@ export default function ProductPreviewPage() {
             <ProductClient
                 product={product}
                 similarProducts={[]}
+                bestSellers={[]}
             />
         </main>
     )
