@@ -313,7 +313,19 @@ export function Header() {
                                                             <span className="text-sm font-bold text-[#1B1F3B] group-hover:text-primary transition-colors">{item.name}</span>
                                                             <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category?.name || item.category}</span>
                                                         </div>
-                                                        <span className="ml-auto text-sm font-black text-[#1B1F3B]">{item.price.toLocaleString()} FCFA</span>
+                                                        <div className="ml-auto flex flex-col items-end gap-1">
+                                                            <span className="text-sm font-black text-[#1B1F3B]">{item.price.toLocaleString()} FCFA</span>
+                                                            {item.stock > 0 ? (
+                                                                <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-green-100 flex items-center gap-1">
+                                                                    <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                                                                    En Stock
+                                                                </span>
+                                                            ) : (
+                                                                <span className="bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-red-100">
+                                                                    Rupture
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </Link>
                                                 ))}
                                                 {searchSuggestions.length === 0 && (

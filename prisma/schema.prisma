@@ -46,6 +46,7 @@ model Product {
   promotionId          String?
   storeId              String?
   features             Json?                 @default("[]")
+  packageContent       Json?                 @default("[]")
   shortDescription     String?
   reference            String?               @unique
   detailedDescription  Json?                 @default("[]")

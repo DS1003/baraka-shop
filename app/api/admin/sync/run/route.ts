@@ -12,9 +12,14 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const result = await runFtpSync('MANUAL')
-        return NextResponse.json(result)
+        // Fire and forget - don't await so the response is immediate
+        // The frontend will poll the progress via /api/admin/sync/status
+        runFtpSync('MANUAL').catch(err => {
+            console.error('[MANUAL_SYNC] Background error:', err)
+        })
+        
+        return NextResponse.json({ success: true, message: 'Synchronisation démarrée en arrière-plan' })
     } catch (error: any) {
-        return NextResponse.json({ error: error.message || 'Erreur lors de la synchronisation FTP' }, { status: 500 })
+        return NextResponse.json({ error: error.message || 'Erreur lors du démarrage de la synchronisation' }, { status: 500 })
     }
 }

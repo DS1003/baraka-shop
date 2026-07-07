@@ -4,6 +4,7 @@ import prisma from './prisma'
 import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
+import { startSyncTracking, addSyncLog, updateSyncProgress, completeSyncTracking } from './sync-status'
 
 export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
     // 1. Fetch config
@@ -27,6 +28,9 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         }
     })
 
+    // Start real-time tracking
+    startSyncTracking(type, history.id)
+
     const client = new Client(60000) // 60 seconds timeout instead of default 30s
     client.ftp.verbose = false // Set to true for deep debugging if needed in prod
 
@@ -34,12 +38,15 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
 
     try {
         // 3. Connect to FTP
+        updateSyncProgress(5, 'Connexion au serveur FTP...')
+        addSyncLog('Connexion au serveur FTP...')
         await client.access({
             host: config.ftpServer,
             user: config.ftpUser,
             password: config.ftpPassword,
             secure: false, // Standard FTP assumed based on prompt
         })
+        addSyncLog('✅ Connecté au serveur FTP', 'success')
 
         // 4. Download files from FTP
         // On Vercel, process.cwd() is read-only. We MUST use os.tmpdir() which maps to the writable /tmp folder.
@@ -61,8 +68,11 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         }
 
         // Download ARTICLES_BARAKA.xlsx
+        updateSyncProgress(15, 'Téléchargement du fichier Excel...')
+        addSyncLog('Téléchargement de ARTICLES_BARAKA.xlsx...')
         const exactArticlesPath = ftpDir.endsWith('/') ? `${ftpDir}${articlesFile.name}` : `${ftpDir}/${articlesFile.name}`
         await client.downloadTo(articlesPath, exactArticlesPath)
+        addSyncLog('✅ ARTICLES_BARAKA.xlsx téléchargé', 'success')
 
         // Download CATEGORIES_BARAKA.xlsx (if it exists)
         type FtpCategory = { id: string; name: string; parentId: string; image: string | null }
@@ -70,8 +80,10 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         let categoriesSyncedCount = 0
 
         if (categoriesFile) {
+            addSyncLog('Téléchargement de CATEGORIES_BARAKA.xlsx...')
             const exactCategoriesPath = ftpDir.endsWith('/') ? `${ftpDir}${categoriesFile.name}` : `${ftpDir}/${categoriesFile.name}`
             await client.downloadTo(categoriesPath, exactCategoriesPath)
+            addSyncLog('✅ CATEGORIES_BARAKA.xlsx téléchargé', 'success')
 
             try {
                 const catBuffer = await fs.readFile(categoriesPath)
@@ -111,9 +123,12 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         }
 
         // 5. Process Products
+        updateSyncProgress(30, 'Analyse des produits...')
+        addSyncLog('Analyse du fichier Excel des produits...')
         const prodWorkbook = xlsx.read(fileBuffer, { type: 'buffer' })
         const prodSheetName = prodWorkbook.SheetNames[0]
         const prodData = xlsx.utils.sheet_to_json<any>(prodWorkbook.Sheets[prodSheetName])
+        addSyncLog(`${prodData.length} lignes de produits trouvées`)
 
         // Optimize: Fetch all existing product references in one query to avoid 10,000 sequential DB calls
         const allProducts = await prisma.product.findMany({ select: { id: true, reference: true, categoryId: true, subCategoryId: true, thirdLevelCategoryId: true } })
@@ -152,6 +167,8 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         const resolvedCategoriesCache = new Map<string, ResolvedDbCategory>()
 
         if (ftpCategories.size > 0) {
+            updateSyncProgress(40, 'Construction de la hiérarchie des catégories...')
+            addSyncLog('Construction de la hiérarchie des catégories...')
             // Level 1
             const n1Categories = Array.from(ftpCategories.values()).filter(c => c.parentId === '0' || c.parentId === '')
             for (const n1 of n1Categories) {
@@ -201,6 +218,7 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
             }
             
             console.log(`[SYNC] Hiérarchie de catégories construite. Nouveaux créés: ${categoriesSyncedCount}`)
+            addSyncLog(`✅ Hiérarchie construite — ${categoriesSyncedCount} nouvelle(s) catégorie(s) créée(s)`, 'success')
         }
 
         const updateValues = []
@@ -287,6 +305,8 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         }
 
         // Execute raw SQL updates in batches to prevent memory and connection timeout issues
+        updateSyncProgress(60, 'Mise à jour des prix et stocks...')
+        addSyncLog(`Mise à jour de ${updateValues.length} produit(s) existant(s)...`)
         const CHUNK_SIZE = 1000
         for (let i = 0; i < updateValues.length; i += CHUNK_SIZE) {
             const chunk = updateValues.slice(i, i + CHUNK_SIZE)
@@ -318,6 +338,8 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         // Bulk insert new products
         let productsCreatedCount = 0
         if (createValues.length > 0) {
+            updateSyncProgress(80, 'Création des nouveaux produits...')
+            addSyncLog(`Création de ${createValues.length} nouveau(x) produit(s)...`)
             // Process in chunks to avoid large query errors
             const INSERT_CHUNK = 500
             for (let i = 0; i < createValues.length; i += INSERT_CHUNK) {
@@ -337,6 +359,9 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         await fs.unlink(categoriesPath).catch(() => {})
 
         // 6. Success
+        updateSyncProgress(95, 'Finalisation...')
+        addSyncLog('Enregistrement des résultats...')
+
         await prisma.syncHistory.update({
             where: { id: history.id },
             data: {
@@ -348,10 +373,24 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
             }
         })
 
-        return { success: true, productsUpdatedCount, productsCreatedCount, categoriesReassignedCount, categoriesSyncedCount }
+        const syncResult = { productsUpdatedCount, productsCreatedCount, categoriesReassignedCount, categoriesSyncedCount }
+
+        addSyncLog(`✅ ${productsUpdatedCount} produit(s) mis à jour`, 'success')
+        if (productsCreatedCount > 0) addSyncLog(`✨ ${productsCreatedCount} nouveau(x) produit(s) créé(s)`, 'success')
+        if (categoriesSyncedCount > 0) addSyncLog(`🗂️ ${categoriesSyncedCount} catégorie(s) synchronisée(s)`, 'success')
+        if (categoriesReassignedCount > 0) addSyncLog(`📂 ${categoriesReassignedCount} produit(s) réassigné(s)`, 'success')
+        addSyncLog('Synchronisation terminée sans erreur.', 'success')
+
+        completeSyncTracking(true, syncResult)
+
+        return { success: true, ...syncResult }
 
     } catch (error: any) {
         // 8. Error
+        addSyncLog(`❌ Erreur : ${error.message}`, 'error')
+        addSyncLog('La synchronisation a échoué.', 'error')
+        completeSyncTracking(false, { error: error.message })
+
         await prisma.syncHistory.update({
             where: { id: history.id },
             data: {

@@ -16,24 +16,12 @@ export default function FtpSyncPage() {
     const [syncProgress, setSyncProgress] = useState(0)
     const [syncStep, setSyncStep] = useState('')
     const [syncLogs, setSyncLogs] = useState<{time: string, message: string, type: 'info' | 'success' | 'error'}[]>([])
-    const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
-    const lastStepRef = useRef('')
     const logsEndRef = useRef<HTMLDivElement | null>(null)
     const [newTime, setNewTime] = useState('12:00')
-
-    const SYNC_STEPS = [
-        { at: 5,  label: 'Connexion au serveur FTP...' },
-        { at: 15, label: 'Téléchargement du fichier Excel...' },
-        { at: 35, label: 'Analyse des produits...' },
-        { at: 60, label: 'Mise à jour des prix et stocks...' },
-        { at: 85, label: 'Finalisation...' },
-    ]
+    const pollingRef = useRef<NodeJS.Timeout | null>(null)
+    const wasRunningRef = useRef(false)
 
     const now = () => new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-
-    const addLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
-        setSyncLogs(prev => [...prev, { time: now(), message, type }])
-    }
 
     useEffect(() => {
         if (logsEndRef.current && logsEndRef.current.parentElement) {
@@ -41,36 +29,63 @@ export default function FtpSyncPage() {
         }
     }, [syncLogs])
 
-    const startProgressSimulation = () => {
-        setSyncProgress(0)
-        setSyncLogs([])
-        lastStepRef.current = ''
-        setSyncStep(SYNC_STEPS[0].label)
-        addLog('Démarrage de la synchronisation FTP...')
-        let current = 0
-        progressIntervalRef.current = setInterval(() => {
-            current += Math.random() * 3 + 0.5
-            if (current > 95) current = 95
-            setSyncProgress(Math.round(current))
-            const step = [...SYNC_STEPS].reverse().find(s => current >= s.at)
-            if (step && step.label !== lastStepRef.current) {
-                lastStepRef.current = step.label
-                setSyncStep(step.label)
-                setSyncLogs(prev => [...prev, { time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }), message: step.label, type: 'info' }])
-            }
-        }, 400)
-    }
-
-    const stopProgressSimulation = (success: boolean) => {
-        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current)
-        progressIntervalRef.current = null
-        setSyncProgress(100)
-        setSyncStep(success ? 'Synchronisation terminée !' : 'Échec de la synchronisation')
-    }
-
+    // ────────────────────────────────────────────────
+    // Real-time sync status polling (2s interval)
+    // Detects both manual AND scheduled syncs
+    // ────────────────────────────────────────────────
     useEffect(() => {
+        const pollStatus = async () => {
+            try {
+                const res = await fetch('/api/admin/sync/status')
+                const status = await res.json()
+
+                if (status.isRunning) {
+                    // A sync is running (manual or scheduled)
+                    if (!wasRunningRef.current) {
+                        // Just started → activate the UI
+                        wasRunningRef.current = true
+                        setIsSyncing(true)
+                        if (status.type === 'SCHEDULED') {
+                            toast.info('⏰ Synchronisation planifiée en cours...')
+                        }
+                    }
+                    setSyncProgress(status.progress)
+                    setSyncStep(status.step)
+                    setSyncLogs(status.logs || [])
+                } else if (wasRunningRef.current) {
+                    // Sync just finished → show final state
+                    wasRunningRef.current = false
+                    setSyncProgress(status.progress)
+                    setSyncStep(status.step)
+                    setSyncLogs(status.logs || [])
+                    setIsSyncing(false)
+
+                    // Refresh history
+                    fetchHistory()
+
+                    if (status.result?.error) {
+                        toast.error(`Synchronisation échouée : ${status.result.error}`)
+                    } else {
+                        const r = status.result || {}
+                        toast.success(`Synchronisation réussie ! ${r.productsUpdatedCount || 0} mis à jour, ${r.productsCreatedCount || 0} créés.`)
+                    }
+                }
+            } catch {
+                // Ignore polling errors
+            }
+        }
+
+        // Load initial data
         fetchData()
-    }, [])
+
+        // Start polling immediately
+        pollStatus()
+        pollingRef.current = setInterval(pollStatus, 2_000)
+
+        return () => {
+            if (pollingRef.current) clearInterval(pollingRef.current)
+        }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchData = async () => {
         try {
@@ -95,6 +110,14 @@ export default function FtpSyncPage() {
         }
     }
 
+    const fetchHistory = async () => {
+        try {
+            const res = await fetch('/api/admin/sync/history')
+            const data = await res.json()
+            if (Array.isArray(data)) setHistory(data)
+        } catch {}
+    }
+
     const handleSaveConfig = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSaving(true)
@@ -116,8 +139,12 @@ export default function FtpSyncPage() {
     const handleManualSync = async () => {
         setIsConfirmModalOpen(false)
         setIsSyncing(true)
-        startProgressSimulation()
+        setSyncProgress(0)
+        setSyncStep('Démarrage...')
+        setSyncLogs([])
+
         try {
+            // Fire-and-forget: the polling system will track progress in real-time
             const res = await fetch('/api/admin/sync/run', { method: 'POST' })
             
             let data;
@@ -131,38 +158,20 @@ export default function FtpSyncPage() {
                 if (res.status === 504) {
                     errorMessage = "Délai d'attente dépassé (Timeout). L'opération prend trop de temps pour ce serveur.";
                 } else if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-                    errorMessage = `Erreur système (${res.status}): Le serveur a renvoyé une page HTML au lieu de JSON (possible timeout ou erreur de configuration).`;
+                    errorMessage = `Erreur système (${res.status}): Le serveur a renvoyé une page HTML au lieu de JSON.`;
                 }
                 throw new Error(errorMessage);
             }
             
             if (!res.ok) throw new Error(data.error || "Erreur inconnue")
             
-            stopProgressSimulation(true)
-            addLog(`✅ ${data.productsUpdatedCount} produit(s) mis à jour avec succès`, 'success')
-            if (data.productsCreatedCount > 0) {
-                addLog(`✨ ${data.productsCreatedCount} nouveau(x) produit(s) créé(s)`, 'success')
-            }
-            if (data.categoriesSyncedCount > 0) {
-                addLog(`🗂️ ${data.categoriesSyncedCount} catégorie(s) de l'arborescence créée(s) ou mise(s) à jour`, 'success')
-            }
-            if (data.categoriesReassignedCount > 0) {
-                addLog(`📂 ${data.categoriesReassignedCount} produit(s) réassigné(s) à leur vraie catégorie hiérarchique`, 'success')
-            }
-            if (data.productsUpdatedCount === 0 && (!data.productsCreatedCount || data.productsCreatedCount === 0)) {
-                addLog('ℹ️ Aucun produit mis à jour ou créé', 'info')
-            }
-            addLog('Synchronisation terminée sans erreur.', 'success')
-            toast.success(`Synchronisation réussie ! ${data.productsUpdatedCount} mis à jour, ${data.productsCreatedCount || 0} créés, ${data.categoriesSyncedCount || 0} catégories synchronisées.`)
-            fetchData()
+            // Le polling se chargera d'afficher les résultats finaux
+            fetchHistory()
         } catch (error: any) {
-            stopProgressSimulation(false)
-            addLog(`❌ Erreur : ${error.message}`, 'error')
-            addLog('La synchronisation a échoué. Vérifiez vos paramètres de connexion FTP.', 'error')
             toast.error(error.message || "La synchronisation a échoué")
-            fetchData()
+            fetchHistory()
         } finally {
-            setIsSyncing(false)
+            // Le polling détectera la fin et mettra isSyncing à false
         }
     }
 

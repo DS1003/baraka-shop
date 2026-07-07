@@ -25,7 +25,8 @@ import {
     ThumbsUp,
     ThumbsDown,
     Flag,
-    X
+    X,
+    Package
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -43,9 +44,10 @@ import { addReviewAction, voteReviewAction, reportReviewAction } from '@/lib/act
 interface ProductClientProps {
     product: any
     similarProducts: any[]
+    bestSellers: any[]
 }
 
-export function ProductClient({ product, similarProducts }: ProductClientProps) {
+export function ProductClient({ product, similarProducts, bestSellers }: ProductClientProps) {
     const { addToCart } = useCart()
     const { headerLogo } = useSiteLogos()
     const { data: session } = useSession()
@@ -250,6 +252,9 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
 
     const [currentIndexSimilar, setCurrentIndexSimilar] = useState(0)
     const [directionSimilar, setDirectionSimilar] = useState(0)
+    const [activeDiscoveryTab, setActiveDiscoveryTab] = useState<'similar' | 'bestsellers' | 'brands'>('similar')
+    const [currentIndexBestsellers, setCurrentIndexBestsellers] = useState(0)
+    const [directionBestsellers, setDirectionBestsellers] = useState(0)
     const [isMobile, setIsMobile] = useState(false)
 
     useEffect(() => {
@@ -298,6 +303,15 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
         return resultArray;
     }, []);
 
+    const bestSellerChunks = bestSellers.reduce((resultArray: any[][], item, index) => {
+        const chunkIndex = Math.floor(index / chunkSize);
+        if (!resultArray[chunkIndex]) {
+            resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+    }, []);
+
     const slideNextSimilar = () => {
         if (similarProductChunks.length <= 1) return
         setDirectionSimilar(1)
@@ -308,6 +322,18 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
         if (similarProductChunks.length <= 1) return
         setDirectionSimilar(-1)
         setCurrentIndexSimilar((prev) => (prev - 1 + similarProductChunks.length) % similarProductChunks.length)
+    }
+
+    const slideNextBestsellers = () => {
+        if (bestSellerChunks.length <= 1) return
+        setDirectionBestsellers(1)
+        setCurrentIndexBestsellers((prev) => (prev + 1) % bestSellerChunks.length)
+    }
+
+    const slidePrevBestsellers = () => {
+        if (bestSellerChunks.length <= 1) return
+        setDirectionBestsellers(-1)
+        setCurrentIndexBestsellers((prev) => (prev - 1 + bestSellerChunks.length) % bestSellerChunks.length)
     }
 
     const carouselVariants = {
@@ -824,27 +850,33 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
             </div>
 
             <div className="mt-4 md:mt-8 px-0 md:px-0">
-                <div className="sticky top-[60px] md:top-[85px] z-40 flex p-1 bg-white/80 backdrop-blur-xl rounded-2xl md:rounded-[2rem] border border-gray-200 mb-6 md:mb-8 w-full scrollbar-hide shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={cn(
-                                "relative flex-1 px-2 md:px-8 py-2.5 md:py-4 text-[8px] md:text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 md:gap-3 whitespace-nowrap rounded-xl md:rounded-[1.5rem] z-10",
-                                activeTab === tab.id ? "text-white" : "text-gray-400 hover:text-gray-600"
-                            )}
-                        >
-                            <tab.icon className={cn("w-3 h-3 md:w-4 md:h-4", activeTab === tab.id ? "text-white" : "text-gray-400")} />
-                            <span className="truncate">{tab.label}</span>
-                            {activeTab === tab.id && (
-                                <motion.div
-                                    layoutId="activeTabPill"
-                                    className="absolute inset-0 bg-primary rounded-xl md:rounded-[1.5rem] -z-10 shadow-lg shadow-primary/20"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                        </button>
-                    ))}
+                <div className="sticky top-[60px] md:top-[85px] z-40 w-full bg-white/80 backdrop-blur-xl py-4 md:py-6 -mx-4 px-4 md:mx-0 md:px-8 rounded-2xl md:rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-6 md:mb-10 transition-all">
+                    <div className="flex flex-col gap-2 w-full md:w-auto">
+                        <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.5em] mb-1">Informations</span>
+                        <div className="flex items-center gap-x-5 md:gap-x-6 lg:gap-x-8 overflow-x-auto overflow-y-hidden pt-2 pb-2 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+                        {tabs.map((tab) => {
+                            const words = tab.label.split(' ');
+                            return (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={cn(
+                                        "whitespace-nowrap text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold transition-all relative uppercase tracking-tight py-1 flex-shrink-0",
+                                        activeTab === tab.id ? "text-[#1B1F3B]" : "text-gray-300 hover:text-[#1B1F3B]/40"
+                                    )}
+                                >
+                                    {words[0]} {words[1] && <span className="text-primary italic font-black ml-1.5">{words[1]}</span>}
+                                    {activeTab === tab.id && (
+                                        <motion.div
+                                            layoutId="productTabUnderline"
+                                            className="absolute -bottom-1 md:-bottom-1.5 left-0 w-full h-[2px] md:h-[3px] bg-primary rounded-full shadow-[0_2px_10px_rgba(255,140,0,0.3)]"
+                                        />
+                                    )}
+                                </button>
+                            )
+                        })}
+                    </div>
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-3xl md:rounded-[3rem] p-4 md:p-10 border border-gray-100 shadow-[0_20px_40px_rgba(0,0,0,0.015)] min-h-[300px] md:min-h-[400px]">
@@ -1045,6 +1077,27 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                                         ))}
                                     </div>
                                 </div>
+
+                                {Array.isArray(product.packageContent) && product.packageContent.length > 0 && (
+                                    <div className="pt-6 md:pt-8 mt-6 md:mt-8 border-t border-gray-100">
+                                        <div className="bg-[#EAF5F8] p-4 md:p-6 rounded-2xl flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center">
+                                            <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 flex items-center justify-center">
+                                                <Package size={32} className="text-[#0EA5E9] stroke-[1.5]" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-sm md:text-base font-bold text-[#0EA5E9] mb-3">Contenu du packaging</h4>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {product.packageContent.map((item: string, i: number) => (
+                                                        <div key={i} className="flex items-start gap-2">
+                                                            <div className="w-1 h-1 rounded-full bg-[#0EA5E9] mt-2 shrink-0" />
+                                                            <span className="text-xs md:text-sm text-gray-700 font-medium leading-snug">{item}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
 
@@ -1308,52 +1361,107 @@ export function ProductClient({ product, similarProducts }: ProductClientProps) 
                 </div>
             </div>
 
-            {/* Similar Products */}
-            {similarProducts.length > 0 && (
-                <div className="mt-16">
-                    <div className="flex items-end justify-between mb-8">
-                        <div className="flex flex-col gap-2">
-                            <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Découverte</span>
-                            <h2 className="text-3xl font-black text-[#1B1F3B] uppercase tracking-tight">Produits <span className="text-primary italic">Similaires</span></h2>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={slidePrevSimilar}
-                                disabled={similarProductChunks.length <= 1}
-                                className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm text-[#1B1F3B] disabled:opacity-20 transition-all"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={slideNextSimilar}
-                                disabled={similarProductChunks.length <= 1}
-                                className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm text-[#1B1F3B] disabled:opacity-20 transition-all"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+            {/* Discovery Section with Tabs */}
+            <div className="mt-16">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+                    <div className="flex flex-col gap-2 min-w-0 flex-1">
+                        <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.5em] mb-1">Découverte</span>
+                        <div className="flex items-center gap-x-4 md:gap-x-5 lg:gap-x-8 overflow-x-auto overflow-y-hidden pt-2 pb-2 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+                            {[
+                                { id: 'similar' as const, label: 'Produits Similaires' },
+                                { id: 'bestsellers' as const, label: 'Meilleures Ventes' },
+                                { id: 'brands' as const, label: 'Nos Marques' },
+                            ].map((tab) => {
+                                const words = tab.label.split(' ');
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => {
+                                            if (tab.id === 'brands') {
+                                                window.location.href = '/marques';
+                                                return;
+                                            }
+                                            setActiveDiscoveryTab(tab.id);
+                                        }}
+                                        className={cn(
+                                            "whitespace-nowrap text-base sm:text-lg md:text-xl lg:text-3xl font-extrabold transition-all relative uppercase tracking-tight py-1 flex-shrink-0",
+                                            activeDiscoveryTab === tab.id ? "text-[#1B1F3B]" : "text-gray-300 hover:text-[#1B1F3B]/40"
+                                        )}
+                                    >
+                                        {words[0]} {words[1] && <span className="text-primary italic font-black ml-1">{words[1]}</span>}
+                                        {activeDiscoveryTab === tab.id && (
+                                            <motion.div
+                                                layoutId="discoveryTabUnderline"
+                                                className="absolute -bottom-1 md:-bottom-1.5 left-0 w-full h-[2px] md:h-[3px] bg-primary rounded-full shadow-[0_2px_10px_rgba(255,140,0,0.3)]"
+                                            />
+                                        )}
+                                    </button>
+                                )
+                            })}
                         </div>
                     </div>
-
-                    <div className="relative h-auto">
-                        <AnimatePresence initial={false} custom={directionSimilar} mode="wait">
-                            <motion.div
-                                key={currentIndexSimilar}
-                                custom={directionSimilar}
-                                variants={carouselVariants}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{ x: { type: "spring", stiffness: 200, damping: 25 }, opacity: { duration: 0.3 } }}
-                                className={cn("grid gap-4 md:gap-8 relative w-full", isMobile ? "grid-cols-2" : "grid-cols-4")}
-                            >
-                                {similarProductChunks[currentIndexSimilar]?.map((prod) => (
-                                    <ProductCard key={prod.id} product={prod} />
-                                ))}
-                            </motion.div>
-                        </AnimatePresence>
+                    <div className="flex items-center gap-3 flex-shrink-0 self-end">
+                        <button
+                            onClick={activeDiscoveryTab === 'similar' ? slidePrevSimilar : slidePrevBestsellers}
+                            disabled={activeDiscoveryTab === 'similar' ? similarProductChunks.length <= 1 : bestSellerChunks.length <= 1}
+                            className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm text-[#1B1F3B] disabled:opacity-20 transition-all"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={activeDiscoveryTab === 'similar' ? slideNextSimilar : slideNextBestsellers}
+                            disabled={activeDiscoveryTab === 'similar' ? similarProductChunks.length <= 1 : bestSellerChunks.length <= 1}
+                            className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm text-[#1B1F3B] disabled:opacity-20 transition-all"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
                     </div>
                 </div>
-            )}
+
+                <AnimatePresence mode="wait">
+                    {activeDiscoveryTab === 'similar' && similarProducts.length > 0 && (
+                        <motion.div key="similar" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="relative h-auto">
+                            <AnimatePresence initial={false} custom={directionSimilar} mode="wait">
+                                <motion.div
+                                    key={currentIndexSimilar}
+                                    custom={directionSimilar}
+                                    variants={carouselVariants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{ x: { type: "spring", stiffness: 200, damping: 25 }, opacity: { duration: 0.3 } }}
+                                    className={cn("grid gap-4 md:gap-8 relative w-full", isMobile ? "grid-cols-2" : "grid-cols-4")}
+                                >
+                                    {similarProductChunks[currentIndexSimilar]?.map((prod) => (
+                                        <ProductCard key={prod.id} product={prod} />
+                                    ))}
+                                </motion.div>
+                            </AnimatePresence>
+                        </motion.div>
+                    )}
+
+                    {activeDiscoveryTab === 'bestsellers' && bestSellers.length > 0 && (
+                        <motion.div key="bestsellers" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="relative h-auto">
+                            <AnimatePresence initial={false} custom={directionBestsellers} mode="wait">
+                                <motion.div
+                                    key={currentIndexBestsellers}
+                                    custom={directionBestsellers}
+                                    variants={carouselVariants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{ x: { type: "spring", stiffness: 200, damping: 25 }, opacity: { duration: 0.3 } }}
+                                    className={cn("grid gap-4 md:gap-8 relative w-full", isMobile ? "grid-cols-2" : "grid-cols-4")}
+                                >
+                                    {bestSellerChunks[currentIndexBestsellers]?.map((prod) => (
+                                        <ProductCard key={prod.id} product={prod} />
+                                    ))}
+                                </motion.div>
+                            </AnimatePresence>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
             {/* Sticky Buy Bar */}
             <AnimatePresence>
                 {showStickyBar && (

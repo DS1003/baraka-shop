@@ -168,6 +168,23 @@ function smartParseMetadata(text: string) {
     return result;
 }
 
+const parsePackageContent = (raw: string) => {
+    if (!raw || raw.trim() === '') return [];
+    let cleaned = raw.trim();
+    // Remove "Contenu :" prefix if present
+    if (cleaned.match(/^Contenu\s*:\s*/i)) {
+        cleaned = cleaned.replace(/^Contenu\s*:\s*/i, '');
+    }
+    
+    // If it contains newlines, split by newlines
+    if (cleaned.includes('\n')) {
+        return cleaned.split('\n').map(item => item.replace(/^[-•]\s*/, '').trim()).filter(Boolean);
+    }
+    
+    // Otherwise split by comma
+    return cleaned.split(',').map(item => item.replace(/^[-•]\s*/, '').trim()).filter(Boolean);
+}
+
 export default function ProductForm({ editingProduct }: { editingProduct?: any }) {
     const router = useRouter();
     const [isSaving, setIsSaving] = useState(false);
@@ -765,6 +782,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             shortDescription: formData.get('shortDescription') as string || null,
             detailedDescription,
             features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
+            packageContent: parsePackageContent(formData.get('packageContent') as string || ""),
             isPublished,
             metadata: (() => {
                 const raw = metadataText;
@@ -1026,6 +1044,17 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 placeholder="Collez ici vos spécifications en vrac..."
                             />
                         </div>
+                    </div>
+                    
+                    <div className="mt-4 space-y-1.5">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Contenu de l'emballage (1 par ligne)</label>
+                        <textarea
+                            name="packageContent"
+                            defaultValue={Array.isArray(editingProduct?.packageContent) ? editingProduct.packageContent.join('\n') : ""}
+                            rows={4}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
+                            placeholder="Ex: 1x DJI Osmo Pocket 4&#10;1x Câble PD USB-C vers USB-C"
+                        />
                     </div>
                 </section>
 
@@ -1810,6 +1839,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 description,
                                 shortDescription,
                                 features,
+                                packageContent: parsePackageContent(formData.get('packageContent') as string || ""),
                                 metadata: metaParsed,
                                 images: formImages,
                                 videos: formVideos,

@@ -47,6 +47,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
     // Fetch similar products based on the full category hierarchy (intelligent matching)
     const similarProducts = await getSimilarProductsAction(product, 8)
+    const topRatedProducts = await getProductsAction({ sort: 'top_rated', limit: 8 })
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
@@ -69,6 +70,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <ProductClient
                 product={product}
                 similarProducts={similarProducts}
+                bestSellers={topRatedProducts.products}
             />
         </main>
     )
