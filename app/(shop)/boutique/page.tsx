@@ -47,6 +47,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             brand,
             sort,
             page,
+            limit: 30,
             minPrice,
             maxPrice,
             query
