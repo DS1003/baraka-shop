@@ -1,0 +1,21 @@
+{
+  "name": "Baraka Shop - Electronique & High-Tech Sénégal",
+  "short_name": "Baraka Shop",
+  "description": "Baraka Shop (Baraka Electronique) - Vente de matériel électronique, informatique, smartphones et accessoires à Dakar, Sénégal.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F97316",
+  "icons": [
+    {
+      "src": "/logo-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

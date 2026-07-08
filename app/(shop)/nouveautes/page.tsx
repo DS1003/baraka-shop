@@ -5,8 +5,9 @@ import { NouveautesClient } from './NouveautesClient'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'Nouveautés | Baraka Shop - Tout beau, tout chaud !',
-    description: 'Découvrez les dernières nouveautés high-tech chez Baraka Shop. Les produits les plus récents sélectionnés pour vous.',
+    title: 'Nouveautés High-Tech | Baraka Shop (Baraka Electronique) - Sénégal',
+    description: 'Découvrez les dernières nouveautés high-tech chez Baraka Shop (Baraka Electronique). Smartphones, ordinateurs et accessoires dernière génération à Dakar, Sénégal.',
+    keywords: ['nouveautés baraka', 'nouveau smartphone dakar', 'baraka electronique nouveautés', 'baraka shop nouveaux produits', 'high-tech sénégal'],
 }
 
 export default async function NouveautesPage({ searchParams }: { searchParams: Promise<any> }) {

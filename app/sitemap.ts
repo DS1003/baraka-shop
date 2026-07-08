@@ -8,7 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // Fetch published products
         const products = await prisma.product.findMany({
             where: { isPublished: true },
-            select: { slug: true, updatedAt: true }
+            select: { id: true, slug: true, updatedAt: true }
         })
 
         // Fetch published categories
@@ -17,15 +17,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             select: { slug: true }
         })
 
+        // Fetch brands
+        const brands = await prisma.brand.findMany({
+            select: { slug: true }
+        })
+
+        // Fetch univers
+        const univers = await prisma.univers.findMany({
+            where: { isPublished: true },
+            select: { slug: true }
+        }).catch(() => [])
+
         const productUrls = products.map((product) => ({
-            url: `${baseUrl}/boutique/p/${product.slug}`,
+            url: `${baseUrl}/product/${product.id}`,
             lastModified: product.updatedAt,
             changeFrequency: 'weekly' as const,
             priority: 0.8,
         }))
 
         const categoryUrls = categories.map((category) => ({
-            url: `${baseUrl}/categories/${category.slug}`,
+            url: `${baseUrl}/boutique?category=${category.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.7,
+        }))
+
+        const brandUrls = brands.map((brand) => ({
+            url: `${baseUrl}/marques/${brand.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as const,
+            priority: 0.6,
+        }))
+
+        const universUrls = univers.map((u: any) => ({
+            url: `${baseUrl}/univers/${u.slug}`,
             lastModified: new Date(),
             changeFrequency: 'weekly' as const,
             priority: 0.7,
@@ -45,6 +70,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 priority: 0.9,
             },
             {
+                url: `${baseUrl}/promotions`,
+                lastModified: new Date(),
+                changeFrequency: 'daily',
+                priority: 0.9,
+            },
+            {
+                url: `${baseUrl}/nouveautes`,
+                lastModified: new Date(),
+                changeFrequency: 'daily',
+                priority: 0.8,
+            },
+            {
                 url: `${baseUrl}/about`,
                 lastModified: new Date(),
                 changeFrequency: 'monthly',
@@ -57,6 +94,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 priority: 0.5,
             },
             ...categoryUrls,
+            ...universUrls,
+            ...brandUrls,
             ...productUrls,
         ]
     } catch (error) {

@@ -13,19 +13,29 @@ const roboto = Roboto({
 })
 
 export const metadata: Metadata = {
-  title: 'Baraka Shop | High-Tech & Électronique Premium au Sénégal',
-  description: 'Votre destination de confiance pour l\'électronique haut de gamme au Sénégal. Smartphones, Ordinateurs, Audio et Jeux Vidéo avec livraison express.',
-  keywords: ['Baraka Shop', 'Sénégal', 'Électronique', 'Smartphone Sénégal', 'Ordinateur Dakar', 'High-Tech', 'Dakar Shop'],
-  authors: [{ name: 'Baraka Shop' }],
+  title: {
+    default: 'Baraka Shop | Électronique et High-Tech Premier au Sénégal',
+    template: '%s | Baraka Shop'
+  },
+  description: 'Baraka Shop (Baraka Electronique) : Votre destination de confiance pour l\'électronique haut de gamme, smartphones, ordinateurs et accessoires à Dakar, Sénégal (Sandaga).',
+  keywords: [
+    'Baraka electronique', 'baraka shop', 'baraka sn', 'baraka', 'electronique sn', 
+    'baraka sandaga', 'smartphone dakar', 'ordinateur sénégal', 'high-tech dakar', 
+    'vente électronique sénégal', 'boutique electronique dakar'
+  ],
+  authors: [{ name: 'Baraka Electronique' }, { name: 'Baraka Shop' }],
   metadataBase: new URL('https://baraka.sn'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'Baraka Shop | Électronique Premier au Sénégal',
-    description: 'Le meilleur de la technologie livré chez vous partout au Sénégal.',
+    title: 'Baraka Shop (Baraka Electronique) | High-Tech Sénégal',
+    description: 'Le meilleur de la technologie livré chez vous partout au Sénégal. Découvrez notre sélection Baraka SN.',
     url: 'https://baraka.sn',
     siteName: 'Baraka Shop',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=1200&h=630',
+        url: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
         width: 1200,
         height: 630,
         alt: 'Baraka Shop Premium Electronics',
@@ -37,13 +47,28 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Baraka Shop | High-Tech Sénégal',
-    description: 'Smartphones, Ordinateurs et plus au meilleur prix.',
-    images: ['https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=1200&h=630'],
+    description: 'Smartphones, Ordinateurs et plus au meilleur prix chez Baraka Electronique.',
+    images: ['https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   icons: {
     icon: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
     shortcut: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
     apple: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
+  },
+  manifest: '/manifest.json',
+  other: {
+    'google-site-verification': 'VOTRE_CODE_VERIFICATION_GOOGLE',
   },
 }
 

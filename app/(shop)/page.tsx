@@ -18,8 +18,12 @@ import { getHomePromos, getBigBanners } from '@/lib/actions/admin-actions'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Baraka Shop | Accueil - Électronique Premier au Sénégal',
-  description: 'Bievenue chez Baraka Shop. Découvrez notre sélection exclusive de smartphones, ordinateurs et accessoires High-Tech au meilleur prix au Sénégal.',
+  title: 'Baraka Shop (Baraka Electronique) | Vente en ligne High-Tech au Sénégal',
+  description: 'Bienvenue chez Baraka Shop (anciennement Baraka Electronique). Découvrez notre sélection de smartphones, ordinateurs, accessoires High-Tech et multimédia au meilleur prix à Dakar, Sandaga, Sénégal.',
+  keywords: ['Baraka electronique', 'baraka shop', 'baraka sn', 'baraka', 'electronique sn', 'baraka sandaga', 'smartphone', 'ordinateur', 'dakar', 'sénégal', 'vente en ligne'],
+  alternates: {
+    canonical: 'https://baraka.sn',
+  },
 }
 
 import { Container } from '@/ui/Container'
@@ -58,6 +62,7 @@ export default async function Home() {
         '@id': 'https://www.baraka.sn/#website',
         url: 'https://www.baraka.sn',
         name: 'Baraka Shop',
+        alternateName: ['Baraka Electronique', 'Baraka sn', 'Baraka', 'Electronique sn', 'Baraka Sandaga'],
         description: 'Vente de matériel électronique, informatique, smartphones et accessoires.',
         potentialAction: {
           '@type': 'SearchAction',
@@ -69,6 +74,7 @@ export default async function Home() {
         '@type': 'Store',
         '@id': 'https://www.baraka.sn/#store',
         name: 'Baraka Shop',
+        alternateName: ['Baraka Electronique', 'Baraka sn', 'Baraka', 'Electronique sn', 'Baraka Sandaga'],
         image: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
         description: 'Spécialiste de la vente de matériel électronique, informatique, smartphones et accessoires.',
         url: 'https://www.baraka.sn',

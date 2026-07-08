@@ -10,17 +10,18 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     const category = params.category
 
     if (category) {
-        // We could fetch category name here for better title
         const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ')
         return {
-            title: `${formattedCategory} | Baraka Shop - Électronique Premier`,
-            description: `Découvrez notre sélection de ${formattedCategory} chez Baraka Shop. High-Tech de qualité supérieure au Sénégal.`
+            title: `${formattedCategory} | Baraka Shop (Baraka Electronique) - Dakar Sénégal`,
+            description: `Achetez ${formattedCategory} chez Baraka Shop (Baraka Electronique). Large choix, meilleur prix garanti. Livraison rapide à Dakar et partout au Sénégal.`,
+            keywords: [formattedCategory, 'Baraka electronique', 'baraka shop', 'baraka sn', 'electronique sn', `${formattedCategory} dakar`, `${formattedCategory} sénégal`],
         }
     }
 
     return {
-        title: 'Boutique | Baraka Shop - Électronique & High-Tech au Sénégal',
-        description: 'Parcourez tout notre catalogue de smartphones, ordinateurs, audio et accessoires high-tech chez Baraka Shop.'
+        title: 'Boutique en ligne | Baraka Shop (Baraka Electronique) - Sénégal',
+        description: 'Parcourez tout notre catalogue chez Baraka Shop (Baraka Electronique) : smartphones, ordinateurs, audio, accessoires high-tech. Livraison rapide à Dakar, Sandaga et partout au Sénégal.',
+        keywords: ['Baraka electronique', 'baraka shop', 'baraka sn', 'boutique electronique dakar', 'electronique sn', 'baraka sandaga'],
     }
 }
 

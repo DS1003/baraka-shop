@@ -8,8 +8,9 @@ import { getProductsAction } from '@/lib/actions/product-actions'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'Promotions & Ventes Flash | Baraka Shop - Équipement High-Tech',
-    description: 'Découvrez les meilleures promotions sur les smartphones, ordinateurs et accessoires High-Tech au Sénégal chez Baraka Shop.'
+    title: 'Promotions & Ventes Flash | Baraka Shop (Baraka Electronique) - Sénégal',
+    description: 'Les meilleures promotions sur les smartphones, ordinateurs et accessoires High-Tech chez Baraka Shop (Baraka Electronique). Prix imbattables à Dakar et partout au Sénégal.',
+    keywords: ['promotion baraka', 'promo electronique dakar', 'baraka electronique promo', 'baraka shop soldes', 'vente flash sénégal', 'baraka sn promotion'],
 }
 
 export default async function PromotionsPage() {
