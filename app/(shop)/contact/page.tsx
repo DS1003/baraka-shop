@@ -99,9 +99,9 @@ export default function ContactPage() {
                                 <h3 className="text-xl font-black uppercase tracking-widest mb-10">Nos Coordonnées</h3>
 
                                 <div className="flex flex-col gap-8">
-                                    <ContactDetail icon={Phone} label="Téléphone" value="+221 33 800 00 00" />
+                                    <ContactDetail icon={Phone} label="Téléphone" value="+221 33 822 34 22" />
                                     <ContactDetail icon={Mail} label="Email" value="contact@baraka.sn" />
-                                    <ContactDetail icon={MapPin} label="Siège Social" value="123 Avenue Blaise Diagne, Dakar" />
+                                    <ContactDetail icon={MapPin} label="Siège Social" value="Rue Avenue ABDOU, 90 Rue Av. K. Bourgi, Dakar" />
                                     <ContactDetail icon={MessageSquare} label="WhatsApp" value="+221 77 000 00 00" />
                                 </div>
 

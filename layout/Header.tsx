@@ -228,7 +228,7 @@ export function Header() {
                                 {isLoggedIn ? (session?.user as any)?.username || "Mon Compte" : "Connexion"}
                             </Link>
                             <span className="flex items-center gap-2 text-gray-400">
-                                Besoin d'aide ? <PhoneCall className="w-3 h-3 text-primary" /> <span className="text-white">+221 33 800 00 00</span>
+                                Besoin d'aide ? <PhoneCall className="w-3 h-3 text-primary" /> <span className="text-white">+221 33 822 34 22</span>
                             </span>
                         </div>
                     </Container>

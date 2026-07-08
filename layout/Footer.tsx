@@ -80,11 +80,11 @@ export function Footer() {
                             <div className="flex flex-col gap-6 items-center">
                                 <button className="flex items-center gap-3 text-sm text-gray-400 hover:text-white transition-colors">
                                     <MapPin className="w-4 h-4 text-primary" />
-                                    <span>Sacré-Cœur 3, Dakar, Sénégal</span>
+                                    <span>Rue Avenue ABDOU, 90 Rue Av. K. Bourgi, Dakar, Sénégal</span>
                                 </button>
                                 <button className="flex items-center gap-3 text-sm text-gray-400 hover:text-white transition-colors">
                                     <Phone className="w-4 h-4 text-primary" />
-                                    <span>+221 33 800 00 00</span>
+                                    <span>+221 33 822 34 22</span>
                                 </button>
                                 <a href="https://wa.me/221770000000" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-gray-400 hover:text-white transition-colors">
                                     <svg viewBox="0 0 24 24" className="w-4 h-4 text-primary fill-current" xmlns="http://www.w3.org/2000/svg">

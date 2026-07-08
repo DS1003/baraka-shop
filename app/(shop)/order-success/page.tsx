@@ -171,8 +171,8 @@ function OrderSuccessContent() {
                     <div className="px-6 sm:px-10 py-4 bg-gray-50 border-t border-gray-100 text-center">
                         <p className="text-[10px] font-bold text-gray-400">
                             Besoin d&apos;aide ?{' '}
-                            <a href="tel:+221338000000" className="text-primary font-black">
-                                +221 33 800 00 00
+                            <a href="tel:+221338223422" className="text-primary font-black">
+                                +221 33 822 34 22
                             </a>
                         </p>
                     </div>

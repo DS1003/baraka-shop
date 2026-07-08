@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 }
 
 import { Container } from '@/ui/Container'
+import Script from 'next/script'
 
 export default async function Home() {
   // Pre-fetch all data server-side to avoid client-side waterfalls
@@ -49,17 +50,71 @@ export default async function Home() {
     'Promotions': newestProducts.products.filter((p: any) => p.oldPrice && p.oldPrice > p.price)
   }
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': 'https://www.baraka.sn/#website',
+        url: 'https://www.baraka.sn',
+        name: 'Baraka Shop',
+        description: 'Vente de matériel électronique, informatique, smartphones et accessoires.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://www.baraka.sn/boutique?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@type': 'Store',
+        '@id': 'https://www.baraka.sn/#store',
+        name: 'Baraka Shop',
+        image: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
+        description: 'Spécialiste de la vente de matériel électronique, informatique, smartphones et accessoires.',
+        url: 'https://www.baraka.sn',
+        telephone: '+221338223422',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'Rue Avenue ABDOU, 90 Rue Av. K. Bourgi',
+          addressLocality: 'Dakar',
+          addressCountry: 'SN'
+        },
+        openingHoursSpecification: [
+          {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            opens: '08:00',
+            closes: '18:30'
+          },
+          {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: 'Sunday',
+            opens: '09:00',
+            closes: '13:00'
+          }
+        ]
+      }
+    ]
+  }
+
   return (
-    <Container className="flex flex-col gap-4 md:gap-8 py-6">
-      <HomeSlider initialSlides={sliderSlides} />
-      <ShippingBar />
-      <CategoryCarousel initialUniverses={popularUniverses} initialCategories={categories} />
-      <HeadphonePromo initialBanner={banners?.[0]} />
-      <PromoGrid initialPromos={promos} />
-      <ShippingPromoBand />
-      <ProductTabs initialData={initialProductTabsData} />
-      <BrandsAndSocial initialBrands={brands} />
-    </Container>
+    <>
+      <Script
+        id="structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Container className="flex flex-col gap-4 md:gap-8 py-6">
+        <HomeSlider initialSlides={sliderSlides} />
+        <ShippingBar />
+        <CategoryCarousel initialUniverses={popularUniverses} initialCategories={categories} />
+        <HeadphonePromo initialBanner={banners?.[0]} />
+        <PromoGrid initialPromos={promos} />
+        <ShippingPromoBand />
+        <ProductTabs initialData={initialProductTabsData} />
+        <BrandsAndSocial initialBrands={brands} />
+      </Container>
+    </>
   )
 }
 
