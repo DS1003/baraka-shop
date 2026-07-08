@@ -1265,6 +1265,7 @@ export async function upsertPopularUniverse(data: any, id?: string) {
                 data
             });
         }
+        await invalidateCache('popular_universes:all');
         revalidatePath('/admin/popular-universes');
         revalidatePath('/');
         return { success: true };
@@ -1277,6 +1278,7 @@ export async function upsertPopularUniverse(data: any, id?: string) {
 export async function deletePopularUniverse(id: string) {
     try {
         await (prisma as any).popularUniverse.delete({ where: { id } });
+        await invalidateCache('popular_universes:all');
         revalidatePath('/admin/popular-universes');
         revalidatePath('/');
         return { success: true };

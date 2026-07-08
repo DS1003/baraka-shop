@@ -76,13 +76,12 @@ export function CategoryCarousel({
     
     if (hasManagedUniverses) {
         displayItems = initialUniverses.map(u => {
-            const slug = u.href ? u.href.split('/').pop() : '';
             return {
                 id: u.id,
                 name: u.name,
                 subtitle: u.subtitle,
                 image: u.image,
-                href: `/univers/${slug}`
+                href: u.href || '#'
             };
         });
     } else if (initialCategories && initialCategories.length > 0) {
