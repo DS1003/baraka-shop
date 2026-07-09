@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, unstable_after as after } from 'next/server'
 import { auth } from '@/auth'
 import { runFtpSync } from '@/lib/ftp-sync'
 
@@ -12,10 +12,14 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        // Fire and forget - don't await so the response is immediate
-        // The frontend will poll the progress via /api/admin/sync/status
-        runFtpSync('MANUAL').catch(err => {
-            console.error('[MANUAL_SYNC] Background error:', err)
+        // Utilisation de unstable_after pour s'assurer que Vercel ne coupe pas l'exécution
+        // après l'envoi de la réponse HTTP.
+        after(async () => {
+            try {
+                await runFtpSync('MANUAL')
+            } catch (err) {
+                console.error('[MANUAL_SYNC] Background error:', err)
+            }
         })
         
         return NextResponse.json({ success: true, message: 'Synchronisation démarrée en arrière-plan' })

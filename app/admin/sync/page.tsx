@@ -96,8 +96,8 @@ export default function FtpSyncPage() {
             const configData = await configRes.json()
             const historyData = await historyRes.json()
             
-            // Set default schedules if empty
-            if (!configData.scheduleTimes || configData.scheduleTimes.length === 0) {
+            // Set default schedules if empty ONLY if it's completely missing (null/undefined), not if they explicitly deleted them all.
+            if (!configData.scheduleTimes) {
                 configData.scheduleTimes = ["00:00", "12:00"]
             }
             

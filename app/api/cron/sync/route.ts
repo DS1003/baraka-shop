@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { runFtpSync } from '@/lib/ftp-sync'
 import prisma from '@/lib/prisma'
 
+// Augmenter le timeout sur Vercel (jusqu'à 5 minutes sur Pro, 10-60s sur Hobby)
+export const maxDuration = 300;
+
 export async function GET(req: Request) {
     // Vérification de sécurité basique (Vercel Cron ou Service Externe)
     const authHeader = req.headers.get('authorization')

@@ -20,7 +20,24 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         throw new Error("Identifiants FTP incomplets.")
     }
 
-    // 2. Create history record
+    // 2. Prevent concurrent connections and clear stuck ones
+    const existing = await prisma.syncHistory.findFirst({
+        where: { status: 'IN_PROGRESS' }
+    })
+    
+    if (existing) {
+        // If it's been running for more than 10 minutes, consider it stuck (Serverless timeout)
+        if (existing.startedAt < new Date(Date.now() - 10 * 60 * 1000)) {
+            await prisma.syncHistory.update({
+                where: { id: existing.id },
+                data: { status: 'ERROR', errorDetails: 'Processus bloqué annulé' }
+            })
+        } else {
+            throw new Error("Une synchronisation est déjà en cours. Veuillez patienter.")
+        }
+    }
+
+    // 3. Create history record
     const history = await prisma.syncHistory.create({
         data: {
             status: 'IN_PROGRESS',
@@ -45,6 +62,7 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
             user: config.ftpUser,
             password: config.ftpPassword,
             secure: false, // Standard FTP assumed based on prompt
+            secureOptions: { rejectUnauthorized: false } // Empêche les erreurs TLS de certificats expirés si le serveur force TLS en prod
         })
         addSyncLog('✅ Connecté au serveur FTP', 'success')
 
