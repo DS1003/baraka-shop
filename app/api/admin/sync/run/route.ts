@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, unstable_after as after } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { auth } from '@/auth'
 import { runFtpSync } from '@/lib/ftp-sync'
 
