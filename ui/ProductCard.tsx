@@ -76,7 +76,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     <div className="flex items-center justify-between mt-auto">
                         <div className="flex flex-col">
                             {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-300 text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} FCFA</span>}
-                            <span className="text-xl font-black text-[#1B1F3B] tracking-tighter">{product.price.toLocaleString()} <span className="text-[10px]">FCFA</span></span>
+                            <span className="text-xl font-black text-[#1B1F3B] tracking-tighter">{(product.price ?? 0).toLocaleString()} <span className="text-[10px]">FCFA</span></span>
                         </div>
                         <button
                             onClick={(e) => {
@@ -193,7 +193,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     <div className="flex flex-col">
                         {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-400 text-[8px] md:text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} FCFA</span>}
                         <span className="text-[#1B1F3B] font-black text-[14px] md:text-[17px] tracking-tight">
-                            {product.price.toLocaleString()} <span className="text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
+                            {(product.price ?? 0).toLocaleString()} <span className="text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
                         </span>
                     </div>
 

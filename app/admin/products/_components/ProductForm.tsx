@@ -739,8 +739,8 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         if (!nameVal || nameVal.trim().length < 2) {
             newErrors.name = "Le nom du produit est requis (min 2 caractères).";
         }
-        if (!priceVal || isNaN(parseFloat(priceVal)) || parseFloat(priceVal) <= 0) {
-            newErrors.price = "Un prix valide supérieur à 0 est requis.";
+        if (priceVal && priceVal.trim() !== '' && (isNaN(parseFloat(priceVal)) || parseFloat(priceVal) < 0)) {
+            newErrors.price = "Le prix doit être un nombre positif ou nul.";
         }
         if (!stockVal || isNaN(parseInt(stockVal)) || parseInt(stockVal) < 0) {
             newErrors.stock = "Le stock doit être un nombre positif ou nul.";
@@ -769,7 +769,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             name: nameVal,
             slug: nameVal.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
             description: (formData.get('description') as string) || "",
-            price: parseFloat(formData.get('price') as string),
+            price: priceVal && priceVal.trim() !== '' ? parseFloat(priceVal) : 0,
             stock: parseInt(formData.get('stock') as string),
             categoryId: formData.get('categoryId') as string,
             subCategoryId: formData.get('subCategoryId') as string || null,

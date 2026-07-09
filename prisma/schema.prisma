@@ -29,7 +29,7 @@ model Product {
   name                 String
   slug                 String                @unique
   description          String?
-  price                Float
+  price                Float?                @default(0)
   oldPrice             Float?
   stock                Int                   @default(0)
   images               String[]
