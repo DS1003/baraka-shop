@@ -70,7 +70,7 @@ export function Footer() {
                                 <FooterLink href="/about">À Propos</FooterLink>
                                 <FooterLink href="/contact">Nous Contacter</FooterLink>
                                 <FooterLink href="/faq">Questions Fréquentes</FooterLink>
-                                <FooterLink href="/terms">Mentions Légales</FooterLink>
+                                <FooterLink href="/legal">Mentions Légales</FooterLink>
                             </ul>
                         </div>
 

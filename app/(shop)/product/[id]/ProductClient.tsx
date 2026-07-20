@@ -850,7 +850,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
             </div>
 
             <div className="mt-4 md:mt-8 px-0 md:px-0">
-                <div className="sticky top-[60px] md:top-[85px] z-40 w-full bg-[#f8f9fb] py-4 md:py-6 -mx-4 px-4 md:mx-0 md:px-8 mb-6 md:mb-10 transition-all">
+                <div className="sticky top-[60px] md:top-[85px] z-40 w-full bg-[#f8f9fb] py-4 md:py-6 -mx-4 px-4 md:mx-0 md:px-0 mb-6 md:mb-10 transition-all">
                     <div className="flex flex-col gap-2 w-full md:w-auto">
                         <div className="flex items-center gap-x-5 md:gap-x-6 lg:gap-x-8 overflow-x-auto overflow-y-hidden pt-2 pb-2 scrollbar-hide [&::-webkit-scrollbar]:hidden">
                         {tabs.map((tab) => {

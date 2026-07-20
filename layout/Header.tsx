@@ -194,7 +194,7 @@ export function Header() {
                 if (data && data.length > 0) setCategories(data)
             }).catch(() => {})
         } else {
-            document.body.style.overflow = 'auto'
+            document.body.style.overflow = ''
         }
     }, [isMenuOpen])
 
@@ -207,10 +207,9 @@ export function Header() {
     }, [])
 
     return (
-        <header className="w-full flex flex-col font-sans relative">
+        <>
             {/* ... (Top Bar remains the same) */}
-            {!scrolled && (
-                <div className="bg-black text-white text-[11px] md:text-xs py-2.5 font-medium tracking-wide hidden md:block">
+            <div className="bg-black text-white text-[11px] md:text-xs py-2.5 font-medium tracking-wide hidden md:block">
                     <Container className="flex justify-between items-center">
                         <div className="flex items-center gap-6">
                             <Link href="/promotions" className="flex items-center gap-1.5 hover:text-primary transition-colors">
@@ -233,16 +232,15 @@ export function Header() {
                         </div>
                     </Container>
                 </div>
-            )}
 
             {/* 2. Main Header (Existing code) */}
             <div className={cn(
-                "w-full transition-all duration-300 hidden md:block",
-                scrolled ? "h-[70px] md:h-[80px]" : "h-auto"
+                "sticky top-0 z-[100] w-full transition-all duration-300 hidden md:block",
+                scrolled ? "shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl bg-white/95" : "bg-white"
             )}>
                 <div className={cn(
-                    "bg-white py-2 border-b border-gray-100 transition-all duration-300 z-[100] w-full",
-                    scrolled ? "fixed top-0 left-0 right-0 shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2.5 backdrop-blur-xl bg-white/95" : "relative"
+                    "py-2 border-b border-gray-100 transition-all duration-300 w-full",
+                    scrolled ? "py-2.5" : ""
                 )}>
                     <Container className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <Link href="/" className="shrink-0 flex items-center">
@@ -502,8 +500,8 @@ export function Header() {
 
             {/* Mobile Header */}
             <div className={cn(
-                "md:hidden bg-white border-b border-gray-100 py-3 px-4 flex items-center justify-between z-[110] transition-all duration-300",
-                scrolled ? "fixed top-0 left-0 right-0 shadow-md py-2" : "relative"
+                "sticky top-0 md:hidden bg-white border-b border-gray-100 py-3 px-4 flex items-center justify-between z-[110] transition-all duration-300",
+                scrolled ? "shadow-md py-2" : ""
             )}>
                 <button onClick={() => setIsMenuOpen(true)} className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
                     <Menu className="w-6 h-6 text-[#1B1F3B]" />
@@ -856,7 +854,7 @@ export function Header() {
                 isOpen={isCartOpen}
                 onClose={() => setIsCartOpen(false)}
             />
-        </header>
+        </>
     )
 }
 

@@ -238,6 +238,8 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [previewTab, setPreviewTab] = useState<'desc' | 'specs'>('desc');
     const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
     const [activePreviewImageIdx, setActivePreviewImageIdx] = useState(0);
+    const [isNormalizing, setIsNormalizing] = useState(false);
+    const [normalizationStage, setNormalizationStage] = useState('');
     const [metadataText, setMetadataText] = useState(
         editingProduct?.metadata 
             ? (() => {
@@ -725,6 +727,39 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         }
     };
 
+    const handleNormalizeSpecs = async () => {
+        if (!metadataText || metadataText.trim() === '') {
+            toast.warning("Veuillez d'abord coller une fiche technique à adapter.");
+            return;
+        }
+
+        setIsNormalizing(true);
+        setNormalizationStage("Analyse...");
+        
+        try {
+            const response = await fetch('/api/admin/products/normalize-specifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rawText: metadataText })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Erreur de l'API");
+            }
+
+            setMetadataText(data.normalized);
+            toast.success("🪄 Fiche technique adaptée et normalisée !");
+        } catch (error: any) {
+            console.error("Normalization error:", error);
+            toast.error(error.message || "Impossible d'adapter la fiche technique via l'IA.");
+        } finally {
+            setIsNormalizing(false);
+            setNormalizationStage("");
+        }
+    };
+
     const handleUpsert = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -1023,16 +1058,24 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Fiche Technique (Key: Value)</label>
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        const parsed = smartParseMetadata(metadataText);
-                                        const formatted = Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join('\n');
-                                        setMetadataText(formatted);
-                                        toast.info("🪄 Fiche technique adaptée !");
-                                    }}
-                                    className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-1.5 hover:text-orange-700 transition-colors"
+                                    onClick={handleNormalizeSpecs}
+                                    disabled={isNormalizing}
+                                    className={cn(
+                                        "text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors",
+                                        isNormalizing ? "text-orange-400" : "text-orange-600 hover:text-orange-700"
+                                    )}
                                 >
-                                    <span>Adapter</span>
-                                    <Palette size={10} />
+                                    {isNormalizing ? (
+                                        <>
+                                            <span className="animate-pulse">{normalizationStage}</span>
+                                            <Loader2 size={10} className="animate-spin" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>✨ Adapter avec l'IA</span>
+                                            <Palette size={10} />
+                                        </>
+                                    )}
                                 </button>
                             </div>
                             <textarea

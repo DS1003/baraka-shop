@@ -11,7 +11,10 @@ const prismaClientSingleton = () => {
         connectionString,
         ssl: {
             rejectUnauthorized: false
-        }
+        },
+        max: 5,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
     });
     const adapter = new PrismaPg(pool as any);
     return new PrismaClient({ adapter }) as any;
