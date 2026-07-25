@@ -743,13 +743,27 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 body: JSON.stringify({ rawText: metadataText })
             });
 
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || "Erreur de l'API");
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || "Erreur de l'API");
             }
 
-            setMetadataText(data.normalized);
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error("Le flux de réponse est vide");
+
+            const decoder = new TextDecoder();
+            let resultText = '';
+            setMetadataText('');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                resultText += chunk;
+                setMetadataText(resultText);
+            }
+
             toast.success("🪄 Fiche technique adaptée et normalisée !");
         } catch (error: any) {
             console.error("Normalization error:", error);
