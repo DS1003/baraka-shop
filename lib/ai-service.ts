@@ -51,24 +51,30 @@ Couleur: Noir
 Résolution: 1920 × 1080 pixels (Full HD)
 `;
 
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash-8b',
-            contents: rawText,
-            config: {
-                systemInstruction: systemInstruction,
-                temperature: 0.1, // Basse température pour éviter les hallucinations
-            }
-        });
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    let lastError: any = null;
 
-        if (response.text) {
-            return response.text.trim();
+    for (const modelName of modelsToTry) {
+        try {
+            const response = await ai.models.generateContent({
+                model: modelName,
+                contents: rawText,
+                config: {
+                    systemInstruction: systemInstruction,
+                    temperature: 0.1,
+                }
+            });
+
+            if (response.text) {
+                return response.text.trim();
+            }
+        } catch (error) {
+            console.warn(`[AI Service] Échec avec le modèle ${modelName}:`, error);
+            lastError = error;
         }
-        throw new Error("Aucune réponse générée par l'IA.");
-    } catch (error) {
-        console.error("Erreur lors de la normalisation des spécifications:", error);
-        throw error;
     }
+
+    throw lastError || new Error("Aucune réponse générée par l'IA.");
 }
 
 export async function normalizeProductSpecsStream(rawText: string) {
@@ -103,19 +109,26 @@ RÈGLES STRICTES ET OBLIGATOIRES :
    - "1280 x 720" ou "1280x720" -> "1280 × 720 pixels (HD 720p)"
 6. NE JAMAIS INVENTER : Ne complète une information que si elle découle directement de la valeur (comme l'ajout de "4K Ultra HD" pour "3840x2160"). N'invente jamais de caractéristiques qui ne sont pas dans le texte d'origine.`;
 
-    try {
-        const responseStream = await ai.models.generateContentStream({
-            model: 'gemini-1.5-flash',
-            contents: rawText,
-            config: {
-                systemInstruction: systemInstruction,
-                temperature: 0.1,
-            }
-        });
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    let lastError: any = null;
 
-        return responseStream;
-    } catch (error) {
-        console.error("Erreur lors de la normalisation en streaming:", error);
-        throw error;
+    for (const modelName of modelsToTry) {
+        try {
+            const responseStream = await ai.models.generateContentStream({
+                model: modelName,
+                contents: rawText,
+                config: {
+                    systemInstruction: systemInstruction,
+                    temperature: 0.1,
+                }
+            });
+
+            return responseStream;
+        } catch (error) {
+            console.warn(`[AI Service Stream] Échec avec le modèle ${modelName}:`, error);
+            lastError = error;
+        }
     }
+
+    throw lastError || new Error("Erreur lors de la normalisation en streaming.");
 }

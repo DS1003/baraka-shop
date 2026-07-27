@@ -1039,7 +1039,7 @@ export async function upsertProduct(data: any, id?: string) {
     try {
         const { 
             categoryId, subCategoryId, thirdLevelCategoryId, brandId, storeId, promotionId,
-            colorVariants,
+            colorVariants, badge,
             ...rest 
         } = data;
 

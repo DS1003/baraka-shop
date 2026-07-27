@@ -9,4 +9,5 @@ export interface Product {
     category: string;
     isNew?: boolean;
     isSale?: boolean;
+    badge?: string;
 }

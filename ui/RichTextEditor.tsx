@@ -48,7 +48,7 @@ export function RichTextEditor({ name, defaultValue = '', value, onChange, place
         if (!text) return;
 
         const currentContent = editorRef.current?.innerText?.trim() || '';
-        
+
         // Normalize pasted text:
         // 1. Replace \r\n with \n
         // 2. Collapse 2+ newlines into a paragraph break marker
@@ -64,14 +64,14 @@ export function RichTextEditor({ name, defaultValue = '', value, onChange, place
             .trim();
 
         let htmlToInsert = normalized.replace(/\n\n/g, '<br><br>');
-        
+
         if (!currentContent && name === 'description') {
-            // "description classique": first sentence bold and uppercase, followed by a line break
+            // "description classique": first sentence bold, followed by a line break (preserving original case)
             const match = normalized.match(/^([^.!?\n]+(?:[.!?]|\n|$))([\s\S]*)$/);
             if (match) {
-                let firstSentence = match[1].trim().toUpperCase();
+                let firstSentence = match[1].trim();
                 let rest = match[2].trim();
-                
+
                 htmlToInsert = `<b>${firstSentence}</b><br><br>${rest ? rest.replace(/\n\n/g, '<br><br>') : ''}`;
             }
         }

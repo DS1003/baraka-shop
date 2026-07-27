@@ -50,6 +50,7 @@ interface ProductClientProps {
 export function ProductClient({ product, similarProducts, bestSellers }: ProductClientProps) {
     const { addToCart } = useCart()
     const { headerLogo } = useSiteLogos()
+    const customBadge = product.badge || (typeof product.metadata === 'object' && product.metadata ? product.metadata.badge : undefined);
     const { data: session } = useSession()
     const [isWishlisted, setIsWishlisted] = useState(false)
     const [isWishlisting, setIsWishlisting] = useState(false)
@@ -417,13 +418,25 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                     unoptimized
                                 />
                             </motion.div>
-                            {product.oldPrice && (
+                            {customBadge ? (
+                                <div className="absolute top-8 left-8">
+                                    <span className={cn(
+                                        "text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-xl uppercase tracking-widest backdrop-blur-sm",
+                                        customBadge === "Bientôt disponible" ? "bg-amber-500/90 shadow-amber-500/20" :
+                                        customBadge === "Nouveau" ? "bg-blue-500/90" :
+                                        customBadge === "Promotion" ? "bg-orange-500/90" :
+                                        customBadge === "Bestseller" ? "bg-purple-600/90" : "bg-indigo-600/90"
+                                    )}>
+                                        {customBadge}
+                                    </span>
+                                </div>
+                            ) : product.oldPrice ? (
                                 <div className="absolute top-8 left-8">
                                     <span className="bg-primary text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-xl shadow-primary/20 uppercase tracking-widest">
                                         Promotion Flash
                                     </span>
                                 </div>
-                            )}
+                            ) : null}
                             <div className="absolute bottom-6 right-6 w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center opacity-0 group-hover/main-img:opacity-100 transition-all shadow-lg border border-gray-100">
                                 <Maximize2 className="w-4 h-4 text-gray-600" />
                             </div>
@@ -558,13 +571,25 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                             ))}
                         </div>
 
-                        {product.oldPrice && (
+                        {customBadge ? (
+                            <div className="absolute top-4 left-4 z-10">
+                                <span className={cn(
+                                    "text-white text-[8px] font-black px-2.5 py-1.5 rounded-lg shadow-lg uppercase tracking-widest backdrop-blur-sm",
+                                    customBadge === "Bientôt disponible" ? "bg-amber-500/90 shadow-amber-500/20" :
+                                    customBadge === "Nouveau" ? "bg-blue-500/90" :
+                                    customBadge === "Promotion" ? "bg-orange-500/90" :
+                                    customBadge === "Bestseller" ? "bg-purple-600/90" : "bg-indigo-600/90"
+                                )}>
+                                    {customBadge}
+                                </span>
+                            </div>
+                        ) : product.oldPrice ? (
                             <div className="absolute top-4 left-4 z-10">
                                 <span className="bg-primary text-white text-[8px] font-black px-2.5 py-1.5 rounded-lg shadow-lg shadow-primary/20 uppercase tracking-widest">
                                     Promotion Flash
                                 </span>
                             </div>
-                        )}
+                        ) : null}
 
                         <div className="absolute bottom-4 right-4 z-10 w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center shadow-md border border-gray-100" onClick={() => openViewer(activeImg)}>
                             <Maximize2 className="w-3.5 h-3.5 text-gray-600" />
@@ -605,6 +630,17 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mb-2 md:mb-3">
+                        {customBadge && (
+                            <div className={cn(
+                                "flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider text-white shadow-sm",
+                                customBadge === "Bientôt disponible" ? "bg-amber-500 shadow-amber-500/20" :
+                                customBadge === "Nouveau" ? "bg-blue-500" :
+                                customBadge === "Promotion" ? "bg-orange-500" :
+                                customBadge === "Bestseller" ? "bg-purple-600" : "bg-indigo-600"
+                            )}>
+                                {customBadge}
+                            </div>
+                        )}
                         <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                             <span className="text-[10px] font-black text-[#1B1F3B] uppercase tracking-widest">{product.brand?.name || product.brand || 'Baraka Shop'}</span>
@@ -755,7 +791,12 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                             </div>
 
                             <div className="flex flex-col items-start md:items-end gap-2">
-                                {product.stock > 0 ? (
+                                {customBadge === "Bientôt disponible" ? (
+                                    <div className="flex items-center gap-2 text-amber-400">
+                                        <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                                        <span className="text-[11px] font-black uppercase tracking-widest">Bientôt disponible</span>
+                                    </div>
+                                ) : product.stock > 0 ? (
                                     <div className="flex items-center gap-2 text-green-400">
                                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                                         <span className="text-[11px] font-black uppercase tracking-widest">Disponible immédiatement</span>
@@ -904,7 +945,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
 
                                 {product.description && (
                                     <div
-                                        className="w-full max-w-none text-gray-500 text-sm md:text-base lg:text-lg leading-relaxed md:leading-[1.8] font-medium mb-6 md:mb-8 text-justify hyphens-auto [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-3 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:uppercase [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child]:text-left [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
+                                        className="w-full max-w-none text-gray-500 text-sm md:text-base lg:text-lg leading-relaxed md:leading-[1.8] font-medium mb-6 md:mb-8 text-justify hyphens-auto [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-3 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child]:text-left [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
                                         style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                                         dangerouslySetInnerHTML={{ __html: product.description }}
                                     />

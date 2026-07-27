@@ -199,6 +199,9 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const videoFileInputRef = React.useRef<HTMLInputElement>(null);
     const [isPublished, setIsPublished] = useState(editingProduct ? editingProduct.isPublished : false);
+    const [badge, setBadge] = useState<string>(
+        editingProduct?.badge || editingProduct?.metadata?.badge || (editingProduct?.isNew ? 'Nouveau' : '') || ''
+    );
 
     // Brand Modal States
     const [mounted, setMounted] = useState(false);
@@ -833,41 +836,48 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
             packageContent: parsePackageContent(formData.get('packageContent') as string || ""),
             isPublished,
+            isNew: badge === 'Nouveau',
             metadata: (() => {
                 const raw = metadataText;
-                if (!raw || raw.trim() === '') return {};
                 let parsed: Record<string, any> = {};
-                try {
-                    const parsedJson = JSON.parse(raw);
-                    if (typeof parsedJson === 'object' && parsedJson !== null && !Array.isArray(parsedJson)) {
-                        parsed = parsedJson;
-                    }
-                } catch { }
+                if (raw && raw.trim() !== '') {
+                    try {
+                        const parsedJson = JSON.parse(raw);
+                        if (typeof parsedJson === 'object' && parsedJson !== null && !Array.isArray(parsedJson)) {
+                            parsed = parsedJson;
+                        }
+                    } catch { }
 
-                if (Object.keys(parsed).length === 0) {
-                    parsed = smartParseMetadata(raw);
+                    if (Object.keys(parsed).length === 0) {
+                        parsed = smartParseMetadata(raw);
+                    }
+
+                    // Create a clean _order list preserving the exact line-by-line order from the textarea
+                    const order: string[] = [];
+                    raw.split('\n').forEach(line => {
+                        let key = '';
+                        const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
+                        if (colonMatch) {
+                            key = colonMatch[1].trim();
+                        } else if (line.includes('\t')) {
+                            key = line.split('\t')[0].trim();
+                        } else {
+                            key = line.trim();
+                        }
+
+                        if (key && parsed[key] !== undefined && !order.includes(key)) {
+                            order.push(key);
+                        }
+                    });
+
+                    if (order.length > 0) {
+                        parsed._order = order;
+                    }
                 }
-
-                // Create a clean _order list preserving the exact line-by-line order from the textarea
-                const order: string[] = [];
-                raw.split('\n').forEach(line => {
-                    let key = '';
-                    const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
-                    if (colonMatch) {
-                        key = colonMatch[1].trim();
-                    } else if (line.includes('\t')) {
-                        key = line.split('\t')[0].trim();
-                    } else {
-                        key = line.trim();
-                    }
-
-                    if (key && parsed[key] !== undefined && !order.includes(key)) {
-                        order.push(key);
-                    }
-                });
-
-                if (order.length > 0) {
-                    parsed._order = order;
+                if (badge) {
+                    parsed.badge = badge;
+                } else {
+                    delete parsed.badge;
                 }
                 return parsed;
             })()
@@ -1013,6 +1023,22 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             >
                                 <option value="">Aucune (Baraka General)</option>
                                 {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <div className="flex justify-between items-center h-[24px]">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Badge Produit</label>
+                            </div>
+                            <select
+                                value={badge}
+                                onChange={(e) => setBadge(e.target.value)}
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
+                            >
+                                <option value="">Aucun</option>
+                                <option value="Bientôt disponible">Bientôt disponible</option>
+                                <option value="Nouveau">Nouveau</option>
+                                <option value="Promotion">Promotion</option>
+                                <option value="Bestseller">Bestseller</option>
                             </select>
                         </div>
                     </div>
