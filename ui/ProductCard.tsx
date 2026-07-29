@@ -40,23 +40,32 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{categoryName}</span>
-                            {customBadge === "Bientôt disponible" ? (
+                            {customBadge === "Bientôt disponible" && (
                                 <span className="bg-amber-50 text-amber-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-amber-100 flex items-center gap-1">
                                     Bientôt disponible
                                 </span>
-                            ) : customBadge ? (
-                                <span className="bg-indigo-50 text-indigo-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-indigo-100 flex items-center gap-1">
+                            )}
+                            {customBadge && customBadge !== "Bientôt disponible" && (
+                                <span className={cn(
+                                    "text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border flex items-center gap-1",
+                                    customBadge === "Nouveau" ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                    customBadge === "Promotion" ? "bg-orange-50 text-orange-600 border-orange-100" :
+                                    "bg-indigo-50 text-indigo-600 border-indigo-100"
+                                )}>
                                     {customBadge}
                                 </span>
-                            ) : product.stock > 0 ? (
-                                <span className="bg-green-50 text-green-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-green-100 flex items-center gap-1">
-                                    <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                                    En Stock
-                                </span>
-                            ) : (
-                                <span className="bg-red-50 text-red-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-100 flex items-center gap-1">
-                                    Rupture
-                                </span>
+                            )}
+                            {(!customBadge || customBadge === "Nouveau") && (
+                                product.stock > 0 ? (
+                                    <span className="bg-green-50 text-green-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-green-100 flex items-center gap-1">
+                                        <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                                        En Stock
+                                    </span>
+                                ) : (
+                                    <span className="bg-red-50 text-red-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-red-100 flex items-center gap-1">
+                                        Rupture
+                                    </span>
+                                )
                             )}
                         </div>
                         <div className="flex items-center gap-1">
@@ -130,7 +139,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                         <span className="bg-indigo-600/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">{customBadge}</span>
                     ) : null}
 
-                    {!customBadge && (
+                    {(!customBadge || customBadge === "Nouveau") && (
                         <>
                             {product.stock > 0 ? (
                                 <span className="bg-green-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm flex items-center gap-1">
@@ -140,10 +149,10 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                             ) : (
                                 <span className="bg-red-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Rupture</span>
                             )}
-                            {product.isNew && (
+                            {!customBadge && product.isNew && (
                                 <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Nouveau</span>
                             )}
-                            {product.isSale && (
+                            {!customBadge && product.isSale && (
                                 <span className="bg-orange-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Promo</span>
                             )}
                         </>
