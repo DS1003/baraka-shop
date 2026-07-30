@@ -126,64 +126,68 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                 </Link>
 
                 {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-40">
+                <div className="absolute top-1.5 left-1.5 md:top-3 md:left-3 flex flex-col gap-1 z-40">
                     {customBadge === "Bientôt disponible" ? (
-                        <span className="bg-amber-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Bientôt disponible</span>
+                        <span className="bg-amber-500/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">
+                            <span className="hidden md:inline">Bientôt disponible</span>
+                            <span className="md:hidden">Bientôt</span>
+                        </span>
                     ) : customBadge === "Nouveau" ? (
-                        <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Nouveau</span>
+                        <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">Nouveau</span>
                     ) : customBadge === "Promotion" ? (
-                        <span className="bg-orange-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Promo</span>
+                        <span className="bg-orange-500/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">Promo</span>
                     ) : customBadge === "Bestseller" ? (
-                        <span className="bg-purple-600/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Bestseller</span>
+                        <span className="bg-purple-600/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">Bestseller</span>
                     ) : customBadge ? (
-                        <span className="bg-indigo-600/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">{customBadge}</span>
+                        <span className="bg-indigo-600/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">{customBadge}</span>
                     ) : null}
 
                     {(!customBadge || customBadge === "Nouveau") && (
                         <>
                             {product.stock > 0 ? (
-                                <span className="bg-green-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm flex items-center gap-1">
+                                <span className="bg-green-500/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs flex items-center gap-1">
                                     <div className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                                    En Stock
+                                    <span className="hidden md:inline">En Stock</span>
+                                    <span className="md:hidden">En Stock</span>
                                 </span>
                             ) : (
-                                <span className="bg-red-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Rupture</span>
+                                <span className="bg-red-500/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">Rupture</span>
                             )}
                             {!customBadge && product.isNew && (
-                                <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Nouveau</span>
+                                <span className="bg-blue-500/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">Nouveau</span>
                             )}
                             {!customBadge && product.isSale && (
-                                <span className="bg-orange-500/90 backdrop-blur-sm text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm">Promo</span>
+                                <span className="bg-orange-500/90 backdrop-blur-sm text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs">Promo</span>
                             )}
                         </>
                     )}
                     {product.badges?.map((badge: any, idx: number) => (
-                        <span key={idx} className={cn("text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-sm backdrop-blur-sm", badge.color)}>
+                        <span key={idx} className={cn("text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 md:px-2 md:py-1 rounded-md uppercase tracking-wider md:tracking-widest shadow-xs backdrop-blur-sm", badge.color)}>
                             {badge.text}
                         </span>
                     ))}
                 </div>
 
                 {/* Actions */}
-                <div className="absolute top-2 right-2 flex flex-col gap-2 z-40 md:translate-x-12 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100 transition-all duration-500">
+                <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex flex-col gap-2 z-40 md:translate-x-12 md:opacity-0 md:group-hover:translate-x-0 md:group-hover:opacity-100 transition-all duration-500">
                     <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/90 text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all"
+                        className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/90 text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all"
                     >
-                        <Heart className="w-3 md:w-3.5 h-3 md:h-3.5" />
+                        <Heart className="w-2.5 md:w-3.5 h-2.5 md:h-3.5" />
                     </button>
                 </div>
 
-                <div className="relative w-full h-full p-4 md:p-6 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110 z-10">
-                    <Image src={displayImage} alt={product.name} fill className="object-contain p-4 md:p-6" priority={priority} unoptimized />
+                <div className="relative w-full h-full p-1.5 md:p-4 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110 z-10">
+                    <Image src={displayImage} alt={product.name} fill className="object-contain p-1.5 md:p-4" priority={priority} unoptimized />
                 </div>
 
                 {/* Add to Cart Overlay */}
                 {customBadge === "Bientôt disponible" ? (
                     <span
-                        className="absolute bottom-2 left-2 right-2 bg-amber-500 text-white py-2.5 rounded-lg font-black text-[8px] md:text-[9px] uppercase tracking-[0.15em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 z-40"
+                        className="absolute bottom-1 md:bottom-2 left-1 md:left-2 right-1 md:right-2 bg-amber-500 text-white py-1.5 md:py-2.5 rounded-md md:rounded-lg font-black text-[7.5px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-1 md:gap-2 shadow-lg shadow-amber-500/20 z-40"
                     >
-                        <Clock className="w-3 md:w-3.5 h-3 md:h-3.5" /> Bientôt disponible
+                        <Clock className="w-2.5 md:w-3.5 h-2.5 md:h-3.5" /> <span className="hidden md:inline">Bientôt disponible</span><span className="md:hidden">Bientôt</span>
                     </span>
                 ) : (
                     <button
@@ -192,9 +196,9 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                             e.stopPropagation();
                             addToCart(product);
                         }}
-                        className="absolute bottom-2 left-2 right-2 bg-primary text-white py-2.5 rounded-lg font-black text-[8px] md:text-[9px] uppercase tracking-[0.15em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-xl shadow-primary/20 z-40"
+                        className="absolute bottom-1 md:bottom-2 left-1 md:left-2 right-1 md:right-2 bg-primary text-white py-1.5 md:py-2.5 rounded-md md:rounded-lg font-black text-[7.5px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-1 md:gap-2 hover:bg-[#1B1F3B] shadow-lg shadow-primary/20 z-40"
                     >
-                        <ShoppingCart className="w-3 md:w-3.5 h-3 md:h-3.5" /> Ajouter
+                        <ShoppingCart className="w-2.5 md:w-3.5 h-2.5 md:h-3.5" /> Ajouter
                     </button>
                 )}
             </div>
