@@ -198,17 +198,14 @@ export function MediaViewer({ media, initialIndex = 0, isOpen, onClose }: MediaV
                                         className="w-full h-full flex items-center justify-center"
                                     >
                                         {current.type === 'image' && (
-                                            <div className="relative w-full h-full max-w-[90%] max-h-[85vh] flex items-center justify-center overflow-hidden rounded-xl">
-                                                <div className="relative w-full h-full">
-                                                    <WatermarkOverlay logoUrl={headerLogo} />
-                                                    <Image
+                                            <div className="relative inline-flex items-center justify-center max-w-[90%] max-h-[85vh] p-2">
+                                                <div className="relative inline-block max-w-full max-h-[85vh] overflow-hidden rounded-xl">
+                                                    <img
                                                         src={current.url}
                                                         alt=""
-                                                        fill
-                                                        className="object-contain"
-                                                        unoptimized
-                                                        priority
+                                                        className="max-w-full max-h-[85vh] w-auto h-auto object-contain block rounded-xl"
                                                     />
+                                                    <WatermarkOverlay logoUrl={headerLogo} />
                                                 </div>
                                             </div>
                                         )}

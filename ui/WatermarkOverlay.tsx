@@ -3,13 +3,13 @@ import Image from 'next/image'
 
 export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false }: { logoUrl?: string, isThumbnail?: boolean, isCard?: boolean }) => {
 
-    // ── Premium Corner Mark (SVG — visible & elegant) ──
-    const cornerMark = (
+    // ── Premium Corner Mark SVG (positioned in bottom-right of 140x140 box) ──
+    const cornerMarkSvg = (
         <svg 
             viewBox="0 0 140 140" 
             fill="none" 
             xmlns="http://www.w3.org/2000/svg"
-            className="w-28 h-28 md:w-40 md:h-40 lg:w-52 lg:h-52"
+            className="w-full h-full"
         >
             <defs>
                 <linearGradient id="fadeV" x1="0" y1="0" x2="0" y2="1">
@@ -30,107 +30,145 @@ export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false 
                 </linearGradient>
             </defs>
 
-            {/* ─── Outer corner bracket — dark, structural ─── */}
+            {/* Outer corner bracket */}
             <path 
                 d="M140 118 L140 140 L118 140" 
                 stroke="#1B1F3B" 
-                strokeWidth="1.8" 
+                strokeWidth="2" 
                 strokeLinecap="round"
-                opacity="0.75"
+                opacity="0.8"
             />
 
-            {/* ─── Inner corner bracket — offset, thinner ─── */}
+            {/* Inner corner bracket */}
             <path 
                 d="M140 126 L140 132 L134 132" 
                 stroke="#1B1F3B" 
-                strokeWidth="0.8" 
+                strokeWidth="1" 
                 strokeLinecap="round"
-                opacity="0.35"
+                opacity="0.4"
             />
 
-            {/* ─── Vertical accent line — fading orange ─── */}
-            <line x1="132" y1="50" x2="132" y2="128" stroke="url(#fadeV)" strokeWidth="1.2" />
+            {/* Vertical accent line — fading orange */}
+            <line x1="132" y1="40" x2="132" y2="128" stroke="url(#fadeV)" strokeWidth="1.4" />
 
-            {/* ─── Horizontal accent line — fading orange ─── */}
-            <line x1="50" y1="132" x2="128" y2="132" stroke="url(#fadeH)" strokeWidth="1.2" />
+            {/* Horizontal accent line — fading orange */}
+            <line x1="40" y1="132" x2="128" y2="132" stroke="url(#fadeH)" strokeWidth="1.4" />
 
-            {/* ─── Vertical dark parallel — structure ─── */}
-            <line x1="136" y1="80" x2="136" y2="128" stroke="url(#fadeDarkV)" strokeWidth="0.6" />
+            {/* Vertical dark parallel */}
+            <line x1="136" y1="70" x2="136" y2="128" stroke="url(#fadeDarkV)" strokeWidth="0.8" />
 
-            {/* ─── Horizontal dark parallel — structure ─── */}
-            <line x1="80" y1="136" x2="128" y2="136" stroke="url(#fadeDarkH)" strokeWidth="0.6" />
+            {/* Horizontal dark parallel */}
+            <line x1="70" y1="136" x2="128" y2="136" stroke="url(#fadeDarkH)" strokeWidth="0.8" />
 
-            {/* ─── Corner diamond accent — focal point ─── */}
+            {/* Corner diamond accent — sitting exactly at bottom corner */}
             <rect 
-                x="129.5" y="129.5" 
-                width="5.5" height="5.5" 
+                x="129" y="129" 
+                width="6" height="6" 
                 rx="1"
                 fill="#F97316" 
-                opacity="0.85"
-                transform="rotate(45, 132.25, 132.25)"
+                opacity="0.9"
+                transform="rotate(45, 132, 132)"
             />
 
-            {/* ─── Connecting arc — subtle sweep ─── */}
+            {/* Connecting arc */}
             <path 
-                d="M132 100 Q132 132 100 132" 
+                d="M132 90 Q132 132 90 132" 
                 stroke="#1B1F3B" 
-                strokeWidth="0.6" 
+                strokeWidth="0.8" 
                 fill="none"
-                opacity="0.18"
+                opacity="0.2"
                 strokeDasharray="3 4"
             />
 
-            {/* ─── Tick marks — precision markers ─── */}
-            <line x1="128" y1="132" x2="123" y2="132" stroke="#1B1F3B" strokeWidth="0.8" opacity="0.4" />
-            <line x1="132" y1="128" x2="132" y2="123" stroke="#1B1F3B" strokeWidth="0.8" opacity="0.4" />
-            <line x1="128" y1="136" x2="125" y2="136" stroke="#1B1F3B" strokeWidth="0.5" opacity="0.2" />
-            <line x1="136" y1="128" x2="136" y2="125" stroke="#1B1F3B" strokeWidth="0.5" opacity="0.2" />
+            {/* Tick marks */}
+            <line x1="128" y1="132" x2="122" y2="132" stroke="#1B1F3B" strokeWidth="1" opacity="0.5" />
+            <line x1="132" y1="128" x2="132" y2="122" stroke="#1B1F3B" strokeWidth="1" opacity="0.5" />
 
-            {/* ─── Small dots along the lines ─── */}
-            <circle cx="132" cy="110" r="1.2" fill="#F97316" opacity="0.5" />
-            <circle cx="132" cy="90" r="0.8" fill="#F97316" opacity="0.3" />
-            <circle cx="110" cy="132" r="1.2" fill="#F97316" opacity="0.5" />
-            <circle cx="90" cy="132" r="0.8" fill="#F97316" opacity="0.3" />
+            {/* Small dots along accent lines */}
+            <circle cx="132" cy="105" r="1.4" fill="#F97316" opacity="0.6" />
+            <circle cx="132" cy="80" r="1" fill="#F97316" opacity="0.4" />
+            <circle cx="105" cy="132" r="1.4" fill="#F97316" opacity="0.6" />
+            <circle cx="80" cy="132" r="1" fill="#F97316" opacity="0.4" />
         </svg>
     );
 
-    const logo = logoUrl ? (
-        <div className="opacity-90 flex items-end">
-            <div className="relative w-32 h-10 md:w-40 md:h-12 lg:w-48 lg:h-14 translate-y-1">
-                <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-left-bottom" unoptimized />
-            </div>
-        </div>
-    ) : null;
-
-    // ── Card / Thumbnail view ──
-    if (isThumbnail || isCard) {
-        const scaleClasses = isThumbnail 
-            ? "scale-[0.40] md:scale-[0.45]" 
-            : "scale-[0.75] md:scale-[0.90]";
-
+    // ── 1. Thumbnail View (Small preview boxes) ──
+    if (isThumbnail) {
         return (
             <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]">
-                <div className={`absolute -bottom-1 -right-1 origin-bottom-right ${scaleClasses}`}>
-                    {cornerMark}
+                {/* Bottom Left Corner Mark (Flipped horizontally inside its container) */}
+                <div className="absolute bottom-0 left-0 w-8 h-8 md:w-10 md:h-10">
+                    <div className="w-full h-full scale-x-[-1]">
+                        {cornerMarkSvg}
+                    </div>
                 </div>
-                {logo && (
-                    <div className={`absolute bottom-0 left-0 origin-bottom-left ${scaleClasses}`}>
-                        {logo}
+
+                {/* Bottom Right Corner Mark */}
+                <div className="absolute bottom-0 right-0 w-8 h-8 md:w-10 md:h-10">
+                    {cornerMarkSvg}
+                </div>
+
+                {/* Centered Logo */}
+                {logoUrl && (
+                    <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2">
+                        <div className="relative w-10 h-3 md:w-12 md:h-3.5 opacity-95">
+                            <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
+                        </div>
                     </div>
                 )}
             </div>
         )
     }
 
-    // ── Full page view ──
-    return (
-        <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-            <div className="absolute -bottom-1 -right-1">
-                {cornerMark}
+    // ── 2. Product Card View (Grid items) ──
+    if (isCard) {
+        return (
+            <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]">
+                {/* Bottom Left Corner Mark (Flipped horizontally inside its container) */}
+                <div className="absolute bottom-0 left-0 w-16 h-16 md:w-20 md:h-20">
+                    <div className="w-full h-full scale-x-[-1]">
+                        {cornerMarkSvg}
+                    </div>
+                </div>
+
+                {/* Bottom Right Corner Mark */}
+                <div className="absolute bottom-0 right-0 w-16 h-16 md:w-20 md:h-20">
+                    {cornerMarkSvg}
+                </div>
+
+                {/* Centered Logo */}
+                {logoUrl && (
+                    <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2">
+                        <div className="relative w-20 h-6 md:w-24 md:h-7 opacity-95">
+                            <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
+                        </div>
+                    </div>
+                )}
             </div>
-            {logo && (
-                <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2">
-                    {logo}
+        )
+    }
+
+    // ── 3. Full Page Main Product & Lightbox Modal View ──
+    return (
+        <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]">
+            {/* Bottom Left Corner Mark (Flipped horizontally inside its container) */}
+            <div className="absolute bottom-0 left-0 w-28 h-28 md:w-40 md:h-40 lg:w-48 lg:h-48">
+                <div className="w-full h-full scale-x-[-1]">
+                    {cornerMarkSvg}
+                </div>
+            </div>
+
+            {/* Bottom Right Corner Mark */}
+            <div className="absolute bottom-0 right-0 w-28 h-28 md:w-40 md:h-40 lg:w-48 lg:h-48">
+                {cornerMarkSvg}
+            </div>
+
+            {/* Centered Logo */}
+            {logoUrl && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+                    <div className="relative w-28 h-8 md:w-36 md:h-10 lg:w-40 lg:h-11 opacity-95">
+                        <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
+                    </div>
                 </div>
             )}
         </div>
