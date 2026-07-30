@@ -2,82 +2,116 @@ import React from 'react'
 import Image from 'next/image'
 
 export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false }: { logoUrl?: string, isThumbnail?: boolean, isCard?: boolean }) => {
-    const topLeftPattern = (
-        <div className="flex items-start">
-            <div className="relative flex flex-col items-center">
-                {/* Origin */}
-                <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-[2px] border-black flex items-center justify-center relative z-10 bg-transparent">
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#F97316]"></div>
-                </div>
-                
-                {/* Vertical Orange Dots & Line */}
-                <div className="flex flex-col items-center gap-1.5 md:gap-1.5 mt-1.5">
-                    <div className="w-2 h-2 rounded-full bg-[#F97316]"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></div>
-                    <div className="w-1 h-1 rounded-full bg-[#F97316]"></div>
-                    {/* Tapering line */}
-                    <div className="w-[2px] md:w-[2.5px] h-16 md:h-24 lg:h-32 bg-gradient-to-b from-[#F97316] to-transparent mt-1" style={{ clipPath: 'polygon(0 0, 100% 0, 50% 100%)' }}></div>
-                </div>
-            </div>
-            
-            {/* Horizontal Black Dots & Line */}
-            <div className="flex items-center gap-1.5 md:gap-1.5 ml-1.5 mt-[4px] md:mt-[5px]">
-                <div className="w-2 h-2 rounded-full bg-black"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-black"></div>
-                <div className="w-1 h-1 rounded-full bg-black"></div>
-                {/* Tapering line */}
-                <div className="h-[2px] md:h-[2.5px] w-20 md:w-32 lg:w-48 bg-gradient-to-r from-black to-transparent ml-1" style={{ clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }}></div>
-            </div>
-        </div>
-    );
 
-    const bottomRightPattern = (
-        <div className="flex items-end">
-            {/* Horizontal Black Dots & Line (going left) */}
-            <div className="flex items-center gap-1.5 md:gap-1.5 mr-1.5 mb-[4px] md:mb-[5px] flex-row-reverse">
-                <div className="w-2 h-2 rounded-full bg-black"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-black"></div>
-                <div className="w-1 h-1 rounded-full bg-black"></div>
-                <div className="h-[2px] md:h-[2.5px] w-20 md:w-32 lg:w-48 bg-gradient-to-l from-black to-transparent mr-1" style={{ clipPath: 'polygon(100% 0, 0 50%, 100% 100%)' }}></div>
-            </div>
+    // ── Premium Corner Mark (SVG — visible & elegant) ──
+    const cornerMark = (
+        <svg 
+            viewBox="0 0 140 140" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-28 h-28 md:w-40 md:h-40 lg:w-52 lg:h-52"
+        >
+            <defs>
+                <linearGradient id="fadeV" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#F97316" stopOpacity="0" />
+                    <stop offset="100%" stopColor="#F97316" stopOpacity="0.9" />
+                </linearGradient>
+                <linearGradient id="fadeH" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#F97316" stopOpacity="0" />
+                    <stop offset="100%" stopColor="#F97316" stopOpacity="0.9" />
+                </linearGradient>
+                <linearGradient id="fadeDarkV" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1B1F3B" stopOpacity="0" />
+                    <stop offset="100%" stopColor="#1B1F3B" stopOpacity="0.7" />
+                </linearGradient>
+                <linearGradient id="fadeDarkH" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#1B1F3B" stopOpacity="0" />
+                    <stop offset="100%" stopColor="#1B1F3B" stopOpacity="0.7" />
+                </linearGradient>
+            </defs>
 
-            <div className="relative flex flex-col items-center flex-col-reverse">
-                {/* Origin */}
-                <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-[2px] border-black flex items-center justify-center relative z-10 bg-transparent">
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-[#F97316]"></div>
-                </div>
-                
-                {/* Vertical Orange Dots & Line (going up) */}
-                <div className="flex flex-col-reverse items-center gap-1.5 md:gap-1.5 mb-1.5">
-                    <div className="w-2 h-2 rounded-full bg-[#F97316]"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#F97316]"></div>
-                    <div className="w-1 h-1 rounded-full bg-[#F97316]"></div>
-                    <div className="w-[2px] md:w-[2.5px] h-16 md:h-24 lg:h-32 bg-gradient-to-t from-[#F97316] to-transparent mb-1" style={{ clipPath: 'polygon(50% 0, 100% 100%, 0 100%)' }}></div>
-                </div>
-            </div>
-        </div>
+            {/* ─── Outer corner bracket — dark, structural ─── */}
+            <path 
+                d="M140 118 L140 140 L118 140" 
+                stroke="#1B1F3B" 
+                strokeWidth="1.8" 
+                strokeLinecap="round"
+                opacity="0.75"
+            />
+
+            {/* ─── Inner corner bracket — offset, thinner ─── */}
+            <path 
+                d="M140 126 L140 132 L134 132" 
+                stroke="#1B1F3B" 
+                strokeWidth="0.8" 
+                strokeLinecap="round"
+                opacity="0.35"
+            />
+
+            {/* ─── Vertical accent line — fading orange ─── */}
+            <line x1="132" y1="50" x2="132" y2="128" stroke="url(#fadeV)" strokeWidth="1.2" />
+
+            {/* ─── Horizontal accent line — fading orange ─── */}
+            <line x1="50" y1="132" x2="128" y2="132" stroke="url(#fadeH)" strokeWidth="1.2" />
+
+            {/* ─── Vertical dark parallel — structure ─── */}
+            <line x1="136" y1="80" x2="136" y2="128" stroke="url(#fadeDarkV)" strokeWidth="0.6" />
+
+            {/* ─── Horizontal dark parallel — structure ─── */}
+            <line x1="80" y1="136" x2="128" y2="136" stroke="url(#fadeDarkH)" strokeWidth="0.6" />
+
+            {/* ─── Corner diamond accent — focal point ─── */}
+            <rect 
+                x="129.5" y="129.5" 
+                width="5.5" height="5.5" 
+                rx="1"
+                fill="#F97316" 
+                opacity="0.85"
+                transform="rotate(45, 132.25, 132.25)"
+            />
+
+            {/* ─── Connecting arc — subtle sweep ─── */}
+            <path 
+                d="M132 100 Q132 132 100 132" 
+                stroke="#1B1F3B" 
+                strokeWidth="0.6" 
+                fill="none"
+                opacity="0.18"
+                strokeDasharray="3 4"
+            />
+
+            {/* ─── Tick marks — precision markers ─── */}
+            <line x1="128" y1="132" x2="123" y2="132" stroke="#1B1F3B" strokeWidth="0.8" opacity="0.4" />
+            <line x1="132" y1="128" x2="132" y2="123" stroke="#1B1F3B" strokeWidth="0.8" opacity="0.4" />
+            <line x1="128" y1="136" x2="125" y2="136" stroke="#1B1F3B" strokeWidth="0.5" opacity="0.2" />
+            <line x1="136" y1="128" x2="136" y2="125" stroke="#1B1F3B" strokeWidth="0.5" opacity="0.2" />
+
+            {/* ─── Small dots along the lines ─── */}
+            <circle cx="132" cy="110" r="1.2" fill="#F97316" opacity="0.5" />
+            <circle cx="132" cy="90" r="0.8" fill="#F97316" opacity="0.3" />
+            <circle cx="110" cy="132" r="1.2" fill="#F97316" opacity="0.5" />
+            <circle cx="90" cy="132" r="0.8" fill="#F97316" opacity="0.3" />
+        </svg>
     );
 
     const logo = logoUrl ? (
-        <div className="opacity-95 drop-shadow-md flex items-end">
+        <div className="opacity-90 flex items-end">
             <div className="relative w-32 h-10 md:w-40 md:h-12 lg:w-48 lg:h-14 translate-y-1">
                 <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-left-bottom" unoptimized />
             </div>
         </div>
     ) : null;
 
+    // ── Card / Thumbnail view ──
     if (isThumbnail || isCard) {
         const scaleClasses = isThumbnail 
-            ? "scale-[0.20] md:scale-[0.25]" 
-            : "scale-[0.5] md:scale-[0.6]";
+            ? "scale-[0.40] md:scale-[0.45]" 
+            : "scale-[0.75] md:scale-[0.90]";
 
         return (
             <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]">
-                <div className={`absolute top-0 left-0 origin-top-left ${scaleClasses}`}>
-                    {topLeftPattern}
-                </div>
-                <div className={`absolute bottom-0 right-0 origin-bottom-right ${scaleClasses}`}>
-                    {bottomRightPattern}
+                <div className={`absolute -bottom-1 -right-1 origin-bottom-right ${scaleClasses}`}>
+                    {cornerMark}
                 </div>
                 {logo && (
                     <div className={`absolute bottom-0 left-0 origin-bottom-left ${scaleClasses}`}>
@@ -88,13 +122,11 @@ export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false 
         )
     }
 
+    // ── Full page view ──
     return (
         <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-            <div className="absolute top-0 left-0">
-                {topLeftPattern}
-            </div>
-            <div className="absolute bottom-0 right-0">
-                {bottomRightPattern}
+            <div className="absolute -bottom-1 -right-1">
+                {cornerMark}
             </div>
             {logo && (
                 <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2">
