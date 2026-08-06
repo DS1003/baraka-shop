@@ -18,10 +18,11 @@ model User {
   updatedAt DateTime  @updatedAt
   username  String?   @unique
   metadata  Json?     @default("{}")
-  orders    Order[]
-  reviews   Review[]
-  reports   Report[]
-  wishlist  Product[] @relation("Wishlist")
+  orders        Order[]
+  reviews       Review[]
+  reports       Report[]
+  wishlist      Product[]      @relation("Wishlist")
+  notifications Notification[]
 }
 
 model Product {
@@ -358,4 +359,20 @@ model SyncHistory {
   errorDetails      String?
   startedAt         DateTime  @default(now())
   completedAt       DateTime?
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // ORDER_CREATED, ORDER_PROCESSING, ORDER_SHIPPED, ORDER_DELIVERED, ORDER_CANCELLED, ORDER_READY_PICKUP, NEW_ORDER_ADMIN
+  title     String
+  message   String
+  orderId   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }

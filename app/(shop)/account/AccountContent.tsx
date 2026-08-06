@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Container } from '@/ui/Container';
@@ -19,11 +19,17 @@ import {
     Trash2,
     Lock,
     Bell,
-    ChevronDown
+    ChevronDown,
+    Truck,
+    PackageCheck,
+    XCircle,
+    History,
+    CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { updateProfile, toggleWishlistAction } from '@/lib/actions/user-actions';
+import { markNotificationRead, markAllNotificationsRead } from '@/lib/actions/admin-actions';
 import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 
@@ -72,8 +78,43 @@ export default function AccountContent({ user }: { user: any }) {
         }
     };
 
+    const [clientNotifications, setClientNotifications] = useState<any[]>([]);
+    const [notifUnreadCount, setNotifUnreadCount] = useState(0);
+    const [notifLoading, setNotifLoading] = useState(false);
+
+    const fetchClientNotifications = useCallback(async () => {
+        try {
+            setNotifLoading(true);
+            const res = await fetch(`/api/notifications?_t=${Date.now()}`, {
+                cache: 'no-store',
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setClientNotifications(data.notifications || []);
+                setNotifUnreadCount(data.unreadCount || 0);
+            }
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        } finally {
+            setNotifLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchClientNotifications();
+        const interval = setInterval(fetchClientNotifications, 30_000);
+        return () => clearInterval(interval);
+    }, [fetchClientNotifications]);
+
+    const handleMarkAllNotifRead = async () => {
+        await markAllNotificationsRead();
+        setClientNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setNotifUnreadCount(0);
+    };
+
     const menuItems = [
         { id: 'orders', label: 'Mes Commandes', icon: Package },
+        { id: 'notifications', label: 'Notifications', icon: Bell, badge: notifUnreadCount },
         { id: 'wishlist', label: 'Liste d\'envies', icon: Heart },
         { id: 'profile', label: 'Mon Profil', icon: UserIcon },
         { id: 'settings', label: 'Paramètres', icon: Settings },
@@ -165,6 +206,11 @@ export default function AccountContent({ user }: { user: any }) {
                                                 isActive ? "text-orange-500" : "group-hover:scale-110 group-hover:text-[#1B1F3B]"
                                             )} />
                                             <span className="text-[11px] font-bold uppercase tracking-widest flex-1 text-left">{item.label}</span>
+                                            {item.badge && item.badge > 0 && (
+                                                <span className="relative z-10 min-w-[18px] h-[18px] px-1 bg-orange-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                                                    {item.badge > 99 ? '99+' : item.badge}
+                                                </span>
+                                            )}
                                         </div>
                                     </button>
                                 );
@@ -193,6 +239,95 @@ export default function AccountContent({ user }: { user: any }) {
                                 transition={{ duration: 0.25 }}
                                 className="bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-white shadow-[0_2px_20px_rgb(0,0,0,0.03)] min-h-[500px]"
                             >
+                                {activeTab === 'notifications' && (
+                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-6">
+                                        <div className="border-b border-gray-100 pb-4 flex items-center justify-between">
+                                            <div>
+                                                <h3 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tight mb-1">Notifications</h3>
+                                                <p className="text-xs text-gray-500">Suivez l'avancement de vos commandes en temps réel.</p>
+                                            </div>
+                                            {notifUnreadCount > 0 && (
+                                                <button
+                                                    onClick={handleMarkAllNotifRead}
+                                                    className="text-[10px] font-bold text-orange-500 hover:text-orange-600 uppercase tracking-widest transition-colors"
+                                                >
+                                                    Tout marquer comme lu
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {clientNotifications.length > 0 ? (
+                                            <div className="flex flex-col gap-3">
+                                                {clientNotifications.map((notif: any) => {
+                                                    const typeConfig: Record<string, { icon: any; bg: string; color: string }> = {
+                                                        ORDER_CREATED: { icon: Package, bg: 'bg-violet-50', color: 'text-violet-500' },
+                                                        ORDER_PROCESSING: { icon: History, bg: 'bg-blue-50', color: 'text-blue-500' },
+                                                        ORDER_SHIPPED: { icon: Truck, bg: 'bg-orange-50', color: 'text-orange-500' },
+                                                        ORDER_DELIVERED: { icon: PackageCheck, bg: 'bg-emerald-50', color: 'text-emerald-500' },
+                                                        ORDER_CANCELLED: { icon: XCircle, bg: 'bg-rose-50', color: 'text-rose-500' },
+                                                    };
+                                                    const config = typeConfig[notif.type] || { icon: Bell, bg: 'bg-gray-50', color: 'text-gray-500' };
+                                                    const NotifIcon = config.icon;
+                                                    const timeAgo = notif.createdAt
+                                                        ? (() => {
+                                                            const diffMs = Date.now() - new Date(notif.createdAt).getTime();
+                                                            const diffMin = Math.floor(diffMs / 60000);
+                                                            const diffHours = Math.floor(diffMin / 60);
+                                                            const diffDays = Math.floor(diffHours / 24);
+                                                            if (diffMin < 1) return "à l'instant";
+                                                            if (diffMin < 60) return `il y a ${diffMin} min`;
+                                                            if (diffHours < 24) return `il y a ${diffHours}h`;
+                                                            if (diffDays < 7) return `il y a ${diffDays}j`;
+                                                            return new Date(notif.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                                                        })()
+                                                        : '';
+
+                                                    return (
+                                                        <motion.div key={notif.id} variants={itemVariants}>
+                                                            <div className={cn(
+                                                                "p-4 rounded-2xl border transition-all",
+                                                                !notif.isRead
+                                                                    ? "bg-orange-50/50 border-orange-100/60 shadow-sm"
+                                                                    : "bg-white border-gray-100 hover:border-gray-200"
+                                                            )}>
+                                                                <div className="flex gap-3">
+                                                                    <div className={cn(
+                                                                        "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
+                                                                        config.bg, config.color
+                                                                    )}>
+                                                                        <NotifIcon className="w-5 h-5" />
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className={cn(
+                                                                            "text-sm line-clamp-1",
+                                                                            !notif.isRead ? "font-bold text-[#1B1F3B]" : "font-medium text-gray-600"
+                                                                        )}>
+                                                                            {notif.title}
+                                                                        </p>
+                                                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.message}</p>
+                                                                        <p className="text-[10px] text-gray-300 mt-1.5 font-medium">{timeAgo}</p>
+                                                                    </div>
+                                                                    {!notif.isRead && (
+                                                                        <div className="w-2.5 h-2.5 rounded-full bg-orange-500 mt-1 flex-shrink-0 animate-pulse" />
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <motion.div variants={itemVariants} className="flex flex-col items-center justify-center py-20 text-center">
+                                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                                    <Bell className="w-8 h-8 text-gray-300" />
+                                                </div>
+                                                <p className="text-xs font-bold text-[#1B1F3B] uppercase tracking-widest mb-1">Aucune notification</p>
+                                                <p className="text-gray-400 text-xs">Les mises à jour de vos commandes apparaîtront ici.</p>
+                                            </motion.div>
+                                        )}
+                                    </motion.div>
+                                )}
+
                                 {activeTab === 'orders' && (
                                     <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-6">
                                         <div className="border-b border-gray-100 pb-4">
@@ -395,12 +530,16 @@ export default function AccountContent({ user }: { user: any }) {
 function OrderCard({ order }: { order: any }) {
     const [expanded, setExpanded] = useState(false);
 
-    const statusColors: any = {
-        PENDING: 'bg-yellow-500',
-        COMPLETED: 'bg-emerald-500',
-        CANCELLED: 'bg-red-500',
-        SHIPPED: 'bg-blue-500'
+    const statusConfig: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+        PENDING: { label: 'En attente', color: 'text-amber-600', bg: 'bg-amber-500', icon: Clock },
+        PROCESSING: { label: 'En traitement', color: 'text-blue-600', bg: 'bg-blue-500', icon: History },
+        SHIPPED: { label: 'Expédiée', color: 'text-orange-600', bg: 'bg-orange-500', icon: Truck },
+        DELIVERED: { label: 'Livrée', color: 'text-emerald-600', bg: 'bg-emerald-500', icon: PackageCheck },
+        CANCELLED: { label: 'Annulée', color: 'text-rose-600', bg: 'bg-rose-500', icon: XCircle },
     };
+
+    const config = statusConfig[order.status] || statusConfig.PENDING;
+    const StatusIcon = config.icon;
 
     return (
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-orange-100 hover:shadow-sm transition-all duration-300">
@@ -415,8 +554,9 @@ function OrderCard({ order }: { order: any }) {
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                             <span className="text-base font-black text-[#1B1F3B] uppercase">#{order.id.slice(0, 8)}</span>
-                            <div className={cn("px-2 py-0.5 rounded-md text-[8px] font-bold text-white uppercase tracking-widest", statusColors[order.status] || 'bg-gray-400')}>
-                                {order.status}
+                            <div className={cn("px-2.5 py-0.5 rounded-md text-[8px] font-bold text-white uppercase tracking-widest flex items-center gap-1", config.bg)}>
+                                <StatusIcon className="w-2.5 h-2.5" />
+                                {config.label}
                             </div>
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
@@ -470,3 +610,4 @@ function OrderCard({ order }: { order: any }) {
         </div>
     );
 }
+

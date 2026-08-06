@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -35,7 +35,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { signOut } from 'next-auth/react';
-import { getAdminNotifications } from '@/lib/actions/admin-actions';
+import { getAdminNotifications, markAllNotificationsRead } from '@/lib/actions/admin-actions';
 import { ImportToast } from '@/features/admin/components/ImportToast';
 import { GlobalSearchModal } from '@/features/admin/components/GlobalSearchModal';
 import { Toaster } from 'sonner';
@@ -91,7 +91,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const { headerLogo } = useSiteLogos();
     const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [hoveredTooltip, setHoveredTooltip] = useState<{label: string, top: number, left: number} | null>(null);
+    const notifIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -104,15 +106,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    useEffect(() => {
-        async function loadNotifications() {
-            const data = await getAdminNotifications();
-            if (JSON.stringify(data) !== JSON.stringify(notifications)) {
-                setNotifications(data);
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/admin/notifications?_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache' },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setNotifications(data.notifications || []);
+                setUnreadCount(data.unreadCount || 0);
             }
+        } catch (err) {
+            console.error('Notification fetch error:', err);
         }
-        loadNotifications();
     }, []);
+
+    useEffect(() => {
+        fetchNotifications();
+        notifIntervalRef.current = setInterval(fetchNotifications, 15_000);
+        return () => {
+            if (notifIntervalRef.current) clearInterval(notifIntervalRef.current);
+        };
+    }, [fetchNotifications]);
+
+    const handleMarkAllRead = async () => {
+        await markAllNotificationsRead();
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setUnreadCount(0);
+    };
 
     return (
         <div className="flex h-screen bg-[#FDFDFD] overflow-hidden font-roboto text-slate-900 selection:bg-orange-100 selection:text-orange-900">
@@ -268,7 +290,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     )}
                                 >
                                     <Bell size={18} strokeWidth={2} />
-                                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border-2 border-white" />
+                                    {unreadCount > 0 && (
+                                        <motion.span
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm"
+                                        >
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </motion.span>
+                                    )}
                                 </button>
 
                                 <AnimatePresence>
@@ -279,31 +309,87 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                className="absolute right-0 mt-3 w-80 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden"
+                                                className="absolute right-0 mt-3 w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden"
                                             >
                                                 <div className="p-4 border-b border-slate-100 flex justify-between items-center">
                                                     <h4 className="font-bold text-[14px]">Notifications</h4>
-                                                    <span className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold">3 NOUVELLES</span>
+                                                    <div className="flex items-center gap-2">
+                                                        {unreadCount > 0 && (
+                                                            <span className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-bold">
+                                                                {unreadCount} NOUVELLE{unreadCount > 1 ? 'S' : ''}
+                                                            </span>
+                                                        )}
+                                                        {unreadCount > 0 && (
+                                                            <button
+                                                                onClick={handleMarkAllRead}
+                                                                className="text-[10px] font-bold text-slate-400 hover:text-orange-600 transition-colors uppercase tracking-wider"
+                                                            >
+                                                                Tout lire
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="max-h-96 overflow-y-auto">
-                                                    {notifications.map((n) => (
-                                                        <div key={n.id} className="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group">
-                                                            <div className="flex gap-3">
-                                                                <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
-                                                                    <Activity size={14} />
+                                                <div className="max-h-[420px] overflow-y-auto">
+                                                    {notifications.length > 0 ? (
+                                                        notifications.map((n: any) => {
+                                                            const typeIcons: Record<string, { bg: string; color: string }> = {
+                                                                NEW_ORDER_ADMIN: { bg: 'bg-emerald-50', color: 'text-emerald-500' },
+                                                                ORDER_PROCESSING: { bg: 'bg-blue-50', color: 'text-blue-500' },
+                                                                ORDER_SHIPPED: { bg: 'bg-orange-50', color: 'text-orange-500' },
+                                                                ORDER_DELIVERED: { bg: 'bg-emerald-50', color: 'text-emerald-500' },
+                                                                ORDER_CANCELLED: { bg: 'bg-rose-50', color: 'text-rose-500' },
+                                                                ORDER_CREATED: { bg: 'bg-violet-50', color: 'text-violet-500' },
+                                                            };
+                                                            const style = typeIcons[n.type] || { bg: 'bg-orange-50', color: 'text-orange-500' };
+                                                            const timeAgo = n.createdAt
+                                                                ? (() => {
+                                                                    const diffMs = Date.now() - new Date(n.createdAt).getTime();
+                                                                    const diffMin = Math.floor(diffMs / 60000);
+                                                                    const diffHours = Math.floor(diffMin / 60);
+                                                                    const diffDays = Math.floor(diffHours / 24);
+                                                                    if (diffMin < 1) return "à l'instant";
+                                                                    if (diffMin < 60) return `il y a ${diffMin} min`;
+                                                                    if (diffHours < 24) return `il y a ${diffHours}h`;
+                                                                    if (diffDays < 7) return `il y a ${diffDays}j`;
+                                                                    return new Date(n.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                                                                })()
+                                                                : '';
+
+                                                            return (
+                                                                <div key={n.id} className={cn(
+                                                                    "p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group",
+                                                                    !n.isRead && "bg-orange-50/30"
+                                                                )}>
+                                                                    <div className="flex gap-3">
+                                                                        <div className={cn(
+                                                                            "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                                                                            style.bg, style.color
+                                                                        )}>
+                                                                            <Activity size={14} />
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className={cn(
+                                                                                "text-[12px] line-clamp-1",
+                                                                                !n.isRead ? "font-bold text-slate-900" : "font-medium text-slate-600"
+                                                                            )}>{n.title}</p>
+                                                                            {n.message && (
+                                                                                <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">{n.message}</p>
+                                                                            )}
+                                                                            <p className="text-[10px] text-slate-300 mt-1 font-medium">{timeAgo}</p>
+                                                                        </div>
+                                                                        {!n.isRead && <div className="w-2 h-2 rounded-full bg-orange-500 mt-1 flex-shrink-0 animate-pulse" />}
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-[12px] font-bold text-slate-800 line-clamp-1">{n.title}</p>
-                                                                    <p className="text-[10px] text-slate-400 mt-0.5">{n.time}</p>
-                                                                </div>
-                                                                {!n.read && <div className="w-2 h-2 rounded-full bg-orange-500 mt-1" />}
-                                                            </div>
+                                                            );
+                                                        })
+                                                    ) : (
+                                                        <div className="p-8 text-center">
+                                                            <Bell size={24} className="mx-auto text-slate-200 mb-3" />
+                                                            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Aucune notification</p>
+                                                            <p className="text-[11px] text-slate-300 mt-1">Les notifications apparaîtront ici</p>
                                                         </div>
-                                                    ))}
+                                                    )}
                                                 </div>
-                                                <button className="w-full p-3 text-[12px] font-bold text-slate-400 hover:text-orange-600 transition-colors bg-slate-50/50">
-                                                    Voir tout l'historique
-                                                </button>
                                             </motion.div>
                                         </>
                                     )}

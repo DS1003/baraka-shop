@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import { notifyClientOrderStatusChange, notifyAdminsNewOrder } from '@/lib/notification-service';
 
 interface OrderItemData {
     productId: string;
@@ -31,18 +32,12 @@ interface CreateOrderData {
 export async function createOrder(data: CreateOrderData) {
     const session = await auth();
 
-    // We allow guest orders for now if we want, but let's stick to auth for the "Account" vibe
-    // Or we could create a "Guest" user or just use a nullable userId if schema allows.
-    // Looking at schema: userId is String, not optional. So user MUST be logged in.
-
     if (!session?.user?.id) {
         return { success: false, error: "Vous devez être connecté pour passer une commande." };
     }
 
     try {
-        // Create the order in a transaction
         const order = await prisma.$transaction(async (tx) => {
-            // Vérifier que tous les produits existent encore
             const productIds = data.items.map(item => item.productId);
             const uniqueProductIds = Array.from(new Set(productIds));
             const foundProducts = await tx.product.findMany({
@@ -54,7 +49,6 @@ export async function createOrder(data: CreateOrderData) {
                 throw new Error("Certains produits de votre panier ne sont plus disponibles ou ont été supprimés du catalogue.");
             }
 
-            // Vérifier le stock
             const missingStock = data.items.find(item => {
                 const p = foundProducts.find(fp => fp.id === item.productId);
                 return !p || p.stock < item.quantity;
@@ -85,7 +79,6 @@ export async function createOrder(data: CreateOrderData) {
                 }
             });
 
-            // Update stock
             for (const item of data.items) {
                 await tx.product.update({
                     where: { id: item.productId },
@@ -96,6 +89,16 @@ export async function createOrder(data: CreateOrderData) {
             return newOrder;
         });
 
+        // Send notifications (non-blocking)
+        const clientName = data.shippingDetails.firstName
+            ? `${data.shippingDetails.firstName} ${data.shippingDetails.lastName}`.trim()
+            : session.user.name || session.user.email || 'Client';
+
+        // Notify client: order confirmed
+        notifyClientOrderStatusChange(order.id, 'PENDING').catch(() => {});
+        // Notify admins: new order received
+        notifyAdminsNewOrder(order.id, clientName, data.total).catch(() => {});
+
         revalidatePath('/account');
         return { success: true, orderId: order.id };
     } catch (error: any) {
@@ -103,3 +106,4 @@ export async function createOrder(data: CreateOrderData) {
         return { success: false, error: "Erreur lors de la création de la commande: " + (error?.message || String(error)) };
     }
 }
+

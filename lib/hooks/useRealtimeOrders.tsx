@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
-const NOTIFICATION_SOUND_URL = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgipqYgWA0JFh8lJiMdVc3N2eGlpF+X0E0VHyQk4h4YUk8WnyOj4V5ZE5BW3qKi4R7Z1NCXH2IiIJ4Z1REX3yGiIB3ZVNEYHuEh352YlRFYnqCg3xzXlVIZXqBgnlvWldKaHx/f3RoWFdNbH1+fG9iVldScH18emteV1hVdH16eGdYV1tYd3x4dl9UV15beHt2clhUYGBbeXp0bVVVY2N+e3NrUFdmZoB7cGdOWGlpiHtwZEpcbGyNeXBgRF1wcJJ4bFpBYXN0lnlqVj5jd3icemhQO2V7e6B6ZUo4aX1+ontjRTVqgICke2FBNW2Cg6d7XjwycYWFqnxcOC91h4esf1o1LXeKiK1/WDMseoyJrn9WMSt8jYmuf1UwK32Oiq5/VDArf46KrX9UMCt/j4qtf1QwK3+Piq1/VTArfo+KrX9VMCp+kIqtgFUwKn6Qiq2AVTAqfpCKrYBVMCp+kIqtgFU=';
+const NOTIFICATION_SOUND_URL = '/sounds/notification.mp3'; // Placez votre son premium ici (ex: son type Shopify/Stripe)
 
 interface UseRealtimeOrdersOptions {
   apiUrl?: string;
@@ -81,20 +81,42 @@ export function useRealtimeOrders({
           newOrders.forEach((order: any) => {
             const clientName = order.user?.username || order.user?.email || 'Client';
             const total = order.total?.toLocaleString() || '0';
+            const itemsCount = order.items?.length || 0;
+            const orderRef = `#ORD-${order.id.substring(0, 8).toUpperCase()}`;
 
-            toast.success(
-              `🛒 Nouvelle commande de ${clientName}`,
-              {
-                description: `Montant: ${total} FCFA • ${order.items?.length || 0} article(s)`,
-                duration: 8000,
-                action: {
-                  label: 'Voir',
-                  onClick: () => {
-                    onNewOrderRef.current?.(order);
-                  },
-                },
-              }
-            );
+            toast.custom((t) => (
+              <div 
+                className="flex items-start gap-4 p-4 bg-white border border-slate-100 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] rounded-2xl w-[380px] cursor-pointer hover:scale-[1.02] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] transition-all duration-300 group"
+                onClick={() => {
+                  onNewOrderRef.current?.(order);
+                  toast.dismiss(t);
+                }}
+              >
+                <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-orange-50 text-orange-600 rounded-full border border-orange-100 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                </div>
+                <div className="flex-1 flex flex-col pt-0.5">
+                  <div className="flex justify-between items-center mb-1">
+                    <h3 className="font-bold text-slate-900 text-[15px]">Nouvelle commande</h3>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">À l'instant</span>
+                  </div>
+                  <p className="text-sm text-slate-600 leading-snug">
+                    <span className="font-semibold text-slate-900">{clientName}</span> a commandé pour <span className="font-bold text-orange-600">{total} FCFA</span>
+                  </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-50 text-slate-500 text-[11px] font-bold tracking-wide border border-slate-100">
+                      {orderRef}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-md bg-slate-50 text-slate-500 text-[11px] font-bold tracking-wide border border-slate-100">
+                      {itemsCount} article{itemsCount > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ), { 
+              duration: 8000,
+              id: order.id // Prevent duplicates
+            });
           });
         }
       }

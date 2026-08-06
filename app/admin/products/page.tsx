@@ -98,7 +98,7 @@ function ProductsPageContent() {
         subCategoryId?: string;
         thirdLevelCategoryId?: string;
         brandId?: string;
-        stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+        stockStatus?: 'in_stock' | 'out_of_stock';
         publishStatus?: 'published' | 'hidden';
     }>({
         categoryId: searchParams.get('categoryId') || undefined,
@@ -441,9 +441,8 @@ function ProductsPageContent() {
                                 onChange={(e) => setActiveFilters(prev => ({ ...prev, stockStatus: (e.target.value || undefined) as any }))}
                             >
                                 <option value="">Stock</option>
-                                <option value="in_stock">En stock (&gt;10)</option>
-                                <option value="low_stock">Faible (&lt;10)</option>
-                                <option value="out_of_stock">Rupture (0)</option>
+                                <option value="in_stock">En stock</option>
+                                <option value="out_of_stock">Rupture</option>
                             </select>
                         </div>
 

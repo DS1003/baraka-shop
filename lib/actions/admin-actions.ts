@@ -5,6 +5,15 @@ import bcrypt from 'bcryptjs';
 
 import { revalidatePath } from 'next/cache';
 import { invalidatePrefix, invalidateCache } from '@/lib/redis';
+import { auth } from '@/auth';
+import {
+    notifyClientOrderStatusChange,
+    notifyAdminsOrderStatusChange,
+    getUserNotifications,
+    getUnreadCount,
+    markAsRead,
+    markAllAsRead
+} from '@/lib/notification-service';
 
 export async function getDashboardStats(period: string = 'ALL') {
     try {
@@ -267,9 +276,7 @@ export async function getAdminProducts(
 
         if (filters?.stockStatus) {
             if (filters.stockStatus === 'in_stock') {
-                andFilters.push({ stock: { gt: 10 } });
-            } else if (filters.stockStatus === 'low_stock') {
-                andFilters.push({ stock: { gt: 0, lt: 10 } });
+                andFilters.push({ stock: { gt: 0 } });
             } else if (filters.stockStatus === 'out_of_stock') {
                 andFilters.push({ stock: 0 });
             }
@@ -441,11 +448,26 @@ export async function getAdminCategories() {
 
 export async function updateOrderStatus(orderId: string, status: string) {
     try {
+        // Fetch order details before updating for notification context
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            include: { user: { select: { username: true, email: true } } }
+        });
+
         await prisma.order.update({
             where: { id: orderId },
             data: { status }
         });
+
+        // Send notifications (non-blocking)
+        if (order) {
+            const clientName = order.user.username || order.user.email || 'Client';
+            notifyClientOrderStatusChange(orderId, status).catch(() => {});
+            notifyAdminsOrderStatusChange(orderId, status, clientName, order.total).catch(() => {});
+        }
+
         revalidatePath('/admin/orders');
+        revalidatePath('/account');
         return { success: true };
     } catch (error) {
         console.error("Update order error:", error);
@@ -1152,24 +1174,117 @@ export async function upsertCategory(data: any, id?: string) {
 }
 
 export async function getAdminNotifications() {
-    return [
-        { id: 1, type: 'ORDER', title: 'Nouvelle commande #BAR-902', time: 'il y a 2 min', read: false },
-        { id: 2, type: 'STOCK', title: 'Alerte stock : Abaya Silk', time: 'il y a 10 min', read: false },
-        { id: 3, type: 'USER', title: 'Nouveau client : Amadou Fall', time: 'il y a 45 min', read: true },
-    ];
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return [];
+
+        const notifications = await getUserNotifications(session.user.id, 20);
+        return notifications.map((n: any) => ({
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            time: getRelativeTime(n.createdAt),
+            read: n.isRead,
+            orderId: n.orderId,
+            createdAt: n.createdAt,
+        }));
+    } catch (error) {
+        console.error('getAdminNotifications error:', error);
+        return [];
+    }
+}
+
+function getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(date).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMin < 1) return "à l'instant";
+    if (diffMin < 60) return `il y a ${diffMin} min`;
+    if (diffHours < 24) return `il y a ${diffHours}h`;
+    if (diffDays < 7) return `il y a ${diffDays}j`;
+    return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
 export async function bulkUpdateOrderStatuses(orderIds: string[], status: string) {
     try {
+        // Fetch order details for notifications
+        const orders = await prisma.order.findMany({
+            where: { id: { in: orderIds } },
+            include: { user: { select: { username: true, email: true } } }
+        });
+
         await prisma.order.updateMany({
             where: { id: { in: orderIds } },
             data: { status }
         });
+
+        // Send notifications for each order (non-blocking)
+        for (const order of orders) {
+            const clientName = order.user.username || order.user.email || 'Client';
+            notifyClientOrderStatusChange(order.id, status).catch(() => {});
+            notifyAdminsOrderStatusChange(order.id, status, clientName, order.total).catch(() => {});
+        }
+
         revalidatePath('/admin/orders');
+        revalidatePath('/account');
         return { success: true };
     } catch (error) {
         console.error("Bulk update order statuses error:", error);
         return { success: false };
+    }
+}
+
+// ==========================================
+// NOTIFICATION MANAGEMENT ACTIONS
+// ==========================================
+
+export async function markNotificationRead(notificationId: string) {
+    return markAsRead(notificationId);
+}
+
+export async function markAllNotificationsRead() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return { success: false };
+        return markAllAsRead(session.user.id);
+    } catch {
+        return { success: false };
+    }
+}
+
+export async function getUnreadNotificationCount() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return 0;
+        return getUnreadCount(session.user.id);
+    } catch {
+        return 0;
+    }
+}
+
+export async function getClientNotifications() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return [];
+
+        const notifications = await getUserNotifications(session.user.id, 50);
+        return notifications.map((n: any) => ({
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            time: getRelativeTime(n.createdAt),
+            read: n.isRead,
+            orderId: n.orderId,
+            createdAt: n.createdAt,
+        }));
+    } catch (error) {
+        console.error('getClientNotifications error:', error);
+        return [];
     }
 }
 
