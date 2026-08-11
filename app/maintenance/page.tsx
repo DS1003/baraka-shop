@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { ShieldCheck, RefreshCw, Clock, ArrowRight, Settings2, User, Lock, Eye, EyeOff, Loader2, X, AlertCircle } from 'lucide-react'
+import { ShieldCheck, RefreshCw, Clock, ArrowRight, Settings2, User, Lock, Eye, EyeOff, Loader2, X, AlertCircle, Phone, ShoppingBag } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
@@ -219,29 +219,29 @@ export default function MaintenancePage() {
                 <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 animate-[fade-in-up_1s_ease-out] max-w-3xl mx-auto">
                     
                     <div className="group relative bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all overflow-hidden flex items-start gap-4">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-12 -mt-12 transition-transform group-hover:scale-110" />
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-12 -mt-12 transition-transform group-hover:scale-110" />
                         
-                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 shadow-inner">
-                            <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 shadow-inner">
+                            <Phone className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                         <div className="relative pt-0.5">
-                            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">Données sécurisées</h3>
+                            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">Service Client</h3>
                             <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                                L'intégrité de vos informations est totalement garantie.
+                                Notre équipe reste joignable au <br/><span className="font-bold text-orange-600">+221 76 514 98 98</span> sur WhatsApp.
                             </p>
                         </div>
                     </div>
 
                     <div className="group relative bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/60 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all overflow-hidden flex items-start gap-4">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-12 -mt-12 transition-transform group-hover:scale-110" />
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-12 -mt-12 transition-transform group-hover:scale-110" />
                         
-                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner">
-                            <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-[spin_4s_linear_infinite]" />
+                        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-inner">
+                            <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                         <div className="relative pt-0.5">
-                            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">Auto-actualisation</h3>
+                            <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1">Nouveautés à venir</h3>
                             <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-                                Vérification automatique dans <span className="font-black text-blue-600">{countdown}</span> secondes.
+                                Nous préparons plein de nouvelles offres pour notre retour. Restez connectés !
                             </p>
                         </div>
                     </div>
@@ -251,7 +251,7 @@ export default function MaintenancePage() {
                 {/* Primary CTA */}
                 <div className="mt-10 sm:mt-12 animate-[fade-in-up_1.2s_ease-out]">
                     <a
-                        href="https://wa.me/221338000000"
+                        href="https://wa.me/221765149898"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group relative inline-flex items-center justify-center gap-3 h-12 sm:h-14 px-6 sm:px-8 bg-slate-900 text-white rounded-full font-bold text-xs sm:text-sm tracking-wide overflow-hidden transition-all shadow-[0_8px_30px_-8px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_30px_-8px_rgba(234,88,12,0.6)] hover:-translate-y-1 active:translate-y-0"
