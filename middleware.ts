@@ -23,6 +23,18 @@ async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
         return maintenanceCookie.value === 'true';
     }
 
+    // Call API for visitors
+    try {
+        const url = new URL('/api/site-status', req.nextUrl.origin);
+        const res = await fetch(url);
+        if (res.ok) {
+            const data = await res.json();
+            return !!data.maintenanceMode;
+        }
+    } catch (err) {
+        // Ignore and fallback
+    }
+
     return false;
 }
 
