@@ -102,7 +102,7 @@ export default function ContactPage() {
                                     <ContactDetail icon={Phone} label="Téléphone" value="+221 33 822 34 22" />
                                     <ContactDetail icon={Mail} label="Email" value="contact@baraka.sn" />
                                     <ContactDetail icon={MapPin} label="Siège Social" value="Rue Avenue ABDOU, 90 Rue Av. K. Bourgi, Dakar" />
-                                    <ContactDetail icon={MessageSquare} label="WhatsApp" value="+221 77 000 00 00" />
+                                    <ContactDetail icon={MessageSquare} label="WhatsApp" value="+221 76 514 98 98" />
                                 </div>
 
                                 <div className="mt-12 pt-12 border-t border-white/10 flex flex-col gap-6">

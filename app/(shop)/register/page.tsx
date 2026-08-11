@@ -196,7 +196,7 @@ export default function RegisterPage() {
                                 <input
                                     type="tel"
                                     name="phone"
-                                    placeholder="77 000 00 00"
+                                    placeholder="76 514 98 98"
                                     className="w-full h-11 pl-10 pr-4 bg-slate-50/50 focus:bg-white border border-slate-200 rounded-lg text-base sm:text-sm focus:outline-none focus:ring-4 focus:ring-[#1B1F3B]/5 focus:border-[#1B1F3B] transition-all duration-300 font-medium text-[#1B1F3B] placeholder-gray-400"
                                     value={formData.phone}
                                     onChange={handleChange}

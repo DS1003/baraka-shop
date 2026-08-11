@@ -555,7 +555,7 @@ export default function CheckoutPage() {
                                         <div className="md:col-span-2">
                                             <FormInput
                                                 label="Téléphone"
-                                                placeholder="+221 77 000 00 00"
+                                                placeholder="+221 76 514 98 98"
                                                 value={formData.phone}
                                                 onChange={(val) => setFormData({ ...formData, phone: val })}
                                             />

@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 
 export function WhatsAppButton() {
     const pathname = usePathname()
-    const phoneNumber = '221770000000' // Format international sans le +
+    const phoneNumber = '221765149898' // Format international sans le +
     const message = encodeURIComponent("Bonjour Baraka Shop, j'aimerais avoir plus d'informations sur vos produits.")
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
 

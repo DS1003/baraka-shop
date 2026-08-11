@@ -413,7 +413,7 @@ function AddCustomerModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                             <label className="text-sm font-bold text-slate-700 ml-1">Téléphone</label>
                             <input
                                 type="tel"
-                                placeholder="+221 77 000 00 00"
+                                placeholder="+221 76 514 98 98"
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -567,7 +567,7 @@ function EditCustomerModal({ customer, onClose, onSuccess }: { customer: any, on
                             <label className="text-sm font-bold text-slate-700 ml-1">Téléphone</label>
                             <input
                                 type="tel"
-                                placeholder="+221 77 000 00 00"
+                                placeholder="+221 76 514 98 98"
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
