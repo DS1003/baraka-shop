@@ -42,7 +42,7 @@ export async function getProductsAction(options: {
     const cacheKey = `products:${JSON.stringify(options)}`;
     const cached = await getCache<any>(cacheKey);
     if (cached) {
-        console.log(`[Redis] Cache Hit for ${cacheKey}`);
+        if (process.env.NODE_ENV !== 'production') console.log(`[Redis] Cache Hit for ${cacheKey}`);
         return cached;
     }
 
@@ -333,7 +333,7 @@ export async function getMegaMenuAction() {
         const cacheKey = 'megamenu:all';
         const cached = await getCache<any>(cacheKey);
         if (cached) {
-            console.log('[Redis] Cache Hit for Mega Menu');
+            if (process.env.NODE_ENV !== 'production') console.log('[Redis] Cache Hit for Mega Menu');
             return cached;
         }
 
@@ -589,7 +589,7 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                     (reference && ext.reference !== reference)
                 );
 
-                console.log(`[Import Debug] Prod: ${name} | RefExcel: ${reference} | RefDB: ${ext.reference} | Changed: ${hasChanged}`);
+                if (process.env.NODE_ENV !== 'production') console.log(`[Import Debug] Prod: ${name} | RefExcel: ${reference} | RefDB: ${ext.reference} | Changed: ${hasChanged}`);
 
                 if (hasChanged) {
                     toUpdate.push({

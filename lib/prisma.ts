@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 
-const prismaClientSingleton = () => {
+const prismaClientSingleton = (): PrismaClient => {
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) {
         throw new Error("DATABASE_URL environment variable is not defined");
@@ -17,14 +17,14 @@ const prismaClientSingleton = () => {
         connectionTimeoutMillis: 10000,
     });
     const adapter = new PrismaPg(pool as any);
-    return new PrismaClient({ adapter }) as any;
+    return new PrismaClient({ adapter });
 };
 
 declare global {
-    var prismaGlobal: any;
+    var prismaGlobal: PrismaClient | undefined;
 }
 
-const prisma: any = globalThis.prismaGlobal ?? prismaClientSingleton();
+const prisma: PrismaClient = globalThis.prismaGlobal ?? prismaClientSingleton();
 
 export default prisma;
 

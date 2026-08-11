@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
+import { auth } from '@/auth';
 
 export async function GET() {
     try {
+        const session = await auth();
+        if (!session?.user || (session.user as any).role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const cacheKey = 'api:physical-stores:all';
         const cached = await getCache<any>(cacheKey);
         if (cached) return NextResponse.json(cached);
@@ -33,6 +39,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
+        const session = await auth();
+        if (!session?.user || (session.user as any).role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await request.json();
         const { action, data, id } = body;
 

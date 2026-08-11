@@ -15,8 +15,20 @@ import {
     markAllAsRead
 } from '@/lib/notification-service';
 
+// ==========================================
+// SECURITY: Centralized admin guard
+// ==========================================
+async function requireAdmin() {
+    const session = await auth();
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        throw new Error('Accès non autorisé.');
+    }
+    return session;
+}
+
 export async function getDashboardStats(period: string = 'ALL') {
     try {
+        await requireAdmin();
         const orderWhereClause: any = {};
         const now = new Date();
         
@@ -176,6 +188,7 @@ export async function getAdminStores() {
 
 export async function upsertStore(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await prisma.store.update({
                 where: { id },
@@ -217,6 +230,7 @@ export async function upsertStore(data: any, id?: string) {
 
 export async function deleteStore(id: string) {
     try {
+        await requireAdmin();
         const productCount = await prisma.product.count({ where: { storeId: id } });
         if (productCount > 0) {
             return { success: false, message: "La boutique contient des produits." };
@@ -243,6 +257,7 @@ export async function getAdminProducts(
     }
 ) {
     try {
+        await requireAdmin();
         const skip = (page - 1) * pageSize;
         const where: any = {};
         const andFilters: any[] = [];
@@ -361,6 +376,7 @@ export async function getAllFilteredProductIds(
     }
 ) {
     try {
+        await requireAdmin();
         const where: any = {};
         const andFilters: any[] = [];
 
@@ -409,8 +425,9 @@ export async function getAllFilteredProductIds(
 
 export async function getAdminOrders(status?: string) {
     try {
+        await requireAdmin();
         const orders = await prisma.order.findMany({
-            where: status ? { status } : {},
+            where: status ? { status: status as any } : {},
             include: {
                 user: true,
                 items: {
@@ -428,6 +445,7 @@ export async function getAdminOrders(status?: string) {
 
 export async function getAdminCategories() {
     try {
+        await requireAdmin();
         const categories = await prisma.category.findMany({
             include: {
                 subCategories: {
@@ -448,6 +466,7 @@ export async function getAdminCategories() {
 
 export async function updateOrderStatus(orderId: string, status: string) {
     try {
+        await requireAdmin();
         // Fetch order details before updating for notification context
         const order = await prisma.order.findUnique({
             where: { id: orderId },
@@ -456,7 +475,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
         await prisma.order.update({
             where: { id: orderId },
-            data: { status }
+            data: { status: status as any }
         });
 
         // Send notifications (non-blocking)
@@ -477,6 +496,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
 export async function updateProductStock(productId: string, stock: number) {
     try {
+        await requireAdmin();
         await prisma.product.update({
             where: { id: productId },
             data: { stock }
@@ -490,6 +510,7 @@ export async function updateProductStock(productId: string, stock: number) {
 
 export async function getCategoryRevenue() {
     try {
+        await requireAdmin();
         const categories = await prisma.category.findMany({
             include: {
                 products: {
@@ -518,6 +539,7 @@ export async function getCategoryRevenue() {
 
 export async function getRecentActivity() {
     try {
+        await requireAdmin();
         const [recentOrders, recentUsers] = await Promise.all([
             prisma.order.findMany({
                 take: 5,
@@ -556,6 +578,7 @@ export async function getRecentActivity() {
 
 export async function getAdminCustomers(query?: string, segment: string = 'all') {
     try {
+        await requireAdmin();
         const whereClause: any = { role: 'USER' };
 
         if (query) {
@@ -611,6 +634,7 @@ export async function getAdminCustomers(query?: string, segment: string = 'all')
 
 export async function getAdminPromotions(query?: string) {
     try {
+        await requireAdmin();
         const whereClause: any = {};
         if (query) {
             whereClause.name = { contains: query, mode: 'insensitive' };
@@ -635,6 +659,7 @@ export async function getAdminPromotions(query?: string) {
 
 export async function createPromotion(data: { name: string, description?: string, startDate: Date, endDate: Date, discountPercentage: number }) {
     try {
+        await requireAdmin();
         const promotion = await prisma.promotion.create({ data });
         revalidatePath('/admin/promotions');
         revalidatePath('/promotions');
@@ -647,6 +672,7 @@ export async function createPromotion(data: { name: string, description?: string
 
 export async function updatePromotion(id: string, data: { name?: string, description?: string, startDate?: Date, endDate?: Date, discountPercentage?: number, isActive?: boolean }) {
     try {
+        await requireAdmin();
         const promotion = await prisma.promotion.update({
             where: { id },
             data,
@@ -678,6 +704,7 @@ export async function updatePromotion(id: string, data: { name?: string, descrip
 
 export async function deletePromotion(id: string) {
     try {
+        await requireAdmin();
         // First restore all linked products' prices
         const linkedProducts = await prisma.product.findMany({ where: { promotionId: id } });
         for (const prod of linkedProducts) {
@@ -706,6 +733,7 @@ export async function searchProductsForPromo(query: string) {
     if (!query || query.length < 2) return [];
 
     try {
+        await requireAdmin();
         return await prisma.product.findMany({
             where: {
                 name: { contains: query, mode: 'insensitive' },
@@ -721,6 +749,7 @@ export async function searchProductsForPromo(query: string) {
 
 export async function getPromotionProducts(promotionId: string) {
     try {
+        await requireAdmin();
         return await prisma.product.findMany({
             where: { promotionId },
             include: { brand: true, category: true }
@@ -732,6 +761,7 @@ export async function getPromotionProducts(promotionId: string) {
 
 export async function addProductToPromo(productId: string, promotionId: string) {
     try {
+        await requireAdmin();
         const product = await prisma.product.findUnique({ where: { id: productId } });
         const promotion = await prisma.promotion.findUnique({ where: { id: promotionId } });
 
@@ -761,6 +791,7 @@ export async function addProductToPromo(productId: string, promotionId: string) 
 
 export async function removeProductFromPromo(productId: string) {
     try {
+        await requireAdmin();
         const product = await prisma.product.findUnique({ where: { id: productId } });
         if (!product || !product.oldPrice) throw new Error("Produit non valide");
 
@@ -783,6 +814,7 @@ export async function removeProductFromPromo(productId: string) {
 
 export async function deleteBulkProducts(ids: string[]) {
     try {
+        await requireAdmin();
         await prisma.product.deleteMany({
             where: {
                 id: {
@@ -800,6 +832,7 @@ export async function deleteBulkProducts(ids: string[]) {
 
 export async function deleteProduct(id: string) {
     try {
+        await requireAdmin();
         await prisma.product.delete({
             where: { id }
         });
@@ -813,6 +846,7 @@ export async function deleteProduct(id: string) {
 
 export async function deleteAllProducts() {
     try {
+        await requireAdmin();
         await prisma.product.deleteMany({});
         revalidatePath('/admin/inventory');
         return { success: true };
@@ -824,6 +858,7 @@ export async function deleteAllProducts() {
 
 export async function updateProduct(id: string, data: any) {
     try {
+        await requireAdmin();
         const product = await prisma.product.update({
             where: { id },
             data,
@@ -840,6 +875,7 @@ export async function updateProduct(id: string, data: any) {
 
 export async function deleteCategory(id: string) {
     try {
+        await requireAdmin();
         const productCount = await prisma.product.count({ where: { categoryId: id } });
         if (productCount > 0) {
             return { success: false, message: "La catégorie contient des produits." };
@@ -861,6 +897,7 @@ export async function deleteCategory(id: string) {
 
 export async function deleteCustomer(id: string) {
     try {
+        await requireAdmin();
         const orderCount = await prisma.order.count({ where: { userId: id } });
         if (orderCount > 0) {
             return { success: false, message: "Le client a des commandes actives." };
@@ -875,6 +912,7 @@ export async function deleteCustomer(id: string) {
 
 export async function getAdminBrands() {
     try {
+        await requireAdmin();
         return await prisma.brand.findMany({
             include: {
                 _count: {
@@ -890,6 +928,7 @@ export async function getAdminBrands() {
 
 export async function upsertBrand(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await prisma.brand.update({
                 where: { id },
@@ -912,6 +951,7 @@ export async function upsertBrand(data: any, id?: string) {
 
 export async function deleteBrand(id: string) {
     try {
+        await requireAdmin();
         const productCount = await prisma.product.count({ where: { brandId: id } });
         if (productCount > 0) {
             return { success: false, message: "La marque contient des produits." };
@@ -929,6 +969,7 @@ export async function deleteBrand(id: string) {
 
 export async function getSubCategories(categoryId?: string) {
     try {
+        await requireAdmin();
         return await (prisma as any).subCategory.findMany({
             where: categoryId ? { categoryId } : {},
             include: {
@@ -945,6 +986,7 @@ export async function getSubCategories(categoryId?: string) {
 
 export async function upsertSubCategory(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await prisma.subCategory.update({
                 where: { id },
@@ -971,6 +1013,7 @@ export async function upsertSubCategory(data: any, id?: string) {
 
 export async function deleteSubCategory(id: string) {
     try {
+        await requireAdmin();
         const productCount = await prisma.product.count({ where: { subCategoryId: id } });
         if (productCount > 0) {
             return { success: false, message: "La sous-catégorie contient des produits." };
@@ -996,6 +1039,7 @@ export async function deleteSubCategory(id: string) {
 
 export async function getThirdLevelCategories(subCategoryId?: string) {
     try {
+        await requireAdmin();
         return await (prisma as any).thirdLevelCategory.findMany({
             where: subCategoryId ? { subCategoryId } : {},
             include: {
@@ -1012,6 +1056,7 @@ export async function getThirdLevelCategories(subCategoryId?: string) {
 
 export async function upsertThirdLevelCategory(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await (prisma as any).thirdLevelCategory.update({
                 where: { id },
@@ -1038,6 +1083,7 @@ export async function upsertThirdLevelCategory(data: any, id?: string) {
 
 export async function deleteThirdLevelCategory(id: string) {
     try {
+        await requireAdmin();
         const productCount = await prisma.product.count({ where: { thirdLevelCategoryId: id } as any });
         if (productCount > 0) {
             return { success: false, message: "Cette catégorie contient des produits." };
@@ -1059,6 +1105,7 @@ export async function deleteThirdLevelCategory(id: string) {
 
 export async function upsertProduct(data: any, id?: string) {
     try {
+        await requireAdmin();
         const { 
             categoryId, subCategoryId, thirdLevelCategoryId, brandId, storeId, promotionId,
             colorVariants, badge,
@@ -1086,13 +1133,13 @@ export async function upsertProduct(data: any, id?: string) {
 
         let product;
         if (id) {
-            console.log(`[AdminAction] Updating product: ${id}`);
+            if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Updating product: ${id}`);
             product = await prisma.product.update({
                 where: { id },
                 data: prismaData,
             });
         } else {
-            console.log(`[AdminAction] Creating new product: ${rest.name}`);
+            if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Creating new product: ${rest.name}`);
             product = await prisma.product.create({
                 data: prismaData,
             });
@@ -1122,7 +1169,7 @@ export async function upsertProduct(data: any, id?: string) {
         // Invalider le cache Redis
         try {
             if (id) {
-                console.log(`[Redis] Invalidating cache for product: ${id}`);
+                if (process.env.NODE_ENV !== 'production') console.log(`[Redis] Invalidating cache for product: ${id}`);
                 await invalidateCache(`product:${id}`);
                 await invalidatePrefix('similar:');
             }
@@ -1132,13 +1179,13 @@ export async function upsertProduct(data: any, id?: string) {
         }
 
         // Revalidation ciblée (plus performant que '/' layout)
-        console.log(`[AdminAction] Revalidating paths...`);
+        if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Revalidating paths...`);
         revalidatePath('/admin/products');
         revalidatePath('/boutique');
         revalidatePath(`/product/${product.id}`);
         revalidatePath('/');
         
-        console.log(`[AdminAction] Success!`);
+        if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Success!`);
         return { success: true, product };
     } catch (error) {
         console.error("Upsert product error:", error);
@@ -1148,6 +1195,7 @@ export async function upsertProduct(data: any, id?: string) {
 
 export async function upsertCategory(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await prisma.category.update({
                 where: { id },
@@ -1211,6 +1259,7 @@ function getRelativeTime(date: Date): string {
 
 export async function bulkUpdateOrderStatuses(orderIds: string[], status: string) {
     try {
+        await requireAdmin();
         // Fetch order details for notifications
         const orders = await prisma.order.findMany({
             where: { id: { in: orderIds } },
@@ -1219,7 +1268,7 @@ export async function bulkUpdateOrderStatuses(orderIds: string[], status: string
 
         await prisma.order.updateMany({
             where: { id: { in: orderIds } },
-            data: { status }
+            data: { status: status as any }
         });
 
         // Send notifications for each order (non-blocking)
@@ -1290,6 +1339,7 @@ export async function getClientNotifications() {
 
 export async function createCustomer(data: any) {
     try {
+        await requireAdmin();
         const existingUser = await prisma.user.findUnique({
             where: { email: data.email }
         });
@@ -1320,6 +1370,7 @@ export async function createCustomer(data: any) {
 
 export async function updateCustomer(id: string, data: any) {
     try {
+        await requireAdmin();
         if (data.email) {
             const existingUser = await prisma.user.findUnique({
                 where: { email: data.email }
@@ -1359,6 +1410,7 @@ export async function updateCustomer(id: string, data: any) {
 
 export async function getPopularUniverses() {
     try {
+        await requireAdmin();
         return await (prisma as any).popularUniverse.findMany({
             orderBy: { order: 'asc' }
         });
@@ -1370,6 +1422,7 @@ export async function getPopularUniverses() {
 
 export async function upsertPopularUniverse(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await (prisma as any).popularUniverse.update({
                 where: { id },
@@ -1392,6 +1445,7 @@ export async function upsertPopularUniverse(data: any, id?: string) {
 
 export async function deletePopularUniverse(id: string) {
     try {
+        await requireAdmin();
         await (prisma as any).popularUniverse.delete({ where: { id } });
         await invalidateCache('popular_universes:all');
         revalidatePath('/admin/popular-universes');
@@ -1415,6 +1469,7 @@ export async function initializePopularUniverses() {
     ];
 
     try {
+        await requireAdmin();
         const count = await (prisma as any).popularUniverse.count();
         if (count > 0) return { success: false, message: "La table n'est pas vide." };
 
@@ -1437,6 +1492,7 @@ export async function initializePopularUniverses() {
 
 export async function getHomePromos() {
     try {
+        await requireAdmin();
         return await (prisma as any).homePromo.findMany({
             orderBy: { order: 'asc' }
         });
@@ -1447,6 +1503,7 @@ export async function getHomePromos() {
 
 export async function upsertHomePromo(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await (prisma as any).homePromo.update({ where: { id }, data });
         } else {
@@ -1461,6 +1518,7 @@ export async function upsertHomePromo(data: any, id?: string) {
 
 export async function deleteHomePromo(id: string) {
     try {
+        await requireAdmin();
         await (prisma as any).homePromo.delete({ where: { id } });
         revalidatePath('/');
         return { success: true };
@@ -1531,6 +1589,7 @@ export async function initializeHomePromos() {
     ];
 
     try {
+        await requireAdmin();
         for (const p of DEFAULT_PROMOS) {
             await (prisma as any).homePromo.create({ data: p });
         }
@@ -1547,6 +1606,7 @@ export async function initializeHomePromos() {
 
 export async function getBigBanners() {
     try {
+        await requireAdmin();
         return await (prisma as any).bigBanner.findMany({
             where: { isActive: true },
             orderBy: { createdAt: 'desc' }
@@ -1558,6 +1618,7 @@ export async function getBigBanners() {
 
 export async function upsertBigBanner(data: any, id?: string) {
     try {
+        await requireAdmin();
         if (id) {
             await (prisma as any).bigBanner.update({ where: { id }, data });
         } else {
@@ -1572,6 +1633,7 @@ export async function upsertBigBanner(data: any, id?: string) {
 
 export async function deleteBigBanner(id: string) {
     try {
+        await requireAdmin();
         await (prisma as any).bigBanner.delete({ where: { id } });
         revalidatePath('/');
         return { success: true };
@@ -1593,6 +1655,7 @@ export async function initializeBigBanners() {
     };
 
     try {
+        await requireAdmin();
         await (prisma as any).bigBanner.create({ data: DEFAULT_BANNER });
         revalidatePath('/');
         return { success: true };
@@ -1607,6 +1670,7 @@ export async function initializeBigBanners() {
 
 export async function toggleProductPublish(id: string, isPublished: boolean) {
     try {
+        await requireAdmin();
         await prisma.product.update({
             where: { id },
             data: { isPublished }
@@ -1623,6 +1687,7 @@ export async function toggleProductPublish(id: string, isPublished: boolean) {
 
 export async function bulkTogglePublishProducts(ids: string[], isPublished: boolean) {
     try {
+        await requireAdmin();
         if (!ids || ids.length === 0) return { success: false, message: "Aucun produit sélectionné" };
         
         await prisma.product.updateMany({
@@ -1641,6 +1706,7 @@ export async function bulkTogglePublishProducts(ids: string[], isPublished: bool
 
 export async function globalTogglePublishProducts(isPublished: boolean) {
     try {
+        await requireAdmin();
         await prisma.product.updateMany({
             data: { isPublished }
         });
@@ -1656,6 +1722,7 @@ export async function globalTogglePublishProducts(isPublished: boolean) {
 
 export async function toggleCategoryPublish(id: string, isPublished: boolean) {
     try {
+        await requireAdmin();
         // 1. Update the category itself
         await prisma.category.update({
             where: { id },

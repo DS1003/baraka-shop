@@ -22,11 +22,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             select: { slug: true }
         })
 
-        // Fetch univers
-        const univers = await prisma.univers.findMany({
-            where: { isPublished: true },
-            select: { slug: true }
-        }).catch(() => [])
 
         const productUrls = products.map((product) => ({
             url: `${baseUrl}/product/${product.id}`,
@@ -49,12 +44,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.6,
         }))
 
-        const universUrls = univers.map((u: any) => ({
-            url: `${baseUrl}/univers/${u.slug}`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly' as const,
-            priority: 0.7,
-        }))
 
         return [
             {
@@ -112,7 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 priority: 0.8,
             },
             ...categoryUrls,
-            ...universUrls,
+
             ...brandUrls,
             ...productUrls,
         ]

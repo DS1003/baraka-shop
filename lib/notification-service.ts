@@ -120,24 +120,23 @@ export async function notifyClientOrderStatusChange(
             const { headerLogo } = await getSiteLogos();
             const logoUrl = headerLogo || undefined;
 
-            // Use type assertion since PaymentStatus in schema is likely string
             let pStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY' = 'PENDING';
-            if (order.paymentStatus === 'PAID') pStatus = 'PAID';
-            else if (order.paymentMethod === 'CASH_ON_DELIVERY') pStatus = 'ON_DELIVERY';
+            if (order.paymentMethod === 'CASH_ON_DELIVERY') pStatus = 'ON_DELIVERY';
+            else if (order.paymentMethod !== 'CASH_ON_DELIVERY' && order.paymentMethod != null) pStatus = 'PAID';
 
             await emailService.sendOrderShippedEmail({
                 to: order.user.email,
                 orderRef: orderRef,
-                clientName: order.user.username || order.user.firstName || 'Client',
+                clientName: order.user.username || 'Client',
                 date: order.createdAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-                deliveryAddress: order.address ? `${order.address}, ${order.city}` : undefined,
-                phone: order.phone || undefined,
+                deliveryAddress: order.user.address || undefined,
+                phone: order.user.phone || undefined,
                 deliveryMethod: order.deliveryMethod === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile',
                 paymentMethod: order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Paiement à la livraison' : 'Paiement en ligne',
                 paymentStatus: pStatus,
                 total: order.total,
-                subtotal: order.total - 5000, // Assuming 5000 delivery fee for demonstration, ideally get this from order if it exists
-                deliveryFee: 5000,
+                subtotal: order.total - (order.shippingCost || 0),
+                deliveryFee: order.shippingCost || 0,
                 discount: 0,
                 items: items,
                 logoUrl: logoUrl,
@@ -154,22 +153,22 @@ export async function notifyClientOrderStatusChange(
             const logoUrl = headerLogo || undefined;
 
             let pStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY' = 'PENDING';
-            if (order.paymentStatus === 'PAID') pStatus = 'PAID';
-            else if (order.paymentMethod === 'CASH_ON_DELIVERY') pStatus = 'ON_DELIVERY';
+            if (order.paymentMethod === 'CASH_ON_DELIVERY') pStatus = 'ON_DELIVERY';
+            else if (order.paymentMethod !== 'CASH_ON_DELIVERY' && order.paymentMethod != null) pStatus = 'PAID';
 
             await emailService.sendOrderCreatedEmail({
                 to: order.user.email,
                 orderRef: orderRef,
-                clientName: order.user.username || order.user.firstName || 'Client',
+                clientName: order.user.username || 'Client',
                 date: order.createdAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-                deliveryAddress: order.address ? `${order.address}, ${order.city}` : undefined,
-                phone: order.phone || undefined,
+                deliveryAddress: order.user.address || undefined,
+                phone: order.user.phone || undefined,
                 deliveryMethod: order.deliveryMethod === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile',
                 paymentMethod: order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Paiement à la livraison' : 'Paiement en ligne',
                 paymentStatus: pStatus,
                 total: order.total,
-                subtotal: order.total - 5000,
-                deliveryFee: 5000,
+                subtotal: order.total - (order.shippingCost || 0),
+                deliveryFee: order.shippingCost || 0,
                 discount: 0,
                 items: items,
                 logoUrl: logoUrl,

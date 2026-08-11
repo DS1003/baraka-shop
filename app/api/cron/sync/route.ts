@@ -6,9 +6,11 @@ import prisma from '@/lib/prisma'
 export const maxDuration = 300;
 
 export async function GET(req: Request) {
-    // Vérification de sécurité basique (Vercel Cron ou Service Externe)
+    // Vérification de sécurité stricte (Vercel Cron ou Service Externe)
     const authHeader = req.headers.get('authorization')
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const cronSecret = process.env.CRON_SECRET;
+    
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
         return new NextResponse('Unauthorized', { status: 401 })
     }
 

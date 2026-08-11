@@ -15,41 +15,15 @@ function bypassesMaintenance(pathname: string) {
 }
 
 async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
-    if (process.env.MAINTENANCE_MODE === 'true') return true
+    if (process.env.MAINTENANCE_MODE === 'true') return true;
 
-    const origin = req.nextUrl.origin
-
-    // Primary: DB via API (reliable on Vercel; static maintenance.json is build-time only)
-    try {
-        const res = await fetch(`${origin}/api/site-status`, {
-            cache: 'no-store',
-            headers: { Accept: 'application/json' },
-        })
-        if (res.ok) {
-            const data = await res.json()
-            return !!data.maintenanceMode
-        }
-    } catch {
-        /* dev fallback below */
+    // Fast path: Check for maintenance cookie set by admin
+    const maintenanceCookie = req.cookies.get('x-maintenance');
+    if (maintenanceCookie) {
+        return maintenanceCookie.value === 'true';
     }
 
-    // Dev fallback when API is down (e.g. corrupt .next cache)
-    if (process.env.NODE_ENV === 'development') {
-        try {
-            const fileRes = await fetch(`${origin}/maintenance.json`, {
-                cache: 'no-store',
-                headers: { Accept: 'application/json' },
-            })
-            if (fileRes.ok) {
-                const data = await fileRes.json()
-                return !!data.maintenanceMode
-            }
-        } catch {
-            /* ignore */
-        }
-    }
-
-    return false
+    return false;
 }
 
 function addSecurityHeaders(response: NextResponse) {

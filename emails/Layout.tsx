@@ -23,30 +23,30 @@ interface LayoutProps {
 export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
   return (
     <Html>
-      <Head>
-        <Font
-          fontFamily="Inter"
-          fallbackFontFamily="sans-serif"
-          webFont={{
-            url: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2',
-            format: 'woff2',
-          }}
-          fontWeight={400}
-          fontStyle="normal"
-        />
-        <Font
-          fontFamily="Inter"
-          fallbackFontFamily="sans-serif"
-          webFont={{
-            url: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYfAZ9hjp-Ek-_EeA.woff2',
-            format: 'woff2',
-          }}
-          fontWeight={600}
-          fontStyle="normal"
-        />
-      </Head>
-      <Preview>{previewText}</Preview>
       <Tailwind>
+        <Head>
+          <Font
+            fontFamily="Inter"
+            fallbackFontFamily="sans-serif"
+            webFont={{
+              url: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2',
+              format: 'woff2',
+            }}
+            fontWeight={400}
+            fontStyle="normal"
+          />
+          <Font
+            fontFamily="Inter"
+            fallbackFontFamily="sans-serif"
+            webFont={{
+              url: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYfAZ9hjp-Ek-_EeA.woff2',
+              format: 'woff2',
+            }}
+            fontWeight={600}
+            fontStyle="normal"
+          />
+        </Head>
+        <Preview>{previewText}</Preview>
         <Body className="bg-gray-50 my-auto mx-auto font-sans">
           <Container className="border border-solid border-gray-200 rounded-xl my-[40px] mx-auto overflow-hidden bg-white shadow-sm max-w-[600px]">
             {/* Header / Logo */}

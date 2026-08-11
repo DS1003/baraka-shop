@@ -141,7 +141,7 @@ export async function startMediaMatchingJob() {
  * Utilise un index inversé par tokens pour éviter les boucles imbriquées O(N * M)
  */
 async function processMediaMatching(jobId: string) {
-    console.log(`[Media Matching] Starting Job ${jobId}`);
+    if (process.env.NODE_ENV !== 'production') console.log(`[Media Matching] Starting Job ${jobId}`);
 
     // 1. Charger tout en mémoire pour la vitesse maximale
     const products = await prisma.product.findMany({
@@ -307,7 +307,7 @@ async function processMediaMatching(jobId: string) {
         matchedCount
     }, 3600);
 
-    console.log(`[Media Matching] Job ${jobId} Completed! Found ${matchedCount} associations.`);
+    if (process.env.NODE_ENV !== 'production') console.log(`[Media Matching] Job ${jobId} Completed! Found ${matchedCount} associations.`);
     revalidatePath('/admin/products');
 }
 

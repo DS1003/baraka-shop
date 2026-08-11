@@ -13,7 +13,7 @@ import { revalidatePath } from 'next/cache';
  * Sauvegarde les produits dans un fichier JSON et démarre l'importation en arrière-plan.
  */
 export async function saveToJsonAndStartImport(products: any[]) {
-    console.log(`[Import Start] Received ${products.length} products to save and import.`);
+    if (process.env.NODE_ENV !== 'production') console.log(`[Import Start] Received ${products.length} products to save and import.`);
     try {
         // 1. Sauvegarder dans un JSON intermédiaire (utilise /tmp pour la compatibilité Vercel)
         const dataDir = path.join(os.tmpdir(), 'baraka-import-data');
@@ -80,7 +80,7 @@ export async function saveToJsonAndStartImport(products: any[]) {
             progress: 0
         }, 86400); // 24h
 
-        console.log(`[Import] Created job ${job.id} for ${products.length} items. status: ${job.status}`);
+        if (process.env.NODE_ENV !== 'production') console.log(`[Import] Created job ${job.id} for ${products.length} items. status: ${job.status}`);
 
         // 3. Lancer la synchronisation en arrière-plan (non-bloquant)
         // Attention: Dans un environnement Serverless (Vercel), cela peut être risqué si l'exécution dépasse le timeout.
@@ -107,13 +107,13 @@ async function processSync(jobId: string, products: any[]) {
         let job = await getImportStatus(jobId);
 
         while (job?.status === 'PAUSED') {
-            console.log(`[Job ${jobId}] Injection suspendue... en attente de reprise.`);
+            if (process.env.NODE_ENV !== 'production') console.log(`[Job ${jobId}] Injection suspendue... en attente de reprise.`);
             await new Promise(resolve => setTimeout(resolve, 3000)); // Attendre 3s
             job = await getImportStatus(jobId);
         }
 
         if (!job || job.status === 'CANCELLED' || job.status === 'FAILED') {
-            console.log(`[Job ${jobId}] Injection arrêtée (Annulée ou Échouée).`);
+            if (process.env.NODE_ENV !== 'production') console.log(`[Job ${jobId}] Injection arrêtée (Annulée ou Échouée).`);
             return;
         }
 
