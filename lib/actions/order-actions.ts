@@ -4,6 +4,9 @@ import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { notifyClientOrderStatusChange, notifyAdminsNewOrder } from '@/lib/notification-service';
+import { validateCoupon } from '@/lib/promotions/validation';
+import { calculateDiscount } from '@/lib/promotions/calculation';
+import { recordCouponUsage, updateCampaignStats } from '@/lib/promotions/eligibility';
 
 interface OrderItemData {
     productId: string;
@@ -19,6 +22,7 @@ interface CreateOrderData {
     deliveryMethod: 'livraison' | 'retrait';
     deliveryZone?: string;
     shippingCost: number;
+    couponCode?: string;
     shippingDetails: {
         firstName: string;
         lastName: string;
@@ -37,6 +41,34 @@ export async function createOrder(data: CreateOrderData) {
     }
 
     try {
+        // ── Compute server-side subtotal from item prices ──
+        const serverSubtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+        // ── Validate and calculate coupon discount (server-side) ──
+        let discountAmount = 0;
+        let couponCode: string | null = null;
+        let campaignId: string | null = null;
+
+        if (data.couponCode) {
+            const validation = await validateCoupon(data.couponCode, session.user.id, serverSubtotal);
+            if (validation.valid && validation.campaign) {
+                const calc = calculateDiscount(
+                    serverSubtotal,
+                    validation.campaign.discountType,
+                    validation.campaign.discountValue
+                );
+                discountAmount = calc.discountAmount;
+                couponCode = validation.campaign.couponCode;
+                campaignId = validation.campaign.id;
+            }
+            // If validation fails, we silently ignore the coupon and proceed without discount.
+            // The frontend should have already validated and shown the error.
+        }
+
+        // ── Compute final total server-side (source of truth) ──
+        const shipping = data.shippingCost || 0;
+        const serverTotal = serverSubtotal - discountAmount + shipping;
+
         const order = await prisma.$transaction(async (tx) => {
             const productIds = data.items.map(item => item.productId);
             const uniqueProductIds = Array.from(new Set(productIds));
@@ -62,11 +94,14 @@ export async function createOrder(data: CreateOrderData) {
             const newOrder = await tx.order.create({
                 data: {
                     userId: session.user.id!,
-                    total: data.total,
+                    subtotal: serverSubtotal,
+                    couponCode: couponCode,
+                    discountAmount: discountAmount,
+                    total: serverTotal,
                     paymentMethod: data.paymentMethod,
                     deliveryMethod: data.deliveryMethod,
                     deliveryZone: data.deliveryZone || null,
-                    shippingCost: data.shippingCost,
+                    shippingCost: shipping,
                     status: 'PENDING',
                     items: {
                         create: data.items.map(item => ({
@@ -89,6 +124,12 @@ export async function createOrder(data: CreateOrderData) {
             return newOrder;
         });
 
+        // ── Record coupon usage and update campaign stats (non-blocking) ──
+        if (campaignId && couponCode) {
+            recordCouponUsage(campaignId, session.user.id, order.id).catch(() => {});
+            updateCampaignStats(campaignId, serverTotal, discountAmount).catch(() => {});
+        }
+
         // Send notifications (non-blocking)
         const clientName = data.shippingDetails.firstName
             ? `${data.shippingDetails.firstName} ${data.shippingDetails.lastName}`.trim()
@@ -97,7 +138,7 @@ export async function createOrder(data: CreateOrderData) {
         // Notify client: order confirmed
         notifyClientOrderStatusChange(order.id, 'PENDING').catch(() => {});
         // Notify admins: new order received
-        notifyAdminsNewOrder(order.id, clientName, data.total).catch(() => {});
+        notifyAdminsNewOrder(order.id, clientName, serverTotal).catch(() => {});
 
         revalidatePath('/account');
         return { success: true, orderId: order.id };

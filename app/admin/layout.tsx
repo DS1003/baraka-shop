@@ -60,7 +60,7 @@ const sidebarGroups = [
             { icon: Zap, label: 'Promotions Accueil', href: '/admin/home-promos' },
             { icon: Maximize, label: 'Bannières Larges', href: '/admin/big-banners' },
             { icon: Tag, label: 'Marques', href: '/admin/brands' },
-            { icon: Zap, label: 'Campagnes Promos', href: '/admin/promotions' },
+            { icon: Zap, label: 'Campagnes Marketing', href: '/admin/marketing/campaigns' },
             { icon: ImageIcon, label: 'Médiathèque', href: '/admin/media' },
         ]
     },

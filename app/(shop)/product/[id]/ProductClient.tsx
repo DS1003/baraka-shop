@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import DOMPurify from 'isomorphic-dompurify'
 
 import { Container } from '@/ui/Container'
 import { Button } from '@/ui/Button'
@@ -947,7 +948,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                     <div
                                         className="w-full max-w-none text-gray-500 text-sm md:text-base lg:text-lg leading-relaxed md:leading-[1.8] font-medium mb-6 md:mb-8 text-justify hyphens-auto [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&>div]:mb-3 [&>p]:mb-4 [&>*:last-child]:mb-0 [&>*:first-child]:text-xl [&>*:first-child]:md:text-3xl [&>*:first-child]:font-black [&>*:first-child]:text-[#1B1F3B] [&>*:first-child]:tracking-tight [&>*:first-child]:mb-6 [&>*:first-child]:text-left [&>*:first-child_strong]:font-black [&>*:first-child_b]:font-black"
                                         style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
-                                        dangerouslySetInnerHTML={{ __html: product.description }}
+                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description) }}
                                     />
                                 )}
 
@@ -1001,7 +1002,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                                                     </h3>
                                                                     <div
                                                                         className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -1018,7 +1019,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                                                     </h3>
                                                                     <div
                                                                         className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                                     />
                                                                 </div>
                                                                 <div className="w-full relative aspect-[4/3] overflow-hidden order-1 md:order-2">
@@ -1049,7 +1050,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                                                     </h3>
                                                                     <div
                                                                         className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -1066,7 +1067,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                                                     </h3>
                                                                     <div
                                                                         className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                        dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                                     />
                                                                 </div>
                                                                 <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg order-1 md:order-2">

@@ -274,6 +274,8 @@ export function CheckoutOrderSummary({
     cartItems,
     subtotal,
     shipping,
+    discount = 0,
+    couponCode,
     total,
     deliveryMethod,
     selectedZoneName,
@@ -283,6 +285,8 @@ export function CheckoutOrderSummary({
     cartItems: CartItem[]
     subtotal: number
     shipping: number
+    discount?: number
+    couponCode?: string | null
     total: number
     deliveryMethod: 'livraison' | 'retrait'
     selectedZoneName?: string | null
@@ -329,6 +333,12 @@ export function CheckoutOrderSummary({
                     <span>Sous-total</span>
                     <span>{subtotal.toLocaleString()} FCFA</span>
                 </div>
+                {discount > 0 && couponCode && (
+                    <div className="flex justify-between text-xs sm:text-sm font-bold text-green-400">
+                        <span>Réduction ({couponCode})</span>
+                        <span>-{discount.toLocaleString()} FCFA</span>
+                    </div>
+                )}
                 <div className="flex justify-between text-xs font-bold text-green-400 gap-2">
                     <span className="flex items-center gap-1.5 min-w-0">
                         {deliveryMethod === 'livraison' ? (

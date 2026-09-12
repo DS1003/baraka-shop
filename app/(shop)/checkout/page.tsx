@@ -42,6 +42,14 @@ import {
     PaymentOption,
 } from '@/features/checkout/CheckoutUI'
 
+interface AppliedCoupon {
+    couponCode: string;
+    campaignName: string;
+    discountType: string;
+    discountValue: number;
+    discountAmount: number;
+}
+
 export default function CheckoutPage() {
     const { data: session } = useSession()
     const { cartItems, subtotal, clearCart } = useCart()
@@ -50,6 +58,7 @@ export default function CheckoutPage() {
     const [step, setStep] = useState(1) // 1: Delivery Method, 2: Address/Zone, 3: Payment, 4: Confirm
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState('')
+    const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
 
     // Delivery state
     const [deliveryMethod, setDeliveryMethod] = useState<'livraison' | 'retrait'>('livraison')
@@ -67,7 +76,48 @@ export default function CheckoutPage() {
     })
 
     const shipping = deliveryMethod === 'retrait' ? 0 : (selectedZone?.price ?? 0)
-    const total = subtotal + shipping
+    const discount = appliedCoupon?.discountAmount || 0
+    const total = subtotal - discount + shipping
+
+    // Load saved coupon from localStorage on mount
+    React.useEffect(() => {
+        const saved = localStorage.getItem('baraka-applied-coupon')
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved) as AppliedCoupon
+                revalidateCoupon(parsed.couponCode)
+            } catch {
+                localStorage.removeItem('baraka-applied-coupon')
+            }
+        }
+    }, [subtotal])
+
+    const revalidateCoupon = async (code: string) => {
+        try {
+            const res = await fetch('/api/promotions/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, subtotal }),
+            })
+            const data = await res.json()
+            if (data.valid) {
+                const coupon: AppliedCoupon = {
+                    couponCode: data.couponCode,
+                    campaignName: data.campaignName,
+                    discountType: data.discountType,
+                    discountValue: data.discountValue,
+                    discountAmount: data.discountAmount,
+                }
+                setAppliedCoupon(coupon)
+                localStorage.setItem('baraka-applied-coupon', JSON.stringify(coupon))
+            } else {
+                setAppliedCoupon(null)
+                localStorage.removeItem('baraka-applied-coupon')
+            }
+        } catch {
+            // Silently fail on revalidation
+        }
+    }
 
     // Filtered regions based on search
     const filteredRegions = useMemo(() => {
@@ -148,6 +198,7 @@ export default function CheckoutPage() {
             deliveryMethod,
             deliveryZone: selectedZone?.name,
             shippingCost: shipping,
+            couponCode: appliedCoupon?.couponCode,
             shippingDetails: formData
         }
 
@@ -198,6 +249,8 @@ export default function CheckoutPage() {
                         cartItems={cartItems}
                         subtotal={subtotal}
                         shipping={shipping}
+                        discount={discount}
+                        couponCode={appliedCoupon?.couponCode}
                         total={total}
                         deliveryMethod={deliveryMethod}
                         selectedZoneName={selectedZone?.name}
@@ -713,6 +766,8 @@ export default function CheckoutPage() {
                                 cartItems={cartItems}
                                 subtotal={subtotal}
                                 shipping={shipping}
+                                discount={discount}
+                                couponCode={appliedCoupon?.couponCode}
                                 total={total}
                                 deliveryMethod={deliveryMethod}
                                 selectedZoneName={selectedZone?.name}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import DOMPurify from 'isomorphic-dompurify';
 import {
     X,
     Save,
@@ -532,7 +533,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                             </h3>
                                                             <div 
                                                                 className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                             />
                                                         </div>
                                                     </div>
@@ -549,7 +550,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                             </h3>
                                                             <div 
                                                                 className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                             />
                                                         </div>
                                                         <div className="w-full relative aspect-[4/3] overflow-hidden order-1 md:order-2">
@@ -580,7 +581,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                             </h3>
                                                             <div 
                                                                 className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                             />
                                                         </div>
                                                     </div>
@@ -597,7 +598,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                             </h3>
                                                             <div 
                                                                 className="text-gray-600 text-[14px] md:text-[15px] leading-relaxed font-medium whitespace-pre-wrap text-justify hyphens-auto [&>p]:mb-4 [&>p:last-child]:mb-0"
-                                                                dangerouslySetInnerHTML={{ __html: block.text }}
+                                                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.text) }}
                                                             />
                                                         </div>
                                                         <div className="w-full relative aspect-video overflow-hidden rounded-2xl md:rounded-3xl bg-black shadow-lg order-1 md:order-2">

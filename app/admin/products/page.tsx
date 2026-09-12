@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import DOMPurify from 'isomorphic-dompurify';
 import {
     Plus,
     Search,
@@ -872,7 +873,7 @@ function ProductsPageContent() {
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description Détaillée</p>
                                                 <div className="text-[13px] text-slate-500 font-medium leading-relaxed max-h-[150px] overflow-y-auto pr-4 scrollbar-thin">
                                                     {detailProduct.description ? (
-                                                        <div dangerouslySetInnerHTML={{ __html: detailProduct.description }} />
+                                                        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(detailProduct.description) }} />
                                                     ) : (
                                                         'Aucune description fournie.'
                                                     )}

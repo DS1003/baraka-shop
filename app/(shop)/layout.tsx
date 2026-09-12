@@ -1,6 +1,7 @@
 import { Header } from '@/layout/Header'
 import { Footer } from '@/layout/Footer'
 import { MaintenanceAdminBanner } from '@/layout/MaintenanceAdminBanner'
+import { PromotionPopup } from '@/components/marketing/PromotionPopup'
 
 export default function ShopLayout({
     children,
@@ -15,6 +16,7 @@ export default function ShopLayout({
                 {children}
             </main>
             <Footer />
+            <PromotionPopup />
         </>
     )
 }

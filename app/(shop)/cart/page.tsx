@@ -14,17 +14,112 @@ import {
     ChevronRight,
     ShoppingBag,
     ArrowLeft,
-    Tag
+    Tag,
+    Loader2,
+    Check,
+    X
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/ui/Button'
 import { useCart } from '@/context/CartContext'
 
+interface AppliedCoupon {
+    couponCode: string;
+    campaignName: string;
+    discountType: string;
+    discountValue: number;
+    discountAmount: number;
+}
+
 export default function CartPage() {
     const { cartItems, removeFromCart, updateQty, subtotal } = useCart()
     const [promoCode, setPromoCode] = useState('')
+    const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
+    const [promoError, setPromoError] = useState('')
+    const [promoLoading, setPromoLoading] = useState(false)
 
-    const total = subtotal
+    const discount = appliedCoupon?.discountAmount || 0
+    const total = subtotal - discount
+
+    // Load saved coupon from localStorage on mount
+    React.useEffect(() => {
+        const saved = localStorage.getItem('baraka-applied-coupon')
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved) as AppliedCoupon
+                revalidateCoupon(parsed.couponCode)
+            } catch {
+                localStorage.removeItem('baraka-applied-coupon')
+            }
+        }
+    }, [subtotal])
+
+    const revalidateCoupon = async (code: string) => {
+        try {
+            const res = await fetch('/api/promotions/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, subtotal }),
+            })
+            const data = await res.json()
+            if (data.valid) {
+                const coupon: AppliedCoupon = {
+                    couponCode: data.couponCode,
+                    campaignName: data.campaignName,
+                    discountType: data.discountType,
+                    discountValue: data.discountValue,
+                    discountAmount: data.discountAmount,
+                }
+                setAppliedCoupon(coupon)
+                localStorage.setItem('baraka-applied-coupon', JSON.stringify(coupon))
+            } else {
+                setAppliedCoupon(null)
+                localStorage.removeItem('baraka-applied-coupon')
+            }
+        } catch {
+            // Silently fail on revalidation
+        }
+    }
+
+    const handleApplyPromo = async () => {
+        if (!promoCode.trim()) return
+        setPromoLoading(true)
+        setPromoError('')
+
+        try {
+            const res = await fetch('/api/promotions/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: promoCode.trim().toUpperCase(), subtotal }),
+            })
+            const data = await res.json()
+
+            if (data.valid) {
+                const coupon: AppliedCoupon = {
+                    couponCode: data.couponCode,
+                    campaignName: data.campaignName,
+                    discountType: data.discountType,
+                    discountValue: data.discountValue,
+                    discountAmount: data.discountAmount,
+                }
+                setAppliedCoupon(coupon)
+                setPromoCode('')
+                localStorage.setItem('baraka-applied-coupon', JSON.stringify(coupon))
+            } else {
+                setPromoError(data.error || 'Code promo invalide.')
+            }
+        } catch {
+            setPromoError('Erreur de connexion. Réessayez.')
+        } finally {
+            setPromoLoading(false)
+        }
+    }
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null)
+        localStorage.removeItem('baraka-applied-coupon')
+        setPromoError('')
+    }
 
     if (cartItems.length === 0) {
         return (
@@ -34,7 +129,7 @@ export default function CartPage() {
                         <ShoppingBag className="w-16 h-16" />
                     </div>
                     <h1 className="text-4xl font-black text-[#1B1F3B] uppercase tracking-tighter mb-4">Votre panier est vide</h1>
-                    <p className="text-gray-400 max-w-sm mb-12 font-medium">Il semblerait que vous n'ayez pas encore ajouté de produits. Découvrez nos dernières nouveautés !</p>
+                    <p className="text-gray-400 max-w-sm mb-12 font-medium">Il semblerait que vous n&apos;ayez pas encore ajouté de produits. Découvrez nos dernières nouveautés !</p>
                     <Link href="/boutique" className="h-16 px-12 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#1B1F3B] transition-all shadow-xl shadow-primary/20 flex items-center gap-3">
                         Retour à la boutique <ChevronRight className="w-4 h-4" />
                     </Link>
@@ -127,6 +222,22 @@ export default function CartPage() {
                                         <span>Sous-total</span>
                                         <span className="text-white">{subtotal.toLocaleString()} FCFA</span>
                                     </div>
+                                    {appliedCoupon && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            className="flex items-center justify-between text-sm font-bold"
+                                        >
+                                            <span className="flex items-center gap-1.5 text-green-400">
+                                                <Tag className="w-3 h-3" />
+                                                {appliedCoupon.couponCode}
+                                                <button onClick={handleRemoveCoupon} className="ml-1 hover:text-red-400 transition-colors">
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
+                                            <span className="text-green-400">-{discount.toLocaleString()} FCFA</span>
+                                        </motion.div>
+                                    )}
                                     <div className="flex items-center justify-between text-sm font-bold text-gray-400">
                                         <span>Livraison</span>
                                         <span className="text-amber-400 text-xs uppercase tracking-wider">Calculé au checkout</span>
@@ -138,17 +249,50 @@ export default function CartPage() {
                                     </div>
                                 </div>
 
-                                {/* Promo Code */}
-                                <div className="relative mb-10">
-                                    <Tag className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Code Promo"
-                                        value={promoCode}
-                                        onChange={(e) => setPromoCode(e.target.value)}
-                                        className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 text-sm font-bold outline-none focus:border-primary transition-all placeholder:text-gray-500"
-                                    />
-                                </div>
+                                {/* Promo Code Input */}
+                                {!appliedCoupon ? (
+                                    <div className="mb-10">
+                                        <div className="relative flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Code Promo"
+                                                    value={promoCode}
+                                                    onChange={(e) => {
+                                                        setPromoCode(e.target.value.toUpperCase())
+                                                        setPromoError('')
+                                                    }}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                                                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 text-sm font-bold outline-none focus:border-primary transition-all placeholder:text-gray-500"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={handleApplyPromo}
+                                                disabled={promoLoading || !promoCode.trim()}
+                                                className="h-12 px-5 bg-white/10 hover:bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                            >
+                                                {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Appliquer'}
+                                            </button>
+                                        </div>
+                                        {promoError && (
+                                            <motion.p
+                                                initial={{ opacity: 0, y: -4 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="text-red-400 text-[11px] font-bold mt-2 pl-1"
+                                            >
+                                                {promoError}
+                                            </motion.p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="mb-10 p-3 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-green-400 shrink-0" />
+                                        <p className="text-[11px] font-bold text-green-400">
+                                            Code <span className="font-black">{appliedCoupon.couponCode}</span> appliqué !
+                                        </p>
+                                    </div>
+                                )}
 
                                 <Link href="/checkout" className="block w-full">
                                     <button className="w-full h-16 bg-primary text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-white hover:text-[#1B1F3B] transition-all shadow-xl shadow-primary/20 group">

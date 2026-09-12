@@ -134,6 +134,9 @@ model Order {
   userId         String
   status         OrderStatus @default(PENDING)
   total          Float
+  subtotal       Float?
+  couponCode     String?
+  discountAmount Float?      @default(0)
   paymentMethod  String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -375,4 +378,53 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+model PromotionCampaign {
+  id                 String    @id @default(uuid())
+  name               String
+  title              String?
+  description        String?
+  discountType       String    @default("PERCENTAGE") // PERCENTAGE | FIXED_AMOUNT
+  discountValue      Float
+  couponCode         String    @unique
+  startDate          DateTime
+  endDate            DateTime
+  isActive           Boolean   @default(true)
+  showPopup          Boolean   @default(true)
+  popupTitle         String?
+  popupDescription   String?
+  popupImage         String?
+  ctaText            String?   @default("Profiter de l'offre")
+  ctaLink            String?   @default("/boutique")
+  maxUses            Int?
+  maxUsesPerUser     Int       @default(1)
+  minimumOrderAmount Float     @default(0)
+  firstPurchaseOnly  Boolean   @default(false)
+  displayFrequency   String    @default("ONCE_PER_CAMPAIGN") // ONCE_PER_SESSION | ONCE_PER_DAY | ONCE_PER_CAMPAIGN | ALWAYS
+  popupViews         Int       @default(0)
+  popupClicks        Int       @default(0)
+  codeCopies         Int       @default(0)
+  codeUses           Int       @default(0)
+  totalRevenue       Float     @default(0)
+  totalDiscount      Float     @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  usages             CouponUsage[]
+
+  @@index([couponCode])
+  @@index([isActive])
+}
+
+model CouponUsage {
+  id         String            @id @default(uuid())
+  campaignId String
+  userId     String
+  orderId    String?
+  usedAt     DateTime          @default(now())
+  campaign   PromotionCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([userId])
+  @@unique([campaignId, orderId])
 }
