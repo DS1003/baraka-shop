@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Gift, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
 
 interface CampaignData {
   id: string;
@@ -55,6 +56,7 @@ function trackEvent(campaignId: string, event: string) {
 }
 
 export function PromotionPopup() {
+  const { headerLogo } = useSiteLogos();
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -251,13 +253,11 @@ export function PromotionPopup() {
                   className="mb-4 w-full flex flex-col"
                 >
                   {/* Logo */}
-                  <div className="mb-3 bg-[#1B1F3B] p-2 rounded-[12px] inline-flex shadow-sm self-start">
-                    <Image 
-                      src="/logo-icon.png" 
+                  <div className="mb-3 inline-flex self-start">
+                    <img 
+                      src={headerLogo || "/logo-icon.png"} 
                       alt="Baraka Shop Logo" 
-                      width={28} 
-                      height={28} 
-                      className="object-contain"
+                      className="h-8 md:h-10 w-auto object-contain"
                     />
                   </div>
                   
