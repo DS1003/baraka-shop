@@ -136,9 +136,9 @@ export async function createOrder(data: CreateOrderData) {
             : session.user.name || session.user.email || 'Client';
 
         // Notify client: order confirmed
-        notifyClientOrderStatusChange(order.id, 'PENDING').catch(() => {});
+        await notifyClientOrderStatusChange(order.id, 'PENDING').catch((e) => console.error('Error notifying client:', e));
         // Notify admins: new order received
-        notifyAdminsNewOrder(order.id, clientName, serverTotal).catch(() => {});
+        await notifyAdminsNewOrder(order.id, clientName, serverTotal).catch((e) => console.error('Error notifying admins:', e));
 
         revalidatePath('/account');
         return { success: true, orderId: order.id };
