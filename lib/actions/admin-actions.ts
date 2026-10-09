@@ -481,8 +481,8 @@ export async function updateOrderStatus(orderId: string, status: string) {
         // Send notifications (non-blocking)
         if (order) {
             const clientName = order.user.username || order.user.email || 'Client';
-            notifyClientOrderStatusChange(orderId, status).catch(() => {});
-            notifyAdminsOrderStatusChange(orderId, status, clientName, order.total).catch(() => {});
+            await notifyClientOrderStatusChange(orderId, status).catch((e) => console.error('Error notifying client:', e));
+            await notifyAdminsOrderStatusChange(orderId, status, clientName, order.total).catch((e) => console.error('Error notifying admins:', e));
         }
 
         revalidatePath('/admin/orders');
