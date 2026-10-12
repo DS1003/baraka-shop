@@ -199,10 +199,15 @@ export function Header() {
     }, [isMenuOpen])
 
     React.useEffect(() => {
+        let isScrolled = false
         const handleScroll = () => {
-            setScrolled(window.scrollY > 50)
+            const nextScrolled = window.scrollY > 50
+            if (nextScrolled !== isScrolled) {
+                isScrolled = nextScrolled
+                setScrolled(nextScrolled)
+            }
         }
-        window.addEventListener('scroll', handleScroll)
+        window.addEventListener('scroll', handleScroll, { passive: true })
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 

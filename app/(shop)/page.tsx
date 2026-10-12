@@ -26,6 +26,8 @@ export const metadata: Metadata = {
   },
 }
 
+export const revalidate = 60;
+
 import { Container } from '@/ui/Container'
 import Script from 'next/script'
 
@@ -109,14 +111,12 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Container className="flex flex-col gap-6 md:gap-12 py-6">
+      <Container className="flex flex-col gap-4 md:gap-8 py-3 md:py-5">
         <HomeSlider initialSlides={sliderSlides} />
         <ShippingBar />
 
         {/* Univers Populaires */}
         <CategoryCarousel initialUniverses={popularUniverses} initialCategories={categories} />
-
-        <HeadphonePromo initialBanner={banners?.[0]} />
 
         {/* Nouveautés */}
         <ProductSection
@@ -128,6 +128,9 @@ export default async function Home() {
           viewAllHref="/boutique?sort=newest"
           priority={true}
         />
+
+        {/* Le Son Absolu */}
+        <HeadphonePromo initialBanner={banners?.[0]} />
 
         {/* Meilleures Ventes */}
         <ProductSection

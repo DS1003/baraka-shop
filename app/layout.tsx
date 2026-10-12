@@ -1,15 +1,17 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { Inter, Montserrat, Roboto } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { Providers } from '@/components/providers'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat', display: 'swap' })
 const roboto = Roboto({ 
   subsets: ['latin'], 
   weight: ['100', '300', '400', '500', '700', '900'],
-  variable: '--font-roboto' 
+  variable: '--font-roboto',
+  display: 'swap'
 })
 
 export const metadata: Metadata = {
@@ -88,7 +90,25 @@ export default async function RootLayout({
 
   return (
     <html lang="fr" className="h-full antialiased scroll-smooth" suppressHydrationWarning>
-      <head />
+      <head>
+        {/* Google Analytics (gtag.js) */}
+        <Script
+          strategy="afterInteractive"
+          src="https://www.googletagmanager.com/gtag/js?id=G-BY3SM39WNQ"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-BY3SM39WNQ');
+            `,
+          }}
+        />
+      </head>
       <body
         className={cn(
           "min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20",

@@ -9,18 +9,29 @@ import { usePathname } from 'next/navigation'
 export function ScrollToTop() {
     const pathname = usePathname()
     const [isVisible, setIsVisible] = useState(false)
+    const [scrollProgress, setScrollProgress] = useState(0)
 
     useEffect(() => {
-        const toggleVisibility = () => {
-            if (window.scrollY > 300) {
-                setIsVisible(true)
-            } else {
-                setIsVisible(false)
+        let ticking = false
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+                    if (totalHeight > 0) {
+                        const currentProgress = (window.scrollY / totalHeight) * 100
+                        setScrollProgress(Math.min(100, Math.max(0, currentProgress)))
+                    }
+
+                    setIsVisible(window.scrollY > 280)
+                    ticking = false
+                })
+                ticking = true
             }
         }
 
-        window.addEventListener('scroll', toggleVisibility)
-        return () => window.removeEventListener('scroll', toggleVisibility)
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        handleScroll()
+        return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
     if (
@@ -40,28 +51,54 @@ export function ScrollToTop() {
         })
     }
 
+    const radius = 21
+    const circumference = 2 * Math.PI * radius
+    const strokeDashoffset = circumference - (scrollProgress / 100) * circumference
+
     return (
         <AnimatePresence>
             {isVisible && (
                 <motion.button
-                    initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                    initial={{ opacity: 0, scale: 0.7, y: 15 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.5, y: 20 }}
+                    exit={{ opacity: 0, scale: 0.7, y: 15 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
                     onClick={scrollToTop}
                     className={cn(
-                        "fixed bottom-8 right-8 z-[100]",
-                        "w-12 h-12 md:w-14 md:h-14",
-                        "bg-[#1B1F3B] text-white rounded-2xl shadow-2xl",
+                        "fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[90]",
+                        "w-11 h-11 md:w-13 md:h-13",
+                        "bg-[#1B1F3B] text-white rounded-full shadow-[0_10px_25px_rgba(27,31,59,0.35)]",
                         "flex items-center justify-center transition-all duration-300",
-                        "hover:bg-primary hover:scale-110 active:scale-95 group",
-                        "border border-white/10"
+                        "hover:shadow-[0_15px_30px_rgba(232,98,26,0.35)] hover:scale-105 active:scale-95 group",
+                        "border border-white/10 cursor-pointer select-none"
                     )}
-                    aria-label="Retour en haut"
+                    aria-label="Retour en haut de page"
                 >
-                    <ArrowUp className="w-6 h-6 md:w-7 h-7 group-hover:-translate-y-1 transition-transform" strokeWidth={3} />
+                    {/* SVG Circular Progress Track & Fill */}
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none p-1" viewBox="0 0 52 52">
+                        <circle
+                            cx="26"
+                            cy="26"
+                            r={radius}
+                            stroke="rgba(255, 255, 255, 0.15)"
+                            strokeWidth="2.5"
+                            fill="transparent"
+                        />
+                        <circle
+                            cx="26"
+                            cy="26"
+                            r={radius}
+                            stroke="#E8621A"
+                            strokeWidth="2.5"
+                            fill="transparent"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                            className="transition-all duration-150 ease-out"
+                        />
+                    </svg>
 
-                    {/* Ring animation */}
-                    <div className="absolute inset-0 rounded-2xl border-2 border-primary/50 scale-100 opacity-0 group-hover:scale-125 group-hover:opacity-100 transition-all duration-500" />
+                    <ArrowUp className="w-5 h-5 text-white group-hover:-translate-y-0.5 group-hover:text-orange-400 transition-all duration-200" strokeWidth={2.5} />
                 </motion.button>
             )}
         </AnimatePresence>

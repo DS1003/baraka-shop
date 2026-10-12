@@ -239,16 +239,16 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
     }, [])
 
     useEffect(() => {
+        let isSticky = false
         const handleScroll = () => {
-            const scrollThreshold = 600
-            if (window.scrollY > scrollThreshold) {
-                setShowStickyBar(true)
-            } else {
-                setShowStickyBar(false)
+            const nextSticky = window.scrollY > 600
+            if (nextSticky !== isSticky) {
+                isSticky = nextSticky
+                setShowStickyBar(nextSticky)
             }
         }
 
-        window.addEventListener('scroll', handleScroll)
+        window.addEventListener('scroll', handleScroll, { passive: true })
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 

@@ -73,24 +73,138 @@
 
     body {
         @apply bg-background text-foreground;
+        overflow-x: hidden;
     }
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
+/* ==========================================================================
+   PREMIUM SMOOTH SCROLL & LUXURY SCROLLBAR DESIGN
+   ========================================================================== */
+
+/* 1. Global Smooth Scroll & Header Offset */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    scrollbar-gutter: stable;
+    /* Firefox standard */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
 }
 
+@media (max-width: 768px) {
+    html {
+        scroll-padding-top: 4rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto !important;
+    }
+}
+
+/* 2. WebKit Global Scrollbar (Chrome, Safari, Edge, Opera) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.45);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #E8621A; /* Baraka Brand Orange */
+}
+
+::-webkit-scrollbar-thumb:active {
+    background-color: #C2410C;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Dark mode scrollbar */
+.dark html,
+html.dark {
+    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.35);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background-color: #FB923C;
+}
+
+.dark ::-webkit-scrollbar-thumb:active {
+    background-color: #EA580C;
+}
+
+/* 3. Sleek inner custom scrollbars (drawers, tables, dropdowns) */
+.scrollbar-thin,
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track,
 .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
 
+.scrollbar-thin::-webkit-scrollbar-thumb,
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #E2E8F0;
-    border-radius: 10px;
+    background-color: rgba(148, 163, 184, 0.45);
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.2s ease;
 }
 
+.scrollbar-thin::-webkit-scrollbar-thumb:hover,
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #CBD5E1;
+    background-color: #E8621A;
+}
+
+/* 4. Complete cross-browser Scrollbar Hiding (horizontal carousels, category pills) */
+.scrollbar-hide,
+.hide-scrollbar,
+.no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+.scrollbar-hide::-webkit-scrollbar,
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+}
+
+/* 5. Mobile smooth touch momentum scrolling */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto {
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent iOS auto-zoom on form controls */
@@ -98,4 +212,25 @@
     input, select, textarea {
         font-size: 16px !important;
     }
+}
+
+/* 6. Hardware-accelerated slider progress bar (0 JS re-render overhead) */
+@keyframes sliderProgressBar {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.animate-slider-progress {
+    animation: sliderProgressBar 5000ms linear forwards;
+    will-change: width;
+}
+
+/* 7. GPU rendering helpers */
+.gpu-layer {
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }

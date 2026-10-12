@@ -79,10 +79,10 @@ export function ProductSection({
     }
 
     return (
-        <section className={cn("relative overflow-hidden py-4 md:py-6", className)}>
+        <section className={cn("relative overflow-hidden py-1 md:py-2", className)}>
             <div className="relative z-10">
                 {/* Header matching Baraka Section UI */}
-                <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-8 md:mb-10">
+                <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-5 md:mb-6">
                     <div className="flex flex-col gap-1.5 md:gap-2">
                         {eyebrow && (
                             <div className="flex items-center gap-2">

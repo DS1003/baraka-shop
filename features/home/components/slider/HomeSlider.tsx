@@ -15,10 +15,7 @@ const AUTOPLAY_DURATION = 5000 // 5 seconds
 export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
     const [slides, setSlides] = useState<any[]>(initialSlides || [])
     const [currentSlide, setCurrentSlide] = useState(0)
-    const [progress, setProgress] = useState(0)
     const [loading, setLoading] = useState(!initialSlides)
-    const timerRef = useRef<NodeJS.Timeout | null>(null)
-    const startTimeRef = useRef<number>(Date.now())
 
     useEffect(() => {
         if (initialSlides) return
@@ -43,38 +40,14 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
     }, [initialSlides])
 
     useEffect(() => {
-        if (slides.length > 0) {
-            startTimer()
-        }
-        return () => stopTimer()
-    }, [currentSlide, slides])
+        if (slides.length <= 1) return
 
-    const startTimer = () => {
-        stopTimer()
-        startTimeRef.current = Date.now()
-        setProgress(0)
+        const timer = setTimeout(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length)
+        }, AUTOPLAY_DURATION)
 
-        timerRef.current = setInterval(() => {
-            const elapsed = Date.now() - startTimeRef.current
-            const newProgress = Math.min((elapsed / AUTOPLAY_DURATION) * 100, 100)
-            setProgress(newProgress)
-
-            if (newProgress >= 100) {
-                nextSlide()
-            }
-        }, 30) // Update every 30ms for smooth progress
-    }
-
-    const stopTimer = () => {
-        if (timerRef.current) {
-            clearInterval(timerRef.current)
-        }
-    }
-
-    const nextSlide = () => {
-        if (slides.length === 0) return
-        setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }
+        return () => clearTimeout(timer)
+    }, [currentSlide, slides.length])
 
     const handleTabClick = (index: number) => {
         setCurrentSlide(index)
@@ -147,8 +120,9 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
 
                         {/* Progress Bar */}
                         {currentSlide === index && (
-                            <div className="absolute bottom-0 left-0 h-[3px] bg-primary transition-all duration-100 ease-linear"
-                                style={{ width: `${progress}%` }}
+                            <div
+                                key={`progress-${currentSlide}`}
+                                className="absolute bottom-0 left-0 h-[3px] bg-primary animate-slider-progress"
                             />
                         )}
                     </button>

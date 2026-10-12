@@ -72,7 +72,7 @@ export function BrandsAndSocial({ initialBrands }: { initialBrands?: any[] }) {
 
     return (
         <section className="relative overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                     {/* Left Side: Premium Brands Carousel */}
                     <div className="flex flex-col gap-10">
                         <div className="flex flex-col gap-6">

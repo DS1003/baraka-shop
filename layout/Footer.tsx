@@ -111,28 +111,10 @@ export function Footer() {
                     </div>
 
                     {/* Bottom Bar */}
-                    <div className="w-full pt-8 pb-4 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
-                        <p className="text-[10px] md:text-xs text-gray-500 tracking-wider font-medium" suppressHydrationWarning={true}>
+                    <div className="w-full pt-8 pb-4 border-t border-white/5 flex items-center justify-center px-4">
+                        <p className="text-[10px] md:text-xs text-gray-500 tracking-wider font-medium text-center" suppressHydrationWarning={true}>
                             © {new Date().getFullYear()} <span className="text-gray-300 font-bold">Baraka Shop Senegal</span>. Tous droits réservés.
                         </p>
-                        
-                        <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <span className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">Paiement Sécurisé</span>
-                            <div className="flex items-center gap-2">
-                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4 w-auto object-contain" />
-                                </div>
-                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Visa_Logo.svg" alt="Visa" className="h-3.5 w-auto object-contain" />
-                                </div>
-                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-4 w-auto object-contain" />
-                                </div>
-                                <div className="bg-white border border-white/10 px-3 py-1.5 rounded flex items-center justify-center hover:-translate-y-0.5 transition-transform cursor-pointer">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-4 w-auto object-contain" />
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </Container>

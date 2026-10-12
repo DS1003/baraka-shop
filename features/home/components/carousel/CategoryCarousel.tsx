@@ -135,9 +135,9 @@ export function CategoryCarousel({
     }
 
     return (
-        <section className="py-12 md:py-20 overflow-hidden">
+        <section className="py-1 md:py-3 overflow-hidden">
             <Container>
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 md:mb-16">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 md:mb-8">
                     <div className="space-y-4">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-[2px] bg-primary rounded-full" />

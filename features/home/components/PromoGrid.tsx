@@ -111,9 +111,9 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
     }
 
     return (
-        <section className="overflow-hidden py-10">
+        <section className="overflow-hidden py-1 md:py-3">
             <Container>
-                <div className="flex items-center justify-between mb-8 md:mb-10 gap-4 w-full">
+                <div className="flex items-center justify-between mb-5 md:mb-6 gap-4 w-full">
                     <div className="flex flex-col gap-1.5 md:gap-2">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-[2px] bg-primary rounded-full" />
