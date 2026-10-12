@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react'
 import { ArrowUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { usePathname } from 'next/navigation'
 
 export function ScrollToTop() {
+    const pathname = usePathname()
     const [isVisible, setIsVisible] = useState(false)
 
     useEffect(() => {
@@ -20,6 +22,16 @@ export function ScrollToTop() {
         window.addEventListener('scroll', toggleVisibility)
         return () => window.removeEventListener('scroll', toggleVisibility)
     }, [])
+
+    if (
+        pathname?.startsWith('/admin') ||
+        pathname === '/maintenance' ||
+        pathname?.startsWith('/cart') ||
+        pathname?.startsWith('/checkout') ||
+        pathname?.startsWith('/order-success')
+    ) {
+        return null
+    }
 
     const scrollToTop = () => {
         window.scrollTo({

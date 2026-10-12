@@ -1,43 +1,48 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     CheckCircle2,
     ChevronRight,
+    ChevronDown,
     CreditCard,
     Home,
     ShieldCheck,
     Store,
     Truck,
+    Smartphone,
+    Wallet,
+    ShoppingBag,
+    Loader2
 } from 'lucide-react'
 import { Button } from '@/ui/Button'
 import { cn } from '@/lib/utils'
 
 export const CHECKOUT_STEPS = [
-    { id: 1, label: 'Mode', shortLabel: 'Livraison', icon: Truck },
-    { id: 2, label: 'Adresse', shortLabel: 'Coordonnées', icon: Home },
+    { id: 1, label: 'Mode & Zone', shortLabel: 'Livraison', icon: Truck },
+    { id: 2, label: 'Coordonnées', shortLabel: 'Adresse', icon: Home },
     { id: 3, label: 'Paiement', shortLabel: 'Paiement', icon: CreditCard },
-    { id: 4, label: 'Validation', shortLabel: 'Récap', icon: ShieldCheck },
+    { id: 4, label: 'Confirmation', shortLabel: 'Validation', icon: ShieldCheck },
 ] as const
 
 export function CheckoutBreadcrumb() {
     return (
         <nav
             aria-label="Fil d'Ariane"
-            className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 sm:mb-8 overflow-x-auto scrollbar-hide whitespace-nowrap"
+            className="flex items-center gap-1.5 sm:gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 sm:mb-6 overflow-x-auto scrollbar-hide whitespace-nowrap"
         >
-            <Link href="/" className="hover:text-primary transition-colors shrink-0">
+            <Link href="/" className="hover:text-orange-600 transition-colors shrink-0">
                 Accueil
             </Link>
-            <ChevronRight className="w-3 h-3 shrink-0" />
-            <Link href="/cart" className="hover:text-primary transition-colors shrink-0">
+            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+            <Link href="/cart" className="hover:text-orange-600 transition-colors shrink-0">
                 Panier
             </Link>
-            <ChevronRight className="w-3 h-3 shrink-0" />
-            <span className="text-[#1B1F3B] shrink-0">Commande</span>
+            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+            <span className="text-[#1B1F3B] shrink-0 font-black">Commande</span>
         </nav>
     )
 }
@@ -52,32 +57,31 @@ export function CheckoutStepper({
     const progress = ((step - 1) / (CHECKOUT_STEPS.length - 1)) * 100
 
     return (
-        <>
-            {/* Mobile: compact progress */}
-            <motion.div
-                className="lg:hidden mb-6 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                <motion.div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                        Étape {step} / {CHECKOUT_STEPS.length}
+        <div className="mb-6 sm:mb-8">
+            {/* Mobile: Sleek segmented bar */}
+            <div className="lg:hidden bg-white rounded-2xl border border-slate-100 p-3.5 shadow-sm">
+                <div className="flex items-center justify-between mb-2.5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Étape {step} sur {CHECKOUT_STEPS.length}
                     </span>
-                    <span className="text-xs font-black text-[#1B1F3B]">
-                        {CHECKOUT_STEPS[step - 1]?.shortLabel}
+                    <span className="text-xs font-black text-orange-600 flex items-center gap-1">
+                        {CHECKOUT_STEPS[step - 1]?.label}
                     </span>
-                </motion.div>
-                <motion.div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                </div>
+                
+                {/* Visual Progress bar */}
+                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
                     <motion.div
-                        className="h-full bg-primary rounded-full"
+                        className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"
                         initial={false}
                         animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.35 }}
+                        transition={{ duration: 0.3 }}
                     />
-                </motion.div>
-                <motion.div className="flex justify-between mt-3 gap-1">
+                </div>
+
+                {/* 4 Step touch targets */}
+                <div className="grid grid-cols-4 gap-1">
                     {CHECKOUT_STEPS.map((s) => {
-                        const Icon = s.icon
                         const done = step > s.id
                         const active = step === s.id
                         return (
@@ -87,29 +91,26 @@ export function CheckoutStepper({
                                 disabled={s.id > step}
                                 onClick={() => s.id < step && onStepClick(s.id)}
                                 className={cn(
-                                    'flex-1 flex flex-col items-center gap-1 min-w-0 py-1 rounded-lg transition-colors',
-                                    s.id < step && 'cursor-pointer',
+                                    'py-1.5 px-1 rounded-xl flex flex-col items-center gap-1 transition-all',
+                                    active && 'bg-orange-50/80 border border-orange-200/60',
+                                    done && 'hover:bg-slate-50 cursor-pointer',
                                     s.id > step && 'opacity-40 cursor-not-allowed'
                                 )}
                             >
                                 <span
                                     className={cn(
-                                        'w-8 h-8 rounded-full flex items-center justify-center transition-colors',
-                                        done && 'bg-primary text-white',
-                                        active && !done && 'bg-[#1B1F3B] text-white ring-2 ring-primary/30',
-                                        !done && !active && 'bg-gray-100 text-gray-400'
+                                        'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-colors',
+                                        done && 'bg-emerald-500 text-white',
+                                        active && 'bg-orange-600 text-white shadow-sm',
+                                        !done && !active && 'bg-slate-100 text-slate-400'
                                     )}
                                 >
-                                    {done ? (
-                                        <CheckCircle2 className="w-4 h-4" />
-                                    ) : (
-                                        <Icon className="w-3.5 h-3.5" />
-                                    )}
+                                    {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : s.id}
                                 </span>
                                 <span
                                     className={cn(
-                                        'text-[8px] font-black uppercase tracking-wide truncate w-full text-center',
-                                        active ? 'text-[#1B1F3B]' : 'text-gray-400'
+                                        'text-[9px] font-bold tracking-tight truncate w-full text-center',
+                                        active ? 'text-orange-600 font-black' : done ? 'text-slate-700' : 'text-slate-400'
                                     )}
                                 >
                                     {s.shortLabel}
@@ -117,17 +118,17 @@ export function CheckoutStepper({
                             </button>
                         )
                     })}
-                </motion.div>
-            </motion.div>
+                </div>
+            </div>
 
-            {/* Desktop: full stepper */}
-            <div className="hidden lg:block max-w-3xl mx-auto mb-12 xl:mb-16 px-2">
+            {/* Desktop: Elegant full stepper */}
+            <div className="hidden lg:block max-w-2xl mx-auto px-4">
                 <div className="flex items-center justify-between relative">
-                    <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 z-0" />
+                    <div className="absolute top-5 left-8 right-8 h-0.5 bg-slate-200 z-0" />
                     <motion.div
-                        className="absolute top-5 left-0 h-0.5 bg-primary z-0"
+                        className="absolute top-5 left-8 h-0.5 bg-orange-600 z-0"
                         initial={false}
-                        animate={{ width: `${progress}%` }}
+                        animate={{ width: `calc(${progress}% * 0.85)` }}
                         transition={{ duration: 0.35 }}
                     />
                     {CHECKOUT_STEPS.map((s) => {
@@ -135,25 +136,25 @@ export function CheckoutStepper({
                         const done = step > s.id
                         const active = step === s.id
                         return (
-                            <div key={s.id} className="relative z-10 flex flex-col items-center gap-2 flex-1">
+                            <div key={s.id} className="relative z-10 flex flex-col items-center gap-2">
                                 <button
                                     type="button"
                                     disabled={s.id > step}
                                     onClick={() => s.id < step && onStepClick(s.id)}
                                     className={cn(
-                                        'w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-all',
-                                        done && 'bg-primary text-white',
-                                        active && !done && 'bg-[#1B1F3B] text-white scale-110',
-                                        !done && !active && 'bg-gray-100 text-gray-400',
-                                        s.id < step && 'cursor-pointer hover:scale-105'
+                                        'w-10 h-10 rounded-2xl flex items-center justify-center transition-all shadow-sm',
+                                        done && 'bg-emerald-500 text-white hover:scale-105',
+                                        active && 'bg-orange-600 text-white ring-4 ring-orange-500/20 scale-105',
+                                        !done && !active && 'bg-white border border-slate-200 text-slate-400',
+                                        s.id < step && 'cursor-pointer'
                                     )}
                                 >
-                                    {done ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                                    {done ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-4 h-4" />}
                                 </button>
                                 <span
                                     className={cn(
-                                        'text-[10px] font-black uppercase tracking-widest text-center',
-                                        step >= s.id ? 'text-[#1B1F3B]' : 'text-gray-400'
+                                        'text-[11px] font-black uppercase tracking-wider',
+                                        active ? 'text-orange-600' : done ? 'text-slate-800' : 'text-slate-400'
                                     )}
                                 >
                                     {s.label}
@@ -163,7 +164,7 @@ export function CheckoutStepper({
                     })}
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 
@@ -177,7 +178,7 @@ export function CheckoutSection({
     return (
         <section
             className={cn(
-                'bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] p-5 sm:p-8 lg:p-10 border border-gray-100 shadow-sm',
+                'bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-slate-100 shadow-sm',
                 className
             )}
         >
@@ -189,25 +190,25 @@ export function CheckoutSection({
 export function CheckoutSectionHeader({
     icon: Icon,
     title,
-    accent = 'dark',
+    subtitle,
 }: {
     icon: React.ComponentType<{ className?: string }>
     title: string
-    accent?: 'dark' | 'green'
+    subtitle?: string
 }) {
     return (
-        <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div
-                className={cn(
-                    'w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shrink-0',
-                    accent === 'green' ? 'bg-green-500' : 'bg-[#1B1F3B]'
-                )}
-            >
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+        <div className="flex items-center gap-3.5 mb-6 sm:mb-8 pb-4 border-b border-slate-100">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-orange-50 border border-orange-100/60 flex items-center justify-center text-orange-600 shrink-0">
+                <Icon className="w-5 h-5" />
             </div>
-            <h2 className="text-base sm:text-lg lg:text-xl font-black uppercase tracking-wide sm:tracking-widest text-[#1B1F3B] leading-tight">
-                {title}
-            </h2>
+            <div>
+                <h2 className="text-base sm:text-lg font-black uppercase tracking-wide text-[#1B1F3B] leading-tight">
+                    {title}
+                </h2>
+                {subtitle && (
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">{subtitle}</p>
+                )}
+            </div>
         </div>
     )
 }
@@ -217,33 +218,38 @@ export function CheckoutNavButtons({
     onNext,
     nextLabel = 'Continuer',
     showBack = true,
+    isLoading = false,
 }: {
     onBack?: () => void
     onNext: () => void
     nextLabel?: string
     showBack?: boolean
+    isLoading?: boolean
 }) {
     return (
-        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
+        <div className="flex flex-col-reverse sm:flex-row gap-2.5 sm:gap-4 pt-4 sm:pt-6 border-t border-slate-100 mt-6 sm:mt-8">
             {showBack && onBack && (
-                <Button
+                <button
                     type="button"
                     onClick={onBack}
-                    className="w-full sm:flex-1 h-12 sm:h-14 bg-gray-100 text-[#1B1F3B] rounded-xl sm:rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-all"
+                    className="w-full sm:w-auto sm:px-6 h-12 sm:h-13 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-wider transition-colors"
                 >
                     Retour
-                </Button>
+                </button>
             )}
-            <Button
+            <button
                 type="button"
                 onClick={onNext}
+                disabled={isLoading}
                 className={cn(
-                    'w-full h-12 sm:h-14 bg-[#1B1F3B] text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest hover:bg-primary transition-all',
-                    showBack && onBack ? 'sm:flex-[2]' : ''
+                    'w-full h-12 sm:h-13 bg-orange-600 hover:bg-orange-500 text-white rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-orange-600/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50',
+                    showBack && onBack ? 'sm:flex-1' : ''
                 )}
             >
-                <span className="truncate">{nextLabel}</span>
-            </Button>
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>{nextLabel}</span>
+                {!isLoading && <ChevronRight className="w-4 h-4" />}
+            </button>
         </div>
     )
 }
@@ -255,9 +261,9 @@ export function CheckoutError({ message }: { message: string }) {
             role="alert"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-100 rounded-xl sm:rounded-2xl text-red-600 text-xs font-bold text-center leading-relaxed"
+            className="p-3.5 sm:p-4 bg-rose-50 border border-rose-200/80 rounded-xl sm:rounded-2xl text-rose-600 text-xs font-bold text-center leading-relaxed"
         >
-            {message}
+            ⚠️ {message}
         </motion.div>
     )
 }
@@ -270,6 +276,102 @@ type CartItem = {
     image: string
 }
 
+/**
+ * Collapsible Order Summary Bar for Mobile Screens
+ */
+export function MobileOrderSummaryAccordion({
+    cartItems,
+    subtotal,
+    shipping,
+    discount = 0,
+    total,
+    deliveryMethod,
+    selectedZoneName,
+}: {
+    cartItems: CartItem[]
+    subtotal: number
+    shipping: number
+    discount?: number
+    total: number
+    deliveryMethod: 'livraison' | 'retrait'
+    selectedZoneName?: string | null
+}) {
+    const [isOpen, setIsOpen] = useState(false)
+
+    return (
+        <div className="lg:hidden mb-4 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full px-4 py-3 flex items-center justify-between text-left active:bg-slate-50 transition-colors"
+            >
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 truncate">
+                        {isOpen ? 'Masquer le récapitulatif' : `Articles (${cartItems.length}) · Total`}
+                    </span>
+                    <ChevronDown className={cn('w-4 h-4 text-slate-400 transition-transform duration-200', isOpen && 'rotate-180')} />
+                </div>
+                <span className="text-sm font-black text-orange-600 shrink-0">
+                    {total.toLocaleString()} FCFA
+                </span>
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="border-t border-slate-100 px-4 py-3 bg-slate-50/50"
+                    >
+                        <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1 mb-3">
+                            {cartItems.map((item) => (
+                                <div key={item.id} className="flex items-center gap-2.5 text-xs">
+                                    <div className="relative w-10 h-10 bg-white rounded-lg border border-slate-200/60 overflow-hidden shrink-0">
+                                        <Image src={item.image} alt="" fill className="object-contain p-1" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-slate-800 truncate">{item.name}</p>
+                                        <p className="text-[11px] text-slate-400">Qté: {item.qty}</p>
+                                    </div>
+                                    <span className="font-black text-slate-900 shrink-0">
+                                        {(item.price * item.qty).toLocaleString()} F
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="space-y-1.5 pt-2 border-t border-slate-200/60 text-xs">
+                            <div className="flex justify-between text-slate-500">
+                                <span>Sous-total</span>
+                                <span>{subtotal.toLocaleString()} FCFA</span>
+                            </div>
+                            {discount > 0 && (
+                                <div className="flex justify-between text-emerald-600 font-bold">
+                                    <span>Réduction</span>
+                                    <span>-{discount.toLocaleString()} FCFA</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between text-slate-500">
+                                <span>Livraison ({deliveryMethod === 'retrait' ? 'Boutique' : (selectedZoneName || 'Zone')}):</span>
+                                <span className="font-bold text-slate-800">
+                                    {shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} FCFA`}
+                                </span>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    )
+}
+
+/**
+ * Desktop Order Summary Card
+ */
 export function CheckoutOrderSummary({
     cartItems,
     subtotal,
@@ -279,7 +381,6 @@ export function CheckoutOrderSummary({
     total,
     deliveryMethod,
     selectedZoneName,
-    compact = false,
     className,
 }: {
     cartItems: CartItem[]
@@ -290,80 +391,83 @@ export function CheckoutOrderSummary({
     total: number
     deliveryMethod: 'livraison' | 'retrait'
     selectedZoneName?: string | null
-    compact?: boolean
     className?: string
 }) {
     return (
         <div
             className={cn(
-                'bg-[#1B1F3B] rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] shadow-xl shadow-[#1B1F3B]/20 relative overflow-hidden',
-                compact ? 'p-4' : 'p-5 sm:p-8 lg:p-10',
+                'bg-[#1B1F3B] rounded-3xl shadow-xl shadow-[#1B1F3B]/20 relative overflow-hidden p-6 sm:p-8',
                 className
             )}
         >
-            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-primary/20 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 blur-[50px] rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
-            <h2 className="text-sm sm:text-lg font-black text-white uppercase tracking-widest mb-4 sm:mb-6 pb-4 border-b border-white/10 relative z-10">
-                Récapitulatif
+            <h2 className="text-base font-black text-white uppercase tracking-widest mb-6 pb-4 border-b border-white/10 relative z-10 flex items-center justify-between">
+                <span>Récapitulatif</span>
+                <span className="text-xs text-slate-400 font-medium normal-case">
+                    {cartItems.length} article{cartItems.length > 1 ? 's' : ''}
+                </span>
             </h2>
 
-            {!compact && (
-                <div className="flex flex-col gap-4 mb-6 max-h-[220px] sm:max-h-[280px] overflow-y-auto scrollbar-hide pr-1 relative z-10">
-                    {cartItems.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3">
-                            <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-white/5 rounded-lg overflow-hidden shrink-0">
-                                <Image src={item.image} alt="" fill className="object-contain p-1" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-bold text-white/90 uppercase tracking-tight line-clamp-2">
-                                    {item.name}
-                                </p>
-                                <p className="text-xs sm:text-sm font-black text-primary mt-0.5">
-                                    {(item.price * item.qty).toLocaleString()} FCFA
-                                </p>
-                            </div>
-                            <span className="text-[10px] font-black text-white/40 shrink-0">×{item.qty}</span>
+            {/* Items list preview */}
+            <div className="flex flex-col gap-3 mb-6 max-h-[240px] overflow-y-auto scrollbar-hide pr-1 relative z-10">
+                {cartItems.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3">
+                        <div className="relative w-12 h-12 bg-white/10 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                            <Image src={item.image} alt="" fill sizes="48px" className="object-contain p-1" />
                         </div>
-                    ))}
-                </div>
-            )}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-bold text-white/95 line-clamp-1">
+                                {item.name}
+                            </p>
+                            <p className="text-xs font-black text-orange-400 mt-0.5">
+                                {(item.price * item.qty).toLocaleString()} FCFA
+                            </p>
+                        </div>
+                        <span className="text-[11px] font-black text-white/40 shrink-0">×{item.qty}</span>
+                    </div>
+                ))}
+            </div>
 
-            <div className="flex flex-col gap-2 sm:gap-3 text-white relative z-10">
-                <div className="flex justify-between text-xs sm:text-sm font-bold text-white/60">
+            {/* Costs calculation */}
+            <div className="flex flex-col gap-3 text-white relative z-10 text-sm">
+                <div className="flex justify-between text-slate-300 font-medium">
                     <span>Sous-total</span>
                     <span>{subtotal.toLocaleString()} FCFA</span>
                 </div>
+
                 {discount > 0 && couponCode && (
-                    <div className="flex justify-between text-xs sm:text-sm font-bold text-green-400">
-                        <span>Réduction ({couponCode})</span>
+                    <div className="flex justify-between font-bold text-emerald-400">
+                        <span>Code promo ({couponCode})</span>
                         <span>-{discount.toLocaleString()} FCFA</span>
                     </div>
                 )}
-                <div className="flex justify-between text-xs font-bold text-green-400 gap-2">
-                    <span className="flex items-center gap-1.5 min-w-0">
+
+                <div className="flex justify-between items-center text-slate-300">
+                    <span className="flex items-center gap-1.5 text-xs">
                         {deliveryMethod === 'livraison' ? (
                             <>
-                                <Truck className="w-3 h-3 shrink-0" />
-                                <span className="truncate">
-                                    Livraison{selectedZoneName ? ` · ${selectedZoneName}` : ''}
-                                </span>
+                                <Truck className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                                <span>Livraison {selectedZoneName ? `(${selectedZoneName})` : ''}</span>
                             </>
                         ) : (
                             <>
-                                <Store className="w-3 h-3 shrink-0" />
-                                Retrait boutique
+                                <Store className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                <span>Retrait en boutique</span>
                             </>
                         )}
                     </span>
-                    <span className="shrink-0 uppercase">
+                    <span className={cn('text-xs font-bold uppercase', shipping === 0 ? 'text-emerald-400' : 'text-white')}>
                         {shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} FCFA`}
                     </span>
                 </div>
+
                 <div className="h-px bg-white/10 my-1" />
-                <div className="flex justify-between items-end gap-2">
-                    <span className="text-xs sm:text-sm font-black uppercase tracking-widest">Total</span>
-                    <span className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tighter text-primary">
-                        {total.toLocaleString()} FCFA
+
+                <div className="flex justify-between items-baseline pt-1">
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-200">Total Net</span>
+                    <span className="text-2xl font-black tracking-tight text-orange-500">
+                        {total.toLocaleString()} <span className="text-xs text-orange-300">FCFA</span>
                     </span>
                 </div>
             </div>
@@ -371,6 +475,9 @@ export function CheckoutOrderSummary({
     )
 }
 
+/**
+ * Mobile Sticky Bottom Navigation Bar
+ */
 export function CheckoutMobileBar({
     step,
     total,
@@ -391,117 +498,168 @@ export function CheckoutMobileBar({
     const isLast = step === 4
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-gray-200 bg-white/95 backdrop-blur-md safe-area-pb">
-            <div className="px-4 py-3 flex items-center gap-3 max-w-lg mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            <div className="flex items-center gap-3 max-w-lg mx-auto">
                 <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                        {itemCount} article{itemCount > 1 ? 's' : ''} · Étape {step}/4
-                    </p>
-                    <p className="text-lg font-black text-[#1B1F3B] tracking-tight truncate">
-                        {total.toLocaleString()} <span className="text-xs text-primary">FCFA</span>
-                    </p>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block truncate">
+                        Étape {step}/4 · {itemCount} art.
+                    </span>
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-lg font-black text-[#1B1F3B] tracking-tight truncate">
+                            {total.toLocaleString()}
+                        </span>
+                        <span className="text-xs font-black text-orange-600">FCFA</span>
+                    </div>
                 </div>
+
                 {step > 1 && (
                     <button
                         type="button"
                         onClick={onBack}
-                        className="h-11 px-3 rounded-xl bg-gray-100 text-[#1B1F3B] text-[10px] font-black uppercase shrink-0"
+                        disabled={isSubmitting}
+                        className="h-12 px-3.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold uppercase shrink-0 active:bg-slate-200 transition-colors"
                     >
                         Retour
                     </button>
                 )}
-                <Button
+
+                <button
                     type="button"
                     onClick={isLast ? onConfirm : onNext}
                     disabled={isSubmitting}
-                    className="h-11 px-5 sm:px-6 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-wider shrink-0 disabled:opacity-50"
+                    className="h-12 px-6 bg-orange-600 active:bg-orange-700 text-white rounded-xl font-black text-xs uppercase tracking-wider shrink-0 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-orange-600/30 transition-transform active:scale-95"
                 >
-                    {isSubmitting ? '…' : isLast ? 'Confirmer' : 'Continuer'}
-                </Button>
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Patientez…</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>{isLast ? 'Confirmer' : 'Continuer'}</span>
+                            <ChevronRight className="w-4 h-4" />
+                        </>
+                    )}
+                </button>
             </div>
         </div>
     )
 }
 
+/**
+ * Modern Touch-Friendly Form Input with 16px font to prevent iOS Safari auto-zoom
+ */
 export function FormInput({
     label,
     placeholder,
     value,
     onChange,
     type = 'text',
+    required = false,
+    helperText,
+    icon: Icon,
 }: {
     label: string
     placeholder: string
     value: string
     onChange: (val: string) => void
     type?: string
+    required?: boolean
+    helperText?: string
+    icon?: React.ComponentType<{ className?: string }>
 }) {
     return (
-        <label className="flex flex-col gap-2">
-            <span className="text-[10px] font-black text-[#1B1F3B] uppercase tracking-widest pl-1">
+        <label className="flex flex-col gap-1.5 w-full">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider pl-0.5 flex items-center gap-1">
                 {label}
+                {required && <span className="text-orange-600">*</span>}
             </span>
-            <input
-                type={type}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder}
-                className="w-full h-12 sm:h-14 bg-gray-50 border border-gray-100 rounded-xl sm:rounded-2xl px-4 sm:px-6 text-base font-bold outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-            />
+            <div className="relative">
+                {Icon && (
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <Icon className="w-4 h-4" />
+                    </div>
+                )}
+                <input
+                    type={type}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
+                    className={cn(
+                        "w-full h-12 bg-slate-50/80 border border-slate-200/80 rounded-xl text-slate-900 font-semibold text-[15px] sm:text-sm outline-none focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/15 transition-all placeholder:text-slate-400 placeholder:font-normal",
+                        Icon ? "pl-10 pr-4" : "px-4"
+                    )}
+                />
+            </div>
+            {helperText && (
+                <span className="text-[10px] text-slate-400 pl-1">{helperText}</span>
+            )}
         </label>
     )
 }
 
+/**
+ * Modern Payment Option Tile
+ */
 export function PaymentOption({
     active,
     onClick,
     icon: Icon,
     title,
     desc,
+    badge,
 }: {
     active: boolean
     onClick: () => void
     icon: React.ComponentType<{ className?: string }>
     title: string
     desc: string
+    badge?: string
 }) {
     return (
         <button
             type="button"
             onClick={onClick}
             className={cn(
-                'flex items-start sm:items-center gap-4 p-4 sm:p-6 rounded-xl sm:rounded-2xl border transition-all text-left w-full',
+                'flex items-center gap-3.5 sm:gap-4 p-4 sm:p-5 rounded-2xl border-2 transition-all text-left w-full relative group',
                 active
-                    ? 'bg-primary/5 border-primary shadow-md shadow-primary/5'
-                    : 'bg-white border-gray-100 hover:border-gray-200'
+                    ? 'bg-orange-50/40 border-orange-600 shadow-sm'
+                    : 'bg-white border-slate-200/80 hover:border-slate-300'
             )}
         >
-            <motion.div
-                className={cn(
-                    'w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0',
-                    active ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'
-                )}
-            >
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-            </motion.div>
-            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                <span
-                    className={cn(
-                        'text-xs sm:text-sm font-black uppercase tracking-tight',
-                        active ? 'text-primary' : 'text-[#1B1F3B]'
-                    )}
-                >
-                    {title}
-                </span>
-                <span className="text-[11px] sm:text-xs text-gray-500 font-medium leading-snug">{desc}</span>
-            </div>
             <div
                 className={cn(
-                    'w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0',
-                    active ? 'border-primary bg-primary' : 'border-gray-200'
+                    'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors',
+                    active ? 'bg-orange-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
                 )}
             >
-                {active && <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
+                <Icon className="w-5 h-5" />
+            </div>
+
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                    <span className={cn('text-xs sm:text-sm font-black uppercase tracking-tight', active ? 'text-orange-600' : 'text-[#1B1F3B]')}>
+                        {title}
+                    </span>
+                    {badge && (
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-black rounded-md uppercase tracking-wide">
+                            {badge}
+                        </span>
+                    )}
+                </div>
+                <span className="text-[11px] sm:text-xs text-slate-500 font-medium leading-snug">
+                    {desc}
+                </span>
+            </div>
+
+            {/* Custom Radio check */}
+            <div
+                className={cn(
+                    'w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+                    active ? 'border-orange-600 bg-orange-600 text-white' : 'border-slate-300 bg-white'
+                )}
+            >
+                {active && <div className="w-2 h-2 rounded-full bg-white" />}
             </div>
         </button>
     )
