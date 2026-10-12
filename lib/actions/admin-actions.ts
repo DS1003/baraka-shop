@@ -478,19 +478,21 @@ export async function updateOrderStatus(orderId: string, status: string) {
             data: { status: status as any }
         });
 
-        // Send notifications (non-blocking)
+        // Send notifications asynchronously so network/email delays don't block response
         if (order) {
-            const clientName = order.user.username || order.user.email || 'Client';
-            await notifyClientOrderStatusChange(orderId, status).catch((e) => console.error('Error notifying client:', e));
-            await notifyAdminsOrderStatusChange(orderId, status, clientName, order.total).catch((e) => console.error('Error notifying admins:', e));
+            const clientName = order.user?.username || order.user?.email || 'Client';
+            Promise.allSettled([
+                notifyClientOrderStatusChange(orderId, status),
+                notifyAdminsOrderStatusChange(orderId, status, clientName, order.total)
+            ]).catch((e) => console.error('Error triggering notifications:', e));
         }
 
         revalidatePath('/admin/orders');
         revalidatePath('/account');
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Update order error:", error);
-        return { success: false };
+        return { success: false, error: error.message };
     }
 }
 
@@ -1273,7 +1275,7 @@ export async function bulkUpdateOrderStatuses(orderIds: string[], status: string
 
         // Send notifications for each order (non-blocking)
         for (const order of orders) {
-            const clientName = order.user.username || order.user.email || 'Client';
+            const clientName = order.user?.username || order.user?.email || 'Client';
             notifyClientOrderStatusChange(order.id, status).catch(() => {});
             notifyAdminsOrderStatusChange(order.id, status, clientName, order.total).catch(() => {});
         }
@@ -1281,9 +1283,9 @@ export async function bulkUpdateOrderStatuses(orderIds: string[], status: string
         revalidatePath('/admin/orders');
         revalidatePath('/account');
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Bulk update order statuses error:", error);
-        return { success: false };
+        return { success: false, error: error.message };
     }
 }
 

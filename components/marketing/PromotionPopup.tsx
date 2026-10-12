@@ -6,6 +6,7 @@ import { X, Copy, Check, Gift, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
+import { usePathname } from 'next/navigation';
 
 interface CampaignData {
   id: string;
@@ -56,6 +57,7 @@ function trackEvent(campaignId: string, event: string) {
 }
 
 export function PromotionPopup() {
+  const pathname = usePathname();
   const { headerLogo } = useSiteLogos();
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -155,6 +157,16 @@ export function PromotionPopup() {
       setTimeout(() => setCopied(false), 2000);
     }
   }, [campaign]);
+
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname === '/maintenance' ||
+    pathname?.startsWith('/cart') ||
+    pathname?.startsWith('/checkout') ||
+    pathname?.startsWith('/order-success')
+  ) {
+    return null;
+  }
 
   if (!campaign) return null;
 
