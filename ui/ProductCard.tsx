@@ -182,12 +182,12 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     <Image src={displayImage} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-contain p-1.5 md:p-4" priority={priority} unoptimized />
                 </div>
 
-                {/* Add to Cart Overlay */}
+                {/* Add to Cart Overlay (Desktop Hover) */}
                 {customBadge === "Bientôt disponible" ? (
                     <span
-                        className="absolute bottom-1 md:bottom-2 left-1 md:left-2 right-1 md:right-2 bg-amber-500 text-white py-1.5 md:py-2.5 rounded-md md:rounded-lg font-black text-[7.5px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-1 md:gap-2 shadow-lg shadow-amber-500/20 z-40"
+                        className="hidden md:flex absolute bottom-2 left-2 right-2 bg-amber-500 text-white py-2.5 rounded-lg font-black text-[9px] uppercase tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 items-center justify-center gap-2 shadow-lg shadow-amber-500/20 z-40"
                     >
-                        <Clock className="w-2.5 md:w-3.5 h-2.5 md:h-3.5" /> <span className="hidden md:inline">Bientôt disponible</span><span className="md:hidden">Bientôt</span>
+                        <Clock className="w-3.5 h-3.5" /> Bientôt disponible
                     </span>
                 ) : (
                     <button
@@ -196,26 +196,34 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                             e.stopPropagation();
                             addToCart(product);
                         }}
-                        className="absolute bottom-1 md:bottom-2 left-1 md:left-2 right-1 md:right-2 bg-primary text-white py-1.5 md:py-2.5 rounded-md md:rounded-lg font-black text-[7.5px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 flex items-center justify-center gap-1 md:gap-2 hover:bg-[#1B1F3B] shadow-lg shadow-primary/20 z-40"
+                        className="hidden md:flex absolute bottom-2 left-2 right-2 bg-primary text-white py-2.5 rounded-lg font-black text-[9px] uppercase tracking-[0.2em] md:translate-y-20 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 items-center justify-center gap-2 hover:bg-[#1B1F3B] shadow-lg shadow-primary/20 z-40"
                     >
-                        <ShoppingCart className="w-2.5 md:w-3.5 h-2.5 md:h-3.5" /> Ajouter
+                        <ShoppingCart className="w-3.5 h-3.5" /> Ajouter
                     </button>
                 )}
             </div>
 
             {/* Content */}
-            <div className="p-3 md:p-4 flex flex-col gap-1 md:gap-1.5 flex-1">
-                <div className="flex items-center justify-between">
-                    <span className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">{categoryName}</span>
-                    <div className="flex items-center gap-1">
-                        <Star className="w-2.5 md:w-3 h-2.5 md:h-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-[9px] md:text-[10px] font-bold text-gray-500">{(product.rating || 5)}.0</span>
+            <div className="p-2 sm:p-3 md:p-4 flex flex-col gap-1 md:gap-1.5 flex-1 justify-between">
+                <div>
+                    <div className="flex items-center justify-between mb-1">
+                        <span className="text-[7.5px] sm:text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[70%]">{categoryName}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                            <Star className="w-2.5 md:w-3 h-2.5 md:h-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-[8.5px] sm:text-[9px] md:text-[10px] font-bold text-gray-500">{(product.rating || 5)}.0</span>
+                        </div>
                     </div>
-                </div>
 
-                <Link href={`/product/${product.id}`} className="block h-[32px] md:h-[36px] overflow-hidden">
-                    <h3 
-                        className="font-bold text-[11px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[16px] md:leading-[18px] tracking-tight"
+                    <Link href={`/product/${product.id}`} className="block overflow-hidden">
+                        <h3 
+                            className="font-bold text-[11px] sm:text-[12px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[15px] sm:leading-[17px] md:leading-[18px] tracking-tight line-clamp-2"
+                        >
+                            {product.name}
+                        </h3>
+                    </Link>
+
+                    <p 
+                        className="hidden sm:block text-gray-400 text-[8px] md:text-[9px] leading-[12px] md:leading-[14px] mt-1 h-[24px] md:h-[28px] overflow-hidden"
                         style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
@@ -223,33 +231,41 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                             overflow: 'hidden'
                         }}
                     >
-                        {product.name}
-                    </h3>
-                </Link>
+                        {cleanDescription}
+                    </p>
+                </div>
 
-                <p 
-                    className="text-gray-400 text-[8px] md:text-[9px] leading-[12px] md:leading-[14px] mt-1 h-[24px] md:h-[28px] overflow-hidden"
-                    style={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                    }}
-                >
-                    {cleanDescription}
-                </p>
-
-                <div className="mt-4 md:mt-6 flex items-center justify-between">
+                <div className="mt-2.5 sm:mt-4 md:mt-6 flex items-center justify-between pt-1">
                     <div className="flex flex-col">
-                        {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-400 text-[8px] md:text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} FCFA</span>}
-                        <span className="text-[#1B1F3B] font-black text-[14px] md:text-[17px] tracking-tight">
-                            {(product.price ?? 0).toLocaleString()} <span className="text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
+                        {(product.oldPrice || product.compareAtPrice) && (
+                            <span className="text-gray-400 text-[7.5px] sm:text-[8px] md:text-[10px] line-through font-bold">
+                                {(product.oldPrice || product.compareAtPrice).toLocaleString()} FCFA
+                            </span>
+                        )}
+                        <span className="text-[#1B1F3B] font-black text-[12px] sm:text-[14px] md:text-[17px] tracking-tight">
+                            {(product.price ?? 0).toLocaleString()} <span className="text-[7.5px] sm:text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
                         </span>
                     </div>
 
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                        <Zap className="w-3.5 md:w-4 h-3.5 md:h-4 fill-current" />
-                    </div>
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (customBadge !== "Bientôt disponible" && product.stock > 0) {
+                                addToCart(product);
+                            }
+                        }}
+                        disabled={customBadge === "Bientôt disponible" || product.stock <= 0}
+                        aria-label={`Ajouter ${product.name} au panier`}
+                        className={cn(
+                            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shadow-sm active:scale-90 shrink-0",
+                            product.stock <= 0 || customBadge === "Bientôt disponible"
+                                ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                : "bg-primary text-white md:bg-primary/10 md:text-primary md:group-hover:bg-primary md:group-hover:text-white shadow-primary/20 hover:bg-[#1B1F3B]"
+                        )}
+                    >
+                        <ShoppingCart className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                    </button>
                 </div>
             </div>
         </div>

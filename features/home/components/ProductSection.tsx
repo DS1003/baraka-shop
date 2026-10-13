@@ -16,6 +16,7 @@ interface ProductSectionProps {
     viewAllHref?: string;
     priority?: boolean;
     className?: string;
+    hideIfEmpty?: boolean;
 }
 
 export function ProductSection({
@@ -26,8 +27,13 @@ export function ProductSection({
     products = [],
     viewAllHref = '/boutique',
     priority = false,
-    className
+    className,
+    hideIfEmpty = false
 }: ProductSectionProps) {
+    if (hideIfEmpty && (!products || products.length === 0)) {
+        return null;
+    }
+
     const [currentIndex, setCurrentIndex] = useState(0)
     const [direction, setDirection] = useState(0)
     const [isMobile, setIsMobile] = useState(false)

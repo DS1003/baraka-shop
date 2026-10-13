@@ -34,7 +34,7 @@ export function WhatsAppButton() {
                 "fixed bottom-24 right-8 z-[100] hidden md:flex",
                 "w-12 h-12 md:w-14 md:h-14",
                 "bg-[#25D366] text-white rounded-2xl shadow-2xl",
-                "flex items-center justify-center transition-all duration-300",
+                "items-center justify-center transition-all duration-300",
                 "hover:shadow-[#25D366]/40 border border-white/20 group"
             )}
             aria-label="Contactez-nous sur WhatsApp"

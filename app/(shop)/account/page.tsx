@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import AccountContent from "./AccountContent";
 
 export default async function AccountPage() {
@@ -18,12 +19,22 @@ export default async function AccountPage() {
                 include: {
                     items: {
                         include: {
-                            product: true
+                            product: {
+                                include: {
+                                    category: true,
+                                    brand: true
+                                }
+                            }
                         }
                     }
                 }
             },
-            wishlist: true
+            wishlist: {
+                include: {
+                    category: true,
+                    brand: true
+                }
+            }
         }
     });
 
@@ -32,6 +43,12 @@ export default async function AccountPage() {
     }
 
     return (
-        <AccountContent user={userData} />
+        <Suspense fallback={
+            <div className="w-full min-h-[60vh] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+            </div>
+        }>
+            <AccountContent user={userData} />
+        </Suspense>
     );
 }

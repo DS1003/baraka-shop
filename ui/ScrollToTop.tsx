@@ -68,7 +68,7 @@ export function ScrollToTop() {
                         "fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[90]",
                         "w-11 h-11 md:w-13 md:h-13",
                         "bg-[#1B1F3B] text-white rounded-full shadow-[0_10px_25px_rgba(27,31,59,0.35)]",
-                        "flex items-center justify-center transition-all duration-300",
+                        "hidden md:flex items-center justify-center transition-all duration-300",
                         "hover:shadow-[0_15px_30px_rgba(232,98,26,0.35)] hover:scale-105 active:scale-95 group",
                         "border border-white/10 cursor-pointer select-none"
                     )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
@@ -14,10 +14,12 @@ import {
     Eye,
     EyeOff,
     ArrowRight,
-    CheckCircle2
+    CheckCircle2,
+    ShieldCheck
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { GoogleIcon } from '@/components/icons/GoogleIcon';
 
 export default function RegisterPage() {
     const [formData, setFormData] = useState({
@@ -29,8 +31,38 @@ export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const oauthError = searchParams.get('error');
+        if (oauthError) {
+            if (oauthError === 'OAuthSignin' || oauthError === 'OAuthCallback') {
+                setError("L'inscription avec Google a été interrompue ou annulée. Veuillez réessayer.");
+            } else if (oauthError === 'AccessDenied') {
+                setError("Accès refusé. Veuillez autoriser l'accès avec votre compte Google.");
+            } else if (oauthError === 'Configuration') {
+                setError("La configuration Google OAuth est en attente des identifiants dans .env.");
+            } else {
+                setError("Une erreur est survenue lors de l'inscription avec Google.");
+            }
+        }
+    }, []);
+
+    const handleGoogleSignUp = async () => {
+        setIsGoogleLoading(true);
+        setError(null);
+        try {
+            await signIn('google', {
+                redirectTo: '/boutique',
+            });
+        } catch (err) {
+            setError("Impossible d'initialiser l'inscription avec Google.");
+            setIsGoogleLoading(false);
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -144,6 +176,40 @@ export default function RegisterPage() {
                     className="bg-white/95 backdrop-blur-md p-6 sm:p-7 rounded-2xl border border-gray-100/80 shadow-[0_12px_40px_-12px_rgba(27,31,59,0.08)] relative overflow-hidden"
                 >
                     <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -translate-x-12 -translate-y-12" />
+
+                    {/* Google Sign-Up Button (2026 Standards) */}
+                    <div className="relative z-10 mb-4">
+                        <motion.button
+                            type="button"
+                            onClick={handleGoogleSignUp}
+                            disabled={isLoading || isGoogleLoading}
+                            whileHover={{ y: -1, boxShadow: "0 4px 14px rgba(0, 0, 0, 0.06)" }}
+                            whileTap={{ scale: 0.99 }}
+                            className="w-full h-11 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-xl font-bold text-xs text-[#1B1F3B] flex items-center justify-center gap-2.5 transition-all duration-200 shadow-2xs hover:shadow-xs active:scale-[0.99] touch-manipulation disabled:opacity-60 disabled:pointer-events-none"
+                        >
+                            {isGoogleLoading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                                    <span>Redirection vers Google...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                                    <span>S'inscrire avec Google</span>
+                                </>
+                            )}
+                        </motion.button>
+
+                        {/* Elegant Divider */}
+                        <div className="relative my-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-slate-100" />
+                            </div>
+                            <div className="relative flex justify-center text-[9px] font-black uppercase tracking-widest">
+                                <span className="bg-white px-2.5 text-slate-400">ou avec email</span>
+                            </div>
+                        </div>
+                    </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
                         {error && (
@@ -287,8 +353,12 @@ export default function RegisterPage() {
                     </motion.div>
                 </motion.div>
 
-                <motion.div variants={itemVariants} className="mt-5 text-center text-[#94A3B8] text-[9px] font-black uppercase tracking-[0.15em] opacity-80">
-                    &copy; 2024 Baraka Shop Senegal - Tous droits réservés
+                <motion.div variants={itemVariants} className="mt-5 flex flex-col items-center gap-1.5 text-center text-[#94A3B8] text-[9px] font-bold tracking-wider opacity-85">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100/70 border border-slate-200/60 text-slate-500 text-[10px]">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        <span>Inscription sécurisée SSL 256-bit • Protocole OIDC 2026</span>
+                    </div>
+                    <span className="uppercase text-[9px] tracking-widest text-slate-400">&copy; 2026 Baraka Shop Senegal - Tous droits réservés</span>
                 </motion.div>
             </motion.div>
         </div>

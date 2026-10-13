@@ -18,6 +18,7 @@ const MegaMenu = dynamic(() => import('@/features/home/components/MegaMenu').the
 const CartToast = dynamic(() => import('@/components/CartToast').then(mod => mod.CartToast), { ssr: false })
 const MiniCart = dynamic(() => import('@/components/MiniCart').then(mod => mod.MiniCart), { ssr: false })
 import { BorderGlow } from '@/components/BorderGlow'
+import { ProfileDropdown } from './ProfileDropdown'
 
 const SUGGESTIONS = [
     { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000FCFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
@@ -356,10 +357,9 @@ export function Header() {
 
                         <div className="flex items-center gap-6 md:gap-8">
                             <HeaderAction icon={MapPin} label="Boutiques" href="/boutiques" />
-                            <HeaderAction
-                                icon={User}
-                                label={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "Admin" : "Compte") : "Connexion"}
-                                href={isLoggedIn ? ((session?.user as any)?.role === 'ADMIN' ? "/admin" : "/account") : "/login"}
+                            <ProfileDropdown
+                                isLoggedIn={isLoggedIn}
+                                session={session}
                             />
                             <div
                                 onClick={() => setIsCartOpen(true)}
@@ -514,10 +514,12 @@ export function Header() {
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2">
                     <img src={headerLogo} alt="Baraka Shop" className="h-12 md:h-16 w-auto object-contain" />
                 </Link>
-                <div className="flex items-center gap-2">
-                    <Link href="/login" className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
-                        <User className="w-6 h-6 text-[#1B1F3B]" />
-                    </Link>
+                <div className="flex items-center gap-1 sm:gap-2">
+                    <ProfileDropdown
+                        isLoggedIn={isLoggedIn}
+                        session={session}
+                        isMobile
+                    />
                     <Link href="/cart" className="p-2 hover:bg-gray-50 rounded-xl transition-colors relative">
                         <ShoppingCart className="w-6 h-6 text-[#1B1F3B]" />
                         {itemCount > 0 && (

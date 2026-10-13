@@ -64,8 +64,11 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
-    shortcut: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png' }
+    ],
+    shortcut: '/favicon.ico',
     apple: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
   },
   manifest: '/manifest.json',

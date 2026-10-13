@@ -1,13 +1,19 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the Google Gen AI SDK
-// It will automatically use the GEMINI_API_KEY environment variable.
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+function getAiClient() {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error("Clé API Gemini non configurée (GEMINI_API_KEY).");
+    }
+    return new GoogleGenAI({ apiKey });
+}
 
 export async function normalizeProductSpecs(rawText: string): Promise<string> {
     if (!rawText || rawText.trim() === '') {
         return '';
     }
+
+    const ai = getAiClient();
 
     const systemInstruction = `Tu es un assistant expert en e-commerce spécialisé dans le formatage de fiches techniques de produits high-tech.
 Ta mission est de prendre une fiche technique brute (souvent copiée-collée depuis des sites comme LDLC, Fnac, Amazon) et de la nettoyer, la normaliser et la formater parfaitement.
@@ -109,6 +115,7 @@ RÈGLES STRICTES ET OBLIGATOIRES :
    - "1280 x 720" ou "1280x720" -> "1280 × 720 pixels (HD 720p)"
 6. NE JAMAIS INVENTER : Ne complète une information que si elle découle directement de la valeur (comme l'ajout de "4K Ultra HD" pour "3840x2160"). N'invente jamais de caractéristiques qui ne sont pas dans le texte d'origine.`;
 
+    const ai = getAiClient();
     const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
     let lastError: any = null;
 

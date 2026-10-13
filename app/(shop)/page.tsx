@@ -148,15 +148,18 @@ export default async function Home() {
         {/* Bandeau Livraison Express & Garantie juste au-dessus des Promotions */}
         <ShippingPromoBand />
 
-        {/* Promotions */}
-        <ProductSection
-          eyebrow="Offres Spéciales"
-          title="Promotions"
-          highlightedWord="Du Moment"
-          subtitle="Profitez de nos réductions exceptionnelles et bons plans exclusifs."
-          products={promoProducts}
-          viewAllHref="/boutique?onSale=true"
-        />
+        {/* Promotions - Masqué s'il n'y a pas de promotions */}
+        {promoProducts && promoProducts.length > 0 && (
+          <ProductSection
+            eyebrow="Offres Spéciales"
+            title="Promotions"
+            highlightedWord="Du Moment"
+            subtitle="Profitez de nos réductions exceptionnelles et bons plans exclusifs."
+            products={promoProducts}
+            viewAllHref="/boutique?onSale=true"
+            hideIfEmpty
+          />
+        )}
 
         <BrandsAndSocial initialBrands={brands} />
       </Container>

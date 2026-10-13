@@ -355,6 +355,28 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
         })
     }
 
+    const handleDragEndSimilar = (_: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+        if (similarProductChunks.length <= 1) return
+        const isSwipeLeft = info.offset.x < -35 || (info.offset.x < -10 && info.velocity.x < -150)
+        const isSwipeRight = info.offset.x > 35 || (info.offset.x > 10 && info.velocity.x > 150)
+        if (isSwipeLeft) {
+            slideNextSimilar()
+        } else if (isSwipeRight) {
+            slidePrevSimilar()
+        }
+    }
+
+    const handleDragEndBestsellers = (_: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+        if (bestSellerChunks.length <= 1) return
+        const isSwipeLeft = info.offset.x < -35 || (info.offset.x < -10 && info.velocity.x < -150)
+        const isSwipeRight = info.offset.x > 35 || (info.offset.x > 10 && info.velocity.x > 150)
+        if (isSwipeLeft) {
+            slideNextBestsellers()
+        } else if (isSwipeRight) {
+            slidePrevBestsellers()
+        }
+    }
+
     const handleReviewSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!session?.user?.id) {
@@ -811,15 +833,17 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
 
                         <div className="h-px bg-white/5 my-4" />
 
-                        <div className="flex flex-col sm:flex-row items-center gap-6">
-                            <div className="flex items-center justify-between bg-white/5 rounded-2xl p-1.5 md:p-2 border border-white/10 w-full sm:w-auto h-14 md:h-16">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                            {/* Quantity Selector */}
+                            <div className="flex items-center justify-between bg-white/5 rounded-2xl p-1.5 md:p-2 border border-white/10 w-full sm:w-auto h-14 md:h-16 shrink-0">
                                 <button
                                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                    aria-label="Diminuer la quantité"
                                     className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white hover:bg-white/10 transition-all active:scale-90"
                                 >
-                                    <Minus className="w-4 h-4" />
+                                    <Minus className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
-                                <span className="w-14 text-center font-black text-xl text-white">{quantity}</span>
+                                <span className="w-14 text-center font-black text-xl md:text-2xl text-white select-none">{quantity}</span>
                                 <button
                                     onClick={() => {
                                         if (quantity < product.stock) {
@@ -828,36 +852,50 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                             toast.error(`Stock maximum atteint (${product.stock} disponibles)`);
                                         }
                                     }}
+                                    aria-label="Augmenter la quantité"
                                     className={cn(
                                         "w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-white transition-all",
                                         quantity >= product.stock ? "opacity-50 cursor-not-allowed" : "hover:bg-white/10 active:scale-90"
                                     )}
                                 >
-                                    <Plus className="w-4 h-4" />
+                                    <Plus className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
                             </div>
 
+                            {/* Action Buttons */}
                             <div className="flex-1 w-full flex flex-col sm:flex-row gap-3 md:gap-4">
-                                <Button
+                                {/* Ajouter au panier (Primary Action) */}
+                                <button
                                     onClick={() => addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity)}
                                     disabled={product.stock <= 0}
-                                    className="flex-1 h-14 md:h-16 bg-white text-[#1B1F3B] hover:bg-gray-100 rounded-2xl font-black text-[11px] md:text-[12px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 md:gap-3 border border-white/10 shadow-sm"
+                                    className={cn(
+                                        "w-full sm:flex-1 h-14 md:h-16 rounded-2xl font-black text-xs md:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 sm:gap-3 shadow-xl active:scale-[0.98]",
+                                        product.stock <= 0
+                                            ? "bg-white/10 text-gray-400 cursor-not-allowed border border-white/10"
+                                            : "bg-primary text-white hover:bg-[#d95213] shadow-primary/25 hover:shadow-primary/40 border border-primary/30"
+                                    )}
                                 >
-                                    <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-                                    Ajouter au panier
-                                </Button>
+                                    <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                                    <span>Ajouter au panier</span>
+                                </button>
 
-                                <Button
+                                {/* Achat Rapide (Direct Checkout CTA) */}
+                                <button
                                     onClick={() => {
                                         addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity);
                                         setTimeout(() => window.location.href = '/checkout', 100);
                                     }}
                                     disabled={product.stock <= 0}
-                                    className="flex-1 h-14 md:h-16 bg-primary text-white hover:bg-[#1B1F3B] hover:border hover:border-white/10 rounded-2xl font-black text-[11px] md:text-[12px] uppercase tracking-widest shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2 md:gap-3 border border-primary/20"
+                                    className={cn(
+                                        "w-full sm:flex-1 h-14 md:h-16 rounded-2xl font-black text-xs md:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 sm:gap-3 shadow-md active:scale-[0.98]",
+                                        product.stock <= 0
+                                            ? "bg-white/5 text-gray-500 cursor-not-allowed border border-white/5"
+                                            : "bg-white text-[#1B1F3B] border-2 border-primary hover:bg-orange-50 hover:text-primary hover:shadow-lg"
+                                    )}
                                 >
-                                    <Zap className="w-4 h-4 md:w-5 md:h-5 fill-white" />
-                                    Achat Rapide
-                                </Button>
+                                    <Zap className="w-4 h-4 md:w-5 md:h-5 text-primary fill-primary shrink-0" />
+                                    <span>Achat Rapide</span>
+                                </button>
                             </div>
                         </div>
 
@@ -872,19 +910,19 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                             </div>
                         )}
 
-                        <div className="mt-6 pt-6 border-t border-white/5 flex flex-col items-center">
+                        <div className="mt-5 pt-5 border-t border-white/5 flex flex-col items-center">
                             <a
                                 href={`https://wa.me/221765149898?text=${encodeURIComponent(`Bonjour Baraka Shop, je souhaiterais commander le produit : ${product.name} (Prix: ${product.price.toLocaleString()} FCFA)`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-3 text-[#25D366] font-black text-[11px] uppercase tracking-[0.2em] hover:scale-105 transition-transform group"
+                                className="w-full sm:w-auto h-14 px-6 rounded-2xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] group"
                             >
-                                <div className="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center">
+                                <div className="w-7 h-7 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-sm">
                                     <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                                     </svg>
                                 </div>
-                                <span className="group-hover:underline underline-offset-4 decoration-2 decoration-[#25D366]/30 transition-all">Commander via WhatsApp</span>
+                                <span>Commander via WhatsApp</span>
                             </a>
                         </div>
                     </div>
@@ -892,31 +930,40 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
             </div>
 
             <div className="mt-4 md:mt-8 px-0 md:px-0">
-                <div className="sticky top-[60px] md:top-[85px] z-40 w-full bg-[#f8f9fb] py-4 md:py-6 -mx-4 px-4 md:mx-0 md:px-0 mb-6 md:mb-10 transition-all">
+                <div className="sticky top-[56px] md:top-[85px] z-30 w-full bg-[#f8f9fb]/95 backdrop-blur-md py-3 md:py-6 -mx-4 px-4 md:mx-0 md:px-0 mb-4 md:mb-10 transition-all border-b border-gray-200/50 md:border-none">
                     <div className="flex flex-col gap-2 w-full md:w-auto">
-                        <div className="flex items-center gap-x-5 md:gap-x-6 lg:gap-x-8 overflow-x-auto overflow-y-hidden pt-2 pb-2 scrollbar-hide [&::-webkit-scrollbar]:hidden">
-                        {tabs.map((tab) => {
-                            const words = tab.label.split(' ');
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={cn(
-                                        "whitespace-nowrap text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold transition-all relative uppercase tracking-tight py-1 flex-shrink-0",
-                                        activeTab === tab.id ? "text-[#1B1F3B]" : "text-gray-300 hover:text-[#1B1F3B]/40"
-                                    )}
-                                >
-                                    {words[0]} {words[1] && <span className="text-primary italic font-black ml-1.5">{words[1]}</span>}
-                                    {activeTab === tab.id && (
-                                        <motion.div
-                                            layoutId="productTabUnderline"
-                                            className="absolute -bottom-1 md:-bottom-1.5 left-0 w-full h-[2px] md:h-[3px] bg-primary rounded-full shadow-[0_2px_10px_rgba(255,140,0,0.3)]"
-                                        />
-                                    )}
-                                </button>
-                            )
-                        })}
-                    </div>
+                        <div className="flex items-center justify-between sm:justify-start gap-x-2 sm:gap-x-6 md:gap-x-8 overflow-x-auto overflow-y-hidden pt-1 pb-1 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+                            {tabs.map((tab) => {
+                                const words = tab.label.split(' ');
+                                const isActive = activeTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={cn(
+                                            "whitespace-nowrap text-xs sm:text-base md:text-xl lg:text-2xl font-extrabold transition-all relative uppercase tracking-tight py-2 px-1 flex-shrink-0 group",
+                                            isActive ? "text-[#1B1F3B]" : "text-gray-400 hover:text-[#1B1F3B]"
+                                        )}
+                                    >
+                                        <span>{words[0]}</span>
+                                        {words[1] && (
+                                            <span className={cn(
+                                                "italic font-black ml-1 md:ml-1.5 transition-colors",
+                                                isActive ? "text-primary" : "text-gray-400 group-hover:text-[#1B1F3B]"
+                                            )}>
+                                                {words[1]}
+                                            </span>
+                                        )}
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="productTabUnderline"
+                                                className="absolute bottom-0 left-0 w-full h-[2.5px] md:h-[3px] bg-primary rounded-full shadow-[0_2px_10px_rgba(232,98,26,0.35)]"
+                                            />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
@@ -1403,17 +1450,42 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
             </div>
 
             {/* Discovery Section with Tabs */}
-            <div className="mt-16">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
-                    <div className="flex flex-col gap-2 min-w-0 flex-1">
-                        <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.5em] mb-1">Découverte</span>
-                        <div className="flex items-center gap-x-4 md:gap-x-5 lg:gap-x-8 overflow-x-auto overflow-y-hidden pt-2 pb-2 scrollbar-hide [&::-webkit-scrollbar]:hidden">
+            <div className="mt-10 md:mt-16">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-4 mb-6 md:mb-8">
+                    <div className="flex flex-col gap-1.5 md:gap-2 min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                            <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.5em]">Découverte</span>
+                            
+                            {/* Mobile Carousel Navigation Arrows */}
+                            <div className="flex md:hidden items-center gap-2">
+                                <button
+                                    onClick={activeDiscoveryTab === 'similar' ? slidePrevSimilar : slidePrevBestsellers}
+                                    disabled={activeDiscoveryTab === 'similar' ? similarProductChunks.length <= 1 : bestSellerChunks.length <= 1}
+                                    aria-label="Produits précédents"
+                                    className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 active:scale-95 transition-all"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={activeDiscoveryTab === 'similar' ? slideNextSimilar : slideNextBestsellers}
+                                    disabled={activeDiscoveryTab === 'similar' ? similarProductChunks.length <= 1 : bestSellerChunks.length <= 1}
+                                    aria-label="Produits suivants"
+                                    className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 active:scale-95 transition-all"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Discovery Tabs Bar */}
+                        <div className="flex items-center justify-between sm:justify-start gap-x-2 sm:gap-x-6 md:gap-x-8 overflow-x-auto overflow-y-hidden pt-1 pb-1.5 scrollbar-hide [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0">
                             {[
                                 { id: 'similar' as const, label: 'Produits Similaires' },
                                 { id: 'bestsellers' as const, label: 'Meilleures Ventes' },
                                 { id: 'brands' as const, label: 'Nos Marques' },
                             ].map((tab) => {
                                 const words = tab.label.split(' ');
+                                const isActive = activeDiscoveryTab === tab.id;
                                 return (
                                     <button
                                         key={tab.id}
@@ -1425,23 +1497,33 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                             setActiveDiscoveryTab(tab.id);
                                         }}
                                         className={cn(
-                                            "whitespace-nowrap text-base sm:text-lg md:text-xl lg:text-3xl font-extrabold transition-all relative uppercase tracking-tight py-1 flex-shrink-0",
-                                            activeDiscoveryTab === tab.id ? "text-[#1B1F3B]" : "text-gray-300 hover:text-[#1B1F3B]/40"
+                                            "whitespace-nowrap text-[11px] xs:text-xs sm:text-base md:text-xl lg:text-3xl font-extrabold transition-all relative uppercase tracking-tight py-2 px-1 flex-shrink-0 group",
+                                            isActive ? "text-[#1B1F3B]" : "text-gray-400 hover:text-[#1B1F3B]"
                                         )}
                                     >
-                                        {words[0]} {words[1] && <span className="text-primary italic font-black ml-1">{words[1]}</span>}
-                                        {activeDiscoveryTab === tab.id && (
+                                        <span>{words[0]}</span>
+                                        {words[1] && (
+                                            <span className={cn(
+                                                "italic font-black ml-1 md:ml-1.5 transition-colors",
+                                                isActive ? "text-primary" : "text-gray-400 group-hover:text-[#1B1F3B]"
+                                            )}>
+                                                {words[1]}
+                                            </span>
+                                        )}
+                                        {isActive && (
                                             <motion.div
                                                 layoutId="discoveryTabUnderline"
-                                                className="absolute -bottom-1 md:-bottom-1.5 left-0 w-full h-[2px] md:h-[3px] bg-primary rounded-full shadow-[0_2px_10px_rgba(255,140,0,0.3)]"
+                                                className="absolute bottom-0 left-0 w-full h-[2.5px] md:h-[3px] bg-primary rounded-full shadow-[0_2px_10px_rgba(232,98,26,0.35)]"
                                             />
                                         )}
                                     </button>
-                                )
+                                );
                             })}
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0 self-end">
+
+                    {/* Desktop Carousel Navigation Arrows */}
+                    <div className="hidden md:flex items-center gap-3 flex-shrink-0 self-end">
                         <button
                             onClick={activeDiscoveryTab === 'similar' ? slidePrevSimilar : slidePrevBestsellers}
                             disabled={activeDiscoveryTab === 'similar' ? similarProductChunks.length <= 1 : bestSellerChunks.length <= 1}
@@ -1470,14 +1552,43 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                     initial="enter"
                                     animate="center"
                                     exit="exit"
-                                    transition={{ x: { type: "spring", stiffness: 200, damping: 25 }, opacity: { duration: 0.3 } }}
-                                    className={cn("grid gap-4 md:gap-8 relative w-full", isMobile ? "grid-cols-2" : "grid-cols-4")}
+                                    transition={{ x: { type: "spring", stiffness: 220, damping: 26 }, opacity: { duration: 0.25 } }}
+                                    drag={similarProductChunks.length > 1 ? "x" : false}
+                                    dragConstraints={{ left: 0, right: 0 }}
+                                    dragElastic={0.2}
+                                    onDragEnd={handleDragEndSimilar}
+                                    style={{ touchAction: 'pan-y' }}
+                                    className={cn(
+                                        "grid gap-3 sm:gap-4 md:gap-8 relative w-full",
+                                        isMobile ? "grid-cols-2" : "grid-cols-4",
+                                        similarProductChunks.length > 1 ? "cursor-grab active:cursor-grabbing select-none" : ""
+                                    )}
                                 >
                                     {similarProductChunks[currentIndexSimilar]?.map((prod) => (
                                         <ProductCard key={prod.id} product={prod} />
                                     ))}
                                 </motion.div>
                             </AnimatePresence>
+
+                            {/* Pagination Dots Indicator */}
+                            {similarProductChunks.length > 1 && (
+                                <div className="flex justify-center items-center gap-1.5 mt-5 md:mt-8">
+                                    {similarProductChunks.map((_, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                setDirectionSimilar(idx > currentIndexSimilar ? 1 : -1);
+                                                setCurrentIndexSimilar(idx);
+                                            }}
+                                            aria-label={`Aller au groupe de produits ${idx + 1}`}
+                                            className={cn(
+                                                "h-1.5 rounded-full transition-all duration-300",
+                                                currentIndexSimilar === idx ? "w-6 bg-primary" : "w-1.5 bg-gray-200 hover:bg-gray-400"
+                                            )}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </motion.div>
                     )}
 
@@ -1491,14 +1602,43 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                     initial="enter"
                                     animate="center"
                                     exit="exit"
-                                    transition={{ x: { type: "spring", stiffness: 200, damping: 25 }, opacity: { duration: 0.3 } }}
-                                    className={cn("grid gap-4 md:gap-8 relative w-full", isMobile ? "grid-cols-2" : "grid-cols-4")}
+                                    transition={{ x: { type: "spring", stiffness: 220, damping: 26 }, opacity: { duration: 0.25 } }}
+                                    drag={bestSellerChunks.length > 1 ? "x" : false}
+                                    dragConstraints={{ left: 0, right: 0 }}
+                                    dragElastic={0.2}
+                                    onDragEnd={handleDragEndBestsellers}
+                                    style={{ touchAction: 'pan-y' }}
+                                    className={cn(
+                                        "grid gap-3 sm:gap-4 md:gap-8 relative w-full",
+                                        isMobile ? "grid-cols-2" : "grid-cols-4",
+                                        bestSellerChunks.length > 1 ? "cursor-grab active:cursor-grabbing select-none" : ""
+                                    )}
                                 >
                                     {bestSellerChunks[currentIndexBestsellers]?.map((prod) => (
                                         <ProductCard key={prod.id} product={prod} />
                                     ))}
                                 </motion.div>
                             </AnimatePresence>
+
+                            {/* Pagination Dots Indicator */}
+                            {bestSellerChunks.length > 1 && (
+                                <div className="flex justify-center items-center gap-1.5 mt-5 md:mt-8">
+                                    {bestSellerChunks.map((_, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => {
+                                                setDirectionBestsellers(idx > currentIndexBestsellers ? 1 : -1);
+                                                setCurrentIndexBestsellers(idx);
+                                            }}
+                                            aria-label={`Aller au groupe de produits ${idx + 1}`}
+                                            className={cn(
+                                                "h-1.5 rounded-full transition-all duration-300",
+                                                currentIndexBestsellers === idx ? "w-6 bg-primary" : "w-1.5 bg-gray-200 hover:bg-gray-400"
+                                            )}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
