@@ -4,6 +4,8 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { authConfig } from "./auth.config";
 
+import { rateLimit } from "@/lib/rate-limit";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
     providers: [
@@ -13,14 +15,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                if (!credentials?.identifier || !credentials?.password) return null;
+                const rawIdentifier = (credentials?.identifier || (credentials as any)?.email) as string | undefined;
+                if (!rawIdentifier || !credentials?.password) return null;
 
-                const identifier = credentials.identifier as string;
+                const identifier = String(rawIdentifier).trim();
+                const lowerIdentifier = identifier.toLowerCase();
+
+                // Protection contre le brute-force : max 10 tentatives par 5 minutes par compte
+                const limiter = await rateLimit(`login:${lowerIdentifier}`, 10, 300);
+                if (!limiter.success) {
+                    console.warn(`[Auth] Rate limit exceeded for identifier: ${lowerIdentifier}`);
+                    return null;
+                }
 
                 // Utilisation de findFirst avec recherche sur plusieurs champs
                 const user = await (prisma.user as any).findFirst({
                     where: {
                         OR: [
+                            { email: lowerIdentifier },
                             { email: identifier },
                             { username: identifier },
                             { phone: identifier }

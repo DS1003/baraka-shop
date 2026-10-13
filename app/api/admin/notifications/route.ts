@@ -8,7 +8,7 @@ export const revalidate = 0;
 export async function GET() {
     try {
         const session = await auth();
-        if (!session?.user?.id) {
+        if (!session?.user?.id || (session.user as any).role !== 'ADMIN') {
             return NextResponse.json({ notifications: [], unreadCount: 0 }, { status: 401 });
         }
 
@@ -35,7 +35,7 @@ export async function GET() {
 export async function POST() {
     try {
         const session = await auth();
-        if (!session?.user?.id) {
+        if (!session?.user?.id || (session.user as any).role !== 'ADMIN') {
             return NextResponse.json({ success: false }, { status: 401 });
         }
 

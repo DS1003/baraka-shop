@@ -286,10 +286,18 @@ export async function getUnreadCount(userId: string): Promise<number> {
 }
 
 /**
- * Marquer une notification comme lue
+ * Marquer une notification comme lue (avec vérification de propriété si userId fourni)
  */
-export async function markAsRead(notificationId: string) {
+export async function markAsRead(notificationId: string, userId?: string) {
     try {
+        if (userId) {
+            const result = await prisma.notification.updateMany({
+                where: { id: notificationId, userId },
+                data: { isRead: true },
+            });
+            return { success: result.count > 0 };
+        }
+
         await prisma.notification.update({
             where: { id: notificationId },
             data: { isRead: true },

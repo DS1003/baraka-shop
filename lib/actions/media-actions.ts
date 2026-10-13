@@ -7,11 +7,23 @@ import { revalidatePath } from 'next/cache';
 import { slugify } from '@/lib/utils';
 import { v2 as cloudinary } from 'cloudinary';
 
+import { auth } from '@/auth';
+
+async function requireAdmin() {
+    const session = await auth();
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        throw new Error('Accès non autorisé.');
+    }
+    return session;
+}
+
 /**
  * Upload direct vers Cloudinary via Server Action (Upload "Normal")
  */
 export async function uploadToCloudinaryAction(formData: FormData) {
     try {
+        await requireAdmin();
+
         // Init config within the action
         cloudinary.config({
             cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -69,6 +81,8 @@ export async function syncMediaAction(data: {
     type?: string;
 }) {
     try {
+        await requireAdmin();
+
         const media = await prisma.media.upsert({
             where: { publicId: data.publicId },
             update: {
@@ -101,6 +115,7 @@ export async function syncMediaAction(data: {
  */
 export async function getMediaItems() {
     try {
+        await requireAdmin();
         return await prisma.media.findMany({
             orderBy: { createdAt: 'desc' }
         });
@@ -114,6 +129,8 @@ export async function getMediaItems() {
  */
 export async function startMediaMatchingJob() {
     try {
+        await requireAdmin();
+
         // 1. Créer le job
         const job = await prisma.mediaJob.create({
             data: {

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-
 import { rateLimit } from "@/lib/rate-limit";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
     // Rate limit par IP (5 inscriptions max par 15 minutes)
-    const ip = req.headers.get("x-forwarded-for") || "anonymous";
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
     const limiter = await rateLimit(`reg:${ip}`, 5, 900);
 
     if (!limiter.success) {
@@ -17,11 +18,52 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { username, email, password, phone } = await req.json();
+        const body = await req.json();
+        const { username, email, password, phone } = body || {};
 
         if (!email || !password || !username) {
             return NextResponse.json(
-                { message: "Champs manquants" },
+                { message: "Veuillez renseigner tous les champs obligatoires (nom d'utilisateur, email, mot de passe)." },
+                { status: 400 }
+            );
+        }
+
+        const trimmedUsername = String(username).trim();
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const cleanPassword = String(password);
+        const trimmedPhone = phone ? String(phone).trim() : null;
+
+        if (trimmedUsername.length < 2 || trimmedUsername.length > 50) {
+            return NextResponse.json(
+                { message: "Le nom d'utilisateur doit contenir entre 2 et 50 caractères." },
+                { status: 400 }
+            );
+        }
+
+        if (!EMAIL_REGEX.test(normalizedEmail) || normalizedEmail.length > 100) {
+            return NextResponse.json(
+                { message: "L'adresse email n'est pas valide." },
+                { status: 400 }
+            );
+        }
+
+        if (cleanPassword.length < 8) {
+            return NextResponse.json(
+                { message: "Le mot de passe doit comporter au moins 8 caractères." },
+                { status: 400 }
+            );
+        }
+
+        if (cleanPassword.length > 128) {
+            return NextResponse.json(
+                { message: "Le mot de passe est trop long (maximum 128 caractères)." },
+                { status: 400 }
+            );
+        }
+
+        if (trimmedPhone && (trimmedPhone.length < 6 || trimmedPhone.length > 25)) {
+            return NextResponse.json(
+                { message: "Le numéro de téléphone n'est pas valide." },
                 { status: 400 }
             );
         }
@@ -30,28 +72,28 @@ export async function POST(req: Request) {
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
-                    { email },
-                    { username },
-                    { phone: phone || undefined }
+                    { email: normalizedEmail },
+                    { username: trimmedUsername },
+                    ...(trimmedPhone ? [{ phone: trimmedPhone }] : [])
                 ]
             }
         });
 
         if (existingUser) {
             return NextResponse.json(
-                { message: "Cet utilisateur existe déjà (email, username ou téléphone)" },
+                { message: "Cet utilisateur existe déjà (email, nom d'utilisateur ou téléphone)." },
                 { status: 400 }
             );
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(cleanPassword, 10);
 
         const user = await prisma.user.create({
             data: {
-                username,
-                email,
+                username: trimmedUsername,
+                email: normalizedEmail,
                 password: hashedPassword,
-                phone: phone || null,
+                phone: trimmedPhone,
                 role: "USER"
             }
         });

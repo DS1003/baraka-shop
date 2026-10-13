@@ -541,8 +541,17 @@ async function getExistingProductsInBatch(products: ImportProduct[], catMap: Map
     return map;
 }
 
+async function requireAdmin() {
+    const session = await auth();
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        throw new Error('Accès non autorisé.');
+    }
+    return session;
+}
+
 export async function importProductsAction(products: ImportProduct[], skipRevalidate = false) {
     try {
+        await requireAdmin();
         if (!products || products.length === 0) return { success: true, count: 0 };
 
         const { catMap, brandMap, subCatMap, thirdCatMap } = await getEntityIds(products);
@@ -678,6 +687,13 @@ export async function addReviewAction(productId: string, rating: number, comment
             return { success: false, message: "Vous devez être connecté pour laisser un avis." };
         }
 
+        // Validation stricte de la note (1 à 5 étoiles)
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            return { success: false, message: "La note doit être comprise entre 1 et 5 étoiles." };
+        }
+
+        const cleanComment = comment ? String(comment).trim().slice(0, 2000) : null;
+
         // Vérifier si l'utilisateur a déjà laissé un avis sur ce produit
         const existingReview = await prisma.review.findFirst({
             where: {
@@ -695,7 +711,7 @@ export async function addReviewAction(productId: string, rating: number, comment
                 productId,
                 userId: session.user.id,
                 rating,
-                comment
+                comment: cleanComment
             }
         });
 
@@ -711,6 +727,11 @@ export async function addReviewAction(productId: string, rating: number, comment
 
 export async function voteReviewAction(reviewId: string, type: 'helpful' | 'unhelpful', productId?: string) {
     try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return { success: false, message: "Vous devez être connecté pour voter." };
+        }
+
         if (type === 'helpful') {
             await prisma.review.update({
                 where: { id: reviewId },

@@ -8,11 +8,21 @@ const prisma = prismaClient as any;
 import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
 import { importProductsAction } from './product-actions';
 import { revalidatePath } from 'next/cache';
+import { auth } from '@/auth';
+
+async function requireAdmin() {
+    const session = await auth();
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        throw new Error('Accès non autorisé.');
+    }
+    return session;
+}
 
 /**
  * Sauvegarde les produits dans un fichier JSON et démarre l'importation en arrière-plan.
  */
 export async function saveToJsonAndStartImport(products: any[]) {
+    await requireAdmin();
     if (process.env.NODE_ENV !== 'production') console.log(`[Import Start] Received ${products.length} products to save and import.`);
     try {
         // 1. Sauvegarder dans un JSON intermédiaire (utilise /tmp pour la compatibilité Vercel)
@@ -219,6 +229,7 @@ export async function getLatestActiveJob() {
 }
 export async function getAllImportJobs() {
     try {
+        await requireAdmin();
         return await prisma.importJob.findMany({
             orderBy: { createdAt: 'desc' },
             take: 50
@@ -230,6 +241,7 @@ export async function getAllImportJobs() {
 
 export async function clearImportJobs() {
     try {
+        await requireAdmin();
         await prisma.importJob.deleteMany({});
         return { success: true };
     } catch (error) {
@@ -242,6 +254,7 @@ export async function clearImportJobs() {
  */
 export async function togglePauseImport(jobId: string) {
     try {
+        await requireAdmin();
         const job = await getImportStatus(jobId);
         if (!job) return { success: false };
 
@@ -266,6 +279,7 @@ export async function togglePauseImport(jobId: string) {
  */
 export async function cancelImport(jobId: string) {
     try {
+        await requireAdmin();
         const job = await getImportStatus(jobId);
         if (!job) return { success: false };
 

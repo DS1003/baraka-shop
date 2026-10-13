@@ -1294,7 +1294,13 @@ export async function bulkUpdateOrderStatuses(orderIds: string[], status: string
 // ==========================================
 
 export async function markNotificationRead(notificationId: string) {
-    return markAsRead(notificationId);
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return { success: false };
+        return markAsRead(notificationId, session.user.id);
+    } catch {
+        return { success: false };
+    }
 }
 
 export async function markAllNotificationsRead() {

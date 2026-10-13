@@ -5,6 +5,16 @@ import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
 import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 
+import { auth } from '@/auth';
+
+async function requireAdmin() {
+    const session = await auth();
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        throw new Error('Accès non autorisé.');
+    }
+    return session;
+}
+
 export async function getStoresAction() {
     try {
         const cacheKey = 'stores:all';
@@ -55,6 +65,7 @@ export async function getStoreBySlugAction(slug: string) {
 
 export async function createStoreAction(data: { name: string; logo?: string; description?: string }) {
     try {
+        await requireAdmin();
         const slug = slugify(data.name);
         const store = await prisma.store.create({
             data: {
@@ -66,14 +77,15 @@ export async function createStoreAction(data: { name: string; logo?: string; des
         await invalidatePrefix('stores:');
         revalidatePath('/admin/stores');
         return { success: true, store };
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Create Store Error]:', error);
-        return { success: false, error: 'Erreur lors de la création de la boutique' };
+        return { success: false, error: error.message || 'Erreur lors de la création de la boutique' };
     }
 }
 
 export async function updateStoreAction(id: string, data: { name?: string; logo?: string; description?: string }) {
     try {
+        await requireAdmin();
         const updateData: any = { ...data };
         if (data.name) {
             updateData.slug = slugify(data.name);
@@ -88,14 +100,15 @@ export async function updateStoreAction(id: string, data: { name?: string; logo?
         await invalidatePrefix(`store:${store.slug}`);
         revalidatePath('/admin/stores');
         return { success: true, store };
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Update Store Error]:', error);
-        return { success: false, error: 'Erreur lors de la mise à jour de la boutique' };
+        return { success: false, error: error.message || 'Erreur lors de la mise à jour de la boutique' };
     }
 }
 
 export async function deleteStoreAction(id: string) {
     try {
+        await requireAdmin();
         await prisma.store.delete({
             where: { id }
         });
@@ -103,8 +116,8 @@ export async function deleteStoreAction(id: string) {
         await invalidatePrefix('stores:');
         revalidatePath('/admin/stores');
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Delete Store Error]:', error);
-        return { success: false, error: 'Erreur lors de la suppression de la boutique' };
+        return { success: false, error: error.message || 'Erreur lors de la suppression de la boutique' };
     }
 }

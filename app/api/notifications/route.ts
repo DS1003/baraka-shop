@@ -46,8 +46,8 @@ export async function POST(request: Request) {
             return NextResponse.json(result);
         }
 
-        if (body.action === 'markRead' && body.notificationId) {
-            const result = await markAsRead(body.notificationId);
+        if (body.action === 'markRead' && body.notificationId && typeof body.notificationId === 'string') {
+            const result = await markAsRead(body.notificationId, session.user.id);
             return NextResponse.json(result);
         }
 
