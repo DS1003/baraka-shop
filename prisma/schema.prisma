@@ -428,3 +428,21 @@ model CouponUsage {
   @@index([userId])
   @@unique([campaignId, orderId])
 }
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  status    String   @default("UNREAD") // UNREAD, READ, REPLIED, ARCHIVED
+  replyNote String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
+}
+

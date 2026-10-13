@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
     BarChart2,
@@ -30,7 +30,8 @@ import {
     Store,
     Maximize,
     Server,
-    MessageSquareWarning
+    MessageSquareWarning,
+    Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -71,6 +72,7 @@ const sidebarGroups = [
             { icon: ShoppingCart, label: 'Commandes', href: '/admin/orders' },
             { icon: Package, label: 'Stock & Inventaire', href: '/admin/inventory' },
             { icon: Users, label: 'Gestion Clients', href: '/admin/customers' },
+            { icon: Mail, label: 'Messages Contact', href: '/admin/messages' },
             { icon: MessageSquareWarning, label: 'Modération Avis', href: '/admin/reviews' },
         ]
     },
@@ -85,6 +87,7 @@ const sidebarGroups = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -339,6 +342,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                                 ORDER_DELIVERED: { bg: 'bg-emerald-50', color: 'text-emerald-500' },
                                                                 ORDER_CANCELLED: { bg: 'bg-rose-50', color: 'text-rose-500' },
                                                                 ORDER_CREATED: { bg: 'bg-violet-50', color: 'text-violet-500' },
+                                                                NEW_CONTACT_MESSAGE: { bg: 'bg-indigo-50', color: 'text-indigo-500' },
                                                             };
                                                             const style = typeIcons[n.type] || { bg: 'bg-orange-50', color: 'text-orange-500' };
                                                             const timeAgo = n.createdAt
@@ -356,10 +360,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                                 : '';
 
                                                             return (
-                                                                <div key={n.id} className={cn(
-                                                                    "p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group",
-                                                                    !n.isRead && "bg-orange-50/30"
-                                                                )}>
+                                                                <div 
+                                                                    key={n.id} 
+                                                                    onClick={() => {
+                                                                        setIsNotificationsOpen(false);
+                                                                        if (n.type === 'NEW_CONTACT_MESSAGE') {
+                                                                            router.push('/admin/messages');
+                                                                        } else if (n.orderId) {
+                                                                            router.push('/admin/orders');
+                                                                        }
+                                                                    }}
+                                                                    className={cn(
+                                                                        "p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group",
+                                                                        !n.isRead && "bg-orange-50/30"
+                                                                    )}
+                                                                >
                                                                     <div className="flex gap-3">
                                                                         <div className={cn(
                                                                             "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",

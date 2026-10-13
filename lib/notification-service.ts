@@ -324,3 +324,38 @@ export async function markAllAsRead(userId: string) {
         return { success: false };
     }
 }
+
+/**
+ * Notifier les administrateurs lors de la réception d'un nouveau message de contact
+ */
+export async function notifyAdminsNewContactMessage(
+    contactId: string,
+    senderName: string,
+    subject: string
+) {
+    try {
+        const admins = await prisma.user.findMany({
+            where: { role: 'ADMIN' },
+            select: { id: true },
+        });
+
+        const notifications = admins.map((admin) => ({
+            userId: admin.id,
+            type: 'NEW_CONTACT_MESSAGE',
+            title: `💬 Nouveau message de ${senderName}`,
+            message: `Sujet : ${subject} (cliquez pour voir dans Messages)`,
+            orderId: null,
+        }));
+
+        if (notifications.length > 0) {
+            await prisma.notification.createMany({
+                data: notifications,
+            });
+        }
+        return { success: true };
+    } catch (error) {
+        console.error('[NotificationService] Admin contact notification error:', error);
+        return { success: false, error };
+    }
+}
+

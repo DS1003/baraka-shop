@@ -24,8 +24,18 @@ declare global {
     var prismaGlobal: PrismaClient | undefined;
 }
 
+// Invalidate stale in-memory singleton if schema models like contactMessage are missing
+if (globalThis.prismaGlobal && !(globalThis.prismaGlobal as any).contactMessage) {
+    globalThis.prismaGlobal = undefined;
+}
+
 const prisma: PrismaClient = globalThis.prismaGlobal ?? prismaClientSingleton();
 
+export { prisma };
 export default prisma;
 
 if (process.env.NODE_ENV !== 'production') globalThis.prismaGlobal = prisma;
+
+
+
+
