@@ -6,7 +6,6 @@ import { getProductByIdAction, getSimilarProductsAction, getProductsAction } fro
 import { ProductClient } from './ProductClient'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import Script from 'next/script'
 
 export async function generateStaticParams() {
     const { products } = await getProductsAction({ limit: 50 })
@@ -26,7 +25,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
 
     return {
-        title: `${product.name} | Acheter chez Baraka Shop Sénégal`,
+        title: {
+            absolute: `${product.name} | Acheter chez Baraka Shop Sénégal`,
+        },
         description: `${product.description?.substring(0, 140) || product.name} - Disponible chez Baraka Electronique. Livraison rapide à Dakar et partout au Sénégal.`,
         keywords: [product.name, product.brand?.name, 'Baraka electronique', 'baraka shop', 'baraka sn', 'acheter au Sénégal'].filter(Boolean),
         openGraph: {
@@ -85,8 +86,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen">
-            <Script
-                id={`product-jsonld-${product.id}`}
+            <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
             />

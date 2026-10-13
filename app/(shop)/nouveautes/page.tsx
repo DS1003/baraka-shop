@@ -5,7 +5,9 @@ import { NouveautesClient } from './NouveautesClient'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'Nouveautés High-Tech | Baraka Shop (Baraka Electronique) - Sénégal',
+    title: {
+        absolute: 'Nouveautés High-Tech | Baraka Shop Sénégal',
+    },
     description: 'Découvrez les dernières nouveautés high-tech chez Baraka Shop (Baraka Electronique). Smartphones, ordinateurs et accessoires dernière génération à Dakar, Sénégal.',
     keywords: ['nouveautés baraka', 'nouveau smartphone dakar', 'baraka electronique nouveautés', 'baraka shop nouveaux produits', 'high-tech sénégal'],
 }

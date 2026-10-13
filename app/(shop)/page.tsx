@@ -18,7 +18,9 @@ import { getHomePromos, getBigBanners } from '@/lib/actions/admin-actions'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Baraka Shop (Baraka Electronique) | Vente en ligne High-Tech au Sénégal',
+  title: {
+    absolute: 'Baraka Shop (Baraka Electronique) | Vente en ligne High-Tech au Sénégal',
+  },
   description: 'Bienvenue chez Baraka Shop (anciennement Baraka Electronique). Découvrez notre sélection de smartphones, ordinateurs, accessoires High-Tech et multimédia au meilleur prix à Dakar, Sandaga, Sénégal.',
   keywords: ['Baraka electronique', 'baraka shop', 'baraka sn', 'baraka', 'electronique sn', 'baraka sandaga', 'smartphone', 'ordinateur', 'dakar', 'sénégal', 'vente en ligne'],
   alternates: {
@@ -29,7 +31,6 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 import { Container } from '@/ui/Container'
-import Script from 'next/script'
 
 export default async function Home() {
   // Pre-fetch all data server-side to avoid client-side waterfalls
@@ -106,12 +107,16 @@ export default async function Home() {
 
   return (
     <>
-      <Script
-        id="structured-data"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Container className="flex flex-col gap-4 md:gap-8 py-3 md:py-5">
+        {/* SEO Semantic H1 Heading */}
+        <h1 className="sr-only">
+          Baraka Shop (Baraka Electronique) — Vente en ligne d&apos;appareils électroniques, smartphones, ordinateurs et accessoires High-Tech à Dakar, Sénégal
+        </h1>
+
         <HomeSlider initialSlides={sliderSlides} />
         <ShippingBar />
 

@@ -72,9 +72,11 @@ export const metadata: Metadata = {
     apple: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
   },
   manifest: '/manifest.json',
-  other: {
-    'google-site-verification': 'VOTRE_CODE_VERIFICATION_GOOGLE',
-  },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || process.env.GOOGLE_SITE_VERIFICATION ? {
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || process.env.GOOGLE_SITE_VERIFICATION,
+    }
+  } : {}),
 }
 
 import { ScrollToTop } from '@/ui/ScrollToTop'
