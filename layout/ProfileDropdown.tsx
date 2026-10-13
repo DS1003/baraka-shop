@@ -144,8 +144,12 @@ export function ProfileDropdown({ isLoggedIn, session, isMobile = false }: Profi
                                 <div className="px-3 py-2.5 rounded-xl bg-slate-50/70 border border-slate-100/80 mb-1">
                                     <div className="flex items-center gap-2.5">
                                         <div className="relative shrink-0">
-                                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1B1F3B] to-[#2D345B] text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                                                {avatarInitial}
+                                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1B1F3B] to-[#2D345B] text-white flex items-center justify-center font-bold text-sm shadow-xs overflow-hidden">
+                                                {user.image ? (
+                                                    <img src={user.image} alt={name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    avatarInitial
+                                                )}
                                             </div>
                                             <span className={cn(
                                                 "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-white",

@@ -359,6 +359,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                             width={44}
                                             height={44}
                                             className="w-full h-full object-cover"
+                                            unoptimized
                                         />
                                     ) : (
                                         <span className="text-sm font-black bg-gradient-to-tr from-[#1B1F3B] to-orange-500 bg-clip-text text-transparent">
@@ -538,6 +539,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                             width={80}
                                             height={80}
                                             className="w-full h-full object-cover"
+                                            unoptimized
                                         />
                                     ) : (
                                         <span className="text-xl font-black bg-gradient-to-tr from-[#1B1F3B] to-orange-500 bg-clip-text text-transparent tracking-tight">

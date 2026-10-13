@@ -17,7 +17,8 @@ import {
     X,
     Settings,
     Tag,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Pencil
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ import { toast } from 'sonner';
 import {
     getCampaigns,
     createCampaign,
+    updateCampaign,
     deleteCampaign,
     toggleCampaignActive,
     getCampaignById
@@ -44,6 +46,22 @@ export default function MarketingCampaignsPage() {
     // Create Modal State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Edit Modal State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingCampaign, setEditingCampaign] = useState<any>(null);
+    const [editShowPopup, setEditShowPopup] = useState(true);
+
+    const formatForInput = (date: any) => {
+        if (!date) return '';
+        try {
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return '';
+            return format(d, "yyyy-MM-dd'T'HH:mm");
+        } catch {
+            return '';
+        }
+    };
 
     useEffect(() => {
         if (view === 'list') {
@@ -106,10 +124,31 @@ export default function MarketingCampaignsPage() {
         }
     };
 
+    const handleOpenEdit = (camp: any, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setEditingCampaign(camp);
+        setEditShowPopup(camp.showPopup !== false);
+        setIsEditModalOpen(true);
+    };
+
+    const handleCloseEdit = () => {
+        setIsEditModalOpen(false);
+        setEditingCampaign(null);
+    };
+
     const handleCreateCampaign = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
         const formData = new FormData(e.currentTarget);
+
+        const startDateVal = formData.get('startDate') as string;
+        const endDateVal = formData.get('endDate') as string;
+
+        if (startDateVal && endDateVal && new Date(startDateVal) >= new Date(endDateVal)) {
+            toast.error("La date de fin doit être après la date de début.");
+            setIsSubmitting(false);
+            return;
+        }
 
         const data = {
             name: formData.get('name') as string,
@@ -117,9 +156,9 @@ export default function MarketingCampaignsPage() {
             description: formData.get('description') as string,
             discountType: formData.get('discountType') as string,
             discountValue: parseFloat(formData.get('discountValue') as string),
-            couponCode: formData.get('couponCode') as string,
-            startDate: new Date(formData.get('startDate') as string),
-            endDate: new Date(formData.get('endDate') as string),
+            couponCode: (formData.get('couponCode') as string)?.trim().toUpperCase(),
+            startDate: new Date(startDateVal),
+            endDate: new Date(endDateVal),
             isActive: formData.get('isActive') === 'on',
             showPopup: formData.get('showPopup') === 'on',
             popupTitle: formData.get('popupTitle') as string,
@@ -128,7 +167,7 @@ export default function MarketingCampaignsPage() {
             ctaText: (formData.get('ctaText') as string) || "Profiter de l'offre",
             ctaLink: (formData.get('ctaLink') as string) || "/boutique",
             firstPurchaseOnly: formData.get('firstPurchaseOnly') === 'on',
-            minimumOrderAmount: formData.get('minimumOrderAmount') ? parseFloat(formData.get('minimumOrderAmount') as string) : undefined,
+            minimumOrderAmount: formData.get('minimumOrderAmount') ? parseFloat(formData.get('minimumOrderAmount') as string) : 0,
         };
 
         try {
@@ -139,6 +178,67 @@ export default function MarketingCampaignsPage() {
                 loadCampaigns();
             } else {
                 toast.error(res.message || "Erreur création.");
+            }
+        } catch (error) {
+            toast.error("Erreur inattendue.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleUpdateCampaign = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!editingCampaign) return;
+        setIsSubmitting(true);
+        const formData = new FormData(e.currentTarget);
+
+        const startDateVal = formData.get('startDate') as string;
+        const endDateVal = formData.get('endDate') as string;
+
+        if (startDateVal && endDateVal && new Date(startDateVal) >= new Date(endDateVal)) {
+            toast.error("La date de fin doit être après la date de début.");
+            setIsSubmitting(false);
+            return;
+        }
+
+        const data = {
+            name: formData.get('name') as string,
+            title: (formData.get('title') as string) || undefined,
+            description: (formData.get('description') as string) || undefined,
+            discountType: formData.get('discountType') as string,
+            discountValue: parseFloat(formData.get('discountValue') as string),
+            couponCode: (formData.get('couponCode') as string)?.trim().toUpperCase(),
+            startDate: new Date(startDateVal),
+            endDate: new Date(endDateVal),
+            isActive: formData.get('isActive') === 'on',
+            showPopup: formData.get('showPopup') === 'on',
+            popupTitle: (formData.get('popupTitle') as string) || undefined,
+            popupDescription: (formData.get('popupDescription') as string) || undefined,
+            popupImage: (formData.get('popupImage') as string) || undefined,
+            ctaText: (formData.get('ctaText') as string) || "Profiter de l'offre",
+            ctaLink: (formData.get('ctaLink') as string) || "/boutique",
+            firstPurchaseOnly: formData.get('firstPurchaseOnly') === 'on',
+            minimumOrderAmount: formData.get('minimumOrderAmount') ? parseFloat(formData.get('minimumOrderAmount') as string) : 0,
+        };
+
+        try {
+            const res = await updateCampaign(editingCampaign.id, data as any);
+            if (res.success) {
+                toast.success("Campagne modifiée avec succès !");
+                setIsEditModalOpen(false);
+                setEditingCampaign(null);
+
+                if (currentCampaign?.id === editingCampaign.id) {
+                    const fullData = await getCampaignById(editingCampaign.id);
+                    if (fullData) {
+                        setCurrentCampaign(fullData);
+                    } else {
+                        setCurrentCampaign((prev: any) => ({ ...prev, ...data }));
+                    }
+                }
+                loadCampaigns();
+            } else {
+                toast.error(res.message || "Erreur de modification.");
             }
         } catch (error) {
             toast.error("Erreur inattendue.");
@@ -222,17 +322,25 @@ export default function MarketingCampaignsPage() {
                                                             {camp.isActive ? 'Active' : 'Inactif'}
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-1.5">
                                                         <button
                                                             onClick={(e) => handleToggleActive(e, camp.id)}
-                                                            className="p-1.5 text-gray-400 hover:text-primary transition-colors"
-                                                            title="Activer/Désactiver"
+                                                            className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-gray-50"
+                                                            title={camp.isActive ? "Désactiver" : "Activer"}
                                                         >
                                                             {camp.isActive ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
                                                         </button>
                                                         <button
+                                                            onClick={(e) => handleOpenEdit(camp, e)}
+                                                            className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/5"
+                                                            title="Modifier la campagne"
+                                                        >
+                                                            <Pencil className="w-4 h-4" />
+                                                        </button>
+                                                        <button
                                                             onClick={(e) => handleDelete(e, camp.id)}
-                                                            className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                                                            className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                                                            title="Supprimer la campagne"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
@@ -301,7 +409,13 @@ export default function MarketingCampaignsPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleOpenEdit(currentCampaign)}
+                                        className="h-10 px-4 bg-[#1B1F3B] hover:bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-2 shadow-md shadow-[#1B1F3B]/10"
+                                    >
+                                        <Pencil className="w-3.5 h-3.5" /> Modifier
+                                    </button>
                                     <button
                                         onClick={(e) => handleDelete(e, currentCampaign.id)}
                                         className="h-10 px-4 bg-red-50 text-red-500 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
@@ -318,9 +432,17 @@ export default function MarketingCampaignsPage() {
                                     {/* Infos Left */}
                                     <div className="lg:col-span-2 flex flex-col gap-6">
                                         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                                            <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
-                                                <Settings className="w-4 h-4" /> Configuration Générale
-                                            </h3>
+                                            <div className="flex items-center justify-between mb-6">
+                                                <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                                                    <Settings className="w-4 h-4" /> Configuration Générale
+                                                </h3>
+                                                <button
+                                                    onClick={() => handleOpenEdit(currentCampaign)}
+                                                    className="h-7 px-3 bg-gray-50 hover:bg-primary hover:text-white text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border border-gray-100"
+                                                >
+                                                    <Pencil className="w-3 h-3" /> Modifier
+                                                </button>
+                                            </div>
                                             
                                             <div className="grid grid-cols-2 gap-6 mb-6">
                                                 <div>
@@ -357,9 +479,17 @@ export default function MarketingCampaignsPage() {
                                         </div>
 
                                         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                                            <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
-                                                <ImageIcon className="w-4 h-4" /> Configuration Popup
-                                            </h3>
+                                            <div className="flex items-center justify-between mb-6">
+                                                <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                                                    <ImageIcon className="w-4 h-4" /> Configuration Popup
+                                                </h3>
+                                                <button
+                                                    onClick={() => handleOpenEdit(currentCampaign)}
+                                                    className="h-7 px-3 bg-gray-50 hover:bg-primary hover:text-white text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 border border-gray-100"
+                                                >
+                                                    <Pencil className="w-3 h-3" /> Modifier
+                                                </button>
+                                            </div>
                                             
                                             <div className="grid grid-cols-2 gap-6">
                                                 <div>
@@ -468,6 +598,10 @@ export default function MarketingCampaignsPage() {
                                                 <input name="title" type="text" className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Titre optionnel" />
                                             </div>
                                             <div className="col-span-2">
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Description (Interne)</label>
+                                                <textarea name="description" rows={2} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none resize-none" placeholder="Description interne optionnelle"></textarea>
+                                            </div>
+                                            <div className="col-span-2">
                                                 <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Code Promo *</label>
                                                 <input required name="couponCode" type="text" className="w-full h-11 px-4 bg-primary/5 text-primary border border-primary/20 rounded-xl text-sm font-black uppercase focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: BIENVENUE10" />
                                             </div>
@@ -526,9 +660,19 @@ export default function MarketingCampaignsPage() {
                                                 <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Description du Popup</label>
                                                 <textarea name="popupDescription" rows={3} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none resize-none" placeholder="Ex: Profitez de 10% sur tout le site..."></textarea>
                                             </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Texte Bouton Action</label>
+                                                    <input name="ctaText" type="text" className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: J'en profite" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Lien Bouton Action</label>
+                                                    <input name="ctaLink" type="text" className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: /boutique" />
+                                                </div>
+                                            </div>
                                             <div>
-                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Texte Bouton Action</label>
-                                                <input name="ctaText" type="text" className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: J'en profite" />
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Image URL Popup (Optionnel)</label>
+                                                <input name="popupImage" type="text" className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: https://..." />
                                             </div>
                                         </div>
                                     </div>
@@ -547,6 +691,165 @@ export default function MarketingCampaignsPage() {
                                     </button>
                                     <button form="create-campaign-form" disabled={isSubmitting} type="submit" className="h-11 px-8 bg-primary text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-[#1B1F3B] transition-all flex items-center gap-2 disabled:opacity-50">
                                         {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4" /> Créer</>}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* Edit Modal */}
+            <AnimatePresence>
+                {isEditModalOpen && editingCampaign && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+                            onClick={handleCloseEdit}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="fixed top-[5%] bottom-[5%] left-1/2 -translate-x-1/2 w-full max-w-3xl bg-white rounded-3xl shadow-2xl z-[101] flex flex-col overflow-hidden border border-gray-100"
+                        >
+                            <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0 bg-gray-50/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                        <Pencil className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black uppercase tracking-tight text-[#1B1F3B]">
+                                            Modifier la Campagne
+                                        </h2>
+                                        <p className="text-xs text-gray-400 font-medium">
+                                            {editingCampaign.name} &bull; <span className="font-bold text-primary">{editingCampaign.couponCode}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onClick={handleCloseEdit} className="p-2 bg-white rounded-xl text-gray-400 hover:text-[#1B1F3B] shadow-sm border border-gray-100 transition-all">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                            
+                            <form key={editingCampaign.id} id="edit-campaign-form" onSubmit={handleUpdateCampaign} className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                                <div className="space-y-8">
+                                    {/* Informations Générales */}
+                                    <div>
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-4 border-b border-gray-100 pb-2">Informations Générales</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="col-span-2">
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Nom (Interne) *</label>
+                                                <input required name="name" type="text" defaultValue={editingCampaign.name} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: Lancement Automne 2026" />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Titre (Public)</label>
+                                                <input name="title" type="text" defaultValue={editingCampaign.title || ''} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Titre optionnel" />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Description (Interne)</label>
+                                                <textarea name="description" rows={2} defaultValue={editingCampaign.description || ''} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none resize-none" placeholder="Description interne optionnelle"></textarea>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Code Promo *</label>
+                                                <input required name="couponCode" type="text" defaultValue={editingCampaign.couponCode} className="w-full h-11 px-4 bg-primary/5 text-primary border border-primary/20 rounded-xl text-sm font-black uppercase focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: BIENVENUE10" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Type de Réduction *</label>
+                                                <select required name="discountType" defaultValue={editingCampaign.discountType} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none">
+                                                    <option value="PERCENTAGE">Pourcentage (%)</option>
+                                                    <option value="FIXED">Montant Fixe (FCFA)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Valeur *</label>
+                                                <input required name="discountValue" type="number" step="0.01" min="0" defaultValue={editingCampaign.discountValue} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: 10" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Date Début *</label>
+                                                <input required name="startDate" type="datetime-local" defaultValue={formatForInput(editingCampaign.startDate)} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Date Fin *</label>
+                                                <input required name="endDate" type="datetime-local" defaultValue={formatForInput(editingCampaign.endDate)} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Conditions */}
+                                    <div>
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-4 border-b border-gray-100 pb-2">Conditions</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Montant Min. Achat (FCFA)</label>
+                                                <input name="minimumOrderAmount" type="number" min="0" defaultValue={editingCampaign.minimumOrderAmount || 0} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Optionnel" />
+                                            </div>
+                                            <div className="flex items-center gap-3 pt-6">
+                                                <input name="firstPurchaseOnly" type="checkbox" id="edit-firstPurchaseOnly" defaultChecked={Boolean(editingCampaign.firstPurchaseOnly)} className="w-5 h-5 rounded text-primary focus:ring-primary border-gray-300" />
+                                                <label htmlFor="edit-firstPurchaseOnly" className="text-xs font-bold text-[#1B1F3B] cursor-pointer">Nouveaux clients (1er achat) uniquement</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Configuration Popup */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                                            <h3 className="text-xs font-black uppercase tracking-widest text-primary">Configuration Popup (Optionnel)</h3>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    name="showPopup"
+                                                    type="checkbox"
+                                                    id="edit-showPopup"
+                                                    defaultChecked={Boolean(editingCampaign.showPopup)}
+                                                    onChange={(e) => setEditShowPopup(e.target.checked)}
+                                                    className="w-4 h-4 rounded text-primary focus:ring-primary border-gray-300"
+                                                />
+                                                <label htmlFor="edit-showPopup" className="text-[10px] font-black uppercase text-[#1B1F3B] cursor-pointer">Activer le popup</label>
+                                            </div>
+                                        </div>
+                                        <div className={cn("grid grid-cols-1 gap-4 transition-all", !editShowPopup && "opacity-50 pointer-events-none")}>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Titre du Popup</label>
+                                                <input name="popupTitle" type="text" defaultValue={editingCampaign.popupTitle || ''} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: Offre de Lancement Exclusif !" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Description du Popup</label>
+                                                <textarea name="popupDescription" rows={3} defaultValue={editingCampaign.popupDescription || ''} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none resize-none" placeholder="Ex: Profitez de 10% sur tout le site..."></textarea>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Texte Bouton Action</label>
+                                                    <input name="ctaText" type="text" defaultValue={editingCampaign.ctaText || "Profiter de l'offre"} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: J'en profite" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Lien Bouton Action</label>
+                                                    <input name="ctaLink" type="text" defaultValue={editingCampaign.ctaLink || "/boutique"} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: /boutique" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black uppercase text-gray-500 mb-1">Image URL Popup (Optionnel)</label>
+                                                <input name="popupImage" type="text" defaultValue={editingCampaign.popupImage || ''} className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-primary focus:bg-white transition-all outline-none" placeholder="Ex: https://..." />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </form>
+                            
+                            <div className="p-6 border-t border-gray-100 bg-gray-50/50 shrink-0 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <input form="edit-campaign-form" name="isActive" type="checkbox" id="edit-isActive" defaultChecked={Boolean(editingCampaign.isActive)} className="w-4 h-4 rounded text-green-500 focus:ring-green-500 border-gray-300" />
+                                    <label htmlFor="edit-isActive" className="text-[10px] font-black uppercase text-[#1B1F3B] cursor-pointer">Campagne Active</label>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button type="button" onClick={handleCloseEdit} className="h-11 px-6 rounded-xl font-black text-[11px] uppercase tracking-widest text-gray-500 hover:bg-gray-100 transition-all">
+                                        Annuler
+                                    </button>
+                                    <button form="edit-campaign-form" disabled={isSubmitting} type="submit" className="h-11 px-8 bg-primary text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-[#1B1F3B] transition-all flex items-center gap-2 disabled:opacity-50">
+                                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4" /> Enregistrer</>}
                                     </button>
                                 </div>
                             </div>

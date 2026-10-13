@@ -134,6 +134,30 @@ export async function updateCampaign(id: string, data: Partial<CreateCampaignDat
   try {
     await requireAdmin();
 
+    if (data.startDate && data.endDate && new Date(data.startDate) >= new Date(data.endDate)) {
+      return { success: false, message: 'La date de fin doit être après la date de début.' };
+    }
+
+    if (data.discountValue !== undefined && data.discountValue <= 0) {
+      return { success: false, message: 'La valeur de la réduction doit être positive.' };
+    }
+
+    if (data.discountType === 'PERCENTAGE' && data.discountValue !== undefined && data.discountValue > 100) {
+      return { success: false, message: 'Le pourcentage ne peut pas dépasser 100%.' };
+    }
+
+    if (data.couponCode) {
+      const existing = await prisma.promotionCampaign.findFirst({
+        where: {
+          couponCode: data.couponCode.toUpperCase(),
+          NOT: { id },
+        },
+      });
+      if (existing) {
+        return { success: false, message: 'Ce code promo existe déjà pour une autre campagne.' };
+      }
+    }
+
     const updateData: any = { ...data };
     if (data.couponCode) {
       updateData.couponCode = data.couponCode.toUpperCase();
