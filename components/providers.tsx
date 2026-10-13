@@ -4,8 +4,6 @@ import { SessionProvider } from "next-auth/react";
 import { useEffect } from "react";
 import { CartProvider } from "@/context/CartContext";
 
-import { Toaster } from "sonner";
-
 export function Providers({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         // Nettoyage des attributs injectés par les extensions (ex: Bitdefender)
@@ -35,7 +33,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <SessionProvider>
             <CartProvider>
                 {children}
-                <Toaster richColors position="top-right" />
             </CartProvider>
         </SessionProvider>
     );
