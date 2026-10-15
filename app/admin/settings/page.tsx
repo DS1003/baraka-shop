@@ -33,6 +33,7 @@ import { getUserSettings, updateUserSettings } from '@/lib/actions/user-actions'
 import { signOut } from 'next-auth/react';
 import { SiteMaintenancePanel } from './_components/SiteMaintenancePanel';
 import { SiteLogosPanel } from './_components/SiteLogosPanel';
+import { RestockNotificationsPanel } from './_components/RestockNotificationsPanel';
 
 export default function SettingsPage() {
     const [activeSection, setActiveSection] = useState('Boutique');
@@ -68,6 +69,15 @@ export default function SettingsPage() {
 
     useEffect(() => {
         setMounted(true);
+
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const sectionParam = params.get('section') || params.get('tab');
+            if (sectionParam) {
+                setActiveSection(sectionParam);
+            }
+        }
+
         const fetchData = async () => {
             const data = await getUserSettings();
             if (data) {
@@ -320,42 +330,47 @@ export default function SettingsPage() {
                                     )}
 
                                     {activeSection === 'Notifications' && (
-                                        <div className="space-y-8">
-                                            <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 flex items-start gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
-                                                    <Bell size={20} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[14px] font-black text-slate-900">Préférences de Canaux</p>
-                                                    <p className="text-[12px] text-slate-400 font-medium">Choisissez comment vous souhaitez être informé des activités de la boutique.</p>
-                                                </div>
-                                            </div>
+                                        <div className="space-y-12">
+                                            {/* Restock Notification Management */}
+                                            <RestockNotificationsPanel />
 
-                                            <div className="divide-y divide-slate-100 border-y border-slate-100">
-                                                <SettingsToggle 
-                                                    label="Notifications par Email" 
-                                                    desc="Rapports quotidiens, alertes de stock et nouvelles commandes." 
-                                                    enabled={notifSettings.emails}
-                                                    onChange={(v: boolean) => setNotifSettings({...notifSettings, emails: v})}
-                                                />
-                                                <SettingsToggle 
-                                                    label="Notifications Push" 
-                                                    desc="Alertes instantanées sur votre navigateur et mobile." 
-                                                    enabled={notifSettings.push}
-                                                    onChange={(v: boolean) => setNotifSettings({...notifSettings, push: v})}
-                                                />
-                                                <SettingsToggle 
-                                                    label="Alertes SMS" 
-                                                    desc="Uniquement pour les urgences critiques et sécurité." 
-                                                    enabled={notifSettings.sms}
-                                                    onChange={(v: boolean) => setNotifSettings({...notifSettings, sms: v})}
-                                                />
-                                                <SettingsToggle 
-                                                    label="Rapports Hebdomadaires" 
-                                                    desc="Synthèse des performances de vente chaque lundi matin." 
-                                                    enabled={notifSettings.reports}
-                                                    onChange={(v: boolean) => setNotifSettings({...notifSettings, reports: v})}
-                                                />
+                                            <div className="border-t border-slate-100 pt-10 space-y-8">
+                                                <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 flex items-start gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0">
+                                                        <Bell size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[14px] font-black text-slate-900">Préférences de Canaux</p>
+                                                        <p className="text-[12px] text-slate-400 font-medium">Choisissez comment vous souhaitez être informé des activités de la boutique.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="divide-y divide-slate-100 border-y border-slate-100">
+                                                    <SettingsToggle 
+                                                        label="Notifications par Email" 
+                                                        desc="Rapports quotidiens, alertes de stock et nouvelles commandes." 
+                                                        enabled={notifSettings.emails}
+                                                        onChange={(v: boolean) => setNotifSettings({...notifSettings, emails: v})}
+                                                    />
+                                                    <SettingsToggle 
+                                                        label="Notifications Push" 
+                                                        desc="Alertes instantanées sur votre navigateur et mobile." 
+                                                        enabled={notifSettings.push}
+                                                        onChange={(v: boolean) => setNotifSettings({...notifSettings, push: v})}
+                                                    />
+                                                    <SettingsToggle 
+                                                        label="Alertes SMS" 
+                                                        desc="Uniquement pour les urgences critiques et sécurité." 
+                                                        enabled={notifSettings.sms}
+                                                        onChange={(v: boolean) => setNotifSettings({...notifSettings, sms: v})}
+                                                    />
+                                                    <SettingsToggle 
+                                                        label="Rapports Hebdomadaires" 
+                                                        desc="Synthèse des performances de vente chaque lundi matin." 
+                                                        enabled={notifSettings.reports}
+                                                        onChange={(v: boolean) => setNotifSettings({...notifSettings, reports: v})}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     )}

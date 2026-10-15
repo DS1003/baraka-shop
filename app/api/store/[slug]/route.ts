@@ -28,7 +28,7 @@ export async function GET(
             FROM "Product" p
             LEFT JOIN "Category" c ON c.id = p."categoryId"
             LEFT JOIN "Brand" b ON b.id = p."brandId"
-            WHERE p."storeId" = $1
+            WHERE p."storeId" = $1 AND p."isPublished" = true AND p.stock > 0
             ORDER BY p."createdAt" DESC
         `, [store.id]);
 

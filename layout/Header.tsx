@@ -123,13 +123,13 @@ export function Header() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [categoriesData, storesRes] = await Promise.all([
+                const [categoriesData, storesList] = await Promise.all([
                     getMegaMenuAction(),
-                    fetch('/api/admin/stores').then(r => r.json())
+                    getStoresAction()
                 ]);
 
-                setCategories(categoriesData);
-                setStores(storesRes.stores || []);
+                setCategories(categoriesData || []);
+                setStores(Array.isArray(storesList) ? storesList : []);
             } catch (err) {
                 console.error('Header fetch error:', err);
             }

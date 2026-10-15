@@ -18,6 +18,8 @@ export type SiteConfigData = {
     headerLogo: string | null
     footerLogo: string | null
     loaderLogo: string | null
+    restockNotificationEmails: string[]
+    restockNotificationsEnabled: boolean
 }
 
 export type SiteLogosData = {
@@ -49,6 +51,8 @@ export async function getSiteConfig(): Promise<SiteConfigData> {
         headerLogo: config.headerLogo,
         footerLogo: config.footerLogo,
         loaderLogo: config.loaderLogo,
+        restockNotificationEmails: config.restockNotificationEmails || [],
+        restockNotificationsEnabled: config.restockNotificationsEnabled ?? true,
     }
 
     await setCache(SITE_CONFIG_CACHE_KEY, data, 30)
@@ -100,6 +104,8 @@ export async function updateSiteConfig(data: Partial<SiteConfigData>) {
                 ...(data.maintenanceMode !== undefined && { maintenanceMode: data.maintenanceMode }),
                 ...(data.maintenanceTitle !== undefined && { maintenanceTitle: data.maintenanceTitle }),
                 ...(data.maintenanceMessage !== undefined && { maintenanceMessage: data.maintenanceMessage }),
+                ...(data.restockNotificationEmails !== undefined && { restockNotificationEmails: data.restockNotificationEmails }),
+                ...(data.restockNotificationsEnabled !== undefined && { restockNotificationsEnabled: data.restockNotificationsEnabled }),
             },
         })
 
@@ -112,6 +118,7 @@ export async function updateSiteConfig(data: Partial<SiteConfigData>) {
         }
 
         revalidatePath('/admin/settings')
+        revalidatePath('/admin/out-of-stock')
         revalidatePath('/maintenance')
         revalidatePath('/')
 
@@ -119,6 +126,26 @@ export async function updateSiteConfig(data: Partial<SiteConfigData>) {
     } catch (error) {
         console.error('updateSiteConfig:', error)
         return { success: false, error: 'Erreur lors de la mise à jour' }
+    }
+}
+
+export async function sendTestRestockEmailAction(email: string) {
+    const session = await auth()
+    if (session?.user?.role !== 'ADMIN') {
+        return { success: false, error: 'Non autorisé' }
+    }
+
+    if (!email || !email.includes('@')) {
+        return { success: false, error: 'Adresse e-mail invalide' }
+    }
+
+    try {
+        const { emailService } = await import('@/lib/email-service')
+        const res = await emailService.sendTestNotificationEmail(email)
+        return res
+    } catch (err: any) {
+        console.error('sendTestRestockEmailAction error:', err)
+        return { success: false, error: err.message || "Erreur lors de l'envoi du test" }
     }
 }
 

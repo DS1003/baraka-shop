@@ -499,14 +499,27 @@ export async function updateOrderStatus(orderId: string, status: string) {
 export async function updateProductStock(productId: string, stock: number) {
     try {
         await requireAdmin();
-        await prisma.product.update({
+        const currentProd = await prisma.product.findUnique({
             where: { id: productId },
-            data: { stock }
+            select: { stock: true }
         });
+
+        if (!currentProd) return { success: false, error: 'Produit introuvable' };
+
+        const { processStockChange } = await import('@/lib/stock-service');
+        const res = await processStockChange({
+            productId,
+            previousStock: currentProd.stock,
+            newStock: stock,
+            source: 'ADMIN_INVENTORY',
+        });
+
         revalidatePath('/admin/inventory');
-        return { success: true };
-    } catch (error) {
-        return { success: false };
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/out-of-stock');
+        return res;
+    } catch (error: any) {
+        return { success: false, error: error.message };
     }
 }
 
@@ -1136,12 +1149,66 @@ export async function upsertProduct(data: any, id?: string) {
         let product;
         if (id) {
             if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Updating product: ${id}`);
+            const existing = await prisma.product.findUnique({
+                where: { id },
+                select: { stock: true, isPublished: true, deactivationReason: true, restockPendingReview: true }
+            });
+
+            const newStock = typeof prismaData.stock === 'number' ? prismaData.stock : (existing?.stock ?? 0);
+            const prevStock = existing?.stock ?? 0;
+            const requestedPublish = typeof prismaData.isPublished === 'boolean' ? prismaData.isPublished : existing?.isPublished;
+
+            // Règle A : Si le nouveau stock est <= 0, il ne doit JAMAIS être publié
+            if (newStock <= 0) {
+                prismaData.isPublished = false;
+                prismaData.deactivationReason = 'OUT_OF_STOCK';
+                prismaData.deactivatedAt = new Date();
+                prismaData.restockPendingReview = false;
+            } 
+            // Règle C : Réapprovisionnement d'un produit désactivé pour rupture
+            else if (prevStock <= 0 && newStock > 0 && existing?.deactivationReason === 'OUT_OF_STOCK') {
+                prismaData.isPublished = false; // Reste masqué jusqu'à validation admin
+                prismaData.restockPendingReview = true;
+                prismaData.restockedAt = new Date();
+                prismaData.lastRestockedQty = newStock;
+            }
+            // Cas de désactivation/activation manuelle
+            else if (typeof prismaData.isPublished === 'boolean') {
+                if (!prismaData.isPublished) {
+                    prismaData.deactivationReason = 'MANUAL';
+                    prismaData.deactivatedAt = new Date();
+                } else if (newStock > 0) {
+                    prismaData.deactivationReason = null;
+                    prismaData.restockPendingReview = false;
+                }
+            }
+
             product = await prisma.product.update({
                 where: { id },
                 data: prismaData,
+                include: { category: true }
             });
+
+            // Déclencher notification si passage 0 -> >0 pour un produit OUT_OF_STOCK (premier avis)
+            if (prevStock <= 0 && newStock > 0 && existing?.deactivationReason === 'OUT_OF_STOCK' && !existing?.restockPendingReview) {
+                import('@/lib/stock-service').then(({ processStockChange }) => {
+                    // La notification est gérée via processStockChange
+                    processStockChange({
+                        productId: id,
+                        previousStock: prevStock,
+                        newStock: newStock,
+                        source: 'ADMIN_PRODUCT_FORM'
+                    }).catch(() => {});
+                }).catch(() => {});
+            }
         } else {
             if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Creating new product: ${rest.name}`);
+            const newStock = typeof prismaData.stock === 'number' ? prismaData.stock : 0;
+            if (newStock <= 0) {
+                prismaData.isPublished = false;
+                prismaData.deactivationReason = 'OUT_OF_STOCK';
+                prismaData.deactivatedAt = new Date();
+            }
             product = await prisma.product.create({
                 data: prismaData,
             });
@@ -1679,17 +1746,54 @@ export async function initializeBigBanners() {
 export async function toggleProductPublish(id: string, isPublished: boolean) {
     try {
         await requireAdmin();
-        await prisma.product.update({
+        const product = await prisma.product.findUnique({
             where: { id },
-            data: { isPublished }
+            select: { id: true, stock: true, name: true }
         });
-        
-        await invalidatePrefix('products:');
-        revalidatePath('/');
+
+        if (!product) return { success: false, message: "Produit introuvable" };
+
+        if (isPublished && product.stock <= 0) {
+            return {
+                success: false,
+                message: "Impossible de réactiver ce produit : aucune unité n'est disponible en stock."
+            };
+        }
+
+        const { reactivateProduct } = await import('@/lib/stock-service');
+        if (isPublished) {
+            const res = await reactivateProduct(id);
+            if (!res.success) return { success: false, message: res.error };
+        } else {
+            await prisma.product.update({
+                where: { id },
+                data: {
+                    isPublished: false,
+                    deactivationReason: 'MANUAL',
+                    deactivatedAt: new Date()
+                }
+            });
+            await invalidatePrefix('products:');
+            revalidatePath('/');
+            revalidatePath('/admin/products');
+            revalidatePath('/admin/out-of-stock');
+        }
+
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Toggle publish error:", error);
-        return { success: false, message: "Erreur lors de la modification du statut" };
+        return { success: false, message: error.message || "Erreur lors de la modification du statut" };
+    }
+}
+
+export async function reactivateProductAction(productId: string) {
+    try {
+        await requireAdmin();
+        const { reactivateProduct } = await import('@/lib/stock-service');
+        return await reactivateProduct(productId);
+    } catch (error: any) {
+        console.error("reactivateProductAction error:", error);
+        return { success: false, error: error.message || "Erreur lors de la réactivation" };
     }
 }
 
@@ -1698,13 +1802,44 @@ export async function bulkTogglePublishProducts(ids: string[], isPublished: bool
         await requireAdmin();
         if (!ids || ids.length === 0) return { success: false, message: "Aucun produit sélectionné" };
         
-        await prisma.product.updateMany({
-            where: { id: { in: ids } },
-            data: { isPublished }
-        });
+        if (isPublished) {
+            // Seuls les produits avec stock > 0 peuvent être publiés
+            const validProducts = await prisma.product.findMany({
+                where: { id: { in: ids }, stock: { gt: 0 } },
+                select: { id: true }
+            });
+
+            const validIds = validProducts.map(p => p.id);
+            if (validIds.length === 0) {
+                return {
+                    success: false,
+                    message: "Aucun des produits sélectionnés ne dispose d'un stock supérieur à zéro."
+                };
+            }
+
+            await prisma.product.updateMany({
+                where: { id: { in: validIds } },
+                data: {
+                    isPublished: true,
+                    deactivationReason: null,
+                    restockPendingReview: false
+                }
+            });
+        } else {
+            await prisma.product.updateMany({
+                where: { id: { in: ids } },
+                data: {
+                    isPublished: false,
+                    deactivationReason: 'MANUAL',
+                    deactivatedAt: new Date()
+                }
+            });
+        }
         
         await invalidatePrefix('products:');
         revalidatePath('/');
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/out-of-stock');
         return { success: true };
     } catch (error) {
         console.error("Bulk publish error:", error);
@@ -1757,3 +1892,138 @@ export async function toggleCategoryPublish(id: string, isPublished: boolean) {
         return { success: false, message: "Erreur lors de la modification du statut" };
     }
 }
+
+// ---------------------------------------------------------
+// OUT OF STOCK & RESTOCKED PRODUCTS MANAGEMENT
+// ---------------------------------------------------------
+
+export async function getOutOfStockProducts(options: {
+    query?: string;
+    page?: number;
+    pageSize?: number;
+    filter?: 'ALL' | 'OUT_OF_STOCK' | 'RESTOCKED_PENDING' | 'MANUAL_DEACTIVATED';
+    sortBy?: 'date_desc' | 'date_asc' | 'name_asc' | 'name_desc' | 'stock_desc' | 'stock_asc';
+} = {}) {
+    try {
+        await requireAdmin();
+        const {
+            query = '',
+            page = 1,
+            pageSize = 15,
+            filter = 'ALL',
+            sortBy = 'date_desc',
+        } = options;
+
+        const skip = (page - 1) * pageSize;
+
+        // Base criteria: Produit désactivé OU en attente de vérification réapprovisionnement OU stock = 0
+        const andFilters: any[] = [];
+
+        if (query.trim()) {
+            andFilters.push({
+                OR: [
+                    { name: { contains: query.trim(), mode: 'insensitive' } },
+                    { reference: { contains: query.trim(), mode: 'insensitive' } },
+                    { description: { contains: query.trim(), mode: 'insensitive' } },
+                ]
+            });
+        }
+
+        if (filter === 'OUT_OF_STOCK') {
+            andFilters.push({
+                OR: [
+                    { deactivationReason: 'OUT_OF_STOCK', stock: { lte: 0 } },
+                    { stock: { lte: 0 } }
+                ]
+            });
+        } else if (filter === 'RESTOCKED_PENDING') {
+            andFilters.push({
+                restockPendingReview: true,
+                stock: { gt: 0 }
+            });
+        } else if (filter === 'MANUAL_DEACTIVATED') {
+            andFilters.push({
+                deactivationReason: 'MANUAL',
+                isPublished: false
+            });
+        } else {
+            // ALL out-of-stock & restock items
+            andFilters.push({
+                OR: [
+                    { stock: { lte: 0 } },
+                    { deactivationReason: 'OUT_OF_STOCK' },
+                    { restockPendingReview: true }
+                ]
+            });
+        }
+
+        const where: any = andFilters.length > 0 ? { AND: andFilters } : {};
+
+        // Tri
+        let orderBy: any = { updatedAt: 'desc' };
+        if (sortBy === 'date_desc') orderBy = { updatedAt: 'desc' };
+        if (sortBy === 'date_asc') orderBy = { updatedAt: 'asc' };
+        if (sortBy === 'name_asc') orderBy = { name: 'asc' };
+        if (sortBy === 'name_desc') orderBy = { name: 'desc' };
+        if (sortBy === 'stock_desc') orderBy = { stock: 'desc' };
+        if (sortBy === 'stock_asc') orderBy = { stock: 'asc' };
+
+        // KPIs calculés sur les données réelles
+        const [
+            outOfStockCount,
+            restockedPendingCount,
+            totalCount,
+            products
+        ] = await Promise.all([
+            prisma.product.count({
+                where: {
+                    stock: { lte: 0 }
+                }
+            }),
+            prisma.product.count({
+                where: {
+                    restockPendingReview: true,
+                    stock: { gt: 0 }
+                }
+            }),
+            prisma.product.count({ where }),
+            prisma.product.findMany({
+                where,
+                include: {
+                    category: true,
+                    brand: true,
+                    subCategory: true,
+                },
+                orderBy,
+                take: pageSize,
+                skip
+            })
+        ]);
+
+        return {
+            success: true,
+            products,
+            total: totalCount,
+            page,
+            pageSize,
+            totalPages: Math.ceil(totalCount / pageSize),
+            stats: {
+                outOfStockCount,
+                restockedPendingCount,
+            }
+        };
+    } catch (error: any) {
+        console.error('getOutOfStockProducts error:', error);
+        return {
+            success: false,
+            error: error.message || 'Erreur lors du chargement des produits',
+            products: [],
+            total: 0,
+            page: 1,
+            pageSize: 15,
+            totalPages: 0,
+            stats: { outOfStockCount: 0, restockedPendingCount: 0 }
+        };
+    }
+}
+

@@ -37,6 +37,8 @@ export function SiteMaintenancePanel() {
         headerLogo: null,
         footerLogo: null,
         loaderLogo: null,
+        restockNotificationEmails: [],
+        restockNotificationsEnabled: true,
     })
     const [showConfirm, setShowConfirm] = useState<'online' | 'maintenance' | null>(null)
     const [confirmText, setConfirmText] = useState('')

@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { updateOrderStatus, bulkUpdateOrderStatuses } from '@/lib/actions/admin-actions';
 import { toast } from 'sonner';
 import { useRealtimeOrders } from '@/lib/hooks/useRealtimeOrders';
+import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
 
 const statusConfig: any = {
     PENDING: { label: 'En attente', color: 'text-amber-600', dot: 'bg-amber-500', bg: 'bg-amber-50', border: 'border-amber-200', icon: Clock, next: 'PROCESSING', nextLabel: 'Traiter' },
@@ -108,95 +109,538 @@ export default function OrdersPage() {
         });
     }, [orders, searchQuery, activeTab]);
 
+    const { headerLogo } = useSiteLogos();
+
     const printInvoice = (order: any) => {
         const printWindow = window.open('', '_blank');
         if (!printWindow) return;
+
+        // Resolve absolute URL for logo in new window
+        const logoUrl = headerLogo ? (headerLogo.startsWith('http') ? headerLogo : `${window.location.origin}${headerLogo}`) : `${window.location.origin}/logo.png`;
+        const orderRef = order.id.substring(0, 8).toUpperCase();
+        const formattedDate = new Date(order.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+        const formattedTime = new Date(order.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const subtotal = order.total - (order.shippingCost || 0);
+        const shippingCost = order.shippingCost || 0;
+        const isDelivery = order.deliveryMethod === 'livraison';
+        const paymentLabel = order.paymentMethod === 'cash' ? 'Paiement à la livraison' : (order.paymentMethod ? order.paymentMethod.toUpperCase() : 'Non spécifié');
+
         const html = `
             <!DOCTYPE html>
-            <html>
+            <html lang="fr">
             <head>
-                <title>Facture / Bon de Livraison #${order.id.substring(0, 8).toUpperCase()}</title>
+                <meta charset="UTF-8">
+                <title>Bon de Livraison & Facture #${orderRef} — Baraka Shop</title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
                 <style>
-                    body { font-family: 'Inter', -apple-system, sans-serif; padding: 40px; color: #1B1F3B; line-height: 1.5; }
-                    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 50px; border-bottom: 3px solid #F1F5F9; padding-bottom: 30px; }
-                    .logo { font-size: 32px; font-weight: 900; letter-spacing: -1px; color: #F97316; }
-                    .info { text-align: right; font-size: 14px; }
-                    .info strong { font-size: 20px; display: block; margin-bottom: 4px; color: #1B1F3B; }
-                    .title { font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 8px; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-                    th, td { text-align: left; padding: 16px 12px; border-bottom: 1px solid #F1F5F9; }
-                    th { font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800; letter-spacing: 1px; }
-                    td { font-size: 14px; font-weight: 600; }
-                    .total-row td { font-weight: 900; font-size: 20px; color: #1B1F3B; border-bottom: none; border-top: 3px solid #F1F5F9; padding-top: 24px; }
+                    @page {
+                        size: A4 portrait;
+                        margin: 10mm 12mm 12mm 12mm;
+                    }
+                    * {
+                        box-sizing: border-box;
+                        margin: 0;
+                        padding: 0;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    body {
+                        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                        color: #0F172A;
+                        background: #FFFFFF;
+                        line-height: 1.45;
+                        font-size: 12.5px;
+                        padding: 24px 30px;
+                        max-width: 860px;
+                        margin: 0 auto;
+                        -webkit-font-smoothing: antialiased;
+                    }
+
+                    /* Minimalist Top Accent Bar */
+                    .top-accent-bar {
+                        height: 3px;
+                        background: linear-gradient(90deg, #EA580C 0%, #F97316 40%, #0F172A 100%);
+                        border-radius: 9999px;
+                        margin-bottom: 24px;
+                    }
+
+                    /* Header brand banner */
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding-bottom: 22px;
+                        border-bottom: 1px solid #E2E8F0;
+                        margin-bottom: 22px;
+                    }
+                    .brand-area {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
+                    }
+                    .logo-img {
+                        height: 44px;
+                        max-width: 190px;
+                        object-fit: contain;
+                        display: block;
+                    }
+                    .company-tagline {
+                        font-size: 11px;
+                        font-weight: 500;
+                        color: #64748B;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    .dot-separator {
+                        width: 3px;
+                        height: 3px;
+                        background-color: #CBD5E1;
+                        border-radius: 50%;
+                        display: inline-block;
+                    }
+
+                    .doc-badge-area {
+                        text-align: right;
+                    }
+                    .doc-badge {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        background: #FFF7ED;
+                        border: 1px solid #FED7AA;
+                        color: #C2410C;
+                        padding: 3px 10px;
+                        border-radius: 9999px;
+                        font-size: 10px;
+                        font-weight: 800;
+                        letter-spacing: 0.8px;
+                        text-transform: uppercase;
+                        margin-bottom: 6px;
+                    }
+                    .doc-title {
+                        font-size: 17px;
+                        font-weight: 800;
+                        letter-spacing: -0.4px;
+                        color: #0F172A;
+                    }
+                    .doc-meta {
+                        margin-top: 4px;
+                        font-family: 'JetBrains Mono', monospace;
+                        font-size: 11px;
+                        color: #64748B;
+                        line-height: 1.6;
+                    }
+                    .doc-ref {
+                        display: inline-block;
+                        padding: 1.5px 7px;
+                        background: #F1F5F9;
+                        border-radius: 4px;
+                        color: #0F172A;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                    }
+
+                    /* 2-Column Info Cards (Clean editorial) */
+                    .info-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 16px;
+                        margin-bottom: 22px;
+                    }
+                    .info-card {
+                        background: #FAFAFA;
+                        border: 1px solid #EDEDED;
+                        border-radius: 10px;
+                        padding: 14px 16px;
+                    }
+                    .info-card-header {
+                        font-size: 10px;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        color: #94A3B8;
+                        margin-bottom: 8px;
+                        display: flex;
+                        align-items: center;
+                        gap: 5px;
+                    }
+                    .info-card-header svg {
+                        width: 13px;
+                        height: 13px;
+                        color: #EA580C;
+                    }
+                    .client-name {
+                        font-size: 14.5px;
+                        font-weight: 700;
+                        color: #0F172A;
+                        margin-bottom: 4px;
+                    }
+                    .client-details {
+                        font-size: 11.5px;
+                        color: #475569;
+                        line-height: 1.6;
+                    }
+                    .badge-pill {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        padding: 2.5px 8px;
+                        border-radius: 6px;
+                        font-size: 11px;
+                        font-weight: 700;
+                    }
+                    .badge-orange {
+                        background: #FFF7ED;
+                        color: #C2410C;
+                        border: 1px solid #FFEDD5;
+                    }
+                    .badge-slate {
+                        background: #F1F5F9;
+                        color: #334155;
+                        border: 1px solid #E2E8F0;
+                    }
+
+                    /* Table styling (Ultra-clean modern) */
+                    .table-wrapper {
+                        border: 1px solid #E2E8F0;
+                        border-radius: 10px;
+                        overflow: hidden;
+                        margin-bottom: 20px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        text-align: left;
+                    }
+                    thead th {
+                        background: #F8FAFC;
+                        padding: 10px 14px;
+                        font-size: 10px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.8px;
+                        color: #64748B;
+                        border-bottom: 1px solid #E2E8F0;
+                    }
+                    tbody td {
+                        padding: 12px 14px;
+                        font-size: 12.5px;
+                        border-bottom: 1px solid #F1F5F9;
+                        vertical-align: middle;
+                    }
+                    tbody tr:last-child td {
+                        border-bottom: none;
+                    }
+                    .item-cell {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+                    .item-thumb {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 6px;
+                        background: #F8FAFC;
+                        border: 1px solid #E2E8F0;
+                        object-fit: cover;
+                        flex-shrink: 0;
+                    }
+                    .item-thumb-placeholder {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 6px;
+                        background: #F1F5F9;
+                        border: 1px solid #E2E8F0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: #94A3B8;
+                        flex-shrink: 0;
+                    }
+                    .item-thumb-placeholder svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                    .product-name {
+                        font-weight: 600;
+                        color: #0F172A;
+                        font-size: 12.5px;
+                        line-height: 1.35;
+                    }
+                    .product-variant {
+                        display: inline-block;
+                        margin-top: 3px;
+                        font-size: 10px;
+                        font-weight: 600;
+                        color: #EA580C;
+                        background: #FFF7ED;
+                        padding: 1.5px 6px;
+                        border-radius: 4px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.3px;
+                    }
+                    .mono-num {
+                        font-family: 'JetBrains Mono', monospace;
+                        font-size: 12px;
+                        color: #1E293B;
+                        font-weight: 500;
+                    }
+
+                    /* Bottom Financial & Validation Section */
+                    .bottom-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 310px;
+                        gap: 20px;
+                        align-items: start;
+                        margin-bottom: 22px;
+                    }
+
+                    .signatures-area {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                    }
+                    .signature-box {
+                        border: 1px dashed #CBD5E1;
+                        border-radius: 8px;
+                        padding: 10px 12px;
+                        min-height: 90px;
+                        background: #FAFAFA;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                    }
+                    .signature-label {
+                        font-size: 9.5px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        color: #94A3B8;
+                    }
+                    .signature-dots {
+                        border-bottom: 1px dotted #CBD5E1;
+                        margin-top: 35px;
+                    }
+
+                    .summary-box {
+                        background: #FAFAFA;
+                        border: 1px solid #E2E8F0;
+                        border-radius: 10px;
+                        padding: 14px 16px;
+                    }
+                    .summary-line {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 12px;
+                        color: #64748B;
+                        margin-bottom: 7px;
+                    }
+                    .summary-line strong {
+                        font-family: 'JetBrains Mono', monospace;
+                        color: #0F172A;
+                        font-weight: 600;
+                    }
+                    .summary-total {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: baseline;
+                        padding-top: 10px;
+                        margin-top: 6px;
+                        border-top: 1.5px solid #E2E8F0;
+                    }
+                    .summary-total-label {
+                        font-size: 12.5px;
+                        font-weight: 800;
+                        color: #0F172A;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .summary-total-val {
+                        font-size: 18px;
+                        font-weight: 800;
+                        color: #EA580C;
+                        font-family: 'JetBrains Mono', monospace;
+                    }
+
+                    /* Footer */
+                    .doc-footer {
+                        border-top: 1px solid #E2E8F0;
+                        padding-top: 14px;
+                        text-align: center;
+                        font-size: 10.5px;
+                        color: #94A3B8;
+                        font-weight: 500;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 2px;
+                    }
+                    .doc-footer strong {
+                        color: #475569;
+                        font-weight: 600;
+                    }
+
+                    @media print {
+                        body {
+                            padding: 0;
+                            max-width: 100%;
+                        }
+                    }
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <div>
-                        <div class="logo">BARAKA SHOP</div>
-                        <div style="font-size: 12px; font-weight: 600; color: #94A3B8; margin-top: 4px;">Dakar, Sénégal</div>
+                <div class="top-accent-bar"></div>
+
+                <!-- Header -->
+                <header class="header">
+                    <div class="brand-area">
+                        <img src="${logoUrl}" alt="Baraka Shop" class="logo-img" onerror="this.style.display='none'; document.getElementById('text-logo-fallback').style.display='block';" />
+                        <div id="text-logo-fallback" style="display: none; font-size: 24px; font-weight: 900; color: #EA580C; letter-spacing: -0.5px;">BARAKA SHOP</div>
+                        <div class="company-tagline">
+                            <span>Dakar, Sénégal</span>
+                            <span class="dot-separator"></span>
+                            <span>Service Client : +221 33 822 34 22</span>
+                        </div>
                     </div>
-                    <div class="info">
-                        <strong>FACTURE</strong>
-                        Réf. #ORD-${order.id.substring(0, 8).toUpperCase()}<br/>
-                        Date: ${new Date(order.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    <div class="doc-badge-area">
+                        <div class="doc-badge">Document Officiel</div>
+                        <div class="doc-title">Bon de Livraison & Facture</div>
+                        <div class="doc-meta">
+                            <div>Réf : <span class="doc-ref">#ORD-${orderRef}</span></div>
+                            <div style="margin-top: 2px;">Date : <strong>${formattedDate} à ${formattedTime}</strong></div>
+                        </div>
                     </div>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 40px; background: #F8FAFC; padding: 24px; border-radius: 16px;">
-                    <div>
-                        <div class="title">Informations Client</div>
-                        <div style="font-size: 18px; font-weight: 800; margin-bottom: 8px;">${order.user.username || order.user.email}</div>
-                        Email: ${order.user.email}<br/>
-                        Téléphone: <span style="font-weight: 700">${order.user.phone || 'Non renseigné'}</span><br/>
+                </header>
+
+                <!-- Information Grid -->
+                <div class="info-grid">
+                    <!-- Client -->
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Destinataire / Client
+                        </div>
+                        <div class="client-name">${order.user.username || 'Client'}</div>
+                        <div class="client-details">
+                            <div><strong>Email :</strong> ${order.user.email}</div>
+                            <div><strong>Téléphone :</strong> <span style="font-weight: 700; color: #0F172A;">${order.user.phone || 'Non renseigné'}</span></div>
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div class="title">Modalité de paiement</div>
-                        <div style="font-size: 16px; font-weight: 800; color: #F97316;">${order.paymentMethod === 'cash' ? 'Paiement à la livraison' : order.paymentMethod.toUpperCase()}</div>
-                        <div style="margin-top: 16px;">
-                            <div class="title">Mode de réception</div>
-                            <div style="font-size: 14px; font-weight: 800; color: #1B1F3B;">
-                                ${order.deliveryMethod === 'retrait' ? '🏪 Retrait en boutique' : '🚚 Livraison à domicile'}
+
+                    <!-- Logistique & Paiement -->
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                            Expédition & Règlement
+                        </div>
+                        <div class="client-details">
+                            <div style="margin-bottom: 4px;">
+                                <strong>Réception :</strong> 
+                                <span class="badge-pill ${isDelivery ? 'badge-orange' : 'badge-slate'}">
+                                    ${isDelivery ? '🚚 Livraison à domicile' : '🏪 Retrait en boutique'}
+                                </span>
                             </div>
-                            ${order.deliveryMethod === 'livraison' && order.deliveryZone ? `
-                                <div style="font-size: 13px; font-weight: 700; color: #F97316; margin-top: 4px;">
-                                    Zone: ${order.deliveryZone} — ${(order.shippingCost || 0).toLocaleString()} FCFA
-                                </div>
+                            ${isDelivery && order.shippingAddress ? `
+                                <div><strong>Adresse :</strong> ${order.shippingAddress}</div>
                             ` : ''}
+                            ${isDelivery && order.deliveryZone ? `
+                                <div><strong>Zone :</strong> ${order.deliveryZone}</div>
+                            ` : ''}
+                            <div style="margin-top: 4px;">
+                                <strong>Règlement :</strong> 
+                                <span style="font-weight: 700; color: #EA580C;">${paymentLabel}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Désignation Produit</th>
-                            <th>Prix Unitaire</th>
-                            <th>Qté</th>
-                            <th style="text-align: right;">Montant Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${order.items.map((item: any) => `
+
+                <!-- Product Table -->
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
                             <tr>
-                                <td>
-                                    ${item.product.name}
-                                    ${item.selectedColor ? `<br/><span style="font-size: 10px; color: #F97316; font-weight: bold; text-transform: uppercase;">Couleur: ${item.selectedColor}</span>` : ''}
-                                </td>
-                                <td>${item.price.toLocaleString()} F</td>
-                                <td>${item.quantity}</td>
-                                <td style="text-align: right;">${(item.price * item.quantity).toLocaleString()} F</td>
+                                <th style="width: 52%;">Désignation Article</th>
+                                <th style="width: 18%; text-align: right;">Prix Unitaire</th>
+                                <th style="width: 10%; text-align: center;">Qté</th>
+                                <th style="width: 20%; text-align: right;">Total</th>
                             </tr>
-                        `).join('')}
-                        <tr class="total-row">
-                            <td colspan="3" style="text-align: right;">Montant Net à Payer :</td>
-                            <td style="text-align: right; color: #F97316;">${order.total.toLocaleString()} FCFA</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div style="margin-top: 80px; font-size: 11px; color: #94A3B8; text-align: center; text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">
-                    Merci pour votre confiance. Retrouvez-nous sur notre boutique en ligne.
+                        </thead>
+                        <tbody>
+                            ${order.items.map((item: any) => {
+                                const prodImg = item.product?.images?.[0];
+                                return `
+                                    <tr>
+                                        <td>
+                                            <div class="item-cell">
+                                                ${prodImg ? `
+                                                    <img src="${prodImg}" alt="${item.product.name}" class="item-thumb" onerror="this.style.display='none'" />
+                                                ` : `
+                                                    <div class="item-thumb-placeholder">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                    </div>
+                                                `}
+                                                <div>
+                                                    <div class="product-name">${item.product.name}</div>
+                                                    ${item.selectedColor ? `<span class="product-variant">Option: ${item.selectedColor}</span>` : ''}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style="text-align: right;" class="mono-num">${item.price.toLocaleString()} F</td>
+                                        <td style="text-align: center;" class="mono-num">${item.quantity}</td>
+                                        <td style="text-align: right; font-weight: 700;" class="mono-num">${(item.price * item.quantity).toLocaleString()} F</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- Bottom Section: Signatures & Summary -->
+                <div class="bottom-grid">
+                    <!-- Signatures -->
+                    <div class="signatures-area">
+                        <div class="signature-box">
+                            <span class="signature-label">Signature Expéditeur / Livreur</span>
+                            <div class="signature-dots"></div>
+                        </div>
+                        <div class="signature-box">
+                            <span class="signature-label">Signature & Date Client (Réception)</span>
+                            <div class="signature-dots"></div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="summary-box">
+                        <div class="summary-line">
+                            <span>Sous-total articles</span>
+                            <strong>${subtotal.toLocaleString()} FCFA</strong>
+                        </div>
+                        <div class="summary-line">
+                            <span>Frais de livraison</span>
+                            <strong>${shippingCost > 0 ? `${shippingCost.toLocaleString()} FCFA` : 'Offerte (0 F)'}</strong>
+                        </div>
+                        <div class="summary-total">
+                            <span class="summary-total-label">Net à Payer</span>
+                            <span class="summary-total-val">${order.total.toLocaleString()} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="doc-footer">
+                    <div><strong>Baraka Shop Sénégal</strong> — Électronique certifiée, high-tech et accessoires de qualité.</div>
+                    <div>Merci pour votre achat ! En cas de besoin ou de réclamation, contactez le support au +221 33 822 34 22 ou par email.</div>
+                </footer>
+
                 <script>
-                    window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); }
+                    window.onload = () => {
+                        setTimeout(() => {
+                            window.print();
+                        }, 400);
+                    };
                 </script>
             </body>
             </html>

@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import fs from 'fs/promises';
 import path from 'path';
+import { sendRestockNotificationAsync } from '@/lib/stock-service';
 
 export async function getProductsAction(options: {
     query?: string;
@@ -49,8 +50,11 @@ export async function getProductsAction(options: {
     const skip = (page - 1) * limit;
 
     try {
-        // Construction du WHERE clause
-        const where: any = { isPublished: true };
+        // Construction du WHERE clause (Public: seuls les produits publiés et avec stock > 0 sont visibles)
+        const where: any = { 
+            isPublished: true,
+            stock: { gt: 0 }
+        };
 
         if (query) {
             where.OR = [
@@ -507,7 +511,20 @@ async function getExistingProductsInBatch(products: ImportProduct[], catMap: Map
     // Fetch by references
     const existingByRef = references.length > 0 ? await prisma.product.findMany({
         where: { reference: { in: references } },
-        select: { id: true, name: true, categoryId: true, price: true, stock: true, subCategoryId: true, thirdLevelCategoryId: true, brandId: true, reference: true }
+        select: { 
+            id: true, 
+            name: true, 
+            categoryId: true, 
+            price: true, 
+            stock: true, 
+            subCategoryId: true, 
+            thirdLevelCategoryId: true, 
+            brandId: true, 
+            reference: true,
+            isPublished: true,
+            deactivationReason: true,
+            restockPendingReview: true
+        }
     }) : [];
 
     // Fetch by names and slugs to ensure we catch the products even if category differs
@@ -521,7 +538,20 @@ async function getExistingProductsInBatch(products: ImportProduct[], catMap: Map
                 { slug: { in: slugs } }
             ]
         },
-        select: { id: true, name: true, categoryId: true, price: true, stock: true, subCategoryId: true, thirdLevelCategoryId: true, brandId: true, reference: true }
+        select: { 
+            id: true, 
+            name: true, 
+            categoryId: true, 
+            price: true, 
+            stock: true, 
+            subCategoryId: true, 
+            thirdLevelCategoryId: true, 
+            brandId: true, 
+            reference: true,
+            isPublished: true,
+            deactivationReason: true,
+            restockPendingReview: true
+        }
     }) : [];
 
     const existing = [...existingByRef, ...existingByName];
@@ -559,6 +589,15 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
 
         const toCreate: any[] = [];
         const toUpdate: { id: string, data: any }[] = [];
+        const restockNotificationsToTrigger: Array<{
+            productId: string;
+            productName: string;
+            reference?: string | null;
+            categoryName?: string | null;
+            price: number;
+            oldStock: number;
+            newStock: number;
+        }> = [];
 
         for (const p of products) {
             const catId = catMap.get(p.category);
@@ -601,20 +640,46 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                 if (process.env.NODE_ENV !== 'production') console.log(`[Import Debug] Prod: ${name} | RefExcel: ${reference} | RefDB: ${ext.reference} | Changed: ${hasChanged}`);
 
                 if (hasChanged) {
+                    const updateData: any = {
+                        price: newPrice,
+                        stock: newStock,
+                        reference: reference || undefined,
+                        updatedAt: new Date()
+                    };
+
+                    if (newStock <= 0) {
+                        updateData.isPublished = false;
+                        updateData.deactivationReason = 'OUT_OF_STOCK';
+                        updateData.deactivatedAt = new Date();
+                    } else if (ext.stock <= 0 && newStock > 0 && ext.deactivationReason === 'OUT_OF_STOCK') {
+                        // Restocked: keep unpublished until admin validation
+                        updateData.isPublished = false;
+                        updateData.restockPendingReview = true;
+                        updateData.restockedAt = new Date();
+                        updateData.lastRestockedQty = newStock;
+
+                        restockNotificationsToTrigger.push({
+                            productId: ext.id,
+                            productName: ext.name,
+                            reference: ext.reference || reference || null,
+                            categoryName: p.category || '',
+                            price: newPrice,
+                            oldStock: ext.stock,
+                            newStock: newStock,
+                        });
+                    }
+
                     toUpdate.push({
                         id: ext.id,
-                        data: {
-                            price: newPrice,
-                            stock: newStock,
-                            reference: reference || undefined,
-                            updatedAt: new Date()
-                        }
+                        data: updateData
                     });
                 }
             } else {
                 // --- CRÉATION ---
                 const brandName = p.brand || '';
                 const slugBase = slugify(`${name}-${brandName}`) || 'product';
+                const initialStock = Number(p.stock) || 0;
+                const isZeroStock = initialStock <= 0;
 
                 toCreate.push({
                     reference: reference || null,
@@ -623,7 +688,7 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                     description: p.description || '',
                     price: Number(p.price) || 0,
                     oldPrice: p.oldPrice ? Number(p.oldPrice) : null,
-                    stock: Number(p.stock) || 0,
+                    stock: initialStock,
                     categoryId: catId,
                     subCategoryId: subId || null,
                     thirdLevelCategoryId: thirdId || null,
@@ -632,6 +697,8 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                     videos: [],
                     storeId: p.metadata?.storeId || null,
                     isPublished: false,
+                    deactivationReason: isZeroStock ? 'OUT_OF_STOCK' : null,
+                    deactivatedAt: isZeroStock ? new Date() : null,
                     metadata: {
                         ...(p.metadata || {}),
                         importedAt: new Date().toISOString()
@@ -663,6 +730,19 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
             }
         }
 
+        // Déclencher les notifications de réapprovisionnement de manière asynchrone
+        if (restockNotificationsToTrigger.length > 0) {
+            (async () => {
+                for (const item of restockNotificationsToTrigger) {
+                    try {
+                        await sendRestockNotificationAsync(item);
+                    } catch (notifErr) {
+                        console.error('[Import] Erreur envoi notification restock:', notifErr);
+                    }
+                }
+            })();
+        }
+
         if (!skipRevalidate) {
             await Promise.all([
                 invalidatePrefix('products:'),
@@ -670,6 +750,8 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                 invalidatePrefix('brands:')
             ]);
             revalidatePath('/admin/products');
+            revalidatePath('/admin/out-of-stock');
+            revalidatePath('/boutique');
         }
 
         return { success: true, count: toCreate.length + toUpdate.length };

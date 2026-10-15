@@ -196,5 +196,108 @@ export const emailService = {
       return { success: false, error };
     }
   },
+
+  /**
+   * Envoyer l'email de notification automatique de réapprovisionnement aux administrateurs
+   */
+  async sendProductRestockedEmail(payload: {
+    recipients: string[];
+    productName: string;
+    reference?: string | null;
+    categoryName?: string | null;
+    price: number;
+    oldStock: number;
+    newStock: number;
+    restockedAt?: Date;
+    productImageUrl?: string | null;
+    productId: string;
+    logoUrl?: string;
+  }) {
+    try {
+      if (!payload.recipients || payload.recipients.length === 0) {
+        return { success: false, error: 'Aucun destinataire configuré' };
+      }
+
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation de notification réapprovisionnement à', payload.recipients.join(', '));
+        return { success: true, simulated: true };
+      }
+
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://baraka.sn';
+      const adminManageUrl = `${baseUrl}/admin/out-of-stock`;
+
+      const formattedDate = (payload.restockedAt || new Date()).toLocaleString('fr-FR', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      });
+
+      const ProductRestockedEmail = (await import('@/emails/ProductRestocked')).default;
+      const htmlContent = await render(ProductRestockedEmail({
+        productName: payload.productName,
+        reference: payload.reference,
+        categoryName: payload.categoryName,
+        price: payload.price,
+        oldStock: payload.oldStock,
+        newStock: payload.newStock,
+        restockedAt: formattedDate,
+        productImageUrl: payload.productImageUrl,
+        adminManageUrl,
+        logoUrl: payload.logoUrl,
+      }));
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: payload.recipients,
+        subject: `[Baraka] Produit réapprovisionné — Vérification requise (${payload.productName})`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur Resend Restock:', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception lors de l\'envoi Restock:', error);
+      return { success: false, error };
+    }
+  },
+
+  /**
+   * Envoyer un email de test de configuration des notifications
+   */
+  async sendTestNotificationEmail(recipient: string) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation test email à', recipient);
+        return { success: true, simulated: true };
+      }
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [recipient],
+        subject: `✅ [Baraka Test] Vérification des notifications de réapprovisionnement`,
+        html: `
+          <div style="font-family: sans-serif; padding: 24px; color: #0f172a; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px;">
+            <h2 style="color: #ea580c; margin-top: 0;">Baraka Shop — Test de notification</h2>
+            <p>Cet e-mail confirme que votre adresse e-mail est correctement configurée pour recevoir les notifications automatiques de réapprovisionnement de produits.</p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 24px;">Envoyé depuis le panneau d'administration Baraka.</p>
+          </div>
+        `,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur test email:', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception test email:', error);
+      return { success: false, error };
+    }
+  }
 };
+
 

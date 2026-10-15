@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     CheckCircle2,
+    Check,
     ChevronRight,
     ChevronDown,
     CreditCard,
@@ -16,7 +17,9 @@ import {
     Smartphone,
     Wallet,
     ShoppingBag,
-    Loader2
+    Loader2,
+    RotateCcw,
+    Headphones,
 } from 'lucide-react'
 import { Button } from '@/ui/Button'
 import { cn } from '@/lib/utils'
@@ -287,6 +290,7 @@ export function MobileOrderSummaryAccordion({
     total,
     deliveryMethod,
     selectedZoneName,
+    isFreeShipping = false,
 }: {
     cartItems: CartItem[]
     subtotal: number
@@ -295,6 +299,7 @@ export function MobileOrderSummaryAccordion({
     total: number
     deliveryMethod: 'livraison' | 'retrait'
     selectedZoneName?: string | null
+    isFreeShipping?: boolean
 }) {
     const [isOpen, setIsOpen] = useState(false)
 
@@ -355,11 +360,17 @@ export function MobileOrderSummaryAccordion({
                                     <span>-{discount.toLocaleString()} FCFA</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-slate-500">
+                            <div className="flex justify-between items-center text-slate-500">
                                 <span>Livraison ({deliveryMethod === 'retrait' ? 'Boutique' : (selectedZoneName || 'Zone')}):</span>
-                                <span className="font-bold text-slate-800">
-                                    {shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} FCFA`}
-                                </span>
+                                {deliveryMethod === 'retrait' ? (
+                                    <span className="font-bold text-emerald-600">Gratuit</span>
+                                ) : isFreeShipping ? (
+                                    <span className="font-bold text-emerald-600">Offerte</span>
+                                ) : selectedZoneName ? (
+                                    <span className="font-bold text-slate-800">{shipping.toLocaleString('fr-FR')} FCFA</span>
+                                ) : (
+                                    <span className="text-slate-400 italic text-[11px]">À calculer</span>
+                                )}
                             </div>
                         </div>
                     </motion.div>
@@ -381,6 +392,7 @@ export function CheckoutOrderSummary({
     total,
     deliveryMethod,
     selectedZoneName,
+    isFreeShipping = false,
     className,
 }: {
     cartItems: CartItem[]
@@ -391,6 +403,7 @@ export function CheckoutOrderSummary({
     total: number
     deliveryMethod: 'livraison' | 'retrait'
     selectedZoneName?: string | null
+    isFreeShipping?: boolean
     className?: string
 }) {
     return (
@@ -433,13 +446,13 @@ export function CheckoutOrderSummary({
             <div className="flex flex-col gap-3 text-white relative z-10 text-sm">
                 <div className="flex justify-between text-slate-300 font-medium">
                     <span>Sous-total</span>
-                    <span>{subtotal.toLocaleString()} FCFA</span>
+                    <span>{subtotal.toLocaleString('fr-FR')} FCFA</span>
                 </div>
 
                 {discount > 0 && couponCode && (
                     <div className="flex justify-between font-bold text-emerald-400">
                         <span>Code promo ({couponCode})</span>
-                        <span>-{discount.toLocaleString()} FCFA</span>
+                        <span>-{discount.toLocaleString('fr-FR')} FCFA</span>
                     </div>
                 )}
 
@@ -457,9 +470,24 @@ export function CheckoutOrderSummary({
                             </>
                         )}
                     </span>
-                    <span className={cn('text-xs font-bold uppercase', shipping === 0 ? 'text-emerald-400' : 'text-white')}>
-                        {shipping === 0 ? 'Gratuit' : `${shipping.toLocaleString()} FCFA`}
-                    </span>
+                    {deliveryMethod === 'retrait' ? (
+                        <span className="text-xs font-bold uppercase text-emerald-400">
+                            Gratuit
+                        </span>
+                    ) : isFreeShipping ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 tracking-wider border border-emerald-500/30">
+                            <Check className="w-3 h-3 stroke-[2.5]" />
+                            Offerte
+                        </span>
+                    ) : selectedZoneName ? (
+                        <span className="text-xs font-bold text-white">
+                            {shipping.toLocaleString('fr-FR')} FCFA
+                        </span>
+                    ) : (
+                        <span className="text-xs font-medium text-slate-400 italic">
+                            À calculer
+                        </span>
+                    )}
                 </div>
 
                 <div className="h-px bg-white/10 my-1" />
@@ -467,7 +495,7 @@ export function CheckoutOrderSummary({
                 <div className="flex justify-between items-baseline pt-1">
                     <span className="text-xs font-black uppercase tracking-widest text-slate-200">Total Net</span>
                     <span className="text-2xl font-black tracking-tight text-orange-500">
-                        {total.toLocaleString()} <span className="text-xs text-orange-300">FCFA</span>
+                        {total.toLocaleString('fr-FR')} <span className="text-xs text-orange-300">FCFA</span>
                     </span>
                 </div>
             </div>
@@ -664,3 +692,103 @@ export function PaymentOption({
         </button>
     )
 }
+
+/**
+ * Premium Trust & Guarantee Card
+ */
+export function CheckoutTrustGuaranteeCard({ className }: { className?: string }) {
+    return (
+        <div
+            className={cn(
+                'relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-[0_2px_14px_-4px_rgba(0,0,0,0.04)] p-4 sm:p-5 transition-all duration-300 hover:shadow-md hover:border-emerald-300/60 group',
+                className
+            )}
+        >
+            {/* Subtle ambient light gradient */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.08] rounded-full blur-2xl pointer-events-none" />
+
+            {/* Header: Seal + Status */}
+            <div className="flex items-center justify-between gap-3 mb-3.5 relative z-10">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/80 border border-emerald-200/70 text-emerald-600 flex items-center justify-center shrink-0 shadow-xs">
+                        <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                    <div>
+                        <h3 className="text-xs font-black uppercase tracking-wider text-[#1B1F3B] leading-tight">
+                            Garantie Baraka Shop
+                        </h3>
+                        <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                            Achetez en toute sérénité à Dakar
+                        </p>
+                    </div>
+                </div>
+
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[10px] font-black uppercase tracking-wider shrink-0 shadow-xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Certifié
+                </span>
+            </div>
+
+            {/* Micro-divider */}
+            <div className="h-px bg-slate-100 my-3 relative z-10" />
+
+            {/* 3 Core Trust Pillars */}
+            <div className="space-y-2.5 relative z-10 text-xs">
+                {/* 1. Échange garanti */}
+                <div className="flex items-start gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-50/80 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <RotateCcw className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-800 text-[11px] leading-tight">
+                            Échange garanti sous 7 jours
+                        </p>
+                        <p className="text-[10px] text-slate-400 leading-snug mt-0.5">
+                            Testez en toute sérénité. Remplacement express en cas de non-conformité.
+                        </p>
+                    </div>
+                </div>
+
+                {/* 2. Inspection avant paiement */}
+                <div className="flex items-start gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-50/80 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-800 text-[11px] leading-tight">
+                            Vérification avant paiement
+                        </p>
+                        <p className="text-[10px] text-slate-400 leading-snug mt-0.5">
+                            Inspectez et testez votre produit en main propre avant de régler au livreur.
+                        </p>
+                    </div>
+                </div>
+
+                {/* 3. Support & SAV Dakar */}
+                <div className="flex items-start gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-50/80 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <Headphones className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-800 text-[11px] leading-tight">
+                            Service client & SAV local 7j/7
+                        </p>
+                        <p className="text-[10px] text-slate-400 leading-snug mt-0.5">
+                            Équipe réactive par WhatsApp et boutique physique basée à Dakar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Seal Footer */}
+            <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 relative z-10">
+                <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Paiement à la livraison
+                </span>
+                <span className="text-slate-400">🇸🇳 Dakar & Banlieue</span>
+            </div>
+        </div>
+    )
+}
+

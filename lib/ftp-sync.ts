@@ -5,6 +5,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import os from 'os'
 import { startSyncTracking, addSyncLog, updateSyncProgress, completeSyncTracking } from './sync-status'
+import { sendRestockNotificationAsync } from './stock-service'
 
 export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
     // 1. Fetch config
@@ -149,11 +150,24 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         addSyncLog(`${prodData.length} lignes de produits trouvées`)
 
         // Optimize: Fetch all existing product references in one query to avoid 10,000 sequential DB calls
-        const allProducts = await prisma.product.findMany({ select: { id: true, reference: true, categoryId: true, subCategoryId: true, thirdLevelCategoryId: true } })
+        const allProducts = await prisma.product.findMany({
+            select: {
+                id: true,
+                reference: true,
+                categoryId: true,
+                subCategoryId: true,
+                thirdLevelCategoryId: true,
+                stock: true,
+                isPublished: true,
+                deactivationReason: true,
+                name: true,
+                price: true,
+            }
+        })
         const productMap = new Map()
         for (const p of allProducts) {
             if (p.reference) {
-                productMap.set(p.reference.toLowerCase(), { id: p.id, categoryId: p.categoryId, subCategoryId: p.subCategoryId, thirdLevelCategoryId: p.thirdLevelCategoryId })
+                productMap.set(p.reference.toLowerCase(), p)
             }
         }
 
@@ -241,6 +255,7 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
 
         const updateValues = []
         const createValues: any[] = []
+        const restockToNotify: any[] = []
         let categoriesReassignedCount = 0
 
         for (const row of prodData) {
@@ -268,7 +283,27 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                     
                     if (stock !== undefined && stock !== null) {
                         const parsedStock = parseInt(String(stock), 10)
-                        if (!isNaN(parsedStock)) updateData.stock = parsedStock
+                        if (!isNaN(parsedStock)) {
+                            updateData.stock = parsedStock
+                            if (parsedStock <= 0) {
+                                updateData.isPublished = false
+                                updateData.deactivationReason = 'OUT_OF_STOCK'
+                                updateData.setDeactivatedAt = true
+                            } else if (existing.stock <= 0 && parsedStock > 0 && existing.deactivationReason === 'OUT_OF_STOCK') {
+                                updateData.isPublished = false
+                                updateData.restockPendingReview = true
+                                updateData.setRestockedAt = true
+                                updateData.lastRestockedQty = parsedStock
+                                restockToNotify.push({
+                                    productId: existing.id,
+                                    productName: existing.name,
+                                    reference: existing.reference,
+                                    price: updateData.price !== undefined ? updateData.price : existing.price,
+                                    oldStock: existing.stock,
+                                    newStock: parsedStock,
+                                })
+                            }
+                        }
                     }
 
                     // Update categories if resolved and different
@@ -305,6 +340,7 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                     // Create a unique slug using the reference to avoid conflicts
                     const safeName = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
                     const newSlug = `${safeName}-${String(ref).toLowerCase()}`.substring(0, 100)
+                    const isZeroStock = parsedStock <= 0
 
                     createValues.push({
                         name: String(name).trim(),
@@ -316,6 +352,8 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                         subCategoryId: resolvedCat ? resolvedCat.subCategoryId : null,
                         thirdLevelCategoryId: resolvedCat ? resolvedCat.thirdLevelCategoryId : null,
                         isPublished: false,
+                        deactivationReason: isZeroStock ? 'OUT_OF_STOCK' : null,
+                        deactivatedAt: isZeroStock ? new Date() : null,
                         isNew: true
                     })
                 }
@@ -343,6 +381,13 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                     sets.push(`"thirdLevelCategoryId" = ${item.thirdLevelCategoryId ? `'${item.thirdLevelCategoryId}'` : 'NULL'}`)
                 }
 
+                if (item.isPublished !== undefined) sets.push(`"isPublished" = ${item.isPublished ? 'TRUE' : 'FALSE'}`)
+                if (item.deactivationReason !== undefined) sets.push(`"deactivationReason" = '${item.deactivationReason}'`)
+                if (item.setDeactivatedAt) sets.push(`"deactivatedAt" = NOW()`)
+                if (item.restockPendingReview !== undefined) sets.push(`"restockPendingReview" = ${item.restockPendingReview ? 'TRUE' : 'FALSE'}`)
+                if (item.setRestockedAt) sets.push(`"restockedAt" = NOW()`)
+                if (item.lastRestockedQty !== undefined) sets.push(`"lastRestockedQty" = ${item.lastRestockedQty}`)
+
                 if (sets.length > 0) {
                     sql += `UPDATE "Product" SET ${sets.join(', ')} WHERE "id" = '${item.id}';\n`
                     productsUpdatedCount++
@@ -351,6 +396,19 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
             if (sql) {
                 await prisma.$executeRawUnsafe(sql)
             }
+        }
+
+        // Déclencher les notifications de réapprovisionnement par email
+        if (restockToNotify.length > 0) {
+            (async () => {
+                for (const notif of restockToNotify) {
+                    try {
+                        await sendRestockNotificationAsync(notif)
+                    } catch (err) {
+                        console.error('[FTP-Sync] Restock email failed:', err)
+                    }
+                }
+            })()
         }
 
         // Bulk insert new products

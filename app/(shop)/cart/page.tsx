@@ -210,29 +210,71 @@ export default function CartPage() {
                 </div>
 
                 {/* Free Shipping Progress Indicator */}
-                <div className="mb-6 sm:mb-8 bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm">
-                    <div className="flex items-center justify-between text-xs font-bold mb-2">
-                        <span className="flex items-center gap-2 text-slate-700">
-                            <Truck className="w-4 h-4 text-orange-600" />
-                            {missingForFreeShipping === 0 ? (
-                                <span className="text-emerald-600 font-black">🎉 Félicitations ! La livraison vous est offerte.</span>
-                            ) : (
-                                <span>
-                                    Plus que <strong className="text-orange-600 font-black">{missingForFreeShipping.toLocaleString()} FCFA</strong> pour la livraison offerte
-                                </span>
-                            )}
-                        </span>
-                        <span className="text-[11px] font-black text-slate-400">{freeShippingProgress}%</span>
+                {missingForFreeShipping === 0 ? (
+                    <div className="mb-6 sm:mb-8 bg-gradient-to-r from-emerald-500/[0.08] via-emerald-500/[0.02] to-white border border-emerald-500/20 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden backdrop-blur-xs transition-all">
+                        <div className="flex items-center justify-between gap-3 mb-2.5">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/25">
+                                    <Check className="w-4 h-4 stroke-[3]" />
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight">
+                                            Livraison offerte sur cette commande !
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100/80 text-emerald-700 tracking-wider uppercase">
+                                            <Sparkles className="w-3 h-3 text-emerald-600" />
+                                            Débloqué
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-emerald-700/80 font-medium mt-0.5 hidden sm:block">
+                                        Félicitations, vos frais de port sont entièrement pris en charge par Baraka Shop.
+                                    </p>
+                                </div>
+                            </div>
+                            <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-100/70 border border-emerald-200/60 px-2.5 py-1 rounded-full shrink-0">
+                                100%
+                            </span>
+                        </div>
+                        <div className="w-full h-1.5 bg-emerald-100/70 rounded-full overflow-hidden">
+                            <motion.div 
+                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full shadow-xs"
+                                initial={{ width: 0 }}
+                                animate={{ width: '100%' }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                            />
+                        </div>
                     </div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div 
-                            className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${freeShippingProgress}%` }}
-                            transition={{ duration: 0.5, ease: 'easeOut' }}
-                        />
+                ) : (
+                    <div className="mb-6 sm:mb-8 bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden transition-all">
+                        <div className="flex items-center justify-between gap-3 mb-2.5">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#E8621A] border border-orange-100 flex items-center justify-center shrink-0">
+                                    <Truck className="w-4 h-4" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight">
+                                        Plus que <span className="font-extrabold text-[#E8621A]">{missingForFreeShipping.toLocaleString('fr-FR')} FCFA</span> pour la livraison offerte
+                                    </p>
+                                    <p className="text-[11px] text-slate-500 font-medium mt-0.5 hidden sm:block">
+                                        Livraison gratuite offerte dès {FREE_SHIPPING_THRESHOLD.toLocaleString('fr-FR')} FCFA d'achats.
+                                    </p>
+                                </div>
+                            </div>
+                            <span className="text-[11px] font-black text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full shrink-0">
+                                {freeShippingProgress}%
+                            </span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div 
+                                className="h-full bg-gradient-to-r from-[#E8621A] to-amber-500 rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${freeShippingProgress}%` }}
+                                transition={{ duration: 0.5, ease: 'easeOut' }}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
                     
@@ -383,9 +425,16 @@ export default function CartPage() {
 
                                     <div className="flex items-center justify-between text-slate-300 font-medium">
                                         <span>Livraison</span>
-                                        <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">
-                                            Calculée à la commande
-                                        </span>
+                                        {missingForFreeShipping === 0 ? (
+                                            <span className="text-emerald-400 text-xs font-black uppercase tracking-wider flex items-center gap-1">
+                                                <Check className="w-3.5 h-3.5" />
+                                                Offerte
+                                            </span>
+                                        ) : (
+                                            <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">
+                                                Calculée à la commande
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="w-full h-px bg-white/10 my-1" />

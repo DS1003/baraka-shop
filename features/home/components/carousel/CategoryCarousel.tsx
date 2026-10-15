@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { formatUniverseHref } from '@/lib/utils'
 
 // Images locales dans /public/categories/ - garanties d'affichage (Fallback)
 const CLEAN_IMAGES: Record<string, string> = {
@@ -81,7 +82,7 @@ export function CategoryCarousel({
                 name: u.name,
                 subtitle: u.subtitle,
                 image: u.image,
-                href: u.href || '#'
+                href: formatUniverseHref(u.href)
             };
         });
     } else if (initialCategories && initialCategories.length > 0) {

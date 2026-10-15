@@ -5,6 +5,7 @@ import { Container } from '@/ui/Container'
 import { getPopularUniversesAction } from '@/lib/actions/product-actions'
 import { ArrowRight, Grid3x3 } from 'lucide-react'
 import { Metadata } from 'next'
+import { formatUniverseHref } from '@/lib/utils'
 
 export const metadata: Metadata = {
     title: 'Tous les Univers | Baraka Shop',
@@ -67,13 +68,12 @@ export default async function AllUniversPage() {
                     {popularUniverses.map((univ: any) => {
                         const univKey = (univ.name || '').trim().toUpperCase()
                         const imageSrc = univ.image || CLEAN_IMAGES[univKey] || CLEAN_IMAGES['DEFAULT']
-                        // Gérer le fallback des slugs 
-                        const slug = univ.href ? univ.href.split('/').pop() : ''
+                        const targetHref = formatUniverseHref(univ.href)
 
                         return (
                             <Link
                                 key={univ.id}
-                                href={`/univers/${slug}`}
+                                href={targetHref}
                                 className="group relative flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/20 hover:-translate-y-1"
                             >
                                 {/* Top gradient bar */}

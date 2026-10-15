@@ -265,8 +265,21 @@ export async function getUserNotifications(userId: string, limit: number = 30) {
             orderBy: { createdAt: 'desc' },
             take: limit,
         });
-    } catch (error) {
-        console.error('[NotificationService] Fetch notifications error:', error);
+    } catch (error: any) {
+        // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
+        if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
+            try {
+                await new Promise((r) => setTimeout(r, 1000));
+                return await prisma.notification.findMany({
+                    where: { userId },
+                    orderBy: { createdAt: 'desc' },
+                    take: limit,
+                });
+            } catch {
+                // Ignore silent retry failure and fallback to empty array
+            }
+        }
+        console.error('[NotificationService] Fetch notifications error:', error?.message || error);
         return [];
     }
 }
@@ -279,8 +292,19 @@ export async function getUnreadCount(userId: string): Promise<number> {
         return await prisma.notification.count({
             where: { userId, isRead: false },
         });
-    } catch (error) {
-        console.error('[NotificationService] Count unread error:', error);
+    } catch (error: any) {
+        // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
+        if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
+            try {
+                await new Promise((r) => setTimeout(r, 1000));
+                return await prisma.notification.count({
+                    where: { userId, isRead: false },
+                });
+            } catch {
+                // Ignore silent retry failure
+            }
+        }
+        console.error('[NotificationService] Count unread error:', error?.message || error);
         return 0;
     }
 }

@@ -52,6 +52,11 @@ model Product {
   reference            String?               @unique
   detailedDescription  Json?                 @default("[]")
   isPublished          Boolean               @default(true)
+  deactivationReason   String?               // OUT_OF_STOCK | MANUAL | null
+  deactivatedAt        DateTime?
+  restockPendingReview Boolean               @default(false)
+  restockedAt          DateTime?
+  lastRestockedQty     Int?
   orderItems           OrderItem[]
   brand                Brand?                @relation(fields: [brandId], references: [id])
   category             Category              @relation(fields: [categoryId], references: [id])
@@ -71,6 +76,8 @@ model Product {
   @@index([brandId])
   @@index([storeId])
   @@index([stock])
+  @@index([deactivationReason])
+  @@index([restockPendingReview])
 }
 
 model ProductColorVariant {
@@ -303,10 +310,12 @@ model SiteConfig {
   maintenanceMode    Boolean  @default(false)
   maintenanceTitle   String   @default("Site en maintenance")
   maintenanceMessage String   @default("Nous effectuons des améliorations. Le site sera de retour très bientôt.")
-  headerLogo         String?
-  footerLogo         String?
-  loaderLogo         String?
-  updatedAt          DateTime @updatedAt
+  headerLogo                  String?
+  footerLogo                  String?
+  loaderLogo                  String?
+  restockNotificationEmails    String[] @default([])
+  restockNotificationsEnabled Boolean  @default(true)
+  updatedAt                   DateTime @updatedAt
 }
 
 enum Role {

@@ -109,7 +109,7 @@ export async function createOrder(data: CreateOrderData) {
         const serverTotal = Math.max(0, serverSubtotal - discountAmount + shipping);
 
         // ── Transaction sécurisée de création de commande ──
-        const order = await prisma.$transaction(async (tx) => {
+        const orderTxResult = await prisma.$transaction(async (tx) => {
             // Re-vérification atomique du stock dans la transaction
             for (const item of data.items) {
                 const currentProd = await tx.product.findUnique({
@@ -147,15 +147,45 @@ export async function createOrder(data: CreateOrderData) {
                 }
             });
 
+            const depletedProductIds: string[] = [];
+
             for (const item of data.items) {
-                await tx.product.update({
+                const updatedProd = await tx.product.update({
                     where: { id: item.productId },
-                    data: { stock: { decrement: item.quantity } }
+                    data: { stock: { decrement: item.quantity } },
+                    select: { id: true, stock: true }
                 });
+
+                // Règle A : Si la commande ramène le stock à 0 (ou moins), désactivation automatique immédiate
+                if (updatedProd.stock <= 0) {
+                    await tx.product.update({
+                        where: { id: item.productId },
+                        data: {
+                            isPublished: false,
+                            deactivationReason: 'OUT_OF_STOCK',
+                            deactivatedAt: new Date(),
+                            restockPendingReview: false
+                        }
+                    });
+                    depletedProductIds.push(item.productId);
+                }
             }
 
-            return newOrder;
+            return { newOrder, depletedProductIds };
         });
+
+        const order = orderTxResult.newOrder;
+
+        // Invalidation des caches pour les produits tombés en rupture
+        if (orderTxResult.depletedProductIds.length > 0) {
+            import('@/lib/redis').then(({ invalidateCache, invalidatePrefix }) => {
+                orderTxResult.depletedProductIds.forEach(id => {
+                    invalidateCache(`product:${id}`).catch(() => {});
+                });
+                invalidatePrefix('products:').catch(() => {});
+                invalidatePrefix('similar:').catch(() => {});
+            }).catch(() => {});
+        }
 
         // ── Enregistrement de l'utilisation du coupon (non-bloquant) ──
         if (campaignId && couponCode) {
@@ -178,4 +208,47 @@ export async function createOrder(data: CreateOrderData) {
         return { success: false, error: "Erreur lors de la création de la commande: " + (error?.message || String(error)) };
     }
 }
+
+export async function getOrderSuccessDetails(orderId: string) {
+    if (!orderId || typeof orderId !== 'string') {
+        return { success: false, order: null };
+    }
+
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            select: {
+                id: true,
+                total: true,
+                status: true,
+                deliveryMethod: true,
+                deliveryZone: true,
+                createdAt: true,
+                items: {
+                    select: {
+                        id: true,
+                        quantity: true,
+                        price: true,
+                        product: {
+                            select: {
+                                name: true,
+                                images: true,
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!order) {
+            return { success: false, order: null };
+        }
+
+        return { success: true, order };
+    } catch (error) {
+        console.error('Error fetching order success details:', error);
+        return { success: false, order: null };
+    }
+}
+
 

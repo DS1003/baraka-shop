@@ -9,6 +9,8 @@ import {
     Truck,
     ShieldCheck,
     CheckCircle2,
+    Check,
+    Sparkles,
     ArrowLeft,
     Wallet,
     Home,
@@ -43,6 +45,7 @@ import {
     CheckoutOrderSummary,
     CheckoutMobileBar,
     MobileOrderSummaryAccordion,
+    CheckoutTrustGuaranteeCard,
     FormInput,
     PaymentOption,
 } from '@/features/checkout/CheckoutUI'
@@ -56,6 +59,7 @@ interface AppliedCoupon {
 }
 
 const POPULAR_ZONES = ['Plateau', 'Almadies', 'Ouakam', 'Point E', 'Maristes', 'Yoff', 'Mermoz', 'Grand Dakar'];
+const FREE_SHIPPING_THRESHOLD = 50_000;
 
 export default function CheckoutPage() {
     const { data: session, status: authStatus } = useSession()
@@ -100,7 +104,8 @@ export default function CheckoutPage() {
         }
     }, [session])
 
-    const shipping = deliveryMethod === 'retrait' ? 0 : (selectedZone?.price ?? 0)
+    const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
+    const shipping = deliveryMethod === 'retrait' || isFreeShipping ? 0 : (selectedZone?.price ?? 0)
     const discount = appliedCoupon?.discountAmount || 0
     const total = Math.max(0, subtotal - discount + shipping)
 
@@ -298,6 +303,7 @@ export default function CheckoutPage() {
                     total={total}
                     deliveryMethod={deliveryMethod}
                     selectedZoneName={selectedZone?.name}
+                    isFreeShipping={isFreeShipping}
                 />
 
                 {/* Stepper (Mobile & Desktop) */}
@@ -370,6 +376,11 @@ export default function CheckoutPage() {
                                                     <span className={cn("text-xs sm:text-sm font-black uppercase tracking-tight", deliveryMethod === 'livraison' ? "text-orange-600" : "text-[#1B1F3B]")}>
                                                         Livraison Domicile
                                                     </span>
+                                                    {isFreeShipping && (
+                                                        <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-black rounded uppercase">
+                                                            Offerte
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-snug">
                                                     Livré à Dakar & banlieue sous 24h
@@ -429,6 +440,26 @@ export default function CheckoutPage() {
                                     {/* Zone Selection for Home Delivery */}
                                     {deliveryMethod === 'livraison' && (
                                         <div className="space-y-4 pt-2">
+
+                                            {/* Free shipping banner reminder */}
+                                            {isFreeShipping && (
+                                                <div className="p-3.5 bg-emerald-500/[0.08] border border-emerald-500/25 rounded-2xl flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/25">
+                                                        <Check className="w-4 h-4 stroke-[3]" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                                            <span>Livraison 100% offerte débloquée !</span>
+                                                            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                                                                Offerte
+                                                            </span>
+                                                        </p>
+                                                        <p className="text-[11px] text-emerald-700/85 font-medium mt-0.5">
+                                                            Sélectionnez simplement votre quartier ci-dessous pour que le livreur sache où vous livrer.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
                                             
                                             {/* Selected Zone Pill if already selected */}
                                             {selectedZone && (
@@ -439,7 +470,14 @@ export default function CheckoutPage() {
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-black text-[#1B1F3B]">{selectedZone.name}</p>
-                                                            <p className="text-[11px] font-bold text-orange-600">Frais: {selectedZone.price.toLocaleString()} FCFA</p>
+                                                            {isFreeShipping ? (
+                                                                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
+                                                                    <span className="line-through text-slate-400 font-normal">{selectedZone.price.toLocaleString()} FCFA</span>
+                                                                    <span>· Offert (0 FCFA)</span>
+                                                                </p>
+                                                            ) : (
+                                                                <p className="text-[11px] font-bold text-orange-600">Frais: {selectedZone.price.toLocaleString()} FCFA</p>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <button
@@ -494,13 +532,23 @@ export default function CheckoutPage() {
                                                                     type="button"
                                                                     onClick={() => setSelectedZone(match)}
                                                                     className={cn(
-                                                                        "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all",
+                                                                        "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                                                                         isSel
                                                                             ? "bg-orange-600 text-white shadow-sm"
                                                                             : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                                                                     )}
                                                                 >
-                                                                    {match.name} · {match.price.toLocaleString()}F
+                                                                    <span>{match.name}</span>
+                                                                    <span className={cn(
+                                                                        "text-[10px] font-black",
+                                                                        isSel 
+                                                                            ? "text-orange-100" 
+                                                                            : isFreeShipping 
+                                                                                ? "text-emerald-600" 
+                                                                                : "text-slate-500"
+                                                                    )}>
+                                                                        {isFreeShipping ? '· Offert' : `· ${match.price.toLocaleString()}F`}
+                                                                    </span>
                                                                 </button>
                                                             )
                                                         })}
@@ -553,9 +601,26 @@ export default function CheckoutPage() {
                                                                                 )}
                                                                             >
                                                                                 <span className="text-xs font-bold truncate block">{zone.name}</span>
-                                                                                <span className={cn("text-[10px] font-black mt-1", isSel ? "text-orange-200" : "text-orange-600")}>
-                                                                                    {zone.price.toLocaleString()} FCFA
-                                                                                </span>
+                                                                                {isFreeShipping ? (
+                                                                                    <div className="flex items-center gap-1.5 mt-1">
+                                                                                        <span className={cn(
+                                                                                            "text-[10px] line-through",
+                                                                                            isSel ? "text-orange-200/80" : "text-slate-400"
+                                                                                        )}>
+                                                                                            {zone.price.toLocaleString()} F
+                                                                                        </span>
+                                                                                        <span className={cn(
+                                                                                            "text-[10px] font-black uppercase tracking-wider",
+                                                                                            isSel ? "text-white" : "text-emerald-600"
+                                                                                        )}>
+                                                                                            Offert
+                                                                                        </span>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <span className={cn("text-[10px] font-black mt-1", isSel ? "text-orange-200" : "text-orange-600")}>
+                                                                                        {zone.price.toLocaleString()} FCFA
+                                                                                    </span>
+                                                                                )}
                                                                             </button>
                                                                         )
                                                                     })}
@@ -768,9 +833,16 @@ export default function CheckoutPage() {
                                                         {deliveryMethod === 'livraison' ? `Livraison à domicile · ${selectedZone?.name || ''}` : 'Retrait en boutique (Gratuit)'}
                                                     </span>
                                                     {deliveryMethod === 'livraison' && selectedZone && (
-                                                        <span className="text-[11px] text-orange-600 font-bold block mt-0.5">
-                                                            Frais: {selectedZone.price.toLocaleString()} FCFA
-                                                        </span>
+                                                        isFreeShipping ? (
+                                                            <span className="text-[11px] text-emerald-600 font-bold block mt-0.5">
+                                                                <span className="line-through text-slate-400 font-normal mr-1">{selectedZone.price.toLocaleString()} FCFA</span>
+                                                                Livraison offerte (0 FCFA)
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[11px] text-orange-600 font-bold block mt-0.5">
+                                                                Frais: {selectedZone.price.toLocaleString()} FCFA
+                                                            </span>
+                                                        )
                                                     )}
                                                 </div>
                                             </div>
@@ -847,6 +919,9 @@ export default function CheckoutPage() {
 
                                     <CheckoutError message={error} />
 
+                                    {/* Mobile Guarantee Trust Card on final step */}
+                                    <CheckoutTrustGuaranteeCard className="mb-6 lg:hidden" />
+
                                     <div className="hidden lg:block">
                                         <CheckoutNavButtons
                                             onBack={goBack}
@@ -873,15 +948,10 @@ export default function CheckoutPage() {
                                 total={total}
                                 deliveryMethod={deliveryMethod}
                                 selectedZoneName={selectedZone?.name}
+                                isFreeShipping={isFreeShipping}
                             />
 
-                            <div className="bg-white rounded-2xl p-4.5 border border-slate-100 flex items-center gap-3 text-xs text-slate-600">
-                                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                                <div>
-                                    <p className="font-bold text-slate-800">Garantie Baraka Shop</p>
-                                    <p className="text-[11px] text-slate-500">Service client réactif & échange garanti sous 7 jours.</p>
-                                </div>
-                            </div>
+                            <CheckoutTrustGuaranteeCard />
                         </div>
                     </div>
 

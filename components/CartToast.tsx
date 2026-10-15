@@ -1,16 +1,19 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Check, ShoppingCart, X, ArrowRight } from 'lucide-react'
+import { Check, ShoppingBag, X, ArrowRight } from 'lucide-react'
 
 interface CartToastProps {
     product: {
         name: string
         price: number
         image: string
+        brand?: string
+        selectedColor?: string
+        qty?: number
     } | null
     isVisible: boolean
     onClose: () => void
@@ -18,104 +21,136 @@ interface CartToastProps {
     subtotal: number
 }
 
+function formatPrice(amount: number): string {
+    return new Intl.NumberFormat('fr-FR').format(Number(amount) || 0) + ' FCFA'
+}
+
 export function CartToast({ product, isVisible, onClose, itemCount, subtotal }: CartToastProps) {
+    const [isHovered, setIsHovered] = useState(false)
+
     useEffect(() => {
-        if (isVisible) {
-            const timer = setTimeout(onClose, 4500)
-            return () => clearTimeout(timer)
-        }
-    }, [isVisible, onClose])
+        if (!isVisible || isHovered) return
+
+        const timer = setTimeout(() => {
+            onClose()
+        }, 4500)
+
+        return () => clearTimeout(timer)
+    }, [isVisible, isHovered, onClose])
 
     return (
         <AnimatePresence>
             {isVisible && product && (
                 <motion.div
-                    initial={{ opacity: 0, y: -20, x: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="fixed top-24 right-4 md:right-8 z-[300] w-[340px] md:w-[380px] bg-white rounded-2xl border border-gray-100 shadow-2xl shadow-gray-300/30 overflow-hidden"
+                    initial={{ opacity: 0, y: -16, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.18 } }}
+                    transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    className="fixed top-20 sm:top-24 right-4 sm:right-6 md:right-8 z-[300] w-[350px] sm:w-[380px] max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-xl rounded-2xl border border-slate-200/70 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.18),0_0_0_1px_rgba(0,0,0,0.02)] overflow-hidden"
                 >
-                    {/* Progress bar */}
-                    <motion.div
-                        initial={{ width: '100%' }}
-                        animate={{ width: '0%' }}
-                        transition={{ duration: 4.5, ease: 'linear' }}
-                        className="h-1 bg-gradient-to-r from-green-400 to-emerald-500"
-                    />
-
-                    <div className="p-5">
-                        {/* Header */}
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
+                    <div className="p-4 sm:p-5 space-y-4">
+                        {/* Header: Statut élégant & bouton fermer */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
                                 <motion.div
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    transition={{ type: 'spring', delay: 0.1, damping: 12 }}
-                                    className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center"
+                                    transition={{ type: 'spring', delay: 0.08, damping: 14 }}
+                                    className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center ring-1 ring-emerald-500/20"
                                 >
-                                    <Check className="w-4 h-4 text-white stroke-[3]" />
+                                    <Check className="w-3 h-3 stroke-[2.5]" />
                                 </motion.div>
-                                <span className="text-[11px] font-black text-green-600 uppercase tracking-widest">
+                                <span className="text-[12px] font-bold text-slate-800 tracking-tight">
                                     Ajouté au panier
                                 </span>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all"
+                                aria-label="Fermer la notification"
+                                className="w-7 h-7 -mr-1 -mt-1 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 transition-all active:scale-95"
                             >
-                                <X className="w-3.5 h-3.5" />
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
 
-                        {/* Product */}
-                        <div className="flex items-center gap-4 mb-5">
-                            <div className="relative w-16 h-16 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                        {/* Produit ajouté */}
+                        <div className="flex items-center gap-3.5 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/60">
+                            <div className="relative w-14 h-14 bg-white rounded-lg border border-slate-100 p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                 <Image
                                     src={product.image}
                                     alt={product.name}
                                     fill
-                                    className="object-contain p-2"
+                                    className="object-contain p-1"
+                                    unoptimized={product.image?.startsWith('http')}
                                 />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="text-xs font-black text-[#1B1F3B] uppercase tracking-tight line-clamp-2 leading-snug">
+                                {product.brand && (
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">
+                                        {product.brand}
+                                    </span>
+                                )}
+                                <h4 className="text-[13px] font-bold text-slate-900 leading-snug line-clamp-2">
                                     {product.name}
                                 </h4>
-                                <p className="text-sm font-black text-primary mt-1 tracking-tighter">
-                                    {product.price.toLocaleString()} FCFA
-                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[13px] font-extrabold text-[#E8621A] tracking-tight">
+                                        {formatPrice(product.price)}
+                                    </span>
+                                    {product.selectedColor && (
+                                        <span className="text-[10px] text-slate-500 font-medium border-l border-slate-200 pl-2">
+                                            {product.selectedColor}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
-                        {/* Cart summary */}
-                        <div className="bg-gray-50 rounded-xl p-3 mb-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <ShoppingCart className="w-4 h-4 text-gray-400" />
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider">
-                                    {itemCount} article{itemCount > 1 ? 's' : ''} dans votre panier
+                        {/* Résumé Panier */}
+                        <div className="bg-slate-50/80 border border-slate-100/80 rounded-xl px-3.5 py-2.5 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-slate-500">
+                                <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="text-[11px] font-medium text-slate-600">
+                                    {itemCount} {itemCount > 1 ? 'articles' : 'article'} dans votre panier
                                 </span>
                             </div>
-                            <span className="text-xs font-black text-[#1B1F3B] tracking-tighter">
-                                {subtotal.toLocaleString()} FCFA
+                            <span className="text-xs font-black text-slate-900 tracking-tight">
+                                {formatPrice(subtotal)}
                             </span>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-3">
+                        {/* Boutons d'action */}
+                        <div className="flex items-center gap-2.5 pt-0.5">
                             <Link
                                 href="/cart"
-                                className="flex-1 h-11 bg-gray-100 text-[#1B1F3B] rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-200 transition-all"
+                                onClick={onClose}
+                                className="flex-1 h-10 px-3 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-bold text-[11px] tracking-wide transition-all shadow-sm flex items-center justify-center active:scale-[0.98]"
                             >
                                 Voir le panier
                             </Link>
                             <Link
                                 href="/checkout"
-                                className="flex-1 h-11 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1B1F3B] transition-all shadow-lg shadow-primary/20 group"
+                                onClick={onClose}
+                                className="flex-1 h-10 px-3 rounded-xl bg-[#E8621A] hover:bg-[#d95213] text-white font-bold text-[11px] tracking-wide shadow-sm hover:shadow-md hover:shadow-orange-500/20 transition-all flex items-center justify-center gap-1.5 group active:scale-[0.98]"
                             >
-                                Commander <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                Commander
+                                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                             </Link>
                         </div>
+                    </div>
+
+                    {/* Barre de progression discrète en bas */}
+                    <div className="h-[2px] w-full bg-slate-100 overflow-hidden">
+                        <motion.div
+                            key={isVisible ? 'visible' : 'hidden'}
+                            initial={{ scaleX: 1 }}
+                            animate={{ scaleX: isHovered ? undefined : 0 }}
+                            transition={{ duration: 4.5, ease: 'linear' }}
+                            style={{ originX: 0 }}
+                            className="h-full bg-gradient-to-r from-[#E8621A] to-amber-500"
+                        />
                     </div>
                 </motion.div>
             )}
