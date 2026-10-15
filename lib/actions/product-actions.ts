@@ -1,7 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
-import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
+import { getCache, setCache, rememberCache, invalidatePrefix } from '@/lib/redis';
 import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
@@ -40,343 +40,314 @@ export async function getProductsAction(options: {
         isNew = false
     } = options;
 
-    const cacheKey = `products:${JSON.stringify(options)}`;
-    const cached = await getCache<any>(cacheKey);
-    if (cached) {
-        if (process.env.NODE_ENV !== 'production') console.log(`[Redis] Cache Hit for ${cacheKey}`);
-        return cached;
-    }
+    // Clé de cache déterministe normalisée : évite la fragmentation du cache
+    const cacheKey = [
+        'products:v3',
+        `q=${(query || '').trim().toLowerCase()}`,
+        `cat=${category || ''}`,
+        `sub=${subCategory || ''}`,
+        `third=${thirdLevelCategory || ''}`,
+        `b=${brand || ''}`,
+        `s=${store || ''}`,
+        `min=${minPrice ?? ''}`,
+        `max=${maxPrice ?? ''}`,
+        `sort=${sort}`,
+        `p=${page}`,
+        `lim=${limit}`,
+        `sale=${Boolean(onSale)}`,
+        `new=${Boolean(isNew)}`
+    ].join(':');
 
-    const skip = (page - 1) * limit;
+    return await rememberCache(cacheKey, 300, async () => {
+        const skip = (page - 1) * limit;
 
-    try {
-        // Construction du WHERE clause (Public: seuls les produits publiés et avec stock > 0 sont visibles)
-        const where: any = { 
-            isPublished: true,
-            stock: { gt: 0 }
-        };
+        try {
+            // Construction du WHERE clause (Public: seuls les produits publiés et avec stock > 0 sont visibles)
+            const where: any = { 
+                isPublished: true,
+                stock: { gt: 0 }
+            };
 
-        if (query) {
-            where.OR = [
-                { name: { contains: query, mode: 'insensitive' } },
-                { description: { contains: query, mode: 'insensitive' } },
-                { reference: { contains: query, mode: 'insensitive' } },
-            ];
-        }
-
-        if (category) {
-            where.category = { slug: category };
-        }
-
-        if (subCategory) {
-            where.subCategory = { slug: subCategory };
-        }
-
-        if (thirdLevelCategory) {
-            where.thirdLevelCategory = { slug: thirdLevelCategory };
-        }
-
-        if (brand) {
-            where.brand = { slug: brand };
-        }
-
-        if (store) {
-            where.store = { slug: store };
-        }
-
-        if (isNew) {
-            where.isNew = true;
-        }
-
-        if (onSale) {
-            const now = new Date();
-            where.AND = [
-                { oldPrice: { not: null } },
-                {
-                    OR: [
-                        { promotionId: null },
-                        {
-                            promotion: {
-                                startDate: { lte: now },
-                                endDate: { gte: now }
-                            }
-                        }
-                    ]
-                }
-            ];
-        }
-
-        if (minPrice !== undefined || maxPrice !== undefined) {
-            where.price = {};
-            if (minPrice !== undefined) where.price.gte = minPrice;
-            if (maxPrice !== undefined) where.price.lte = maxPrice;
-        }
-
-        // Construction du SORT
-        let orderBy: any = { createdAt: 'desc' };
-        if (sort === 'price_asc') orderBy = { price: 'asc' };
-        if (sort === 'price_desc') orderBy = { price: 'desc' };
-        if (sort === 'oldest') orderBy = { createdAt: 'asc' };
-
-        const [products, total] = await Promise.all([
-            prisma.product.findMany({
-                where,
-                include: {
-                    category: true,
-                    subCategory: true,
-                    brand: true
-                },
-                orderBy,
-                skip,
-                take: limit,
-            }),
-            prisma.product.count({ where })
-        ]);
-
-        const result = {
-            products,
-            pagination: {
-                total,
-                pages: Math.ceil(total / limit),
-                currentPage: page,
-                limit
+            if (query) {
+                where.OR = [
+                    { name: { contains: query, mode: 'insensitive' } },
+                    { description: { contains: query, mode: 'insensitive' } },
+                    { reference: { contains: query, mode: 'insensitive' } },
+                ];
             }
-        };
 
-        // Cache pendant 5 minutes pour les résultats de recherche/filtres
-        await setCache(cacheKey, result, 300);
+            if (category) {
+                where.category = { slug: category };
+            }
 
-        return result;
-    } catch (error) {
-        console.error('[Get Products Error]:', error);
-        return { products: [], pagination: { total: 0, pages: 0, currentPage: 1, limit } };
-    }
+            if (subCategory) {
+                where.subCategory = { slug: subCategory };
+            }
+
+            if (thirdLevelCategory) {
+                where.thirdLevelCategory = { slug: thirdLevelCategory };
+            }
+
+            if (brand) {
+                where.brand = { slug: brand };
+            }
+
+            if (store) {
+                where.store = { slug: store };
+            }
+
+            if (isNew) {
+                where.isNew = true;
+            }
+
+            if (onSale) {
+                const now = new Date();
+                where.AND = [
+                    { oldPrice: { not: null } },
+                    {
+                        OR: [
+                            { promotionId: null },
+                            {
+                                promotion: {
+                                    startDate: { lte: now },
+                                    endDate: { gte: now }
+                                }
+                            }
+                        ]
+                    }
+                ];
+            }
+
+            if (minPrice !== undefined || maxPrice !== undefined) {
+                where.price = {};
+                if (minPrice !== undefined) where.price.gte = minPrice;
+                if (maxPrice !== undefined) where.price.lte = maxPrice;
+            }
+
+            // Construction du SORT
+            let orderBy: any = { createdAt: 'desc' };
+            if (sort === 'price_asc') orderBy = { price: 'asc' };
+            if (sort === 'price_desc') orderBy = { price: 'desc' };
+            if (sort === 'oldest') orderBy = { createdAt: 'asc' };
+
+            const [products, total] = await Promise.all([
+                prisma.product.findMany({
+                    where,
+                    include: {
+                        category: true,
+                        subCategory: true,
+                        brand: true
+                    },
+                    orderBy,
+                    skip,
+                    take: limit,
+                }),
+                prisma.product.count({ where })
+            ]);
+
+            return {
+                products,
+                pagination: {
+                    total,
+                    pages: Math.ceil(total / limit),
+                    currentPage: page,
+                    limit
+                }
+            };
+        } catch (error) {
+            console.error('[Get Products Error]:', error);
+            return { products: [], pagination: { total: 0, pages: 0, currentPage: 1, limit } };
+        }
+    });
 }
 
 export async function getProductByIdAction(id: string) {
-    try {
-        const cacheKey = `product:${id}`;
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
-
-        const product = await prisma.product.findUnique({
-            where: { id },
-            include: {
-                category: true,
-                subCategory: true,
-                thirdLevelCategory: true,
-                brand: true,
-                colorVariants: {
-                    orderBy: { position: 'asc' }
-                },
-                reviews: {
-                    include: {
-                        user: {
-                            select: { username: true, image: true }
-                        }
+    if (!id) return null;
+    return await rememberCache(`product:${id}`, 600, async () => {
+        try {
+            return await prisma.product.findUnique({
+                where: { id },
+                include: {
+                    category: true,
+                    subCategory: true,
+                    thirdLevelCategory: true,
+                    brand: true,
+                    colorVariants: {
+                        orderBy: { position: 'asc' }
                     },
-                    orderBy: { createdAt: 'desc' },
-                    take: 10
+                    reviews: {
+                        include: {
+                            user: {
+                                select: { username: true, image: true }
+                            }
+                        },
+                        orderBy: { createdAt: 'desc' },
+                        take: 10
+                    }
                 }
-            }
-        });
-
-        if (product) {
-            await setCache(cacheKey, product, 600); // 10 min cache
+            });
+        } catch (error) {
+            console.error('[Get Product By Id Error]:', error);
+            return null;
         }
-        return product;
-    } catch (error) {
-        console.error('[Get Product By Id Error]:', error);
-        return null;
-    }
+    });
 }
 
 export async function getSimilarProductsAction(product: any, limit: number = 8) {
     if (!product || !product.id) return [];
+    const cacheKey = `similar_v6:${product.id}:${product.categoryId || ''}:${product.subCategoryId || ''}:${product.thirdLevelCategoryId || ''}:${limit}`;
     
-    try {
-        const cacheKey = `similar_v5:${product.id}:${product.categoryId}:${product.subCategoryId}:${product.thirdLevelCategoryId}:${limit}`;
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
+    return await rememberCache(cacheKey, 600, async () => {
+        try {
+            const baseWhere = {
+                id: { not: product.id },
+                stock: { gt: 0 },
+                isPublished: true
+            };
 
-        const baseWhere = {
-            id: { not: product.id },
-            stock: { gt: 0 },
-            isPublished: true
-        };
+            let similarProducts: any[] = [];
 
-        let similarProducts: any[] = [];
+            // 1. Priorité absolue : même sous-catégorie niveau 2 (thirdLevelCategory)
+            if (product.thirdLevelCategoryId) {
+                const thirdLevelProducts = await prisma.product.findMany({
+                    where: { ...baseWhere, thirdLevelCategoryId: product.thirdLevelCategoryId },
+                    include: { category: true, brand: true },
+                    take: limit,
+                    orderBy: { createdAt: 'desc' }
+                });
+                similarProducts = [...thirdLevelProducts];
+            }
 
-        // 1. Priorité absolue : même sous-catégorie niveau 2 (thirdLevelCategory)
-        if (product.thirdLevelCategoryId) {
-            const thirdLevelProducts = await prisma.product.findMany({
-                where: { ...baseWhere, thirdLevelCategoryId: product.thirdLevelCategoryId },
-                include: { category: true, brand: true },
-                take: limit,
-                orderBy: { createdAt: 'desc' }
-            });
-            similarProducts = [...thirdLevelProducts];
+            // 2. Si on n'a pas atteint la limite, on complète avec la sous-catégorie niveau 1 (subCategory)
+            if (similarProducts.length < limit && product.subCategoryId) {
+                const excludeIds = similarProducts.map(p => p.id);
+                const subCatProducts = await prisma.product.findMany({
+                    where: { 
+                        ...baseWhere, 
+                        subCategoryId: product.subCategoryId,
+                        id: { notIn: [product.id, ...excludeIds] }
+                    },
+                    include: { category: true, brand: true },
+                    take: limit - similarProducts.length,
+                    orderBy: { createdAt: 'desc' }
+                });
+                similarProducts = [...similarProducts, ...subCatProducts];
+            }
+
+            // 3. Si toujours pas assez de produits, on complète avec la catégorie principale
+            if (similarProducts.length < limit && product.categoryId) {
+                const excludeIds = similarProducts.map(p => p.id);
+                const catProducts = await prisma.product.findMany({
+                    where: { 
+                        ...baseWhere, 
+                        categoryId: product.categoryId,
+                        id: { notIn: [product.id, ...excludeIds] }
+                    },
+                    include: { category: true, brand: true },
+                    take: limit - similarProducts.length,
+                    orderBy: { createdAt: 'desc' }
+                });
+                similarProducts = [...similarProducts, ...catProducts];
+            }
+
+            return similarProducts;
+        } catch (error) {
+            console.error('[Get Similar Products Error]:', error);
+            return [];
         }
-
-        // 2. Si on n'a pas atteint la limite, on complète avec la sous-catégorie niveau 1 (subCategory)
-        if (similarProducts.length < limit && product.subCategoryId) {
-            const excludeIds = similarProducts.map(p => p.id);
-            const subCatProducts = await prisma.product.findMany({
-                where: { 
-                    ...baseWhere, 
-                    subCategoryId: product.subCategoryId,
-                    id: { notIn: [product.id, ...excludeIds] }
-                },
-                include: { category: true, brand: true },
-                take: limit - similarProducts.length,
-                orderBy: { createdAt: 'desc' }
-            });
-            similarProducts = [...similarProducts, ...subCatProducts];
-        }
-
-        // 3. Si toujours pas assez de produits, on complète avec la catégorie principale
-        if (similarProducts.length < limit && product.categoryId) {
-            const excludeIds = similarProducts.map(p => p.id);
-            const catProducts = await prisma.product.findMany({
-                where: { 
-                    ...baseWhere, 
-                    categoryId: product.categoryId,
-                    id: { notIn: [product.id, ...excludeIds] }
-                },
-                include: { category: true, brand: true },
-                take: limit - similarProducts.length,
-                orderBy: { createdAt: 'desc' }
-            });
-            similarProducts = [...similarProducts, ...catProducts];
-        }
-
-        await setCache(cacheKey, similarProducts, 600); // 10 min cache
-        return similarProducts;
-    } catch (error) {
-        console.error('[Get Similar Products Error]:', error);
-        return [];
-    }
+    });
 }
 
 export async function getCategoriesAction() {
-    try {
-        const cacheKey = 'categories:all:with_sub_v3';
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
-
-        const categories = await prisma.category.findMany({
-            where: { isPublished: true },
-            include: {
-                subCategories: {
-                    include: {
-                        thirdLevelCategories: true
+    return await rememberCache('categories:all:with_sub_v4', 3600, async () => {
+        try {
+            return await prisma.category.findMany({
+                where: { isPublished: true },
+                include: {
+                    subCategories: {
+                        include: {
+                            thirdLevelCategories: true
+                        }
+                    },
+                    _count: {
+                        select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
                     }
                 },
-                _count: {
-                    select: { products: { where: { isPublished: true } } }
-                }
-            },
-            orderBy: { name: 'asc' }
-        });
-
-        await setCache(cacheKey, categories, 3600); // 1h cache
-        return categories;
-    } catch (error) {
-        return [];
-    }
+                orderBy: { name: 'asc' }
+            });
+        } catch (error) {
+            return [];
+        }
+    });
 }
 
 export async function getBrandsAction() {
-    try {
-        const cacheKey = 'brands:all_v2';
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
-
-        const brands = await prisma.brand.findMany({
-            include: {
-                _count: {
-                    select: { products: { where: { isPublished: true } } }
-                }
-            },
-            orderBy: { name: 'asc' }
-        });
-
-        await setCache(cacheKey, brands, 3600); // 1h cache
-        return brands;
-    } catch (error) {
-        return [];
-    }
+    return await rememberCache('brands:all_v3', 3600, async () => {
+        try {
+            return await prisma.brand.findMany({
+                include: {
+                    _count: {
+                        select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            });
+        } catch (error) {
+            return [];
+        }
+    });
 }
 
 export async function getCategoryBySlugAction(slug: string) {
-    try {
-        const cacheKey = `category_v2:${slug}`;
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
-
-        const category = await prisma.category.findFirst({
-            where: { slug, isPublished: true },
-            include: {
-                _count: {
-                    select: { products: { where: { isPublished: true } } }
+    if (!slug) return null;
+    return await rememberCache(`category_v3:${slug}`, 3600, async () => {
+        try {
+            return await prisma.category.findFirst({
+                where: { slug, isPublished: true },
+                include: {
+                    _count: {
+                        select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
+                    }
                 }
-            }
-        });
-
-        if (category) {
-            await setCache(cacheKey, category, 3600);
+            });
+        } catch (error) {
+            return null;
         }
-        return category;
-    } catch (error) {
-        return null;
-    }
+    });
 }
 
 export async function getMegaMenuAction() {
-    try {
-        const cacheKey = 'megamenu:all';
-        const cached = await getCache<any>(cacheKey);
-        if (cached) {
-            if (process.env.NODE_ENV !== 'production') console.log('[Redis] Cache Hit for Mega Menu');
-            return cached;
-        }
-
-        const categories = await prisma.category.findMany({
-            where: { isPublished: true },
-            include: {
-                subCategories: {
-                    include: {
-                        thirdLevelCategories: true
+    return await rememberCache('megamenu:all_v2', 3600, async () => {
+        try {
+            return await prisma.category.findMany({
+                where: { isPublished: true },
+                include: {
+                    subCategories: {
+                        include: {
+                            thirdLevelCategories: true
+                        }
                     }
-                }
-            },
-            orderBy: { name: 'asc' }
-        });
-
-        await setCache(cacheKey, categories, 3600); // 1h cache
-        return categories;
-    } catch (error) {
-        console.error('[Get Mega Menu Action Error]:', error);
-        return [];
-    }
+                },
+                orderBy: { name: 'asc' }
+            });
+        } catch (error) {
+            console.error('[Get Mega Menu Action Error]:', error);
+            return [];
+        }
+    });
 }
 
 export async function getPopularUniversesAction() {
-    try {
-        const cacheKey = 'popular_universes:all';
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
-
-        const universes = await (prisma as any).popularUniverse.findMany({
-            orderBy: { order: 'asc' }
-        });
-
-        await setCache(cacheKey, universes, 3600); // 1h cache
-        return universes;
-    } catch (error) {
-        console.error('[Get Popular Universes Error]:', error);
-        return [];
-    }
+    return await rememberCache('popular_universes:all_v2', 3600, async () => {
+        try {
+            return await (prisma as any).popularUniverse.findMany({
+                orderBy: { order: 'asc' }
+            });
+        } catch (error) {
+            console.error('[Get Popular Universes Error]:', error);
+            return [];
+        }
+    });
 }
 
 
@@ -747,7 +718,11 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
             await Promise.all([
                 invalidatePrefix('products:'),
                 invalidatePrefix('categories:'),
-                invalidatePrefix('brands:')
+                invalidatePrefix('brands:'),
+                invalidatePrefix('similar:'),
+                invalidatePrefix('admin:products:'),
+                invalidatePrefix('admin:out-of-stock:'),
+                invalidatePrefix('admin:dashboard:')
             ]);
             revalidatePath('/admin/products');
             revalidatePath('/admin/out-of-stock');

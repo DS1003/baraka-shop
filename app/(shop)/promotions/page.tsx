@@ -16,18 +16,19 @@ export const metadata: Metadata = {
 }
 
 export default async function PromotionsPage() {
-    // Fetch promotion products
-    const flashSalesResult = await getProductsAction({
-        onSale: true,
-        limit: 3,
-        sort: 'newest'
-    })
-
-    const allPromosResult = await getProductsAction({
-        onSale: true,
-        limit: 12,
-        page: 1
-    })
+    // Fetch promotion products in parallel
+    const [flashSalesResult, allPromosResult] = await Promise.all([
+        getProductsAction({
+            onSale: true,
+            limit: 3,
+            sort: 'newest'
+        }),
+        getProductsAction({
+            onSale: true,
+            limit: 12,
+            page: 1
+        })
+    ])
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen">

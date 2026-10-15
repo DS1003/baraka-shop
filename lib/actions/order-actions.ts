@@ -176,16 +176,32 @@ export async function createOrder(data: CreateOrderData) {
 
         const order = orderTxResult.newOrder;
 
-        // Invalidation des caches pour les produits tombés en rupture
-        if (orderTxResult.depletedProductIds.length > 0) {
-            import('@/lib/redis').then(({ invalidateCache, invalidatePrefix }) => {
-                orderTxResult.depletedProductIds.forEach(id => {
-                    invalidateCache(`product:${id}`).catch(() => {});
-                });
-                invalidatePrefix('products:').catch(() => {});
-                invalidatePrefix('similar:').catch(() => {});
-            }).catch(() => {});
-        }
+        // Invalidation des caches Redis (non-bloquant)
+        import('@/lib/redis').then(({ invalidateCache, invalidatePrefix }) => {
+            const promises: Promise<any>[] = [
+                invalidatePrefix('admin:orders:'),
+                invalidatePrefix('admin:dashboard:'),
+                invalidatePrefix('admin:category:revenue'),
+                invalidatePrefix('products:')
+            ];
+
+            // Invalider le cache individuel de chaque produit commandé
+            data.items.forEach(it => {
+                promises.push(invalidateCache(`product:${it.productId}`));
+            });
+
+            // Si des produits sont tombés en rupture de stock
+            if (orderTxResult.depletedProductIds.length > 0) {
+                promises.push(
+                    invalidatePrefix('similar:'),
+                    invalidatePrefix('categories:'),
+                    invalidatePrefix('brands:'),
+                    invalidatePrefix('admin:products:'),
+                    invalidatePrefix('admin:out-of-stock:')
+                );
+            }
+            Promise.all(promises).catch(() => {});
+        }).catch(() => {});
 
         // ── Enregistrement de l'utilisation du coupon (non-bloquant) ──
         if (campaignId && couponCode) {

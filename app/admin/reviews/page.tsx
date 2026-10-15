@@ -16,7 +16,7 @@ export default function AdminReviewsPage() {
         if (res.success) {
             setReviews(res.data);
         } else {
-            toast.error(res.message);
+            toast.error((res as any).message || "Erreur lors de la récupération des avis.");
         }
         setIsLoading(false);
     };

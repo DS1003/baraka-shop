@@ -3,6 +3,7 @@
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
+import { rememberCache, invalidatePrefix } from '@/lib/redis';
 
 // Helper to check admin access
 async function checkAdmin() {
@@ -17,32 +18,35 @@ export async function getAdminReviews(page = 1, pageSize = 20) {
         await checkAdmin();
         const skip = (page - 1) * pageSize;
 
-        const reviews = await prisma.review.findMany({
-            skip,
-            take: pageSize,
-            orderBy: [
-                {
-                    createdAt: 'desc'
-                }
-            ],
-            include: {
-                user: { select: { id: true, username: true, email: true, image: true } },
-                product: { select: { id: true, name: true, slug: true, images: true } },
-                reports: {
+        return await rememberCache(`admin:reviews:${page}:${pageSize}`, 60, async () => {
+            const [reviews, total] = await Promise.all([
+                prisma.review.findMany({
+                    skip,
+                    take: pageSize,
+                    orderBy: [
+                        {
+                            createdAt: 'desc'
+                        }
+                    ],
                     include: {
-                        user: { select: { id: true, username: true, email: true } }
-                    },
-                    orderBy: { createdAt: 'desc' }
-                }
-            }
+                        user: { select: { id: true, username: true, email: true, image: true } },
+                        product: { select: { id: true, name: true, slug: true, images: true } },
+                        reports: {
+                            include: {
+                                user: { select: { id: true, username: true, email: true } }
+                            },
+                            orderBy: { createdAt: 'desc' }
+                        }
+                    }
+                }),
+                prisma.review.count()
+            ]);
+
+            return { success: true as const, data: reviews, total, totalPages: Math.ceil(total / pageSize), message: undefined as string | undefined };
         });
-
-        const total = await prisma.review.count();
-
-        return { success: true, data: reviews, total, totalPages: Math.ceil(total / pageSize) };
     } catch (error) {
         console.error("[Get Admin Reviews Error]:", error);
-        return { success: false, message: "Erreur lors de la récupération des avis." };
+        return { success: false as const, message: "Erreur lors de la récupération des avis.", data: [] as any[] };
     }
 }
 
@@ -53,6 +57,7 @@ export async function deleteReviewAction(id: string) {
             where: { id }
         });
         
+        await invalidatePrefix('admin:reviews:');
         revalidatePath(`/admin/reviews`);
         revalidatePath(`/product/${review.productId}`);
         return { success: true, message: "Avis supprimé avec succès." };
@@ -70,6 +75,7 @@ export async function updateReportStatusAction(reportId: string, status: 'PENDIN
             data: { status }
         });
         
+        await invalidatePrefix('admin:reviews:');
         revalidatePath(`/admin/reviews`);
         return { success: true, message: "Statut mis à jour avec succès." };
     } catch (error) {

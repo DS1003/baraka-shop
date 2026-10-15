@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { rememberCache, invalidatePrefix } from '@/lib/redis';
 
 // ============================================
 // STATUS MESSAGE CONFIG
@@ -107,6 +108,7 @@ export async function notifyClientOrderStatusChange(
                 orderId: orderId,
             },
         });
+        invalidatePrefix(`notifications:${order.userId}`).catch(() => {});
 
         // Trigger email if the status is SHIPPED
         if (newStatus === 'SHIPPED' && order.user.email) {
@@ -207,6 +209,7 @@ export async function notifyAdminsNewOrder(
             await prisma.notification.createMany({
                 data: notifications,
             });
+            invalidatePrefix('notifications:').catch(() => {});
         }
     } catch (error) {
         console.error('[NotificationService] Admin notification error:', error);
@@ -245,6 +248,7 @@ export async function notifyAdminsOrderStatusChange(
             await prisma.notification.createMany({
                 data: notifications,
             });
+            invalidatePrefix('notifications:').catch(() => {});
         }
     } catch (error) {
         console.error('[NotificationService] Admin status notification error:', error);
@@ -259,54 +263,58 @@ export async function notifyAdminsOrderStatusChange(
  * Récupérer les notifications d'un utilisateur
  */
 export async function getUserNotifications(userId: string, limit: number = 30) {
-    try {
-        return await prisma.notification.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-        });
-    } catch (error: any) {
-        // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
-        if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
-            try {
-                await new Promise((r) => setTimeout(r, 1000));
-                return await prisma.notification.findMany({
-                    where: { userId },
-                    orderBy: { createdAt: 'desc' },
-                    take: limit,
-                });
-            } catch {
-                // Ignore silent retry failure and fallback to empty array
+    return rememberCache(`notifications:list:${userId}:${limit}`, 30, async () => {
+        try {
+            return await prisma.notification.findMany({
+                where: { userId },
+                orderBy: { createdAt: 'desc' },
+                take: limit,
+            });
+        } catch (error: any) {
+            // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
+            if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
+                try {
+                    await new Promise((r) => setTimeout(r, 1000));
+                    return await prisma.notification.findMany({
+                        where: { userId },
+                        orderBy: { createdAt: 'desc' },
+                        take: limit,
+                    });
+                } catch {
+                    // Ignore silent retry failure and fallback to empty array
+                }
             }
+            console.error('[NotificationService] Fetch notifications error:', error?.message || error);
+            return [];
         }
-        console.error('[NotificationService] Fetch notifications error:', error?.message || error);
-        return [];
-    }
+    });
 }
 
 /**
  * Compter les notifications non lues
  */
 export async function getUnreadCount(userId: string): Promise<number> {
-    try {
-        return await prisma.notification.count({
-            where: { userId, isRead: false },
-        });
-    } catch (error: any) {
-        // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
-        if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
-            try {
-                await new Promise((r) => setTimeout(r, 1000));
-                return await prisma.notification.count({
-                    where: { userId, isRead: false },
-                });
-            } catch {
-                // Ignore silent retry failure
+    return rememberCache(`notifications:unread:${userId}`, 30, async () => {
+        try {
+            return await prisma.notification.count({
+                where: { userId, isRead: false },
+            });
+        } catch (error: any) {
+            // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
+            if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
+                try {
+                    await new Promise((r) => setTimeout(r, 1000));
+                    return await prisma.notification.count({
+                        where: { userId, isRead: false },
+                    });
+                } catch {
+                    // Ignore silent retry failure
+                }
             }
+            console.error('[NotificationService] Count unread error:', error?.message || error);
+            return 0;
         }
-        console.error('[NotificationService] Count unread error:', error?.message || error);
-        return 0;
-    }
+    });
 }
 
 /**
@@ -319,13 +327,15 @@ export async function markAsRead(notificationId: string, userId?: string) {
                 where: { id: notificationId, userId },
                 data: { isRead: true },
             });
+            invalidatePrefix(`notifications:${userId}`).catch(() => {});
             return { success: result.count > 0 };
         }
 
-        await prisma.notification.update({
+        const notif = await prisma.notification.update({
             where: { id: notificationId },
             data: { isRead: true },
         });
+        invalidatePrefix(`notifications:${notif.userId}`).catch(() => {});
         return { success: true };
     } catch (error) {
         console.error('[NotificationService] Mark read error:', error);
@@ -342,6 +352,7 @@ export async function markAllAsRead(userId: string) {
             where: { userId, isRead: false },
             data: { isRead: true },
         });
+        invalidatePrefix(`notifications:${userId}`).catch(() => {});
         return { success: true };
     } catch (error) {
         console.error('[NotificationService] Mark all read error:', error);
@@ -375,6 +386,7 @@ export async function notifyAdminsNewContactMessage(
             await prisma.notification.createMany({
                 data: notifications,
             });
+            invalidatePrefix('notifications:').catch(() => {});
         }
         return { success: true };
     } catch (error) {

@@ -1,7 +1,7 @@
 'use server';
 // PROXY REFRESH 2
 import prisma from '@/lib/prisma';
-import { getCache, setCache, invalidatePrefix } from '@/lib/redis';
+import { getCache, setCache, rememberCache, invalidatePrefix } from '@/lib/redis';
 import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 
@@ -17,21 +17,20 @@ async function requireAdmin() {
 
 export async function getStoresAction() {
     try {
-        const cacheKey = 'stores:all';
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
-
-        const stores = await prisma.store.findMany({
-            include: {
-                _count: {
-                    select: { products: true }
-                }
-            },
-            orderBy: { name: 'asc' }
+        return await rememberCache('stores:all_v2', 3600, async () => {
+            return await prisma.store.findMany({
+                include: {
+                    _count: {
+                        select: {
+                            products: {
+                                where: { isPublished: true, stock: { gt: 0 } }
+                            }
+                        }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            });
         });
-
-        await setCache(cacheKey, stores, 3600); // 1h cache
-        return stores;
     } catch (error) {
         console.error('[Get Stores Error]:', error);
         return [];
@@ -40,23 +39,21 @@ export async function getStoresAction() {
 
 export async function getStoreBySlugAction(slug: string) {
     try {
-        const cacheKey = `store:${slug}`;
-        const cached = await getCache<any>(cacheKey);
-        if (cached) return cached;
-
-        const store = await prisma.store.findUnique({
-            where: { slug },
-            include: {
-                _count: {
-                    select: { products: true }
+        if (!slug) return null;
+        return await rememberCache(`store_v2:${slug}`, 3600, async () => {
+            return await prisma.store.findUnique({
+                where: { slug },
+                include: {
+                    _count: {
+                        select: {
+                            products: {
+                                where: { isPublished: true, stock: { gt: 0 } }
+                            }
+                        }
+                    }
                 }
-            }
+            });
         });
-
-        if (store) {
-            await setCache(cacheKey, store, 3600);
-        }
-        return store;
     } catch (error) {
         console.error('[Get Store By Slug Error]:', error);
         return null;
@@ -74,7 +71,11 @@ export async function createStoreAction(data: { name: string; logo?: string; des
             }
         });
 
-        await invalidatePrefix('stores:');
+        await Promise.all([
+            invalidatePrefix('stores:'),
+            invalidatePrefix('admin:stores:'),
+            invalidatePrefix('admin:store:stats')
+        ]);
         revalidatePath('/admin/stores');
         return { success: true, store };
     } catch (error: any) {
@@ -96,8 +97,13 @@ export async function updateStoreAction(id: string, data: { name?: string; logo?
             data: updateData
         });
 
-        await invalidatePrefix('stores:');
-        await invalidatePrefix(`store:${store.slug}`);
+        await Promise.all([
+            invalidatePrefix('stores:'),
+            invalidatePrefix(`store:${store.slug}`),
+            invalidatePrefix(`store_v2:${store.slug}`),
+            invalidatePrefix('admin:stores:'),
+            invalidatePrefix('admin:store:stats')
+        ]);
         revalidatePath('/admin/stores');
         return { success: true, store };
     } catch (error: any) {
@@ -113,7 +119,11 @@ export async function deleteStoreAction(id: string) {
             where: { id }
         });
 
-        await invalidatePrefix('stores:');
+        await Promise.all([
+            invalidatePrefix('stores:'),
+            invalidatePrefix('admin:stores:'),
+            invalidatePrefix('admin:store:stats')
+        ]);
         revalidatePath('/admin/stores');
         return { success: true };
     } catch (error: any) {

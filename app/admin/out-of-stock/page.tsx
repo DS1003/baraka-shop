@@ -73,7 +73,7 @@ export default function OutOfStockPage() {
                 setTotalPages(res.totalPages || 1);
                 if (res.stats) setStats(res.stats);
             } else {
-                toast.error(res.error || "Erreur de chargement des produits");
+                toast.error((res as any).error || "Erreur de chargement des produits");
             }
         } catch (err) {
             console.error('Error loading out-of-stock products:', err);

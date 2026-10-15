@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 import { revalidatePath } from 'next/cache';
-import { invalidatePrefix, invalidateCache } from '@/lib/redis';
+import { invalidatePrefix, invalidateCache, rememberCache } from '@/lib/redis';
 import { auth } from '@/auth';
 import {
     notifyClientOrderStatusChange,
@@ -29,97 +29,99 @@ async function requireAdmin() {
 export async function getDashboardStats(period: string = 'ALL') {
     try {
         await requireAdmin();
-        const orderWhereClause: any = {};
-        const now = new Date();
-        
-        if (period === '7D') {
-            const dateLimit = new Date();
-            dateLimit.setDate(now.getDate() - 7);
-            orderWhereClause.createdAt = { gte: dateLimit };
-        } else if (period === '30D') {
-            const dateLimit = new Date();
-            dateLimit.setDate(now.getDate() - 30);
-            orderWhereClause.createdAt = { gte: dateLimit };
-        } else if (period === 'THIS_MONTH') {
-            const dateLimit = new Date(now.getFullYear(), now.getMonth(), 1);
-            orderWhereClause.createdAt = { gte: dateLimit };
-        } else if (period === 'THIS_YEAR') {
-            const dateLimit = new Date(now.getFullYear(), 0, 1);
-            orderWhereClause.createdAt = { gte: dateLimit };
-        }
-
-        const [orders, customers, products, reviews] = await Promise.all([
-            prisma.order.findMany({
-                where: orderWhereClause,
-                include: { items: true }
-            }),
-            prisma.user.count({ where: { role: 'USER' } }),
-            prisma.product.count(),
-            prisma.review.count()
-        ]);
-
-        const totalRevenue = orders.reduce((acc: number, order: any) => acc + order.total, 0);
-        const orderCount = orders.length;
-        const avgBasket = orderCount > 0 ? totalRevenue / orderCount : 0;
-
-        // Dynamic trends based on period
-        const stats = {
-            revenue: {
-                total: totalRevenue,
-                trend: period === 'ALL' ? "+12.5%" : (period === '7D' ? "7 derniers jours" : "Période sélectionnée"),
-                lastMonth: totalRevenue * 0.9,
-            },
-            orders: {
-                total: orderCount,
-                trend: period === 'ALL' ? "+8.2%" : "Commandes reçues",
-            },
-            customers: {
-                total: customers,
-                trend: "+15.3%",
-            },
-            avgBasket: {
-                total: avgBasket,
-                trend: "+4.1%",
+        return await rememberCache(`admin:dashboard:stats:${period}`, 120, async () => {
+            const orderWhereClause: any = {};
+            const now = new Date();
+            
+            if (period === '7D') {
+                const dateLimit = new Date();
+                dateLimit.setDate(now.getDate() - 7);
+                orderWhereClause.createdAt = { gte: dateLimit };
+            } else if (period === '30D') {
+                const dateLimit = new Date();
+                dateLimit.setDate(now.getDate() - 30);
+                orderWhereClause.createdAt = { gte: dateLimit };
+            } else if (period === 'THIS_MONTH') {
+                const dateLimit = new Date(now.getFullYear(), now.getMonth(), 1);
+                orderWhereClause.createdAt = { gte: dateLimit };
+            } else if (period === 'THIS_YEAR') {
+                const dateLimit = new Date(now.getFullYear(), 0, 1);
+                orderWhereClause.createdAt = { gte: dateLimit };
             }
-        };
 
-        // Revenue history based on period
-        let historyLength = 7;
-        if (period === '30D') historyLength = 30;
-        else if (period === '7D') historyLength = 7;
-        else if (period === 'THIS_MONTH') {
-            historyLength = now.getDate(); // du 1er au jour actuel
-        } else if (period === 'THIS_YEAR') {
-            historyLength = 12; // par mois
-        }
+            const [orders, customers, products, reviews] = await Promise.all([
+                prisma.order.findMany({
+                    where: orderWhereClause,
+                    include: { items: true }
+                }),
+                prisma.user.count({ where: { role: 'USER' } }),
+                prisma.product.count(),
+                prisma.review.count()
+            ]);
 
-        let revenueHistory = [];
-        if (period === 'THIS_YEAR') {
-            revenueHistory = Array.from({ length: 12 }, (_, i) => {
-                const monthOrders = orders.filter((o: any) => o.createdAt.getMonth() === i && o.createdAt.getFullYear() === now.getFullYear());
-                const monthName = new Intl.DateTimeFormat('fr-FR', { month: 'short' }).format(new Date(now.getFullYear(), i, 1));
-                return {
-                    name: monthName.toUpperCase(),
-                    value: monthOrders.reduce((acc: number, o: any) => acc + o.total, 0)
-                };
-            });
-        } else {
-            const days = Array.from({ length: historyLength }, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - (historyLength - 1 - i));
-                return d.toISOString().split('T')[0];
-            });
+            const totalRevenue = orders.reduce((acc: number, order: any) => acc + order.total, 0);
+            const orderCount = orders.length;
+            const avgBasket = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-            revenueHistory = days.map(date => {
-                const dayOrders = orders.filter((o: any) => o.createdAt.toISOString().split('T')[0] === date);
-                return {
-                    name: new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric' }).format(new Date(date)),
-                    value: dayOrders.reduce((acc: number, o: any) => acc + o.total, 0)
-                };
-            });
-        }
+            // Dynamic trends based on period
+            const stats = {
+                revenue: {
+                    total: totalRevenue,
+                    trend: period === 'ALL' ? "+12.5%" : (period === '7D' ? "7 derniers jours" : "Période sélectionnée"),
+                    lastMonth: totalRevenue * 0.9,
+                },
+                orders: {
+                    total: orderCount,
+                    trend: period === 'ALL' ? "+8.2%" : "Commandes reçues",
+                },
+                customers: {
+                    total: customers,
+                    trend: "+15.3%",
+                },
+                avgBasket: {
+                    total: avgBasket,
+                    trend: "+4.1%",
+                }
+            };
 
-        return { stats, revenueHistory };
+            // Revenue history based on period
+            let historyLength = 7;
+            if (period === '30D') historyLength = 30;
+            else if (period === '7D') historyLength = 7;
+            else if (period === 'THIS_MONTH') {
+                historyLength = now.getDate(); // du 1er au jour actuel
+            } else if (period === 'THIS_YEAR') {
+                historyLength = 12; // par mois
+            }
+
+            let revenueHistory = [];
+            if (period === 'THIS_YEAR') {
+                revenueHistory = Array.from({ length: 12 }, (_, i) => {
+                    const monthOrders = orders.filter((o: any) => o.createdAt.getMonth() === i && o.createdAt.getFullYear() === now.getFullYear());
+                    const monthName = new Intl.DateTimeFormat('fr-FR', { month: 'short' }).format(new Date(now.getFullYear(), i, 1));
+                    return {
+                        name: monthName.toUpperCase(),
+                        value: monthOrders.reduce((acc: number, o: any) => acc + o.total, 0)
+                    };
+                });
+            } else {
+                const days = Array.from({ length: historyLength }, (_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - (historyLength - 1 - i));
+                    return d.toISOString().split('T')[0];
+                });
+
+                revenueHistory = days.map(date => {
+                    const dayOrders = orders.filter((o: any) => o.createdAt.toISOString().split('T')[0] === date);
+                    return {
+                        name: new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric' }).format(new Date(date)),
+                        value: dayOrders.reduce((acc: number, o: any) => acc + o.total, 0)
+                    };
+                });
+            }
+
+            return { stats, revenueHistory };
+        });
     } catch (error) {
         console.error("Dashboard stats error:", error);
         return { stats: null, revenueHistory: [] };
@@ -128,21 +130,24 @@ export async function getDashboardStats(period: string = 'ALL') {
 
 export async function getCategoryStats() {
     try {
-        const [l1, l2, l3, products, stores] = await Promise.all([
-            prisma.category.count(),
-            (prisma as any).subCategory.count(),
-            (prisma as any).thirdLevelCategory.count(),
-            prisma.product.count(),
-            prisma.store.count()
-        ]);
+        await requireAdmin();
+        return await rememberCache('admin:category:stats', 300, async () => {
+            const [l1, l2, l3, products, stores] = await Promise.all([
+                prisma.category.count(),
+                (prisma as any).subCategory.count(),
+                (prisma as any).thirdLevelCategory.count(),
+                prisma.product.count(),
+                prisma.store.count()
+            ]);
 
-        return {
-            l1,
-            l2,
-            l3,
-            products,
-            stores
-        };
+            return {
+                l1,
+                l2,
+                l3,
+                products,
+                stores
+            };
+        });
     } catch (error) {
         console.error("Category stats error:", error);
         return { l1: 0, l2: 0, l3: 0, products: 0, stores: 0 };
@@ -151,11 +156,14 @@ export async function getCategoryStats() {
 
 export async function getStoreStats() {
     try {
-        const [stores, productWithStore] = await Promise.all([
-            prisma.store.count(),
-            prisma.product.count({ where: { storeId: { not: null } } })
-        ]);
-        return { stores, productWithStore };
+        await requireAdmin();
+        return await rememberCache('admin:store:stats', 300, async () => {
+            const [stores, productWithStore] = await Promise.all([
+                prisma.store.count(),
+                prisma.product.count({ where: { storeId: { not: null } } })
+            ]);
+            return { stores, productWithStore };
+        });
     } catch (error) {
         return { stores: 0, productWithStore: 0 };
     }
@@ -163,22 +171,22 @@ export async function getStoreStats() {
 
 export async function getAdminStores() {
     try {
-        // Safe check: if the main prisma instance is broken, try to use it via any
-        const p = prisma as any;
-        if (!p.store) {
-            console.error("CRITICAL: prisma.store is undefined in getAdminStores");
-            // Last resort: try to fetch using a raw query if everything else fails
-            // but let's try to just return [] to avoid crash and log keys
-            return [];
-        }
+        await requireAdmin();
+        return await rememberCache('admin:stores:all', 300, async () => {
+            const p = prisma as any;
+            if (!p.store) {
+                console.error("CRITICAL: prisma.store is undefined in getAdminStores");
+                return [];
+            }
 
-        return await p.store.findMany({
-            include: {
-                _count: {
-                    select: { products: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
+            return await p.store.findMany({
+                include: {
+                    _count: {
+                        select: { products: true }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            });
         });
     } catch (error) {
         console.error("GET_ADMIN_STORES_ERROR:", error);
@@ -216,6 +224,13 @@ export async function upsertStore(data: any, id?: string) {
                 data
             });
         }
+
+        await Promise.all([
+            invalidatePrefix('admin:stores:'),
+            invalidatePrefix('admin:store:stats'),
+            invalidatePrefix('stores:')
+        ]);
+
         revalidatePath('/admin/stores');
         revalidatePath('/');
         return { success: true };
@@ -236,6 +251,13 @@ export async function deleteStore(id: string) {
             return { success: false, message: "La boutique contient des produits." };
         }
         await prisma.store.delete({ where: { id } });
+
+        await Promise.all([
+            invalidatePrefix('admin:stores:'),
+            invalidatePrefix('admin:store:stats'),
+            invalidatePrefix('stores:')
+        ]);
+
         revalidatePath('/admin/stores');
         return { success: true };
     } catch (error) {
@@ -258,102 +280,105 @@ export async function getAdminProducts(
 ) {
     try {
         await requireAdmin();
-        const skip = (page - 1) * pageSize;
-        const where: any = {};
-        const andFilters: any[] = [];
+        const cacheKey = `admin:products:${(query || '').trim().toLowerCase()}:${page}:${pageSize}:${JSON.stringify(filters || {})}`;
+        return await rememberCache(cacheKey, 120, async () => {
+            const skip = (page - 1) * pageSize;
+            const where: any = {};
+            const andFilters: any[] = [];
 
-        if (query) {
-            andFilters.push({
-                OR: [
-                    { name: { contains: query, mode: 'insensitive' } },
-                    { description: { contains: query, mode: 'insensitive' } },
-                    { reference: { contains: query, mode: 'insensitive' } },
-                    { brand: { name: { contains: query, mode: 'insensitive' } } }
-                ]
-            });
-        }
-
-        if (filters?.categoryId) {
-            andFilters.push({ categoryId: filters.categoryId });
-        }
-
-        if (filters?.subCategoryId) {
-            andFilters.push({ subCategoryId: filters.subCategoryId });
-        }
-
-        if (filters?.thirdLevelCategoryId) {
-            andFilters.push({ thirdLevelCategoryId: filters.thirdLevelCategoryId });
-        }
-
-        if (filters?.brandId) {
-            andFilters.push({ brandId: filters.brandId });
-        }
-
-        if (filters?.stockStatus) {
-            if (filters.stockStatus === 'in_stock') {
-                andFilters.push({ stock: { gt: 0 } });
-            } else if (filters.stockStatus === 'out_of_stock') {
-                andFilters.push({ stock: 0 });
+            if (query) {
+                andFilters.push({
+                    OR: [
+                        { name: { contains: query, mode: 'insensitive' } },
+                        { description: { contains: query, mode: 'insensitive' } },
+                        { reference: { contains: query, mode: 'insensitive' } },
+                        { brand: { name: { contains: query, mode: 'insensitive' } } }
+                    ]
+                });
             }
-        }
 
-        if (filters?.publishStatus) {
-            if (filters.publishStatus === 'published') {
-                andFilters.push({ isPublished: true });
-            } else if (filters.publishStatus === 'hidden') {
-                andFilters.push({ isPublished: false });
+            if (filters?.categoryId) {
+                andFilters.push({ categoryId: filters.categoryId });
             }
-        }
 
-        if (andFilters.length > 0) {
-            where.AND = andFilters;
-        }
+            if (filters?.subCategoryId) {
+                andFilters.push({ subCategoryId: filters.subCategoryId });
+            }
 
-        // Stats should be global-ish based on the SEARCH but not pagination
-        const [total, activeCount, lowStockCount, categoriesCount] = await Promise.all([
-            prisma.product.count({ where }),
-            prisma.product.count({ where: { ...where, stock: { gt: 0 } } }),
-            prisma.product.count({ where: { ...where, stock: { gt: 0, lt: 10 } } }),
-            prisma.category.count()
-        ]);
+            if (filters?.thirdLevelCategoryId) {
+                andFilters.push({ thirdLevelCategoryId: filters.thirdLevelCategoryId });
+            }
 
-        const products = await prisma.product.findMany({
-            where,
-            include: {
-                category: true,
-                brand: true,
-                subCategory: true,
-                thirdLevelCategory: true,
-                store: true,
-                colorVariants: {
-                    orderBy: { position: 'asc' }
+            if (filters?.brandId) {
+                andFilters.push({ brandId: filters.brandId });
+            }
+
+            if (filters?.stockStatus) {
+                if (filters.stockStatus === 'in_stock') {
+                    andFilters.push({ stock: { gt: 0 } });
+                } else if (filters.stockStatus === 'out_of_stock') {
+                    andFilters.push({ stock: 0 });
                 }
-            },
-            orderBy: { createdAt: 'desc' },
-            take: pageSize,
-            skip: skip
-        });
-
-        let finalProducts = products || [];
-        if (finalProducts.length === 0 && !query && (!filters || Object.keys(filters).length === 0)) {
-            // Check if there's REALLY something in the DB
-            const rawCount = await prisma.product.count();
-            if (rawCount > 0) {
-                finalProducts = [{
-                    id: 'debug-id',
-                    name: `⚠️ SYNC ISSUE: ${rawCount} items in DB, but query returned 0. Try refreshing or clearing filters.`,
-                    price: 0,
-                    stock: 0,
-                    category: { name: 'DEBUG' }
-                }] as any;
             }
-        }
 
-        return {
-            products: finalProducts,
-            total: total || (finalProducts.length > 1 ? total : 0),
-            stats: { activeCount, lowStockCount, categoriesCount }
-        };
+            if (filters?.publishStatus) {
+                if (filters.publishStatus === 'published') {
+                    andFilters.push({ isPublished: true });
+                } else if (filters.publishStatus === 'hidden') {
+                    andFilters.push({ isPublished: false });
+                }
+            }
+
+            if (andFilters.length > 0) {
+                where.AND = andFilters;
+            }
+
+            // Stats should be global-ish based on the SEARCH but not pagination
+            const [total, activeCount, lowStockCount, categoriesCount] = await Promise.all([
+                prisma.product.count({ where }),
+                prisma.product.count({ where: { ...where, stock: { gt: 0 } } }),
+                prisma.product.count({ where: { ...where, stock: { gt: 0, lt: 10 } } }),
+                prisma.category.count()
+            ]);
+
+            const products = await prisma.product.findMany({
+                where,
+                include: {
+                    category: true,
+                    brand: true,
+                    subCategory: true,
+                    thirdLevelCategory: true,
+                    store: true,
+                    colorVariants: {
+                        orderBy: { position: 'asc' }
+                    }
+                },
+                orderBy: { createdAt: 'desc' },
+                take: pageSize,
+                skip: skip
+            });
+
+            let finalProducts = products || [];
+            if (finalProducts.length === 0 && !query && (!filters || Object.keys(filters).length === 0)) {
+                // Check if there's REALLY something in the DB
+                const rawCount = await prisma.product.count();
+                if (rawCount > 0) {
+                    finalProducts = [{
+                        id: 'debug-id',
+                        name: `⚠️ SYNC ISSUE: ${rawCount} items in DB, but query returned 0. Try refreshing or clearing filters.`,
+                        price: 0,
+                        stock: 0,
+                        category: { name: 'DEBUG' }
+                    }] as any;
+                }
+            }
+
+            return {
+                products: finalProducts,
+                total: total || (finalProducts.length > 1 ? total : 0),
+                stats: { activeCount, lowStockCount, categoriesCount }
+            };
+        });
     } catch (error: any) {
         console.error("ADMIN FETCH PRODUCTS ERROR:", error);
         return {
@@ -426,17 +451,20 @@ export async function getAllFilteredProductIds(
 export async function getAdminOrders(status?: string) {
     try {
         await requireAdmin();
-        const orders = await prisma.order.findMany({
-            where: status ? { status: status as any } : {},
-            include: {
-                user: true,
-                items: {
-                    include: { product: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
+        const cacheKey = `admin:orders:${status || 'ALL'}`;
+        return await rememberCache(cacheKey, 60, async () => {
+            const orders = await prisma.order.findMany({
+                where: status && status !== 'ALL' ? { status: status as any } : {},
+                include: {
+                    user: true,
+                    items: {
+                        include: { product: true }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+            return orders;
         });
-        return orders;
     } catch (error) {
         console.error("Fetch orders error:", error);
         return [];
@@ -446,18 +474,20 @@ export async function getAdminOrders(status?: string) {
 export async function getAdminCategories() {
     try {
         await requireAdmin();
-        const categories = await prisma.category.findMany({
-            include: {
-                subCategories: {
-                    select: { name: true, id: true },
-                    take: 5
-                },
-                _count: {
-                    select: { products: true, subCategories: true }
+        return await rememberCache('admin:categories:all', 300, async () => {
+            const categories = await prisma.category.findMany({
+                include: {
+                    subCategories: {
+                        select: { name: true, id: true },
+                        take: 5
+                    },
+                    _count: {
+                        select: { products: true, subCategories: true }
+                    }
                 }
-            }
+            });
+            return categories;
         });
-        return categories;
     } catch (error) {
         console.error("Fetch categories error:", error);
         return [];
@@ -486,6 +516,12 @@ export async function updateOrderStatus(orderId: string, status: string) {
                 notifyAdminsOrderStatusChange(orderId, status, clientName, order.total)
             ]).catch((e) => console.error('Error triggering notifications:', e));
         }
+
+        await Promise.all([
+            invalidatePrefix('admin:orders:'),
+            invalidatePrefix('admin:dashboard:'),
+            invalidatePrefix('admin:category:revenue')
+        ]);
 
         revalidatePath('/admin/orders');
         revalidatePath('/account');
@@ -526,27 +562,29 @@ export async function updateProductStock(productId: string, stock: number) {
 export async function getCategoryRevenue() {
     try {
         await requireAdmin();
-        const categories = await prisma.category.findMany({
-            include: {
-                products: {
-                    include: {
-                        orderItems: true
+        return await rememberCache('admin:category:revenue', 300, async () => {
+            const categories = await prisma.category.findMany({
+                include: {
+                    products: {
+                        include: {
+                            orderItems: true
+                        }
                     }
                 }
-            }
+            });
+
+            const distribution = categories.map((cat: any) => {
+                const revenue = cat.products.reduce((acc: number, prod: any) => {
+                    return acc + prod.orderItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+                }, 0);
+                return {
+                    name: cat.name,
+                    value: revenue
+                };
+            }).filter((d: any) => d.value > 0);
+
+            return distribution;
         });
-
-        const distribution = categories.map((cat: any) => {
-            const revenue = cat.products.reduce((acc: number, prod: any) => {
-                return acc + prod.orderItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-            }, 0);
-            return {
-                name: cat.name,
-                value: revenue
-            };
-        }).filter((d: any) => d.value > 0);
-
-        return distribution;
     } catch (error) {
         return [];
     }
@@ -555,37 +593,39 @@ export async function getCategoryRevenue() {
 export async function getRecentActivity() {
     try {
         await requireAdmin();
-        const [recentOrders, recentUsers] = await Promise.all([
-            prisma.order.findMany({
-                take: 5,
-                include: { user: true },
-                orderBy: { createdAt: 'desc' }
-            }),
-            prisma.user.findMany({
-                take: 5,
-                where: { role: 'USER' },
-                orderBy: { createdAt: 'desc' }
-            })
-        ]);
+        return await rememberCache('admin:dashboard:recent_activity', 60, async () => {
+            const [recentOrders, recentUsers] = await Promise.all([
+                prisma.order.findMany({
+                    take: 5,
+                    include: { user: true },
+                    orderBy: { createdAt: 'desc' }
+                }),
+                prisma.user.findMany({
+                    take: 5,
+                    where: { role: 'USER' },
+                    orderBy: { createdAt: 'desc' }
+                })
+            ]);
 
-        const activities = [
-            ...recentOrders.map((o: any) => ({
-                id: o.id,
-                type: 'ORDER' as const,
-                title: `Nouvelle commande de ${o.user.username || o.user.email}`,
-                time: o.createdAt,
-                amount: o.total
-            })),
-            ...recentUsers.map((u: any) => ({
-                id: u.id,
-                type: 'USER' as const,
-                title: `Nouvelle inscription : ${u.username || u.email}`,
-                time: u.createdAt,
-                amount: null
-            }))
-        ].sort((a: any, b: any) => b.time.getTime() - a.time.getTime()).slice(0, 8);
+            const activities = [
+                ...recentOrders.map((o: any) => ({
+                    id: o.id,
+                    type: 'ORDER' as const,
+                    title: `Nouvelle commande de ${o.user?.username || o.user?.email || 'Client'}`,
+                    time: o.createdAt,
+                    amount: o.total
+                })),
+                ...recentUsers.map((u: any) => ({
+                    id: u.id,
+                    type: 'USER' as const,
+                    title: `Nouvelle inscription : ${u.username || u.email}`,
+                    time: u.createdAt,
+                    amount: null
+                }))
+            ].sort((a: any, b: any) => b.time.getTime() - a.time.getTime()).slice(0, 8);
 
-        return activities;
+            return activities;
+        });
     } catch (error) {
         return [];
     }
@@ -594,49 +634,49 @@ export async function getRecentActivity() {
 export async function getAdminCustomers(query?: string, segment: string = 'all') {
     try {
         await requireAdmin();
-        const whereClause: any = { role: 'USER' };
+        const cacheKey = `admin:customers:${(query || '').trim().toLowerCase()}:${segment}`;
+        return await rememberCache(cacheKey, 120, async () => {
+            const whereClause: any = { role: 'USER' };
 
-        if (query) {
-            whereClause.OR = [
-                { username: { contains: query, mode: 'insensitive' } },
-                { email: { contains: query, mode: 'insensitive' } },
-                { phone: { contains: query, mode: 'insensitive' } }
-            ];
-        }
+            if (query) {
+                whereClause.OR = [
+                    { username: { contains: query, mode: 'insensitive' } },
+                    { email: { contains: query, mode: 'insensitive' } },
+                    { phone: { contains: query, mode: 'insensitive' } }
+                ];
+            }
 
-        if (segment === 'vip') {
-            // Clients avec > 5 commandes
-            whereClause.orders = { some: {} }; // At least one to satisfy basic relation check before counting below if Prisma doesn't support direct relation count filtering for MySQL/PG differences, but Prisma usually does or we filter post-query.
-            // Since Prisma relation filtering on count is tricky in some versions without extended features, we might need a different approach or just filter in memory for 'vip'.
-            // Actually, in Prisma we usually do: `orders: { _count: { gt: 5 } }` (requires preview feature in some versions) but we'll fetch all and filter if it's not huge, or we can use raw.
-        }
+            if (segment === 'vip') {
+                whereClause.orders = { some: {} };
+            }
 
-        const customers = await prisma.user.findMany({
-            where: whereClause,
-            include: {
-                _count: {
-                    select: { orders: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
+            const customers = await prisma.user.findMany({
+                where: whereClause,
+                include: {
+                    _count: {
+                        select: { orders: true }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            // Appliquer les filtres de relations complexes en mémoire pour éviter les soucis de compatibilité Prisma
+            let filteredCustomers = customers;
+
+            if (segment === 'vip') {
+                filteredCustomers = customers.filter(c => c._count.orders > 5);
+            } else if (segment === 'active') {
+                filteredCustomers = customers.filter(c => c._count.orders > 0);
+            } else if (segment === 'inactive') {
+                filteredCustomers = customers.filter(c => c._count.orders === 0);
+            } else if (segment === 'new') {
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                filteredCustomers = customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo);
+            }
+
+            return filteredCustomers;
         });
-
-        // Appliquer les filtres de relations complexes en mémoire pour éviter les soucis de compatibilité Prisma
-        let filteredCustomers = customers;
-
-        if (segment === 'vip') {
-            filteredCustomers = customers.filter(c => c._count.orders > 5);
-        } else if (segment === 'active') {
-            filteredCustomers = customers.filter(c => c._count.orders > 0);
-        } else if (segment === 'inactive') {
-            filteredCustomers = customers.filter(c => c._count.orders === 0);
-        } else if (segment === 'new') {
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            filteredCustomers = customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo);
-        }
-
-        return filteredCustomers;
     } catch (error) {
         console.error("Fetch customers error:", error);
         return [];
@@ -650,22 +690,25 @@ export async function getAdminCustomers(query?: string, segment: string = 'all')
 export async function getAdminPromotions(query?: string) {
     try {
         await requireAdmin();
-        const whereClause: any = {};
-        if (query) {
-            whereClause.name = { contains: query, mode: 'insensitive' };
-        }
+        const cacheKey = `admin:promotions:${(query || '').trim().toLowerCase()}`;
+        return await rememberCache(cacheKey, 120, async () => {
+            const whereClause: any = {};
+            if (query) {
+                whereClause.name = { contains: query, mode: 'insensitive' };
+            }
 
-        const promotions = await prisma.promotion.findMany({
-            where: whereClause,
-            include: {
-                _count: {
-                    select: { products: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
+            const promotions = await prisma.promotion.findMany({
+                where: whereClause,
+                include: {
+                    _count: {
+                        select: { products: true }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            return promotions;
         });
-
-        return promotions;
     } catch (error) {
         console.error("Fetch promotions error:", error);
         return [];
@@ -676,6 +719,10 @@ export async function createPromotion(data: { name: string, description?: string
     try {
         await requireAdmin();
         const promotion = await prisma.promotion.create({ data });
+        await Promise.all([
+            invalidatePrefix('admin:promotions:'),
+            invalidatePrefix('products:')
+        ]);
         revalidatePath('/admin/promotions');
         revalidatePath('/promotions');
         return { success: true, promotion };
@@ -707,6 +754,12 @@ export async function updatePromotion(id: string, data: { name?: string, descrip
             }
         }
 
+        await Promise.all([
+            invalidatePrefix('admin:promotions:'),
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:')
+        ]);
+
         revalidatePath('/admin/promotions');
         revalidatePath('/promotions');
         revalidatePath('/boutique');
@@ -733,6 +786,12 @@ export async function deletePromotion(id: string) {
 
         // Then delete the campaign
         await prisma.promotion.delete({ where: { id } });
+
+        await Promise.all([
+            invalidatePrefix('admin:promotions:'),
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:')
+        ]);
 
         revalidatePath('/admin/promotions');
         revalidatePath('/promotions');
@@ -795,6 +854,13 @@ export async function addProductToPromo(productId: string, promotionId: string) 
             }
         });
 
+        await Promise.all([
+            invalidateCache(`product:${productId}`),
+            invalidatePrefix('admin:promotions:'),
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:')
+        ]);
+
         revalidatePath('/admin/promotions');
         revalidatePath('/boutique');
         return { success: true };
@@ -819,6 +885,13 @@ export async function removeProductFromPromo(productId: string) {
             }
         });
 
+        await Promise.all([
+            invalidateCache(`product:${productId}`),
+            invalidatePrefix('admin:promotions:'),
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:')
+        ]);
+
         revalidatePath('/admin/promotions');
         revalidatePath('/boutique');
         return { success: true };
@@ -837,7 +910,21 @@ export async function deleteBulkProducts(ids: string[]) {
                 }
             }
         });
+
+        await Promise.all([
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:'),
+            invalidatePrefix('admin:products:'),
+            invalidatePrefix('admin:out-of-stock:'),
+            invalidatePrefix('admin:dashboard:'),
+            invalidatePrefix('categories:'),
+            invalidatePrefix('brands:')
+        ]);
+
         revalidatePath('/admin/inventory');
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/out-of-stock');
+        revalidatePath('/boutique');
         return { success: true };
     } catch (error) {
         console.error("Delete bulk products error:", error);
@@ -851,7 +938,22 @@ export async function deleteProduct(id: string) {
         await prisma.product.delete({
             where: { id }
         });
+
+        await Promise.all([
+            invalidateCache(`product:${id}`),
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:'),
+            invalidatePrefix('admin:products:'),
+            invalidatePrefix('admin:out-of-stock:'),
+            invalidatePrefix('admin:dashboard:'),
+            invalidatePrefix('categories:'),
+            invalidatePrefix('brands:')
+        ]);
+
         revalidatePath('/admin/inventory');
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/out-of-stock');
+        revalidatePath('/boutique');
         return { success: true };
     } catch (error) {
         console.error("Delete product error:", error);
@@ -863,7 +965,21 @@ export async function deleteAllProducts() {
     try {
         await requireAdmin();
         await prisma.product.deleteMany({});
+
+        await Promise.all([
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:'),
+            invalidatePrefix('admin:products:'),
+            invalidatePrefix('admin:out-of-stock:'),
+            invalidatePrefix('admin:dashboard:'),
+            invalidatePrefix('categories:'),
+            invalidatePrefix('brands:')
+        ]);
+
         revalidatePath('/admin/inventory');
+        revalidatePath('/admin/products');
+        revalidatePath('/admin/out-of-stock');
+        revalidatePath('/boutique');
         return { success: true };
     } catch (error) {
         console.error("Delete all products error:", error);
@@ -878,6 +994,15 @@ export async function updateProduct(id: string, data: any) {
             where: { id },
             data,
         });
+
+        await Promise.all([
+            invalidateCache(`product:${id}`),
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:'),
+            invalidatePrefix('admin:products:'),
+            invalidatePrefix('admin:out-of-stock:'),
+            invalidatePrefix('admin:dashboard:')
+        ]);
 
         revalidatePath('/admin/promotions');
         revalidatePath('/boutique');
@@ -896,12 +1021,14 @@ export async function deleteCategory(id: string) {
             return { success: false, message: "La catégorie contient des produits." };
         }
         await prisma.category.delete({ where: { id } });
-        try {
-            await invalidatePrefix('categories:');
-            await invalidatePrefix('megamenu:');
-        } catch (e) {
-            console.warn('[Redis] Cache invalidation failed:', e);
-        }
+        
+        await Promise.all([
+            invalidatePrefix('categories:'),
+            invalidatePrefix('megamenu:'),
+            invalidatePrefix('admin:categories:'),
+            invalidatePrefix('admin:category:stats')
+        ]);
+
         revalidatePath('/admin/categories');
         revalidatePath('/');
         return { success: true };
@@ -918,6 +1045,12 @@ export async function deleteCustomer(id: string) {
             return { success: false, message: "Le client a des commandes actives." };
         }
         await prisma.user.delete({ where: { id } });
+
+        await Promise.all([
+            invalidatePrefix('admin:customers:'),
+            invalidatePrefix('admin:dashboard:')
+        ]);
+
         revalidatePath('/admin/customers');
         return { success: true };
     } catch (error) {
@@ -928,13 +1061,15 @@ export async function deleteCustomer(id: string) {
 export async function getAdminBrands() {
     try {
         await requireAdmin();
-        return await prisma.brand.findMany({
-            include: {
-                _count: {
-                    select: { products: true }
-                }
-            },
-            orderBy: { name: 'asc' }
+        return await rememberCache('admin:brands:all', 300, async () => {
+            return await prisma.brand.findMany({
+                include: {
+                    _count: {
+                        select: { products: true }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            });
         });
     } catch (error) {
         return [];
@@ -954,7 +1089,10 @@ export async function upsertBrand(data: any, id?: string) {
                 data
             });
         }
-        await invalidatePrefix('brands:');
+        await Promise.all([
+            invalidatePrefix('brands:'),
+            invalidatePrefix('admin:brands:')
+        ]);
         revalidatePath('/admin/brands');
         revalidatePath('/');
         revalidatePath('/marques');
@@ -972,7 +1110,10 @@ export async function deleteBrand(id: string) {
             return { success: false, message: "La marque contient des produits." };
         }
         await prisma.brand.delete({ where: { id } });
-        await invalidatePrefix('brands:');
+        await Promise.all([
+            invalidatePrefix('brands:'),
+            invalidatePrefix('admin:brands:')
+        ]);
         revalidatePath('/admin/brands');
         revalidatePath('/');
         revalidatePath('/marques');
@@ -985,14 +1126,16 @@ export async function deleteBrand(id: string) {
 export async function getSubCategories(categoryId?: string) {
     try {
         await requireAdmin();
-        return await (prisma as any).subCategory.findMany({
-            where: categoryId ? { categoryId } : {},
-            include: {
-                _count: {
-                    select: { products: true, thirdLevelCategories: true }
-                }
-            },
-            orderBy: { name: 'asc' }
+        return await rememberCache(`admin:subcategories:${categoryId || 'ALL'}`, 300, async () => {
+            return await (prisma as any).subCategory.findMany({
+                where: categoryId ? { categoryId } : {},
+                include: {
+                    _count: {
+                        select: { products: true, thirdLevelCategories: true }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            });
         });
     } catch (error) {
         return [];
@@ -1012,12 +1155,13 @@ export async function upsertSubCategory(data: any, id?: string) {
                 data
             });
         }
-        try {
-            await invalidatePrefix('categories:');
-            await invalidatePrefix('megamenu:');
-        } catch (e) {
-            console.warn('[Redis] Cache invalidation failed:', e);
-        }
+        await Promise.all([
+            invalidatePrefix('categories:'),
+            invalidatePrefix('megamenu:'),
+            invalidatePrefix('admin:categories:'),
+            invalidatePrefix('admin:subcategories:'),
+            invalidatePrefix('admin:category:stats')
+        ]);
         revalidatePath('/admin/categories');
         revalidatePath('/');
         return { success: true };
@@ -1038,12 +1182,13 @@ export async function deleteSubCategory(id: string) {
             return { success: false, message: "Cette catégorie contient des sous-sous-catégories." };
         }
         await prisma.subCategory.delete({ where: { id } });
-        try {
-            await invalidatePrefix('categories:');
-            await invalidatePrefix('megamenu:');
-        } catch (e) {
-            console.warn('[Redis] Cache invalidation failed:', e);
-        }
+        await Promise.all([
+            invalidatePrefix('categories:'),
+            invalidatePrefix('megamenu:'),
+            invalidatePrefix('admin:categories:'),
+            invalidatePrefix('admin:subcategories:'),
+            invalidatePrefix('admin:category:stats')
+        ]);
         revalidatePath('/admin/categories');
         revalidatePath('/');
         return { success: true };
@@ -1055,14 +1200,16 @@ export async function deleteSubCategory(id: string) {
 export async function getThirdLevelCategories(subCategoryId?: string) {
     try {
         await requireAdmin();
-        return await (prisma as any).thirdLevelCategory.findMany({
-            where: subCategoryId ? { subCategoryId } : {},
-            include: {
-                _count: {
-                    select: { products: true }
-                }
-            },
-            orderBy: { name: 'asc' }
+        return await rememberCache(`admin:thirdlevel:${subCategoryId || 'ALL'}`, 300, async () => {
+            return await (prisma as any).thirdLevelCategory.findMany({
+                where: subCategoryId ? { subCategoryId } : {},
+                include: {
+                    _count: {
+                        select: { products: true }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            });
         });
     } catch (error) {
         return [];
@@ -1082,12 +1229,14 @@ export async function upsertThirdLevelCategory(data: any, id?: string) {
                 data
             });
         }
-        try {
-            await invalidatePrefix('categories:');
-            await invalidatePrefix('megamenu:');
-        } catch (e) {
-            console.warn('[Redis] Cache invalidation failed:', e);
-        }
+        await Promise.all([
+            invalidatePrefix('categories:'),
+            invalidatePrefix('megamenu:'),
+            invalidatePrefix('admin:categories:'),
+            invalidatePrefix('admin:subcategories:'),
+            invalidatePrefix('admin:thirdlevel:'),
+            invalidatePrefix('admin:category:stats')
+        ]);
         revalidatePath('/admin/categories');
         revalidatePath('/');
         return { success: true };
@@ -1104,12 +1253,14 @@ export async function deleteThirdLevelCategory(id: string) {
             return { success: false, message: "Cette catégorie contient des produits." };
         }
         await (prisma as any).thirdLevelCategory.delete({ where: { id } });
-        try {
-            await invalidatePrefix('categories:');
-            await invalidatePrefix('megamenu:');
-        } catch (e) {
-            console.warn('[Redis] Cache invalidation failed:', e);
-        }
+        await Promise.all([
+            invalidatePrefix('categories:'),
+            invalidatePrefix('megamenu:'),
+            invalidatePrefix('admin:categories:'),
+            invalidatePrefix('admin:subcategories:'),
+            invalidatePrefix('admin:thirdlevel:'),
+            invalidatePrefix('admin:category:stats')
+        ]);
         revalidatePath('/admin/categories');
         revalidatePath('/');
         return { success: true };
@@ -1237,12 +1388,20 @@ export async function upsertProduct(data: any, id?: string) {
         
         // Invalider le cache Redis
         try {
+            const invalidations: Promise<any>[] = [
+                invalidatePrefix('products:'),
+                invalidatePrefix('similar:'),
+                invalidatePrefix('admin:products:'),
+                invalidatePrefix('admin:out-of-stock:'),
+                invalidatePrefix('admin:dashboard:'),
+                invalidatePrefix('admin:category:stats'),
+                invalidatePrefix('categories:'),
+                invalidatePrefix('brands:')
+            ];
             if (id) {
-                if (process.env.NODE_ENV !== 'production') console.log(`[Redis] Invalidating cache for product: ${id}`);
-                await invalidateCache(`product:${id}`);
-                await invalidatePrefix('similar:');
+                invalidations.push(invalidateCache(`product:${id}`));
             }
-            await invalidatePrefix('products:');
+            await Promise.all(invalidations);
         } catch (redisError) {
             console.warn("[Redis] Cache invalidation failed (non-blocking):", redisError);
         }
@@ -1275,12 +1434,12 @@ export async function upsertCategory(data: any, id?: string) {
                 data
             });
         }
-        try {
-            await invalidatePrefix('categories:');
-            await invalidatePrefix('megamenu:');
-        } catch (e) {
-            console.warn('[Redis] Cache invalidation failed:', e);
-        }
+        await Promise.all([
+            invalidatePrefix('categories:'),
+            invalidatePrefix('megamenu:'),
+            invalidatePrefix('admin:categories:'),
+            invalidatePrefix('admin:category:stats')
+        ]);
         revalidatePath('/admin/categories');
         revalidatePath('/');
         return { success: true };
@@ -1346,6 +1505,12 @@ export async function bulkUpdateOrderStatuses(orderIds: string[], status: string
             notifyClientOrderStatusChange(order.id, status).catch(() => {});
             notifyAdminsOrderStatusChange(order.id, status, clientName, order.total).catch(() => {});
         }
+
+        await Promise.all([
+            invalidatePrefix('admin:orders:'),
+            invalidatePrefix('admin:dashboard:'),
+            invalidatePrefix('admin:category:revenue')
+        ]);
 
         revalidatePath('/admin/orders');
         revalidatePath('/account');
@@ -1567,9 +1732,10 @@ export async function initializePopularUniverses() {
 
 export async function getHomePromos() {
     try {
-        await requireAdmin();
-        return await (prisma as any).homePromo.findMany({
-            orderBy: { order: 'asc' }
+        return await rememberCache('home:promos', 3600, async () => {
+            return await (prisma as any).homePromo.findMany({
+                orderBy: { order: 'asc' }
+            });
         });
     } catch (error) {
         return [];
@@ -1584,6 +1750,7 @@ export async function upsertHomePromo(data: any, id?: string) {
         } else {
             await (prisma as any).homePromo.create({ data });
         }
+        await invalidateCache('home:promos');
         revalidatePath('/');
         return { success: true };
     } catch (error: any) {
@@ -1595,6 +1762,7 @@ export async function deleteHomePromo(id: string) {
     try {
         await requireAdmin();
         await (prisma as any).homePromo.delete({ where: { id } });
+        await invalidateCache('home:promos');
         revalidatePath('/');
         return { success: true };
     } catch (error) {
@@ -1668,6 +1836,7 @@ export async function initializeHomePromos() {
         for (const p of DEFAULT_PROMOS) {
             await (prisma as any).homePromo.create({ data: p });
         }
+        await invalidateCache('home:promos');
         revalidatePath('/');
         return { success: true };
     } catch (error) {
@@ -1681,10 +1850,11 @@ export async function initializeHomePromos() {
 
 export async function getBigBanners() {
     try {
-        await requireAdmin();
-        return await (prisma as any).bigBanner.findMany({
-            where: { isActive: true },
-            orderBy: { createdAt: 'desc' }
+        return await rememberCache('home:big_banners', 3600, async () => {
+            return await (prisma as any).bigBanner.findMany({
+                where: { isActive: true },
+                orderBy: { createdAt: 'desc' }
+            });
         });
     } catch (error) {
         return [];
@@ -1699,6 +1869,7 @@ export async function upsertBigBanner(data: any, id?: string) {
         } else {
             await (prisma as any).bigBanner.create({ data });
         }
+        await invalidateCache('home:big_banners');
         revalidatePath('/');
         return { success: true };
     } catch (error: any) {
@@ -1710,6 +1881,7 @@ export async function deleteBigBanner(id: string) {
     try {
         await requireAdmin();
         await (prisma as any).bigBanner.delete({ where: { id } });
+        await invalidateCache('home:big_banners');
         revalidatePath('/');
         return { success: true };
     } catch (error) {
@@ -1732,6 +1904,7 @@ export async function initializeBigBanners() {
     try {
         await requireAdmin();
         await (prisma as any).bigBanner.create({ data: DEFAULT_BANNER });
+        await invalidateCache('home:big_banners');
         revalidatePath('/');
         return { success: true };
     } catch (error) {
@@ -1773,7 +1946,14 @@ export async function toggleProductPublish(id: string, isPublished: boolean) {
                     deactivatedAt: new Date()
                 }
             });
-            await invalidatePrefix('products:');
+            await Promise.all([
+                invalidateCache(`product:${id}`),
+                invalidatePrefix('products:'),
+                invalidatePrefix('similar:'),
+                invalidatePrefix('admin:products:'),
+                invalidatePrefix('admin:out-of-stock:'),
+                invalidatePrefix('admin:dashboard:')
+            ]);
             revalidatePath('/');
             revalidatePath('/admin/products');
             revalidatePath('/admin/out-of-stock');
@@ -1836,7 +2016,13 @@ export async function bulkTogglePublishProducts(ids: string[], isPublished: bool
             });
         }
         
-        await invalidatePrefix('products:');
+        await Promise.all([
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:'),
+            invalidatePrefix('admin:products:'),
+            invalidatePrefix('admin:out-of-stock:'),
+            invalidatePrefix('admin:dashboard:')
+        ]);
         revalidatePath('/');
         revalidatePath('/admin/products');
         revalidatePath('/admin/out-of-stock');
@@ -1854,7 +2040,13 @@ export async function globalTogglePublishProducts(isPublished: boolean) {
             data: { isPublished }
         });
         
-        await invalidatePrefix('products:');
+        await Promise.all([
+            invalidatePrefix('products:'),
+            invalidatePrefix('similar:'),
+            invalidatePrefix('admin:products:'),
+            invalidatePrefix('admin:out-of-stock:'),
+            invalidatePrefix('admin:dashboard:')
+        ]);
         revalidatePath('/');
         return { success: true };
     } catch (error) {
@@ -1879,9 +2071,15 @@ export async function toggleCategoryPublish(id: string, isPublished: boolean) {
         });
 
         // 3. Invalidate caches
-        const { invalidatePrefix } = await import('@/lib/redis');
-        await invalidatePrefix('products:');
-        await invalidatePrefix('categories:');
+        await Promise.all([
+            invalidatePrefix('products:'),
+            invalidatePrefix('categories:'),
+            invalidatePrefix('megamenu:'),
+            invalidatePrefix('admin:products:'),
+            invalidatePrefix('admin:out-of-stock:'),
+            invalidatePrefix('admin:categories:'),
+            invalidatePrefix('admin:category:stats')
+        ]);
         
         revalidatePath('/admin/categories');
         revalidatePath('/admin/products');
@@ -1914,108 +2112,112 @@ export async function getOutOfStockProducts(options: {
             sortBy = 'date_desc',
         } = options;
 
-        const skip = (page - 1) * pageSize;
+        const cacheKey = `admin:out-of-stock:${query.trim().toLowerCase()}:${page}:${pageSize}:${filter}:${sortBy}`;
+        return await rememberCache(cacheKey, 60, async () => {
+            const skip = (page - 1) * pageSize;
 
-        // Base criteria: Produit désactivé OU en attente de vérification réapprovisionnement OU stock = 0
-        const andFilters: any[] = [];
+            // Base criteria: Produit désactivé OU en attente de vérification réapprovisionnement OU stock = 0
+            const andFilters: any[] = [];
 
-        if (query.trim()) {
-            andFilters.push({
-                OR: [
-                    { name: { contains: query.trim(), mode: 'insensitive' } },
-                    { reference: { contains: query.trim(), mode: 'insensitive' } },
-                    { description: { contains: query.trim(), mode: 'insensitive' } },
-                ]
-            });
-        }
+            if (query.trim()) {
+                andFilters.push({
+                    OR: [
+                        { name: { contains: query.trim(), mode: 'insensitive' } },
+                        { reference: { contains: query.trim(), mode: 'insensitive' } },
+                        { description: { contains: query.trim(), mode: 'insensitive' } },
+                    ]
+                });
+            }
 
-        if (filter === 'OUT_OF_STOCK') {
-            andFilters.push({
-                OR: [
-                    { deactivationReason: 'OUT_OF_STOCK', stock: { lte: 0 } },
-                    { stock: { lte: 0 } }
-                ]
-            });
-        } else if (filter === 'RESTOCKED_PENDING') {
-            andFilters.push({
-                restockPendingReview: true,
-                stock: { gt: 0 }
-            });
-        } else if (filter === 'MANUAL_DEACTIVATED') {
-            andFilters.push({
-                deactivationReason: 'MANUAL',
-                isPublished: false
-            });
-        } else {
-            // ALL out-of-stock & restock items
-            andFilters.push({
-                OR: [
-                    { stock: { lte: 0 } },
-                    { deactivationReason: 'OUT_OF_STOCK' },
-                    { restockPendingReview: true }
-                ]
-            });
-        }
-
-        const where: any = andFilters.length > 0 ? { AND: andFilters } : {};
-
-        // Tri
-        let orderBy: any = { updatedAt: 'desc' };
-        if (sortBy === 'date_desc') orderBy = { updatedAt: 'desc' };
-        if (sortBy === 'date_asc') orderBy = { updatedAt: 'asc' };
-        if (sortBy === 'name_asc') orderBy = { name: 'asc' };
-        if (sortBy === 'name_desc') orderBy = { name: 'desc' };
-        if (sortBy === 'stock_desc') orderBy = { stock: 'desc' };
-        if (sortBy === 'stock_asc') orderBy = { stock: 'asc' };
-
-        // KPIs calculés sur les données réelles
-        const [
-            outOfStockCount,
-            restockedPendingCount,
-            totalCount,
-            products
-        ] = await Promise.all([
-            prisma.product.count({
-                where: {
-                    stock: { lte: 0 }
-                }
-            }),
-            prisma.product.count({
-                where: {
+            if (filter === 'OUT_OF_STOCK') {
+                andFilters.push({
+                    OR: [
+                        { deactivationReason: 'OUT_OF_STOCK', stock: { lte: 0 } },
+                        { stock: { lte: 0 } }
+                    ]
+                });
+            } else if (filter === 'RESTOCKED_PENDING') {
+                andFilters.push({
                     restockPendingReview: true,
                     stock: { gt: 0 }
-                }
-            }),
-            prisma.product.count({ where }),
-            prisma.product.findMany({
-                where,
-                include: {
-                    category: true,
-                    brand: true,
-                    subCategory: true,
-                },
-                orderBy,
-                take: pageSize,
-                skip
-            })
-        ]);
+                });
+            } else if (filter === 'MANUAL_DEACTIVATED') {
+                andFilters.push({
+                    deactivationReason: 'MANUAL',
+                    isPublished: false
+                });
+            } else {
+                // ALL out-of-stock & restock items
+                andFilters.push({
+                    OR: [
+                        { stock: { lte: 0 } },
+                        { deactivationReason: 'OUT_OF_STOCK' },
+                        { restockPendingReview: true }
+                    ]
+                });
+            }
 
-        return {
-            success: true,
-            products,
-            total: totalCount,
-            page,
-            pageSize,
-            totalPages: Math.ceil(totalCount / pageSize),
-            stats: {
+            const where: any = andFilters.length > 0 ? { AND: andFilters } : {};
+
+            // Tri
+            let orderBy: any = { updatedAt: 'desc' };
+            if (sortBy === 'date_desc') orderBy = { updatedAt: 'desc' };
+            if (sortBy === 'date_asc') orderBy = { updatedAt: 'asc' };
+            if (sortBy === 'name_asc') orderBy = { name: 'asc' };
+            if (sortBy === 'name_desc') orderBy = { name: 'desc' };
+            if (sortBy === 'stock_desc') orderBy = { stock: 'desc' };
+            if (sortBy === 'stock_asc') orderBy = { stock: 'asc' };
+
+            // KPIs calculés sur les données réelles
+            const [
                 outOfStockCount,
                 restockedPendingCount,
-            }
-        };
+                totalCount,
+                products
+            ] = await Promise.all([
+                prisma.product.count({
+                    where: {
+                        stock: { lte: 0 }
+                    }
+                }),
+                prisma.product.count({
+                    where: {
+                        restockPendingReview: true,
+                        stock: { gt: 0 }
+                    }
+                }),
+                prisma.product.count({ where }),
+                prisma.product.findMany({
+                    where,
+                    include: {
+                        category: true,
+                        brand: true,
+                        subCategory: true,
+                    },
+                    orderBy,
+                    take: pageSize,
+                    skip
+                })
+            ]);
+
+            return {
+                success: true as const,
+                error: undefined as string | undefined,
+                products,
+                total: totalCount,
+                page,
+                pageSize,
+                totalPages: Math.ceil(totalCount / pageSize),
+                stats: {
+                    outOfStockCount,
+                    restockedPendingCount,
+                }
+            };
+        });
     } catch (error: any) {
         console.error('getOutOfStockProducts error:', error);
         return {
-            success: false,
+            success: false as const,
             error: error.message || 'Erreur lors du chargement des produits',
             products: [],
             total: 0,

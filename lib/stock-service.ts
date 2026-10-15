@@ -119,6 +119,12 @@ export async function processStockChange({
       await invalidatePrefix('products:');
       await invalidatePrefix('similar:');
       await invalidatePrefix('categories:');
+      await invalidatePrefix('brands:');
+      await invalidatePrefix('stores:');
+      await invalidatePrefix('admin:products:');
+      await invalidatePrefix('admin:out-of-stock:');
+      await invalidatePrefix('admin:dashboard:');
+      await invalidatePrefix('admin:category:');
     } catch (e) {
       console.warn('[StockService] Redis cache invalidation notice:', e);
     }
@@ -238,6 +244,13 @@ export async function reactivateProduct(productId: string) {
     await invalidateCache(`product:${productId}`);
     await invalidatePrefix('products:');
     await invalidatePrefix('similar:');
+    await invalidatePrefix('categories:');
+    await invalidatePrefix('brands:');
+    await invalidatePrefix('stores:');
+    await invalidatePrefix('admin:products:');
+    await invalidatePrefix('admin:out-of-stock:');
+    await invalidatePrefix('admin:dashboard:');
+    await invalidatePrefix('admin:category:');
   } catch (e) {
     console.warn('[StockService] Redis cache invalidation error:', e);
   }

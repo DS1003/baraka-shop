@@ -50,9 +50,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         notFound()
     }
 
-    // Fetch similar products based on the full category hierarchy (intelligent matching)
-    const similarProducts = await getSimilarProductsAction(product, 8)
-    const topRatedProducts = await getProductsAction({ sort: 'top_rated', limit: 8 })
+    // Fetch similar products based on the full category hierarchy (intelligent matching) in parallel with top rated
+    const [similarProducts, topRatedProducts] = await Promise.all([
+        getSimilarProductsAction(product, 8),
+        getProductsAction({ sort: 'top_rated', limit: 8 })
+    ])
 
     // Build JSON-LD Product structured data for Google rich snippets
     const productJsonLd = {
@@ -76,11 +78,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 name: 'Baraka Shop',
             },
         },
-        ...(product.averageRating && product.averageRating > 0 ? {
+        ...((product as any).averageRating && (product as any).averageRating > 0 ? {
             aggregateRating: {
                 '@type': 'AggregateRating',
-                ratingValue: product.averageRating,
-                reviewCount: product.reviewCount || 1,
+                ratingValue: (product as any).averageRating,
+                reviewCount: (product as any).reviewCount || 1,
             }
         } : {}),
     }

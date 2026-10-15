@@ -3,49 +3,52 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { rememberCache, invalidateCache } from "@/lib/redis";
 
 export async function getUserSettings() {
     const session = await auth();
     if (!session?.user?.id) return null;
 
-    try {
-        const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: {
-                id: true,
-                username: true,
-                email: true,
-                phone: true,
-                image: true,
-                address: true,
-                metadata: true,
-            }
-        });
-
-        if (!user) return null;
-
-        // Ensure metadata has expected structure
-        const metadata = (user.metadata as any) || {};
-        return {
-            ...user,
-            settings: {
-                notifications: metadata.notifications || {
-                    emails: true,
-                    push: true,
-                    sms: false,
-                    reports: true,
-                    marketing: false
-                },
-                security: metadata.security || {
-                    twoFactor: false,
-                    loginAlerts: true
+    return rememberCache(`user:settings:${session.user.id}`, 120, async () => {
+        try {
+            const user = await prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    phone: true,
+                    image: true,
+                    address: true,
+                    metadata: true,
                 }
-            }
-        };
-    } catch (error) {
-        console.error("Fetch user settings error:", error);
-        return null;
-    }
+            });
+
+            if (!user) return null;
+
+            // Ensure metadata has expected structure
+            const metadata = (user.metadata as any) || {};
+            return {
+                ...user,
+                settings: {
+                    notifications: metadata.notifications || {
+                        emails: true,
+                        push: true,
+                        sms: false,
+                        reports: true,
+                        marketing: false
+                    },
+                    security: metadata.security || {
+                        twoFactor: false,
+                        loginAlerts: true
+                    }
+                }
+            };
+        } catch (error) {
+            console.error("Fetch user settings error:", error);
+            return null;
+        }
+    });
 }
 
 export async function updateUserSettings(data: {
@@ -89,6 +92,7 @@ export async function updateUserSettings(data: {
             } as any,
         });
 
+        await invalidateCache(`user:settings:${session.user.id}`);
         revalidatePath("/admin/settings");
         revalidatePath("/account");
         return { success: true };
