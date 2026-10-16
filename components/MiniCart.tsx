@@ -4,7 +4,7 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Zap, ShieldCheck } from 'lucide-react'
+import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Zap, ShieldCheck, Truck } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 
 interface MiniCartProps {
@@ -189,8 +189,8 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                                 </div>
 
                                 <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                                    <span>Paiement sécurisé · Livraison Express</span>
+                                    <Truck className="w-3.5 h-3.5 text-orange-500" />
+                                    <span>Livraison Express · Règlement à la réception</span>
                                 </div>
                             </div>
                         )}

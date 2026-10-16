@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, ArrowRight, X, ShoppingBag, Sparkles, ShieldCheck } from 'lucide-react'
+import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, ArrowRight, X, ShoppingBag, Sparkles, ShieldCheck, Store } from 'lucide-react'
 import { Container } from '@/ui/Container'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
@@ -209,9 +209,12 @@ export function Header() {
     React.useEffect(() => {
         if (isMenuOpen) {
             document.body.style.overflow = 'hidden'
-            // Re-fetch categories when mobile menu opens
+            // Re-fetch categories and stores when mobile menu opens
             getMegaMenuAction().then(data => {
                 if (data && data.length > 0) setCategories(data)
+            }).catch(() => {})
+            getStoresAction().then(data => {
+                if (Array.isArray(data) && data.length > 0) setStores(data)
             }).catch(() => {})
         } else {
             document.body.style.overflow = ''
@@ -651,6 +654,57 @@ export function Header() {
                 </AnimatePresence>
             </div>
 
+            {/* Mobile Boutiques Strip (Quick access to stores on mobile) */}
+            {stores.length > 0 && (
+                <div className="md:hidden bg-[#0A0D14] text-white border-b border-white/10 px-3 py-1.5 relative overflow-hidden">
+                    {/* Subtle dot matrix pattern */}
+                    <div className="absolute inset-0 pointer-events-none opacity-20">
+                        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <pattern id="dot-matrix-mobile" width="12" height="12" patternUnits="userSpaceOnUse">
+                                    <circle cx="6" cy="6" r="0.75" fill="rgba(255, 255, 255, 0.5)" />
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#dot-matrix-mobile)" />
+                        </svg>
+                    </div>
+                    <div className="relative z-10 flex items-center justify-between gap-2">
+                        <Link
+                            href="/boutiques"
+                            className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-primary shrink-0 hover:text-orange-400 transition-colors"
+                        >
+                            <Store className="w-3 h-3" />
+                            <span>Boutiques :</span>
+                        </Link>
+                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                            {stores.map((store) => (
+                                <Link
+                                    key={store.id}
+                                    href={`/store/${store.slug}`}
+                                    className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/15 bg-white/5 active:scale-95 hover:bg-white transition-all shrink-0"
+                                    title={store.name}
+                                >
+                                    {store.logo && (
+                                        <div className="relative w-3.5 h-3.5 rounded-full overflow-hidden bg-white/10 group-hover:bg-gray-100 transition-all shrink-0">
+                                            <Image
+                                                src={store.logo}
+                                                alt={store.name}
+                                                fill
+                                                className="object-contain p-[1px]"
+                                                unoptimized
+                                            />
+                                        </div>
+                                    )}
+                                    <span className="text-[9px] sm:text-[10px] font-black text-gray-200 group-hover:text-[#1B1F3B] uppercase tracking-wider whitespace-nowrap transition-colors">
+                                        {store.name}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Premium Mobile Menu Drawer with Drill-down */}
             <AnimatePresence>
                 {isMenuOpen && (
@@ -743,6 +797,51 @@ export function Header() {
                                                         </div>
                                                     </button>
                                                 </div>
+
+                                                {/* Nos Boutiques Partenaires */}
+                                                {stores.length > 0 && (
+                                                    <div className="mb-3.5 p-3 rounded-2xl bg-[#0F1420] text-white border border-white/10 shadow-sm shrink-0">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-300 flex items-center gap-1.5">
+                                                                <Store className="w-3.5 h-3.5 text-primary" />
+                                                                Nos Boutiques
+                                                            </span>
+                                                            <button
+                                                                onClick={() => navigateTo('/boutiques')}
+                                                                className="text-[9px] font-black text-primary hover:text-orange-400 uppercase tracking-wider flex items-center gap-0.5 transition-colors"
+                                                            >
+                                                                Tout voir
+                                                                <ArrowRight className="w-2.5 h-2.5" />
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-1.5">
+                                                            {stores.map((store) => (
+                                                                <button
+                                                                    key={store.id}
+                                                                    onClick={() => navigateTo(`/store/${store.slug}`)}
+                                                                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 hover:bg-white active:scale-95 transition-all text-left shadow-xs"
+                                                                    title={store.name}
+                                                                >
+                                                                    {store.logo && (
+                                                                        <div className="relative w-4 h-4 rounded-full overflow-hidden bg-white/10 group-hover:bg-gray-100 transition-all shrink-0">
+                                                                            <Image
+                                                                                src={store.logo}
+                                                                                alt={store.name}
+                                                                                fill
+                                                                                className="object-contain p-[1px]"
+                                                                                unoptimized
+                                                                            />
+                                                                        </div>
+                                                                    )}
+                                                                    <span className="text-[10px] sm:text-[11px] font-black text-gray-200 group-hover:text-[#1B1F3B] uppercase tracking-wider transition-colors whitespace-nowrap">
+                                                                        {store.name}
+                                                                    </span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
 
                                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] mb-2 block shrink-0">Univers Populaires</span>
                                                 <div className="space-y-1.5 sm:space-y-2">

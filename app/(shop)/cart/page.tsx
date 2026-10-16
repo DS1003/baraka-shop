@@ -437,82 +437,95 @@ export default function CartPage() {
                                         )}
                                     </div>
 
-                                    <div className="w-full h-px bg-white/10 my-1" />
-
-                                    <div className="flex items-baseline justify-between pt-1">
-                                        <div>
-                                            <span className="text-xs font-black uppercase tracking-widest text-slate-200 block">Total net</span>
-                                            <span className="text-[10px] text-slate-400">TVA incluse</span>
+                                        {/* Highlighted Total Box */}
+                                        <div className="mt-2 p-4 rounded-2xl bg-white/[0.06] border border-white/10 backdrop-blur-sm flex items-center justify-between gap-3 shadow-inner">
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-white">Total net</span>
+                                                    <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-wider border border-emerald-500/30">TTC</span>
+                                                </div>
+                                                <span className="text-[10px] text-slate-400 font-medium mt-0.5">Paiement à la réception</span>
+                                            </div>
+                                            <div className="text-right flex items-baseline gap-1.5">
+                                                <span className="text-2xl sm:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-amber-300 drop-shadow-[0_2px_8px_rgba(232,98,26,0.3)]">
+                                                    {total.toLocaleString()}
+                                                </span>
+                                                <span className="text-xs sm:text-sm font-black text-orange-400 uppercase tracking-wider">FCFA</span>
+                                            </div>
                                         </div>
-                                        <span className="text-2xl sm:text-3xl font-black tracking-tight text-orange-500">
-                                            {total.toLocaleString()} <span className="text-xs text-orange-300">FCFA</span>
-                                        </span>
+                                    </div>
+
+                                    {/* Promo Code Accordion */}
+                                    <div className="mb-6">
+                                        {!appliedCoupon ? (
+                                            <div>
+                                                {!showPromoInput ? (
+                                                    <button
+                                                        onClick={() => setShowPromoInput(true)}
+                                                        className="w-full py-2.5 px-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-bold text-orange-400 hover:text-orange-300 flex items-center justify-between transition-all group"
+                                                    >
+                                                        <span className="flex items-center gap-2">
+                                                            <Tag className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                                                            <span>Vous avez un code promo ?</span>
+                                                        </span>
+                                                        <span className="text-[10px] font-black uppercase text-slate-400 group-hover:text-white transition-colors">Ajouter +</span>
+                                                    </button>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        <div className="flex gap-2">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="CODE PROMO"
+                                                                value={promoCode}
+                                                                onChange={(e) => {
+                                                                    setPromoCode(e.target.value.toUpperCase())
+                                                                    setPromoError('')
+                                                                }}
+                                                                onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                                                                className="flex-1 h-11 bg-white/10 border border-white/15 rounded-xl px-3.5 text-xs font-bold outline-none focus:border-orange-500 text-white placeholder:text-slate-400 uppercase tracking-wider transition-all"
+                                                            />
+                                                            <button
+                                                                onClick={handleApplyPromo}
+                                                                disabled={promoLoading || !promoCode.trim()}
+                                                                className="h-11 px-4 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shrink-0 flex items-center justify-center gap-1.5"
+                                                            >
+                                                                {promoLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Appliquer'}
+                                                            </button>
+                                                        </div>
+                                                        {promoError && (
+                                                            <p className="text-rose-400 text-[11px] font-bold">{promoError}</p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between text-xs text-emerald-400 font-bold">
+                                                <span className="flex items-center gap-2">
+                                                    <Check className="w-4 h-4 shrink-0" />
+                                                    Coupon {appliedCoupon.couponCode} actif
+                                                </span>
+                                                <button onClick={handleRemoveCoupon} className="text-[10px] text-slate-400 hover:text-white uppercase">Retirer</button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Checkout CTA button */}
+                                    <Link href="/checkout" className="block w-full">
+                                        <button className="w-full h-14 bg-gradient-to-r from-orange-600 via-[#E8621A] to-orange-500 hover:brightness-110 active:scale-[0.99] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2.5 transition-all shadow-xl shadow-orange-600/30 group">
+                                            <span>Passer la commande</span>
+                                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    </Link>
+
+                                    <div className="text-center mt-3.5">
+                                        <div className="inline-flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-300 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full">
+                                            <Truck className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                                            <span>Livraison Express sous 24h</span>
+                                            <span className="text-slate-600">·</span>
+                                            <span className="text-emerald-400">Paiement à la réception</span>
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Promo Code Accordion */}
-                                <div className="mb-6">
-                                    {!appliedCoupon ? (
-                                        <div>
-                                            {!showPromoInput ? (
-                                                <button
-                                                    onClick={() => setShowPromoInput(true)}
-                                                    className="text-xs font-bold text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition-colors"
-                                                >
-                                                    <Tag className="w-3.5 h-3.5" />
-                                                    Vous avez un code promo ?
-                                                </button>
-                                            ) : (
-                                                <div className="space-y-2">
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="CODE PROMO"
-                                                            value={promoCode}
-                                                            onChange={(e) => {
-                                                                setPromoCode(e.target.value.toUpperCase())
-                                                                setPromoError('')
-                                                            }}
-                                                            onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
-                                                            className="flex-1 h-11 bg-white/10 border border-white/15 rounded-xl px-3.5 text-xs font-bold outline-none focus:border-orange-500 text-white placeholder:text-slate-400 uppercase tracking-wider transition-all"
-                                                        />
-                                                        <button
-                                                            onClick={handleApplyPromo}
-                                                            disabled={promoLoading || !promoCode.trim()}
-                                                            className="h-11 px-4 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all shrink-0 flex items-center justify-center gap-1.5"
-                                                        >
-                                                            {promoLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Appliquer'}
-                                                        </button>
-                                                    </div>
-                                                    {promoError && (
-                                                        <p className="text-rose-400 text-[11px] font-bold">{promoError}</p>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between text-xs text-emerald-400 font-bold">
-                                            <span className="flex items-center gap-2">
-                                                <Check className="w-4 h-4 shrink-0" />
-                                                Coupon {appliedCoupon.couponCode} actif
-                                            </span>
-                                            <button onClick={handleRemoveCoupon} className="text-[10px] text-slate-400 hover:text-white uppercase">Retirer</button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Desktop Checkout CTA button */}
-                                <Link href="/checkout" className="hidden lg:block w-full">
-                                    <button className="w-full h-14 bg-orange-600 hover:bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all shadow-xl shadow-orange-600/25 group">
-                                        <span>Passer la commande</span>
-                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </button>
-                                </Link>
-
-                                <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4 hidden lg:block">
-                                    🔒 Paiement Sécurisé · Livraison Express
-                                </p>
-                            </div>
 
                             {/* Trust Perks Banner */}
                             <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-sm flex flex-col gap-4">

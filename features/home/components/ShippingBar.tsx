@@ -17,8 +17,8 @@ const features = [
     },
     {
         icon: ShieldCheck,
-        title: "Paiement Sécurisé",
-        description: "Transactions 100% sûres"
+        title: "Paiement à la Réception",
+        description: "Réglez à la livraison"
     },
     {
         icon: Headphones,

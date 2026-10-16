@@ -32,9 +32,14 @@ const CLEAN_IMAGES: Record<string, string> = {
 
 const SUBTITLES: Record<string, string> = {
     'INFORMATIQUE': 'MacBook, PC & Portables',
+    'PC PORTABLES': 'MacBook, Asus & HP',
+    'PC PORTABLE': 'MacBook, Asus & HP',
+    'IMPRIMANTE': 'Epson, Canon & Laser',
+    'IMPRIMANTES': 'Epson, Canon & Laser',
     'TELEPHONE & TABLETTE': 'iPhone, Galaxy & iPad',
     'IMAGE & SON': 'TV, Casques & Caméras',
     'CONSOLES & JEUX': 'PS5, Xbox & Gaming',
+    'JEUX & LOISIRS': 'PS5, Xbox & Gaming',
     'RESEAUX': 'Routeurs & Wifi 7',
     'SECURITE': 'Caméras & Alarmes',
     'ELECTROMENAGER': 'Maison Intelligente',
@@ -59,16 +64,6 @@ export function CategoryCarousel({
 }) {
     const [currentIndex, setCurrentIndex] = React.useState(0)
     const [direction, setDirection] = React.useState(0)
-    const [isMobileView, setIsMobileView] = React.useState(false)
-
-    React.useEffect(() => {
-        const checkMobile = () => {
-            setIsMobileView(window.innerWidth < 768)
-        }
-        checkMobile()
-        window.addEventListener('resize', checkMobile)
-        return () => window.removeEventListener('resize', checkMobile)
-    }, [])
 
     // If we have managed universes, use them. Otherwise fallback to categories logic.
     const hasManagedUniverses = initialUniverses && initialUniverses.length > 0;
@@ -237,21 +232,23 @@ export function CategoryCarousel({
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                         {displayItems.map((item, idx) => (
-                            <div key={item.id} className="w-[155px] sm:w-[175px] shrink-0 snap-start">
+                            <div key={item.id} className="w-[160px] sm:w-[180px] shrink-0 snap-start">
                                 <UniverseCard item={item} idx={idx} />
                             </div>
                         ))}
                         {/* Final Discovery Card */}
-                        <div className="w-[130px] shrink-0 snap-start">
+                        <div className="w-[140px] shrink-0 snap-start">
                             <Link
                                 href="/univers"
-                                className="flex flex-col items-center justify-center h-[220px] bg-gradient-to-br from-[#1B1F3B] to-[#2A3158] text-white rounded-xl p-4 text-center group active:scale-95 transition-all shadow-md"
+                                className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl p-4 text-center group active:scale-95 transition-all shadow-md border border-white/10"
                             >
-                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2.5 group-hover:bg-primary transition-colors">
-                                    <Plus className="w-5 h-5 text-white" />
+                                <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90">
+                                    <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
                                 </div>
-                                <span className="text-xs font-black uppercase tracking-wider">Tous les univers</span>
-                                <span className="text-[9px] text-gray-300 font-medium mt-1">Explorer tout</span>
+                                <span className="text-xs font-black uppercase tracking-wider text-white">Tous les univers</span>
+                                <span className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1 flex items-center gap-1">
+                                    Voir tout <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-1 transition-transform" />
+                                </span>
                             </Link>
                         </div>
                     </div>
@@ -263,6 +260,7 @@ export function CategoryCarousel({
 
 function UniverseCard({ item, idx }: { item: any, idx: number }) {
     const imageSrc = item.image || CLEAN_IMAGES[(item.name || '').trim().toUpperCase()] || CLEAN_IMAGES['DEFAULT'];
+    const subtitle = item.subtitle || SUBTITLES[(item.name || '').trim().toUpperCase()] || 'Découvrir nos offres';
 
     return (
         <motion.div
@@ -271,39 +269,48 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
             viewport={{ once: true }}
             transition={{ delay: idx * 0.02, duration: 0.3, ease: "easeOut" }}
             className="h-full"
+            suppressHydrationWarning
         >
             <Link
                 href={item.href}
-                className="group relative flex flex-col h-[220px] md:h-[280px] bg-white rounded-xl border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] transition-all duration-300 hover:shadow-[0_10px_30px_rgba(0,0,0,0.06)] hover:border-primary/20 hover:-translate-y-1 p-3 md:p-5 overflow-hidden"
+                suppressHydrationWarning
+                className="group relative flex flex-col h-[215px] md:h-[280px] bg-gradient-to-b from-white via-slate-50/40 to-orange-50/20 rounded-2xl md:rounded-3xl border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.14)] hover:border-primary/40 hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden"
             >
+                {/* Top accent glow line on hover */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                {/* Soft ambient radial glow behind product */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 md:w-36 h-24 md:h-36 bg-primary/[0.04] group-hover:bg-primary/[0.08] rounded-full blur-2xl pointer-events-none transition-colors duration-500" />
+
                 {/* Card Header */}
                 <div className="relative z-10 flex flex-col items-center text-center">
-                    <h3 className="text-[10px] md:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
+                    <h3 className="text-[11px] sm:text-xs md:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
                         {item.name}
                     </h3>
-                    <p className="text-[7px] md:text-[10px] font-bold text-gray-300 uppercase tracking-widest mt-0.5 opacity-80 group-hover:text-gray-400 transition-all line-clamp-1">
-                        {item.subtitle}
+                    <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 group-hover:text-primary/70 transition-colors line-clamp-1">
+                        {subtitle}
                     </p>
                 </div>
 
                 {/* Image */}
-                <div className="relative flex-1 flex items-center justify-center my-1 md:my-2">
-                    <div className="relative w-full h-[110px] md:h-[150px] transform transition-all duration-500 group-hover:scale-110">
+                <div className="relative flex-1 flex items-center justify-center my-1.5 md:my-2">
+                    <div className="relative w-full h-[105px] md:h-[145px] transform transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-1">
                         <Image
                             src={imageSrc}
                             alt={item.name}
                             fill
-                            className="object-contain"
-                            sizes="(max-width: 768px) 100vw, 25vw"
+                            className="object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.08)]"
+                            sizes="(max-width: 768px) 170px, 25vw"
                         />
                     </div>
                 </div>
 
-                {/* Action Button */}
-                <div className="relative z-10 flex justify-center mt-auto">
-                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center transition-all duration-300 group-hover:bg-primary shadow-md">
-                        <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                    </div>
+                {/* Action Pill */}
+                <div className="relative z-10 flex items-center justify-center mt-auto pt-1">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 group-hover:bg-primary text-[#1B1F3B] group-hover:text-white transition-all duration-300 shadow-xs group-hover:shadow-md group-hover:shadow-primary/25">
+                        <span className="text-[8.5px] md:text-[10px] font-black uppercase tracking-wider">Explorer</span>
+                        <ArrowRight className="w-2.5 h-2.5 md:w-3 md:h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
                 </div>
             </Link>
         </motion.div>
