@@ -83,6 +83,7 @@ import { ScrollToTop } from '@/ui/ScrollToTop'
 import { WhatsAppButton } from '@/ui/WhatsAppButton'
 
 import { OrientationBlocker } from '@/components/OrientationBlocker'
+import { InitialSiteLoader } from '@/components/InitialSiteLoader'
 import { getSiteLogos } from '@/lib/actions/site-config-actions'
 import { SiteLogosProvider } from '@/lib/hooks/useSiteLogos'
 
@@ -126,6 +127,7 @@ export default async function RootLayout({
       >
         <SiteLogosProvider initialLogos={initialLogos}>
           <Providers>
+            <InitialSiteLoader />
             <OrientationBlocker />
             {children}
             <WhatsAppButton />

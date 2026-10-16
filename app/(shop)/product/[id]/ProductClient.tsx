@@ -407,7 +407,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
     ]
 
     return (
-        <Container className="pt-2 pb-8 md:pt-4 md:pb-12">
+        <Container className="pt-2 pb-24 md:pt-4 md:pb-12">
             <div className="flex flex-col lg:grid lg:grid-cols-12 gap-2 md:gap-4 lg:gap-8">
                 {/* Mobile Header: Name & Brand - Hidden on Desktop */}
                 <div className="flex flex-col gap-1 lg:hidden">
@@ -613,6 +613,13 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                 </span>
                             </div>
                         ) : null}
+
+                        {/* Media counter badge */}
+                        {allMedia.length > 1 && (
+                            <div className="absolute top-4 right-4 z-10 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-[10px] font-black tracking-wider select-none">
+                                {activeImg + 1} / {allMedia.length}
+                            </div>
+                        )}
 
                         <div className="absolute bottom-4 right-4 z-10 w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center shadow-md border border-gray-100" onClick={() => openViewer(activeImg)}>
                             <Maximize2 className="w-3.5 h-3.5 text-gray-600" />
@@ -1782,6 +1789,78 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                     </motion.div>
                 </div>
             )}
+
+            {/* MOBILE FIRST STICKY BOTTOM PURCHASE BAR */}
+            <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-200/90 px-3.5 py-2.5 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))]">
+                <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
+                    {/* Thumbnail & Price */}
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="relative w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
+                            <Image
+                                src={productImages[0] || '/placeholder.png'}
+                                alt={product.name}
+                                fill
+                                className="object-contain p-1"
+                                unoptimized
+                            />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-black text-[#1B1F3B] tracking-tight truncate">
+                                {product.price.toLocaleString()} <span className="text-[10px] text-primary uppercase">FCFA</span>
+                            </span>
+                            {product.stock > 0 ? (
+                                <span className="text-[9px] font-bold text-green-600 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                    En stock
+                                </span>
+                            ) : (
+                                <span className="text-[9px] font-bold text-red-500">Rupture</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* CTAs */}
+                    <div className="flex items-center gap-2 shrink-0">
+                        {/* WhatsApp quick contact */}
+                        <a
+                            href={`https://wa.me/221765149898?text=${encodeURIComponent(`Bonjour Baraka Shop, je m'intéresse au produit : ${product.name} (${product.price.toLocaleString()} FCFA)`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Commander par WhatsApp"
+                            className="w-11 h-11 rounded-xl bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 flex items-center justify-center active:scale-90 transition-transform shadow-xs"
+                        >
+                            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                            </svg>
+                        </a>
+
+                        {/* Add to cart / Out of stock button */}
+                        {customBadge === "Bientôt disponible" ? (
+                            <button
+                                disabled
+                                className="h-11 px-4 rounded-xl bg-amber-500 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-amber-500/20 opacity-90 cursor-not-allowed"
+                            >
+                                Bientôt
+                            </button>
+                        ) : product.stock <= 0 ? (
+                            <button
+                                disabled
+                                className="h-11 px-4 rounded-xl bg-gray-100 text-gray-400 font-bold text-xs uppercase tracking-wider cursor-not-allowed border border-gray-200"
+                            >
+                                Rupture
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => addToCart({ ...product, selectedColor: selectedColor?.colorName }, quantity)}
+                                className="h-11 px-5 rounded-xl bg-primary active:bg-orange-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all"
+                            >
+                                <ShoppingCart className="w-4 h-4" />
+                                <span>Ajouter</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
         </Container>
     )
 }

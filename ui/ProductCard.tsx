@@ -31,12 +31,12 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
 
     if (viewMode === 'list') {
         return (
-            <div className="group flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500">
-                <Link href={`/product/${product.id}`} className="relative w-full md:w-[260px] aspect-square bg-white flex items-center justify-center p-8 shrink-0 overflow-hidden">
+            <div className="group flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-xs hover:shadow-xl hover:shadow-gray-200 transition-all duration-300">
+                <Link href={`/product/${product.id}`} className="relative w-full md:w-[260px] aspect-square bg-white flex items-center justify-center p-4 sm:p-6 md:p-8 shrink-0 overflow-hidden">
                     <WatermarkOverlay logoUrl={headerLogo} isCard />
-                    <Image src={displayImage} alt={product.name} fill sizes="(max-width: 768px) 100vw, 260px" className="object-contain p-8 group-hover:scale-105 transition-transform duration-500 z-10" priority={priority} unoptimized />
+                    <Image src={displayImage} alt={product.name} fill sizes="(max-width: 768px) 100vw, 260px" className="object-contain p-4 sm:p-6 md:p-8 group-hover:scale-105 transition-transform duration-500 z-10" priority={priority} unoptimized />
                 </Link>
-                <div className="p-8 flex flex-col justify-center flex-1">
+                <div className="p-4 sm:p-6 md:p-8 flex flex-col justify-center flex-1">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{categoryName}</span>
@@ -117,9 +117,9 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
     }
 
     return (
-        <div className="group relative bg-white rounded-2xl md:rounded-3xl p-3 md:p-4 transition-all duration-500 border border-gray-100/80 hover:border-gray-200 hover:shadow-2xl hover:shadow-blue-900/5 flex flex-col justify-between h-full">
+        <div className="group relative bg-white rounded-2xl md:rounded-3xl p-2.5 sm:p-3 md:p-4 transition-all duration-500 border border-gray-100/80 hover:border-gray-200 hover:shadow-2xl hover:shadow-blue-900/5 flex flex-col h-full">
             {/* Image Container */}
-            <div className="relative w-full aspect-square bg-[#fff] rounded-xl overflow-hidden group/img border border-gray-50">
+            <div className="relative w-full aspect-square bg-[#fff] rounded-xl overflow-hidden group/img border border-gray-50 shrink-0">
                 <WatermarkOverlay logoUrl={headerLogo} isCard />
                 <Link href={`/product/${product.id}`} className="absolute inset-0 z-40">
                     <span className="sr-only">Voir {product.name}</span>
@@ -173,6 +173,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/90 text-[#1B1F3B] flex items-center justify-center shadow-md border border-gray-100 hover:bg-primary hover:text-white transition-all"
+                        aria-label="Ajouter aux favoris"
                     >
                         <Heart className="w-2.5 md:w-3.5 h-2.5 md:h-3.5" />
                     </button>
@@ -204,7 +205,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
             </div>
 
             {/* Content */}
-            <div className="p-2 sm:p-3 md:p-4 flex flex-col gap-1 md:gap-1.5 flex-1 justify-between">
+            <div className="px-0.5 pt-2 sm:pt-2.5 md:pt-3 flex flex-col flex-1 justify-between">
                 <div>
                     <div className="flex items-center justify-between mb-1">
                         <span className="text-[7.5px] sm:text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[70%]">{categoryName}</span>
@@ -216,34 +217,28 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
 
                     <Link href={`/product/${product.id}`} className="block overflow-hidden">
                         <h3 
-                            className="font-bold text-[11px] sm:text-[12px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[15px] sm:leading-[17px] md:leading-[18px] tracking-tight line-clamp-2"
+                            className="font-bold text-[11px] sm:text-[12px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[14px] sm:leading-[16px] md:leading-[18px] tracking-tight line-clamp-2 h-[28px] sm:h-[32px] md:h-[36px]"
                         >
                             {product.name}
                         </h3>
                     </Link>
 
                     <p 
-                        className="hidden sm:block text-gray-400 text-[8px] md:text-[9px] leading-[12px] md:leading-[14px] mt-1 h-[24px] md:h-[28px] overflow-hidden"
-                        style={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
-                        }}
+                        className="hidden sm:line-clamp-2 text-gray-400 text-[8px] md:text-[9px] leading-[12px] md:leading-[14px] mt-1 h-[24px] md:h-[28px] overflow-hidden"
                     >
                         {cleanDescription}
                     </p>
                 </div>
 
-                <div className="mt-2.5 sm:mt-4 md:mt-6 flex items-center justify-between pt-1">
-                    <div className="flex flex-col">
+                <div className="mt-auto pt-1.5 sm:pt-2 md:pt-3 flex items-center justify-between">
+                    <div className="flex flex-col min-w-0 pr-1">
                         {(product.oldPrice || product.compareAtPrice) && (
-                            <span className="text-gray-400 text-[7.5px] sm:text-[8px] md:text-[10px] line-through font-bold">
+                            <span className="text-gray-400 text-[7px] sm:text-[8px] md:text-[10px] line-through font-bold truncate leading-none">
                                 {(product.oldPrice || product.compareAtPrice).toLocaleString()} FCFA
                             </span>
                         )}
-                        <span className="text-[#1B1F3B] font-black text-[12px] sm:text-[14px] md:text-[17px] tracking-tight">
-                            {(product.price ?? 0).toLocaleString()} <span className="text-[7.5px] sm:text-[8px] md:text-[10px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
+                        <span className="text-[#1B1F3B] font-black text-[11.5px] sm:text-[13px] md:text-[16px] tracking-tight truncate leading-tight">
+                            {(product.price ?? 0).toLocaleString()} <span className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
                         </span>
                     </div>
 
@@ -258,13 +253,13 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                         disabled={customBadge === "Bientôt disponible" || product.stock <= 0}
                         aria-label={`Ajouter ${product.name} au panier`}
                         className={cn(
-                            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all shadow-sm active:scale-90 shrink-0",
+                            "w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl md:rounded-full flex items-center justify-center transition-all shadow-xs active:scale-90 shrink-0",
                             product.stock <= 0 || customBadge === "Bientôt disponible"
                                 ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                                 : "bg-primary text-white md:bg-primary/10 md:text-primary md:group-hover:bg-primary md:group-hover:text-white shadow-primary/20 hover:bg-[#1B1F3B]"
                         )}
                     >
-                        <ShoppingCart className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                        <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                 </div>
             </div>

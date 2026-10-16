@@ -63,33 +63,48 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
         )
     }
 
+    const handleDragEnd = (_: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+        if (slides.length <= 1) return
+        const isSwipeLeft = info.offset.x < -35 || (info.offset.x < -10 && info.velocity.x < -150)
+        const isSwipeRight = info.offset.x > 35 || (info.offset.x > 10 && info.velocity.x > 150)
+        if (isSwipeLeft) {
+            setCurrentSlide((prev) => (prev + 1) % slides.length)
+        } else if (isSwipeRight) {
+            setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+        }
+    }
+
     return (
         <section>
-            <div className="bg-white relative rounded-t-2xl md:rounded-t-[2.5rem] rounded-b-none overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[500px]">
+            <div className="bg-white relative rounded-2xl md:rounded-t-[2.5rem] md:rounded-b-none overflow-hidden shadow-sm h-[210px] sm:h-[320px] md:h-[500px]">
                 <AnimatePresence mode="wait">
-                    <Link href={slides[currentSlide].href} className="block w-full h-full cursor-pointer overflow-hidden bg-gray-50">
-                        <motion.div
-                            key={currentSlide}
-                            initial={{ opacity: 0, scale: 1.05 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="absolute inset-0 w-full h-full"
-                        >
+                    <motion.div
+                        key={currentSlide}
+                        initial={{ opacity: 0, scale: 1.05 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.15}
+                        onDragEnd={handleDragEnd}
+                        className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
+                    >
+                        <Link href={slides[currentSlide].href} className="block w-full h-full overflow-hidden bg-gray-50">
                             <Image
                                 src={slides[currentSlide].image}
                                 alt={slides[currentSlide].title}
                                 fill
-                                className="object-cover hover:scale-105 transition-transform duration-[4000ms] ease-out"
+                                className="object-cover hover:scale-105 transition-transform duration-[4000ms] ease-out pointer-events-none"
                                 priority
                             />
                             <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent hidden md:block" />
-                        </motion.div>
-                    </Link>
+                        </Link>
+                    </motion.div>
                 </AnimatePresence>
 
                 {/* Mobile Navigation Dots */}
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 md:hidden z-20">
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center items-center gap-1.5 md:hidden z-20 pointer-events-none">
                     {slides.map((_, index) => (
                         <button
                             key={index}

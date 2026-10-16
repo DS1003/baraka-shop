@@ -108,12 +108,20 @@ export function CategoryCarousel({
 
     if (displayItems.length === 0) return null;
 
+    const mobileScrollRef = React.useRef<HTMLDivElement>(null)
+
     const slideNext = () => {
+        if (mobileScrollRef.current) {
+            mobileScrollRef.current.scrollBy({ left: 180, behavior: 'smooth' })
+        }
         setDirection(1)
         setCurrentIndex((prev) => (prev + 1) % displayItems.length)
     }
 
     const slidePrev = () => {
+        if (mobileScrollRef.current) {
+            mobileScrollRef.current.scrollBy({ left: -180, behavior: 'smooth' })
+        }
         setDirection(-1)
         setCurrentIndex((prev) => (prev - 1 + displayItems.length) % displayItems.length)
     }
@@ -138,49 +146,64 @@ export function CategoryCarousel({
     return (
         <section className="py-1 md:py-3 overflow-hidden">
             <Container>
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 md:mb-8">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-[2px] bg-primary rounded-full" />
-                            <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Exploration</span>
+                <div className="mb-3 md:mb-8">
+                    {/* Mobile Top Row: Eyebrow + Mobile Arrows */}
+                    <div className="flex md:hidden items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="w-5 h-[2px] bg-primary rounded-full shrink-0" />
+                            <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">Exploration</span>
                         </div>
-                        <div className="flex items-center justify-between w-full">
-                            <h2 className="text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
-                                Univers <span className="text-primary italic">Populaires</span>
-                            </h2>
-                            
-                            {/* Mobile Arrows + Button */}
-                            <div className="flex md:hidden gap-2 items-center">
-                                <button
-                                    onClick={slidePrev}
-                                    className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all"
-                                >
-                                    <ChevronLeft className="w-4 h-4 text-[#1B1F3B]" />
-                                </button>
-                                <button
-                                    onClick={slideNext}
-                                    className="w-10 h-10 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
-                                >
-                                    <ChevronRight className="w-4 h-4 text-primary" />
-                                </button>
-                            </div>
+
+                        <div className="flex items-center gap-1 shrink-0 ml-auto">
+                            <button
+                                onClick={slidePrev}
+                                aria-label="Univers précédent"
+                                className="w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={slideNext}
+                                aria-label="Univers suivant"
+                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-95 transition-all text-primary"
+                            >
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
                         </div>
-                        <p className="text-gray-400 text-sm md:text-base font-medium italic">
-                           Tout ce que vous aimez est là
-                        </p>
                     </div>
+
+                    {/* Main Header Row */}
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
+                        <div className="flex flex-col gap-0.5 md:gap-2">
+                            {/* Desktop Eyebrow */}
+                            <div className="hidden md:flex items-center gap-3">
+                                <div className="w-8 md:w-10 h-[2px] bg-primary rounded-full" />
+                                <span className="text-primary font-black text-[9px] md:text-[11px] uppercase tracking-[0.4em]">Exploration</span>
+                            </div>
+
+                            {/* Title: 100% full width, no overlap with buttons */}
+                            <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-none">
+                                Univers <span className="text-primary italic inline-block pr-1.5">Populaires</span>
+                            </h2>
+
+                            <p className="text-gray-400 text-xs md:text-base font-medium italic mt-0.5">
+                               Tout ce que vous aimez est là
+                            </p>
+                        </div>
 
                     {/* Desktop Arrows + See All Button */}
                     <div className="hidden md:flex items-center gap-3">
                         <div className="flex gap-2">
                             <button
                                 onClick={slidePrev}
+                                aria-label="Précédent"
                                 className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
                             <button
                                 onClick={slideNext}
+                                aria-label="Suivant"
                                 className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
                             >
                                 <ChevronRight className="w-5 h-5" />
@@ -195,6 +218,7 @@ export function CategoryCarousel({
                         </Link>
                     </div>
                 </div>
+            </div>
 
                 {/* Desktop Grid */}
                 <div className="hidden md:grid grid-cols-4 gap-6">
@@ -205,41 +229,31 @@ export function CategoryCarousel({
                     ))}
                 </div>
 
-                {/* Mobile Carousel */}
+                {/* Mobile Snap-Scroll Rail (Mobile First) */}
                 <div className="md:hidden">
-                    <div className="relative h-[250px] w-full mb-8">
-                        <AnimatePresence initial={false} custom={direction}>
-                            <motion.div
-                                key={currentIndex}
-                                custom={direction}
-                                variants={variants}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{
-                                    x: { type: "spring", stiffness: 300, damping: 32 },
-                                    opacity: { duration: 0.3 }
-                                }}
-                                className="absolute inset-0"
-                            >
-                                <UniverseCard item={displayItems[currentIndex]} idx={0} />
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Dots */}
-                    <div className="flex justify-center gap-2">
-                        {displayItems.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => {
-                                    setDirection(idx > currentIndex ? 1 : -1)
-                                    setCurrentIndex(idx)
-                                }}
-                                className={`h-1.5 rounded-full transition-all duration-500 ${currentIndex === idx ? "w-8 bg-[#1B1F3B]" : "w-1.5 bg-slate-200"
-                                    }`}
-                            />
+                    <div
+                        ref={mobileScrollRef}
+                        className="flex items-stretch gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-3 -mx-4 px-4"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                        {displayItems.map((item, idx) => (
+                            <div key={item.id} className="w-[155px] sm:w-[175px] shrink-0 snap-start">
+                                <UniverseCard item={item} idx={idx} />
+                            </div>
                         ))}
+                        {/* Final Discovery Card */}
+                        <div className="w-[130px] shrink-0 snap-start">
+                            <Link
+                                href="/univers"
+                                className="flex flex-col items-center justify-center h-[220px] bg-gradient-to-br from-[#1B1F3B] to-[#2A3158] text-white rounded-xl p-4 text-center group active:scale-95 transition-all shadow-md"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2.5 group-hover:bg-primary transition-colors">
+                                    <Plus className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-wider">Tous les univers</span>
+                                <span className="text-[9px] text-gray-300 font-medium mt-1">Explorer tout</span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </Container>

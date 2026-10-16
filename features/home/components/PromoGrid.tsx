@@ -93,6 +93,17 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
         setCurrentIndex((prev) => (prev - 1 + promos.length) % promos.length)
     }
 
+    const handleDragEnd = (_: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+        if (promos.length <= 1) return
+        const isSwipeLeft = info.offset.x < -35 || (info.offset.x < -10 && info.velocity.x < -150)
+        const isSwipeRight = info.offset.x > 35 || (info.offset.x > 10 && info.velocity.x > 150)
+        if (isSwipeLeft) {
+            slideNext()
+        } else if (isSwipeRight) {
+            slidePrev()
+        }
+    }
+
     const variants = {
         enter: (direction: number) => ({
             x: direction > 0 ? 300 : -300,
@@ -113,33 +124,48 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
     return (
         <section className="overflow-hidden py-1 md:py-3">
             <Container>
-                <div className="flex items-center justify-between mb-5 md:mb-6 gap-4 w-full">
-                    <div className="flex flex-col gap-1.5 md:gap-2">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-[2px] bg-primary rounded-full" />
-                            <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
+                {/* Header */}
+                <div className="mb-2.5 md:mb-6">
+                    {/* Mobile Top Row: Eyebrow + Controls */}
+                    <div className="flex md:hidden items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="w-5 h-[2px] bg-primary rounded-full shrink-0" />
+                            <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">Baraka Selection</span>
                         </div>
-                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
-                            Nos <span className="text-primary italic">Incontournables</span>
-                        </h2>
-                        <p className="text-slate-400 text-[11px] sm:text-xs md:text-sm font-medium mt-1.5 md:mt-2 max-w-sm md:max-w-xl leading-relaxed">
-                            Découvrez nos packs incontournables !
-                        </p>
+
+                        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                            <button
+                                onClick={slidePrev}
+                                className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
+                                aria-label="Précédent"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={slideNext}
+                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-95 transition-all text-primary"
+                                aria-label="Suivant"
+                            >
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex md:hidden gap-2.5 flex-shrink-0">
-                        <button
-                            onClick={slidePrev}
-                            className="w-12 h-12 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm active:scale-95 transition-all text-[#1B1F3B]"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={slideNext}
-                            className="w-12 h-12 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-lg active:scale-95 transition-all"
-                        >
-                            <ChevronRight className="w-5 h-5 text-primary" />
-                        </button>
+                    <div className="flex flex-col gap-0.5 md:gap-2">
+                        {/* Desktop Eyebrow */}
+                        <div className="hidden md:flex items-center gap-2">
+                            <div className="w-8 h-[2px] bg-primary rounded-full" />
+                            <span className="text-primary font-black text-[10px] uppercase tracking-[0.4em]">Baraka Selection</span>
+                        </div>
+
+                        {/* Title: full width, no truncation, no clipping */}
+                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-none">
+                            Nos <span className="text-primary italic inline-block pr-1.5">Incontournables</span>
+                        </h2>
+
+                        <p className="text-slate-400 text-[10px] sm:text-xs md:text-sm font-medium mt-1 md:mt-1.5 max-w-sm md:max-w-xl leading-relaxed">
+                            Découvrez nos packs incontournables !
+                        </p>
                     </div>
                 </div>
 
@@ -152,8 +178,8 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
 
                 {/* Mobile Carousel */}
                 <div className="md:hidden relative">
-                    <div className="relative h-[560px] w-full mb-10">
-                        <AnimatePresence initial={false} custom={direction}>
+                    <div className="relative h-[240px] sm:h-[280px] w-full mb-2">
+                        <AnimatePresence initial={false} custom={direction} mode="wait">
                             <motion.div
                                 key={currentIndex}
                                 custom={direction}
@@ -162,9 +188,13 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                                 animate="center"
                                 exit="exit"
                                 transition={{
-                                    x: { type: "spring", stiffness: 300, damping: 32 },
-                                    opacity: { duration: 0.3 }
+                                    x: { type: "spring", stiffness: 220, damping: 26 },
+                                    opacity: { duration: 0.25 }
                                 }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                dragElastic={0.15}
+                                onDragEnd={handleDragEnd}
                                 className="absolute inset-0"
                             >
                                 <PromoCard promo={promos[currentIndex]} isMobile={true} />
@@ -173,7 +203,7 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                     </div>
 
                     {/* Pagination Dots */}
-                    <div className="flex justify-center gap-3">
+                    <div className="flex justify-center items-center gap-1.5 pt-1">
                         {promos.map((_, idx) => (
                             <button
                                 key={idx}
@@ -181,8 +211,9 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                                     setDirection(idx > currentIndex ? 1 : -1)
                                     setCurrentIndex(idx)
                                 }}
-                                className={`h-1.5 rounded-full transition-all duration-500 ${currentIndex === idx ? "w-10 bg-[#1B1F3B]" : "w-1.5 bg-slate-200"
+                                className={`h-1.5 rounded-full transition-all duration-300 ${currentIndex === idx ? "w-6 bg-primary" : "w-1.5 bg-slate-200"
                                     }`}
+                                aria-label={`Promo ${idx + 1}`}
                             />
                         ))}
                     </div>
@@ -193,10 +224,74 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
 }
 
 function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean }) {
+    if (isMobile) {
+        return (
+            <Link
+                href={promo.href}
+                className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl p-4 sm:p-5 transition-all duration-500 ${promo.bg} border ${promo.border} h-full shadow-md shadow-slate-200/40`}
+            >
+                {/* Minimalist Grid Pattern */}
+                <div className="absolute inset-0 opacity-[0.015] pointer-events-none" style={{ backgroundImage: `radial-gradient(#1B1F3B 1px, transparent 1px)`, backgroundSize: '20px 20px' }} />
+
+                {/* Sophisticated Inner Border */}
+                <div className="absolute inset-2 border border-white/50 rounded-xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col gap-1.5 max-w-[62%]">
+                    <div>
+                        <span className="inline-block rounded-full bg-white/95 backdrop-blur-md px-2.5 py-0.5 text-[7.5px] font-black uppercase tracking-wider text-[#1B1F3B] shadow-xs border border-white">
+                            {promo.badge}
+                        </span>
+                    </div>
+
+                    <div className="flex flex-col gap-0.5">
+                        <h3 className="text-base sm:text-lg font-black leading-tight tracking-tight text-[#1B1F3B] uppercase line-clamp-2">
+                            {promo.title}
+                        </h3>
+                        <p className="text-[10.5px] font-medium text-[#1B1F3B]/60 leading-tight line-clamp-1">
+                            {promo.subtitle}
+                        </p>
+                    </div>
+
+                    {promo.price && (
+                        <div className="flex flex-col mt-0.5">
+                            <span className="text-[7.5px] font-bold uppercase tracking-wider text-[#1B1F3B]/40">Offre Spéciale</span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-base sm:text-lg font-black tracking-tight text-[#1B1F3B]">{promo.price.split(' ')[0]}</span>
+                                <span className="text-[10px] font-bold text-primary italic font-serif leading-none">{promo.price.split(' ').slice(1).join(' ')}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="relative z-10 self-start flex items-center gap-1.5 rounded-full bg-[#1B1F3B] pl-3.5 pr-2.5 py-1.5 text-[8.5px] font-black uppercase tracking-wider text-white transition-all shadow-md group-hover:bg-primary active:scale-95">
+                    Explorer
+                    <div className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/10">
+                        <ArrowRight className="h-2 w-2 text-primary" />
+                    </div>
+                </div>
+
+                {/* Floating Image with Refined Motion */}
+                <div className="absolute right-[-2%] bottom-1 w-[48%] h-[72%] pointer-events-none transition-transform duration-700 group-hover:scale-105">
+                    <div className="relative h-full w-full">
+                        <Image
+                            src={promo.image}
+                            alt={promo.title}
+                            fill
+                            className="object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,0.12)] select-none"
+                            sizes="(max-width: 768px) 50vw, 300px"
+                            priority
+                            unoptimized
+                        />
+                    </div>
+                </div>
+            </Link>
+        )
+    }
+
     return (
         <Link
             href={promo.href}
-            className={`group relative flex flex-col items-start justify-between overflow-hidden rounded-[2.5rem] p-8 md:p-10 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${promo.bg} border ${promo.border} ${isMobile ? "h-full shadow-2xl shadow-slate-200" : `min-h-[360px] shadow-sm hover:shadow-2xl hover:shadow-slate-200 hover:-translate-y-2 ${promo.size}`}`}
+            className={`group relative flex flex-col items-start justify-between overflow-hidden rounded-[2.5rem] p-8 md:p-10 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${promo.bg} border ${promo.border} min-h-[360px] shadow-sm hover:shadow-2xl hover:shadow-slate-200 hover:-translate-y-2 ${promo.size}`}
         >
             {/* Minimalist Grid Pattern */}
             <div className="absolute inset-0 opacity-[0.015] pointer-events-none" style={{ backgroundImage: `radial-gradient(#1B1F3B 1px, transparent 1px)`, backgroundSize: '24px 24px' }} />
@@ -216,7 +311,7 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <h3 className={`${isMobile ? "text-4xl" : "text-3xl"} font-extrabold leading-[1.1] tracking-tight text-[#1B1F3B] uppercase max-w-[90%]`}>
+                    <h3 className="text-3xl font-extrabold leading-[1.1] tracking-tight text-[#1B1F3B] uppercase max-w-[90%]">
                         {promo.title}
                     </h3>
                     <p className="max-w-[220px] text-sm font-medium text-[#1B1F3B]/50 leading-relaxed">
@@ -243,7 +338,7 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
             </div>
 
             {/* Floating Image with Refined Motion */}
-            <div className={`absolute right-[-5%] bottom-[2%] ${isMobile ? "w-[70%] h-[55%]" : "w-[55%] h-[75%]"} pointer-events-none transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-110 group-hover:-translate-y-6 group-hover:-rotate-2`}>
+            <div className="absolute right-[-5%] bottom-[2%] w-[55%] h-[75%] pointer-events-none transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-110 group-hover:-translate-y-6 group-hover:-rotate-2">
                 <div className="relative h-full w-full">
                     <Image
                         src={promo.image}

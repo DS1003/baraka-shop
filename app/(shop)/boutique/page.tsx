@@ -33,10 +33,10 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 export default async function ShopPage({ searchParams }: { searchParams: Promise<any> }) {
     const params = await searchParams
 
-    // Get filters from URL
-    const category = params.category || ''
-    const subCategory = params.subCategory || ''
-    const thirdLevelCategory = params.thirdLevelCategory || ''
+    // Get filters from URL (support both standard and shorthand query params)
+    let category = params.category || ''
+    const subCategory = params.subCategory || params.sub || ''
+    const thirdLevelCategory = params.thirdLevelCategory || params.third || ''
     const brand = params.brand || ''
     const sort = params.sort || 'newest'
     const page = Number(params.page) || 1
@@ -44,23 +44,34 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined
     const query = params.q || ''
 
-    // Fetch data server-side
-    const [result, categories, brands] = await Promise.all([
-        getProductsAction({
-            category,
-            subCategory,
-            thirdLevelCategory,
-            brand,
-            sort,
-            page,
-            limit: 30,
-            minPrice,
-            maxPrice,
-            query
-        }),
+    // Fetch categories and brands first to recover parent category if missing
+    const [categories, brands] = await Promise.all([
         getCategoriesAction(),
         getBrandsAction()
     ])
+
+    if (!category && subCategory && Array.isArray(categories)) {
+        const parent = categories.find((c: any) =>
+            c.subCategories?.some((s: any) => s.slug === subCategory)
+        )
+        if (parent) {
+            category = parent.slug
+        }
+    }
+
+    // Fetch data server-side
+    const result = await getProductsAction({
+        category,
+        subCategory,
+        thirdLevelCategory,
+        brand,
+        sort,
+        page,
+        limit: 30,
+        minPrice,
+        maxPrice,
+        query
+    })
 
     const currentCategoryName = category ? (categories.find((c: any) => c.slug === category)?.name || 'Catégorie') : 'Boutique'
 

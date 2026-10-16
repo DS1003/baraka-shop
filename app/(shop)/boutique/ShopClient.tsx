@@ -42,15 +42,25 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
     const [isFilterOpen, setIsFilterOpen] = useState(false)
     const [isPending, setIsPending] = useState(false)
 
-    const currentCategory = searchParams.get('category') || ''
-    const currentSubCategory = searchParams.get('subCategory') || ''
-    const currentThirdLevelCategory = searchParams.get('thirdLevelCategory') || ''
+    const rawCategory = searchParams.get('category') || ''
+    const currentSubCategory = searchParams.get('subCategory') || searchParams.get('sub') || ''
+    const currentThirdLevelCategory = searchParams.get('thirdLevelCategory') || searchParams.get('third') || ''
     const currentBrand = searchParams.get('brand') || ''
     const currentSort = searchParams.get('sort') || 'newest'
     const currentPage = Number(searchParams.get('page')) || 1
     const query = searchParams.get('q') || ''
     const minPrice = searchParams.get('minPrice') || ''
     const maxPrice = searchParams.get('maxPrice') || ''
+
+    // Recover category object even if category slug was omitted in query
+    let activeCategoryObj = categories.find(c => c.slug === rawCategory)
+    if (!activeCategoryObj && currentSubCategory) {
+        activeCategoryObj = categories.find(c =>
+            c.subCategories?.some((s: any) => s.slug === currentSubCategory)
+        )
+    }
+
+    const currentCategory = activeCategoryObj?.slug || rawCategory
 
     const activeFiltersCount = [
         currentCategory,
@@ -62,7 +72,6 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
         query
     ].filter(Boolean).length
 
-    const activeCategoryObj = categories.find(c => c.slug === currentCategory)
     const availableSubCategories = activeCategoryObj?.subCategories || []
     const activeSubCategoryObj = availableSubCategories.find((s: any) => s.slug === currentSubCategory)
     const availableThirdCategories = activeSubCategoryObj?.thirdLevelCategories || []

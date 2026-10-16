@@ -76,43 +76,90 @@ export function BrandsAndSocial({ initialBrands }: { initialBrands?: any[] }) {
                     {/* Left Side: Premium Brands Carousel */}
                     <div className="flex flex-col gap-10">
                         <div className="flex flex-col gap-6">
-                            <div className="flex flex-col gap-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-[2px] w-8 bg-primary rounded-full" />
-                                    <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Partenaires</span>
-                                </div>
+                            <div className="flex flex-col gap-2">
+                                {/* Mobile Top Row: Eyebrow + Controls */}
+                                <div className="flex md:hidden items-center justify-between gap-2 mb-1">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <div className="h-[2px] w-5 bg-primary rounded-full shrink-0" />
+                                        <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">Partenaires</span>
+                                    </div>
 
-                                <div className="flex flex-row items-center justify-between gap-4">
-                                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight leading-tight">Nos Marques <span className="text-primary italic">Officielles</span></h2>
-
-                                    {/* Cluster Buttons - Hidden if all visible */}
-                                    {brandChunks.length > 1 && (
-                                        <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                                            <div className="flex gap-1.5 md:gap-2">
+                                    <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                                        {brandChunks.length > 1 && (
+                                            <div className="flex gap-1">
                                                 <button
                                                     onClick={slidePrev}
-                                                    className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                                                    aria-label="Précédent"
+                                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
                                                 >
-                                                    <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+                                                    <ChevronLeft className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={slideNext}
-                                                    className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                                                    aria-label="Suivant"
+                                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
                                                 >
-                                                    <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                                                    <ChevronRight className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
-                                        </div>
-                                    )}
-                                    <Link
-                                        href="/marques"
-                                        className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
-                                    >
-                                        <Plus className="w-5 h-5 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
-                                    </Link>
+                                        )}
+                                        <Link
+                                            href="/marques"
+                                            className="w-7 h-7 rounded-lg bg-primary text-white flex items-center justify-center shadow-sm active:scale-95 group/plus-premium transition-all"
+                                            title="Voir toutes les marques"
+                                        >
+                                            <Plus className="w-3.5 h-3.5 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={2.5} />
+                                        </Link>
+                                    </div>
                                 </div>
 
-                                <p className="text-gray-400 text-sm max-w-sm leading-relaxed">Nous collaborons avec les leaders mondiaux pour vous garantir l'excellence technologique.</p>
+                                {/* Main Header */}
+                                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 md:gap-4">
+                                    <div className="flex flex-col gap-0.5 md:gap-2">
+                                        {/* Desktop Eyebrow */}
+                                        <div className="hidden md:flex items-center gap-3">
+                                            <div className="h-[2px] w-8 bg-primary rounded-full" />
+                                            <span className="text-primary font-black text-[11px] uppercase tracking-[0.4em]">Partenaires</span>
+                                        </div>
+
+                                        <h2 className="text-2xl sm:text-2xl md:text-3xl font-black text-[#1B1F3B] uppercase tracking-tight leading-none">
+                                            Nos Marques <span className="text-primary italic inline-block pr-1.5">Officielles</span>
+                                        </h2>
+
+                                        <p className="text-gray-400 text-xs md:text-sm max-w-sm leading-relaxed mt-0.5">
+                                            Nous collaborons avec les leaders mondiaux pour vous garantir l'excellence technologique.
+                                        </p>
+                                    </div>
+
+                                    {/* Desktop Controls */}
+                                    <div className="hidden md:flex items-center gap-3 shrink-0 self-end">
+                                        {brandChunks.length > 1 && (
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={slidePrev}
+                                                    aria-label="Précédent"
+                                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                                                >
+                                                    <ChevronLeft className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={slideNext}
+                                                    aria-label="Suivant"
+                                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                                                >
+                                                    <ChevronRight className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        )}
+                                        <Link
+                                            href="/marques"
+                                            className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all"
+                                            title="Voir toutes les marques"
+                                        >
+                                            <Plus className="w-7 h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                                        </Link>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

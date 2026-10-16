@@ -18,50 +18,56 @@ export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {
         buttonText: "Commander"
     }
 
+    const displayTitle = banner.title || "Le Son Absolu."
+
     return (
         <section>
-            <div className="relative rounded-2xl md:rounded-[3rem] overflow-hidden bg-[#1B1F3B] min-h-[300px] md:min-h-[500px] flex items-center group shadow-sm transition-all duration-500">
+            <div className="relative rounded-2xl md:rounded-[3rem] overflow-hidden bg-[#1B1F3B] flex items-center group shadow-sm transition-all duration-500">
                 {/* Background Accents */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 blur-[120px] rounded-full translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-blue-500/10 blur-[100px] rounded-full -translate-x-1/2" />
+                <div className="absolute top-0 right-0 w-2/3 md:w-1/2 h-full bg-primary/15 blur-[90px] md:blur-[120px] rounded-full translate-x-1/3 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-1/2 md:w-1/3 h-1/2 bg-blue-500/15 blur-[80px] md:blur-[100px] rounded-full -translate-x-1/3 pointer-events-none" />
 
-                <div className="flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-12 items-center w-full px-6 md:px-20 py-10 md:py-0 relative z-10">
+                <div className="flex flex-col md:grid md:grid-cols-2 gap-5 md:gap-12 items-center w-full px-5 py-6 sm:px-8 sm:py-8 md:px-20 md:py-0 relative z-10">
                     {/* Text Content */}
-                    <div className="flex flex-col gap-4 md:gap-6 items-center md:items-start text-center md:text-left">
-                        <span className="flex items-center gap-2 px-3 py-1 bg-primary text-white text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-full">
-                            <Zap className="w-3 h-3 fill-current" /> {banner.badge}
+                    <div className="flex flex-col gap-2.5 md:gap-6 items-center md:items-start text-center md:text-left w-full">
+                        <span className="flex items-center gap-1.5 md:gap-2 px-2.5 py-1 md:px-3 md:py-1 bg-primary text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-xs">
+                            <Zap className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" /> {banner.badge}
                         </span>
 
-                        <h2 className="text-4xl md:text-7xl font-black text-white leading-[0.95] tracking-tight uppercase whitespace-pre-line">
-                            {banner.title.includes(' ') && !banner.title.includes('\n') ? banner.title.replace(' ', '\n') : banner.title}
+                        <h2 className="text-2xl sm:text-3xl md:text-7xl font-black text-white leading-tight md:leading-[0.95] tracking-tight uppercase">
+                            <span className="md:hidden">{displayTitle}</span>
+                            <span className="hidden md:inline whitespace-pre-line">
+                                {displayTitle.includes(' ') && !displayTitle.includes('\n') ? displayTitle.replace(' ', '\n') : displayTitle}
+                            </span>
                         </h2>
 
-                        <p className="text-gray-400 text-[11px] md:text-sm max-w-[280px] md:max-w-md leading-relaxed">
+                        <p className="text-gray-300 text-[11px] sm:text-xs md:text-sm max-w-xs md:max-w-md leading-relaxed line-clamp-2 md:line-clamp-none">
                             {banner.description}
                         </p>
 
-                        <div className="pt-2 md:pt-4 flex flex-col sm:flex-row items-center gap-4 md:gap-6 w-full sm:w-auto">
-                            <Link href={banner.href} className="w-full sm:w-auto">
-                                <Button size="lg" className="w-full sm:w-auto rounded-xl px-12 h-14 bg-primary text-white hover:bg-white hover:text-black font-black text-[11px] md:text-xs uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95">
+                        <div className="pt-1 md:pt-4 flex flex-row items-center justify-center md:justify-start gap-3 md:gap-6 w-full sm:w-auto">
+                            <Link href={banner.href}>
+                                <Button size="sm" className="rounded-xl px-6 h-10 md:h-14 md:px-12 bg-primary text-white hover:bg-white hover:text-black font-black text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95">
                                     {banner.buttonText}
                                 </Button>
                             </Link>
-                            <Link href="/boutique" className="group flex items-center gap-3 text-white text-[10px] md:text-xs font-black uppercase tracking-widest">
-                                Voir la gamme <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-2 transition-transform" />
+                            <Link href="/boutique" className="group flex items-center gap-1.5 md:gap-3 text-white text-[10px] md:text-xs font-black uppercase tracking-wider md:tracking-widest hover:text-primary transition-colors">
+                                <span>Voir la gamme</span>
+                                <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
                     </div>
 
                     {/* Image Content */}
-                    <div className="relative h-[250px] sm:h-[350px] md:h-[500px] w-full flex items-center justify-center">
-                        <div className="absolute w-[80%] aspect-square rounded-full border border-white/5 animate-pulse" />
-                        <div className="absolute w-[60%] aspect-square rounded-full border border-white/10" />
+                    <div className="relative h-[170px] sm:h-[240px] md:h-[500px] w-full flex items-center justify-center">
+                        <div className="absolute w-[180px] md:w-[80%] aspect-square rounded-full border border-white/5 animate-pulse" />
+                        <div className="absolute w-[140px] md:w-[60%] aspect-square rounded-full border border-white/10" />
 
                         <Image
                             src={banner.image}
                             alt={banner.title}
                             fill
-                            className="object-contain drop-shadow-[0_20px_60px_rgba(0,0,0,0.8)] transition-transform duration-700 group-hover:scale-105 z-10"
+                            className="object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-transform duration-700 group-hover:scale-105 z-10"
                             unoptimized
                         />
                     </div>

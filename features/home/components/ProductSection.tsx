@@ -67,6 +67,17 @@ export function ProductSection({
         setCurrentIndex((prev) => (prev - 1 + productChunks.length) % productChunks.length)
     }
 
+    const handleDragEnd = (_: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
+        if (productChunks.length <= 1) return
+        const isSwipeLeft = info.offset.x < -35 || (info.offset.x < -10 && info.velocity.x < -150)
+        const isSwipeRight = info.offset.x > 35 || (info.offset.x > 10 && info.velocity.x > 150)
+        if (isSwipeLeft) {
+            slideNext()
+        } else if (isSwipeRight) {
+            slidePrev()
+        }
+    }
+
     const variants = {
         enter: (direction: number) => ({
             x: direction > 0 ? 300 : -300,
@@ -88,64 +99,114 @@ export function ProductSection({
         <section className={cn("relative overflow-hidden py-1 md:py-2", className)}>
             <div className="relative z-10">
                 {/* Header matching Baraka Section UI */}
-                <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 mb-5 md:mb-6">
-                    <div className="flex flex-col gap-1.5 md:gap-2">
+                <div className="mb-2.5 md:mb-6">
+                    {/* Mobile Top Row: Eyebrow + Controls */}
+                    <div className="flex md:hidden items-center justify-between gap-2 mb-1.5">
                         {eyebrow && (
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-[2px] bg-primary rounded-full" />
-                                <span className="text-primary font-black text-[9px] md:text-[10px] uppercase tracking-[0.4em]">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <div className="w-5 h-[2px] bg-primary rounded-full shrink-0" />
+                                <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">
                                     {eyebrow}
                                 </span>
                             </div>
                         )}
-                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tighter leading-none">
-                            {title}{' '}
-                            {highlightedWord && (
-                                <span className="text-primary italic">{highlightedWord}</span>
+
+                        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                            <div className="flex gap-1">
+                                <button
+                                    onClick={slidePrev}
+                                    disabled={productChunks.length <= 1}
+                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    aria-label="Précédent"
+                                >
+                                    <ChevronLeft className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                    onClick={slideNext}
+                                    disabled={productChunks.length <= 1}
+                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    aria-label="Suivant"
+                                >
+                                    <ChevronRight className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+
+                            {viewAllHref && (
+                                <Link
+                                    href={viewAllHref}
+                                    className="w-7 h-7 rounded-lg bg-[#1B1F3B] text-white flex items-center justify-center shadow-sm active:scale-95 group/plus-premium transition-all hover:bg-primary"
+                                    title="Voir tous les produits"
+                                >
+                                    <Plus className="w-3.5 h-3.5 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={2.5} />
+                                </Link>
                             )}
-                        </h2>
-                        {subtitle && (
-                            <p className="text-slate-400 text-[11px] sm:text-xs md:text-sm font-medium mt-1 md:mt-1.5 max-w-sm md:max-w-xl leading-relaxed">
-                                {subtitle}
-                            </p>
-                        )}
+                        </div>
                     </div>
 
-                    {/* Navigation Controls */}
-                    <div className="flex items-center gap-3 self-stretch md:self-end justify-end">
-                        <div className="flex gap-2">
-                            <button
-                                onClick={slidePrev}
-                                disabled={productChunks.length <= 1}
-                                className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
-                                aria-label="Précédent"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={slideNext}
-                                disabled={productChunks.length <= 1}
-                                className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed"
-                                aria-label="Suivant"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                    {/* Main Header Row: Title & Subtitle + Desktop Controls */}
+                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 md:gap-4">
+                        <div className="flex flex-col gap-0.5 md:gap-2">
+                            {/* Desktop Eyebrow */}
+                            {eyebrow && (
+                                <div className="hidden md:flex items-center gap-2">
+                                    <div className="w-8 h-[2px] bg-primary rounded-full" />
+                                    <span className="text-primary font-black text-[10px] uppercase tracking-[0.4em]">
+                                        {eyebrow}
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Title: 100% full width, no truncation, no clipping */}
+                            <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-none">
+                                {title}{' '}
+                                {highlightedWord && (
+                                    <span className="text-primary italic inline-block pr-1.5">{highlightedWord}</span>
+                                )}
+                            </h2>
+
+                            {subtitle && (
+                                <p className="text-slate-400 text-[10px] sm:text-xs md:text-sm font-medium mt-1 md:mt-1.5 max-w-sm md:max-w-xl leading-relaxed">
+                                    {subtitle}
+                                </p>
+                            )}
                         </div>
 
-                        {viewAllHref && (
-                            <Link
-                                href={viewAllHref}
-                                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary"
-                                title="Voir tous les produits"
-                            >
-                                <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
-                            </Link>
-                        )}
+                        {/* Desktop Controls */}
+                        <div className="hidden md:flex items-center gap-2.5 shrink-0 self-end">
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={slidePrev}
+                                    disabled={productChunks.length <= 1}
+                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    aria-label="Précédent"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={slideNext}
+                                    disabled={productChunks.length <= 1}
+                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    aria-label="Suivant"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {viewAllHref && (
+                                <Link
+                                    href={viewAllHref}
+                                    className="w-14 h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary"
+                                    title="Voir tous les produits"
+                                >
+                                    <Plus className="w-7 h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Carousel Content */}
-                <div className="relative h-[390px] md:h-[540px] mb-4 md:mb-6">
+                <div className="relative h-[272px] sm:h-[325px] md:h-[510px] mb-2 md:mb-5">
                     <AnimatePresence initial={false} custom={direction} mode="wait">
                         {productChunks.length > 0 ? (
                             <motion.div
@@ -156,12 +217,16 @@ export function ProductSection({
                                 animate="center"
                                 exit="exit"
                                 transition={{
-                                    x: { type: "spring", stiffness: 200, damping: 25 },
-                                    opacity: { duration: 0.3 }
+                                    x: { type: "spring", stiffness: 220, damping: 26 },
+                                    opacity: { duration: 0.25 }
                                 }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                dragElastic={0.15}
+                                onDragEnd={handleDragEnd}
                                 className={cn(
-                                    "absolute inset-0 grid gap-4 md:gap-8",
-                                    isMobile ? "grid-cols-2" : "grid-cols-4"
+                                    "absolute inset-0 grid",
+                                    isMobile ? "grid-cols-2 gap-2 sm:gap-3" : "grid-cols-4 gap-6 md:gap-8"
                                 )}
                             >
                                 {productChunks[currentIndex].map((product, idx) => (
@@ -186,7 +251,7 @@ export function ProductSection({
 
                 {/* Pagination Dots */}
                 {productChunks.length > 1 && (
-                    <div className="flex justify-center items-center gap-2 pt-2 md:pt-4">
+                    <div className="flex justify-center items-center gap-1.5 md:gap-2 pt-1 md:pt-3">
                         {productChunks.map((_, idx) => (
                             <button
                                 key={idx}
@@ -195,8 +260,8 @@ export function ProductSection({
                                     setCurrentIndex(idx)
                                 }}
                                 className={cn(
-                                    "h-1.5 rounded-full transition-all duration-500",
-                                    currentIndex === idx ? "w-8 bg-primary" : "w-2 bg-gray-200 hover:bg-gray-300"
+                                    "h-1.5 rounded-full transition-all duration-300",
+                                    currentIndex === idx ? "w-6 md:w-8 bg-primary" : "w-1.5 md:w-2 bg-gray-200 hover:bg-gray-300"
                                 )}
                                 aria-label={`Page ${idx + 1}`}
                             />

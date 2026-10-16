@@ -24,21 +24,19 @@ export async function getProductsAction(options: {
     onSale?: boolean;
     isNew?: boolean;
 } = {}) {
-    const {
-        query,
-        category,
-        subCategory,
-        thirdLevelCategory,
-        brand,
-        store,
-        minPrice,
-        maxPrice,
-        sort = 'newest',
-        page = 1,
-        limit = 12,
-        onSale = false,
-        isNew = false
-    } = options;
+    const query = options.query;
+    const category = options.category;
+    const subCategory = options.subCategory || (options as any).sub;
+    const thirdLevelCategory = options.thirdLevelCategory || (options as any).third;
+    const brand = options.brand;
+    const store = options.store;
+    const minPrice = options.minPrice;
+    const maxPrice = options.maxPrice;
+    const sort = options.sort || 'newest';
+    const page = options.page || 1;
+    const limit = options.limit || 12;
+    const onSale = options.onSale || false;
+    const isNew = options.isNew || false;
 
     // Clé de cache déterministe normalisée : évite la fragmentation du cache
     const cacheKey = [

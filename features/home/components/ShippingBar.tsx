@@ -29,7 +29,7 @@ const features = [
 
 export function ShippingBar() {
     return (
-        <div className="bg-white rounded-2xl md:rounded-[2.5rem] border border-gray-100 py-6 md:py-8 px-6 md:px-8 shadow-sm">
+        <div className="hidden md:block bg-white md:rounded-[2.5rem] border border-gray-100 py-6 md:py-8 px-6 md:px-8 shadow-sm">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-6 md:gap-y-8 gap-x-4">
                     {features.map((feature, index) => (
                         <div key={index} className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 md:gap-5 group cursor-default">
