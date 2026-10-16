@@ -63,7 +63,7 @@ export function MobileBottomNav() {
     return (
         <aside
             aria-label="Navigation mobile"
-            className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-1 px-2"
+            className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-2xl border-t border-slate-100 shadow-[0_-8px_30px_rgba(27,31,59,0.08)] pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-1.5 px-2"
         >
             <nav className="grid grid-cols-5 items-center max-w-md mx-auto">
                 {navItems.map((item) => {
@@ -74,21 +74,27 @@ export function MobileBottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={cn(
-                                "relative flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-200 active:scale-90 select-none group",
-                                active ? "text-primary" : "text-gray-400 hover:text-gray-700"
-                            )}
+                            className="relative flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-200 active:scale-90 select-none group"
                         >
-                            {/* Icon Container with Badge */}
-                            <div className="relative flex items-center justify-center w-7 h-7">
-                                <Icon
+                            {/* Icon Container with Capsule Spotlight */}
+                            <div className="relative flex items-center justify-center">
+                                <div
                                     className={cn(
-                                        "w-5 h-5 transition-transform duration-200",
-                                        active ? "scale-110 stroke-[2.4]" : "stroke-[1.8] group-hover:scale-105"
+                                        "flex items-center justify-center w-11 h-7 rounded-full transition-all duration-300",
+                                        active
+                                            ? "bg-primary/10 text-primary shadow-xs ring-1 ring-primary/20 scale-105"
+                                            : "text-slate-400 group-hover:text-slate-600 group-hover:bg-slate-100/60"
                                     )}
-                                />
+                                >
+                                    <Icon
+                                        className={cn(
+                                            "w-5 h-5 transition-transform duration-200",
+                                            active ? "stroke-[2.4]" : "stroke-[1.8] group-hover:scale-105"
+                                        )}
+                                    />
+                                </div>
                                 {typeof item.badge === 'number' && item.badge > 0 && (
-                                    <span className="absolute -top-1 -right-2.5 min-w-[18px] h-[18px] px-1 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-xs">
+                                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-primary to-orange-600 text-white text-[9.5px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-xs shadow-primary/30">
                                         {item.badge > 99 ? '99+' : item.badge}
                                     </span>
                                 )}
@@ -97,17 +103,19 @@ export function MobileBottomNav() {
                             {/* Label */}
                             <span
                                 className={cn(
-                                    "text-[10px] tracking-tight mt-0.5 transition-all line-clamp-1 text-center font-bold",
-                                    active ? "text-primary font-black" : "text-gray-500 font-semibold"
+                                    "text-[10px] tracking-tight mt-1 transition-colors line-clamp-1 text-center",
+                                    active ? "text-primary font-black" : "text-slate-500 font-semibold group-hover:text-slate-700"
                                 )}
                             >
                                 {item.label}
                             </span>
 
-                            {/* Active subtle indicator dot */}
-                            {active && (
-                                <span className="absolute bottom-0 w-1 h-1 rounded-full bg-primary" />
-                            )}
+                            {/* Active subtle indicator pill (stable height to prevent jitter) */}
+                            <div className="h-1 mt-0.5 flex items-center justify-center">
+                                {active && (
+                                    <span className="w-3.5 h-1 rounded-full bg-primary shadow-xs shadow-primary/40 animate-in fade-in zoom-in-75 duration-200" />
+                                )}
+                            </div>
                         </Link>
                     )
                 })}

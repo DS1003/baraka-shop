@@ -3,6 +3,7 @@ import path from "path";
 
 // Server reload trigger - Cron & Instrumentation sync
 const nextConfig: NextConfig = {
+  devIndicators: false,
   outputFileTracingRoot: path.join(__dirname, "./"),
   poweredByHeader: false,
   compress: true,

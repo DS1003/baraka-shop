@@ -15,7 +15,13 @@ import {
     Loader2,
     X,
     SlidersHorizontal,
-    RotateCcw
+    RotateCcw,
+    ArrowUpDown,
+    Check,
+    Sparkles,
+    ArrowUpRight,
+    ArrowDownRight,
+    Clock
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProductCard } from '@/ui/ProductCard'
@@ -33,6 +39,13 @@ interface ShopClientProps {
     }
 }
 
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Nouveautés', desc: 'Derniers arrivages en premier', icon: Sparkles },
+    { value: 'price_asc', label: 'Prix : Croissant', desc: 'Du moins cher au plus cher', icon: ArrowUpRight },
+    { value: 'price_desc', label: 'Prix : Décroissant', desc: 'Du plus cher au moins cher', icon: ArrowDownRight },
+    { value: 'oldest', label: 'Plus anciens', desc: 'Du plus ancien au plus récent', icon: Clock },
+]
+
 export function ShopClient({ initialProducts, categories, brands, pagination }: ShopClientProps) {
     const router = useRouter()
     const pathname = usePathname()
@@ -40,6 +53,7 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
     const [isFilterOpen, setIsFilterOpen] = useState(false)
+    const [isSortOpen, setIsSortOpen] = useState(false)
     const [isPending, setIsPending] = useState(false)
 
     const rawCategory = searchParams.get('category') || ''
@@ -250,59 +264,224 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                     )}
                 </AnimatePresence>
 
+                {/* Mobile Sort Bottom Sheet */}
+                <AnimatePresence>
+                    {isSortOpen && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsSortOpen(false)}
+                                className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[200] lg:hidden"
+                            />
+                            <motion.div
+                                initial={{ y: '100%' }}
+                                animate={{ y: 0 }}
+                                exit={{ y: '100%' }}
+                                transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                                className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white rounded-t-3xl z-[210] p-5 pb-[calc(2rem+env(safe-area-inset-bottom,1rem))] overflow-y-auto lg:hidden shadow-2xl border-t border-gray-100"
+                            >
+                                {/* Pull bar indicator */}
+                                <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-4" />
+
+                                {/* Header */}
+                                <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                            <ArrowUpDown className="w-4 h-4" />
+                                        </div>
+                                        <h3 className="text-sm font-black text-[#1B1F3B] uppercase tracking-tight">
+                                            Trier les produits
+                                        </h3>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsSortOpen(false)}
+                                        aria-label="Fermer le tri"
+                                        className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-[#1B1F3B] transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {/* Options list */}
+                                <div className="flex flex-col gap-2">
+                                    {SORT_OPTIONS.map((opt) => {
+                                        const isSelected = currentSort === opt.value
+                                        const Icon = opt.icon
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                onClick={() => {
+                                                    updateFilters({ sort: opt.value })
+                                                    setIsSortOpen(false)
+                                                }}
+                                                className={cn(
+                                                    "w-full p-3.5 rounded-2xl flex items-center justify-between text-left transition-all active:scale-[0.98] border",
+                                                    isSelected
+                                                        ? "bg-primary/5 border-primary shadow-xs"
+                                                        : "bg-gray-50/70 hover:bg-gray-100 border-gray-100 text-gray-700"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={cn(
+                                                        "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                                        isSelected ? "bg-primary text-white shadow-xs" : "bg-white text-gray-500 border border-gray-200/60"
+                                                    )}>
+                                                        <Icon className="w-4 h-4" />
+                                                    </div>
+                                                    <div>
+                                                        <p className={cn("text-xs font-black", isSelected ? "text-primary" : "text-[#1B1F3B]")}>
+                                                            {opt.label}
+                                                        </p>
+                                                        <p className="text-[11px] text-gray-400 font-medium">
+                                                            {opt.desc}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {isSelected && (
+                                                    <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shrink-0 shadow-xs">
+                                                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+
                 {/* Desktop Sidebar */}
                 <FilterSidebar className="hidden lg:flex" />
 
                 {/* Product Listing Area */}
                 <div className="lg:col-span-3">
                     {/* Mobile Unified Toolbar & Filter Controls (< lg) */}
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-4 mb-4 lg:hidden">
-                        {/* Action Row */}
-                        <div className="flex items-center gap-2">
+                    <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_25px_-5px_rgba(27,31,59,0.06)] p-3 sm:p-4 mb-4 lg:hidden">
+                        {/* Action Row: 2 Touch-Friendly Primary Control Buttons */}
+                        <div className="grid grid-cols-2 gap-2.5">
                             {/* Filter Drawer Trigger Button */}
                             <button
                                 onClick={() => setIsFilterOpen(true)}
                                 className={cn(
-                                    "h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all shrink-0 active:scale-95 border",
+                                    "h-11 px-3.5 rounded-xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] border shadow-xs select-none",
                                     activeFiltersCount > 0
-                                        ? "bg-[#1B1F3B] text-white border-[#1B1F3B] shadow-sm"
+                                        ? "bg-[#1B1F3B] text-white border-[#1B1F3B] shadow-sm shadow-[#1B1F3B]/20"
                                         : "bg-gray-50 hover:bg-gray-100 text-[#1B1F3B] border-gray-200/80"
                                 )}
                             >
-                                <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                                <SlidersHorizontal className="w-3.5 h-3.5 text-primary shrink-0" />
                                 <span>Filtres</span>
                                 {activeFiltersCount > 0 && (
-                                    <span className="w-4 h-4 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center -mr-1">
+                                    <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center shadow-xs">
                                         {activeFiltersCount}
                                     </span>
                                 )}
                             </button>
 
-                            {/* Sort Select */}
-                            <div className="relative flex-1 min-w-0">
-                                <select
-                                    value={currentSort}
-                                    onChange={(e) => updateFilters({ sort: e.target.value })}
-                                    className="w-full h-10 bg-gray-50 hover:bg-gray-100 border border-gray-200/80 rounded-xl pl-3 pr-8 text-xs font-bold text-[#1B1F3B] outline-none appearance-none focus:border-primary transition-all truncate"
+                            {/* Sort Drawer Trigger Button */}
+                            <button
+                                onClick={() => setIsSortOpen(true)}
+                                className="h-11 px-3.5 bg-gray-50 hover:bg-gray-100 active:bg-gray-200/70 border border-gray-200/80 rounded-xl flex items-center justify-between text-xs font-bold text-[#1B1F3B] transition-all active:scale-[0.98] shadow-xs select-none"
+                            >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <ArrowUpDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                                    <span className="truncate">
+                                        {SORT_OPTIONS.find(o => o.value === currentSort)?.label || 'Trier'}
+                                    </span>
+                                </div>
+                                <ChevronDown className="w-3.5 h-3.5 text-gray-400 shrink-0 ml-1" />
+                            </button>
+                        </div>
+
+                        {/* Active Filter Chips Bar (Instant 1-Tap Dismissal) */}
+                        {activeFiltersCount > 0 && (
+                            <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 shrink-0 mr-0.5">
+                                    Actifs :
+                                </span>
+                                {currentCategory && (
+                                    <button
+                                        onClick={() => updateFilters({ category: '', subCategory: '', thirdLevelCategory: '' })}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                    >
+                                        <span>{activeCategoryObj?.name || currentCategory}</span>
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                {currentSubCategory && (
+                                    <button
+                                        onClick={() => updateFilters({ subCategory: '', thirdLevelCategory: '' })}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                    >
+                                        <span>{activeSubCategoryObj?.name || currentSubCategory}</span>
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                {currentThirdLevelCategory && (
+                                    <button
+                                        onClick={() => updateFilters({ thirdLevelCategory: '' })}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                    >
+                                        <span>{availableThirdCategories.find((t: any) => t.slug === currentThirdLevelCategory)?.name || currentThirdLevelCategory}</span>
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                {currentBrand && (
+                                    <button
+                                        onClick={() => updateFilters({ brand: '' })}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                    >
+                                        <span>Marque : {brands.find((b: any) => b.slug === currentBrand)?.name || currentBrand}</span>
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                {(minPrice || maxPrice) && (
+                                    <button
+                                        onClick={() => updateFilters({ minPrice: '', maxPrice: '' })}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                    >
+                                        <span>Prix : {minPrice || '0'} - {maxPrice || '∞'} F</span>
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                {query && (
+                                    <button
+                                        onClick={() => updateFilters({ q: '' })}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                    >
+                                        <span>"{query}"</span>
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => updateFilters({ category: '', subCategory: '', thirdLevelCategory: '', brand: '', minPrice: '', maxPrice: '', q: '' })}
+                                    className="text-[10px] font-black uppercase tracking-wider text-gray-400 hover:text-primary shrink-0 px-2 py-1 transition-colors flex items-center gap-1"
                                 >
-                                    <option value="newest">Nouveautés</option>
-                                    <option value="price_asc">Prix : Croissant</option>
-                                    <option value="price_desc">Prix : Décroissant</option>
-                                    <option value="oldest">Plus anciens</option>
-                                </select>
-                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                                    <RotateCcw className="w-2.5 h-2.5" /> Tout effacer
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Bottom Status & View Mode Row */}
+                        <div className="flex items-center justify-between pt-2.5 border-t border-gray-100 mt-2.5">
+                            <div className="flex items-center gap-1.5 text-xs">
+                                <span className="font-black text-[#1B1F3B]">{pagination.total}</span>
+                                <span className="text-gray-400 font-medium">{pagination.total > 1 ? 'articles trouvés' : 'article trouvé'}</span>
                             </div>
 
-                            {/* View Mode Toggle */}
-                            <div className="flex items-center bg-gray-50 p-0.5 rounded-xl border border-gray-200/80 shrink-0">
+                            {/* View Mode Switcher (Grid / List) */}
+                            <div className="flex items-center bg-gray-100/80 p-0.5 rounded-lg border border-gray-200/60 shrink-0">
                                 <button
                                     onClick={() => setViewMode('grid')}
                                     aria-label="Mode grille"
                                     className={cn(
-                                        "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                        "w-7 h-7 rounded-md flex items-center justify-center transition-all",
                                         viewMode === 'grid'
-                                            ? "bg-white text-primary shadow-xs"
-                                            : "text-gray-400 hover:text-gray-600"
+                                            ? "bg-white text-primary shadow-xs font-bold"
+                                            : "text-gray-400 hover:text-gray-700"
                                     )}
                                 >
                                     <LayoutGrid className="w-3.5 h-3.5" />
@@ -311,119 +490,15 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
                                     onClick={() => setViewMode('list')}
                                     aria-label="Mode liste"
                                     className={cn(
-                                        "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                        "w-7 h-7 rounded-md flex items-center justify-center transition-all",
                                         viewMode === 'list'
-                                            ? "bg-white text-primary shadow-xs"
-                                            : "text-gray-400 hover:text-gray-600"
+                                            ? "bg-white text-primary shadow-xs font-bold"
+                                            : "text-gray-400 hover:text-gray-700"
                                     )}
                                 >
                                     <List className="w-3.5 h-3.5" />
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Quick Category / Subcategory Touch-scrollable Pills */}
-                        {availableSubCategories.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-100">
-                                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
-                                    <button
-                                        onClick={() => updateFilters({ subCategory: '', thirdLevelCategory: '' })}
-                                        className={cn(
-                                            "shrink-0 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all",
-                                            !currentSubCategory
-                                                ? "bg-[#1B1F3B] text-white shadow-xs"
-                                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                        )}
-                                    >
-                                        Toutes
-                                    </button>
-                                    {availableSubCategories.map((sub: any) => {
-                                        const isSelected = currentSubCategory === sub.slug
-                                        return (
-                                            <button
-                                                key={sub.id}
-                                                onClick={() => updateFilters({ subCategory: isSelected ? '' : sub.slug, thirdLevelCategory: '' })}
-                                                className={cn(
-                                                    "shrink-0 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all",
-                                                    isSelected
-                                                        ? "bg-primary text-white shadow-xs"
-                                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                                )}
-                                            >
-                                                {sub.name}
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                                {availableThirdCategories.length > 0 && (
-                                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 mt-2 -mx-1 px-1">
-                                        <button
-                                            onClick={() => updateFilters({ thirdLevelCategory: '' })}
-                                            className={cn(
-                                                "shrink-0 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all",
-                                                !currentThirdLevelCategory
-                                                    ? "bg-primary/10 text-primary font-black"
-                                                    : "bg-gray-50 text-gray-500 hover:text-gray-800"
-                                            )}
-                                        >
-                                            Tous types
-                                        </button>
-                                        {availableThirdCategories.map((third: any) => {
-                                            const isSelected = currentThirdLevelCategory === third.slug
-                                            return (
-                                                <button
-                                                    key={third.id}
-                                                    onClick={() => updateFilters({ thirdLevelCategory: isSelected ? '' : third.slug })}
-                                                    className={cn(
-                                                        "shrink-0 px-2.5 py-1 rounded-md text-[10px] font-bold transition-all",
-                                                        isSelected
-                                                            ? "bg-primary text-white font-black"
-                                                            : "bg-gray-50 text-gray-500 hover:text-gray-800"
-                                                    )}
-                                                >
-                                                    {third.name}
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* If at root boutique with no category selected, show root category pills */}
-                        {!currentCategory && categories.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-100">
-                                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
-                                    <button
-                                        onClick={() => updateFilters({ category: '', subCategory: '', thirdLevelCategory: '' })}
-                                        className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#1B1F3B] text-white shadow-xs"
-                                    >
-                                        Tous
-                                    </button>
-                                    {categories.map((cat: any) => (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => updateFilters({ category: cat.slug, subCategory: '', thirdLevelCategory: '' })}
-                                            className="shrink-0 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
-                                        >
-                                            {cat.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Info & Quick Reset Row */}
-                        <div className="flex items-center justify-between text-[11px] font-bold text-gray-500 pt-2.5 border-t border-gray-100 mt-2.5">
-                            <span>{pagination.total} {pagination.total > 1 ? 'produits' : 'produit'}</span>
-                            {activeFiltersCount > 0 && (
-                                <button
-                                    onClick={() => updateFilters({ category: '', subCategory: '', thirdLevelCategory: '', brand: '', minPrice: '', maxPrice: '', q: '' })}
-                                    className="text-primary hover:underline text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
-                                >
-                                    <RotateCcw className="w-2.5 h-2.5" /> Réinitialiser
-                                </button>
-                            )}
                         </div>
                     </div>
 

@@ -17,7 +17,7 @@ interface BarakaAnimatedLoaderProps {
     autoFadeOut?: boolean
     /**
      * Durée totale avant sortie automatique en secondes (si autoFadeOut est actif)
-     * @default 2.2
+     * @default 3.2
      */
     duration?: number
     /**
@@ -37,7 +37,7 @@ interface BarakaAnimatedLoaderProps {
 export function BarakaAnimatedLoader({
     fullScreen = true,
     autoFadeOut = false,
-    duration = 2.2,
+    duration = 3.2,
     onComplete,
     isFinished = false,
     className = '',
@@ -64,7 +64,7 @@ export function BarakaAnimatedLoader({
 
         const timer = setTimeout(() => {
             setShouldExit(true)
-        }, Math.max(1500, duration * 1000 - 350))
+        }, Math.max(1800, duration * 1000 - 450))
 
         return () => clearTimeout(timer)
     }, [autoFadeOut, duration])
@@ -130,7 +130,7 @@ export function BarakaAnimatedLoader({
             {!shouldExit && (
                 <motion.div
                     initial={{ opacity: 1 }}
-                    exit={{ opacity: 0, transition: { duration: 0.35, ease: 'easeInOut' } }}
+                    exit={{ opacity: 0, transition: { duration: 0.45, ease: 'easeInOut' } }}
                     className={containerClasses}
                     role="status"
                     aria-label="Chargement de Baraka Shop"
@@ -149,8 +149,8 @@ export function BarakaAnimatedLoader({
                             ]
                         }}
                         transition={{
-                            times: [0, 0.4, 0.8, 1],
-                            duration: 2.1,
+                            times: [0, 0.4, 0.75, 1],
+                            duration: Math.max(2.1, duration - 0.45),
                             ease: 'easeInOut'
                         }}
                     >
@@ -326,8 +326,8 @@ export function BarakaAnimatedLoader({
                             initial={{ opacity: 0 }}
                             animate={{ opacity: [0, 0, 0.7, 0.4] }}
                             transition={{
-                                times: [0, 0.6, 0.85, 1],
-                                duration: 2.1,
+                                times: [0, 0.45, 0.75, 1],
+                                duration: Math.max(2.1, duration - 0.45),
                                 ease: 'easeInOut'
                             }}
                         />

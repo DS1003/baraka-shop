@@ -11,11 +11,16 @@ export function InitialSiteLoader() {
         setIsMounted(true)
         // Vérifier si le splash a déjà été affiché durant cette session
         try {
+            const searchParams = new URLSearchParams(window.location.search)
+            const forceSplash = searchParams.get('splash') === '1' || searchParams.get('loader') === '1'
+
             const hasSeenSplash = sessionStorage.getItem('baraka_splash_shown')
-            if (!hasSeenSplash) {
+            if (!hasSeenSplash || forceSplash) {
                 setIsVisible(true)
-                // Marquer pour ne pas rejouer à chaque navigation client
-                sessionStorage.setItem('baraka_splash_shown', 'true')
+                // Marquer pour ne pas rejouer à chaque navigation client normale
+                if (!forceSplash) {
+                    sessionStorage.setItem('baraka_splash_shown', 'true')
+                }
             }
         } catch {
             // Si sessionStorage non disponible (mode privé strict), ignorer
@@ -31,7 +36,7 @@ export function InitialSiteLoader() {
         <BarakaAnimatedLoader
             fullScreen={true}
             autoFadeOut={true}
-            duration={2.1}
+            duration={3.2}
             onComplete={() => setIsVisible(false)}
         />
     )
