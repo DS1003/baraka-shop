@@ -274,13 +274,8 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
             <Link
                 href={item.href}
                 suppressHydrationWarning
-                className="group relative flex flex-col h-[215px] md:h-[280px] bg-gradient-to-b from-white via-slate-50/40 to-orange-50/20 rounded-2xl md:rounded-3xl border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.14)] hover:border-primary/40 hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden"
+                className="group relative flex flex-col h-[215px] md:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden"
             >
-                {/* Top accent glow line on hover */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                {/* Soft ambient radial glow behind product */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 md:w-36 h-24 md:h-36 bg-primary/[0.04] group-hover:bg-primary/[0.08] rounded-full blur-2xl pointer-events-none transition-colors duration-500" />
 
                 {/* Card Header */}
                 <div className="relative z-10 flex flex-col items-center text-center">

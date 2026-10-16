@@ -668,39 +668,30 @@ export function Header() {
                             <rect width="100%" height="100%" fill="url(#dot-matrix-mobile)" />
                         </svg>
                     </div>
-                    <div className="relative z-10 flex items-center justify-between gap-2">
-                        <Link
-                            href="/boutiques"
-                            className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-primary shrink-0 hover:text-orange-400 transition-colors"
-                        >
-                            <Store className="w-3 h-3" />
-                            <span>Boutiques :</span>
-                        </Link>
-                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                            {stores.map((store) => (
-                                <Link
-                                    key={store.id}
-                                    href={`/store/${store.slug}`}
-                                    className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/15 bg-white/5 active:scale-95 hover:bg-white transition-all shrink-0"
-                                    title={store.name}
-                                >
-                                    {store.logo && (
-                                        <div className="relative w-3.5 h-3.5 rounded-full overflow-hidden bg-white/10 group-hover:bg-gray-100 transition-all shrink-0">
-                                            <Image
-                                                src={store.logo}
-                                                alt={store.name}
-                                                fill
-                                                className="object-contain p-[1px]"
-                                                unoptimized
-                                            />
-                                        </div>
-                                    )}
-                                    <span className="text-[9px] sm:text-[10px] font-black text-gray-200 group-hover:text-[#1B1F3B] uppercase tracking-wider whitespace-nowrap transition-colors">
-                                        {store.name}
-                                    </span>
-                                </Link>
-                            ))}
-                        </div>
+                    <div className="relative z-10 flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                        {stores.map((store) => (
+                            <Link
+                                key={store.id}
+                                href={`/store/${store.slug}`}
+                                className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/15 bg-white/5 active:scale-95 hover:bg-white transition-all shrink-0"
+                                title={store.name}
+                            >
+                                {store.logo && (
+                                    <div className="relative w-3.5 h-3.5 rounded-full overflow-hidden bg-white/10 group-hover:bg-gray-100 transition-all shrink-0">
+                                        <Image
+                                            src={store.logo}
+                                            alt={store.name}
+                                            fill
+                                            className="object-contain p-[1px]"
+                                            unoptimized
+                                        />
+                                    </div>
+                                )}
+                                <span className="text-[9px] sm:text-[10px] font-black text-gray-200 group-hover:text-[#1B1F3B] uppercase tracking-wider whitespace-nowrap transition-colors">
+                                    {store.name}
+                                </span>
+                            </Link>
+                        ))}
                     </div>
                 </div>
             )}
