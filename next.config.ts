@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: '/(.*)\\.(ico|png|jpg|jpeg|svg|webp|avif|woff|woff2)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
@@ -109,8 +118,19 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion', '@react-email/components'],
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'framer-motion',
+      '@react-email/components',
+      'clsx',
+      'tailwind-merge',
+      'recharts'
+    ],
     serverActions: {
       bodySizeLimit: '10mb',
     },

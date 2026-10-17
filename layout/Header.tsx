@@ -208,14 +208,17 @@ export function Header() {
 
     React.useEffect(() => {
         if (isMenuOpen) {
-            document.body.style.overflow = 'hidden'
-            // Re-fetch categories and stores when mobile menu opens
-            getMegaMenuAction().then(data => {
-                if (data && data.length > 0) setCategories(data)
-            }).catch(() => {})
-            getStoresAction().then(data => {
-                if (Array.isArray(data) && data.length > 0) setStores(data)
-            }).catch(() => {})
+            // Lazy load categories and stores only if not already loaded
+            if (categories.length === 0) {
+                getMegaMenuAction().then(data => {
+                    if (data && data.length > 0) setCategories(data)
+                }).catch(() => {})
+            }
+            if (stores.length === 0) {
+                getStoresAction().then(data => {
+                    if (Array.isArray(data) && data.length > 0) setStores(data)
+                }).catch(() => {})
+            }
         } else {
             document.body.style.overflow = ''
         }

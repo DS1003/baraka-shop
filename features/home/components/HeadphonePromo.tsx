@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { Button } from '@/ui/Button'
 import { ArrowRight, Zap } from 'lucide-react'
+import { getOptimizedImageUrl } from '@/lib/utils'
 
 export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {
     const banner = initialBanner || {
@@ -64,9 +65,10 @@ export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {
                         <div className="absolute w-[140px] md:w-[60%] aspect-square rounded-full border border-white/10" />
 
                         <Image
-                            src={banner.image}
+                            src={getOptimizedImageUrl(banner.image, 800)}
                             alt={banner.title}
                             fill
+                            sizes="(max-width: 768px) 100vw, 600px"
                             className="object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-transform duration-700 group-hover:scale-105 z-10"
                             unoptimized
                         />

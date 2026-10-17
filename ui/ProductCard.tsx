@@ -4,7 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Heart, ShoppingCart, Star, Zap, Clock } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getOptimizedImageUrl } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
@@ -25,7 +25,8 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
     const { headerLogo } = useSiteLogos()
 
     const customBadge = product.badge || (typeof product.metadata === 'object' && product.metadata ? product.metadata.badge : undefined);
-    const displayImage = product.images?.[0] || product.image || '/placeholder.png'
+    const rawImage = product.images?.[0] || product.image || '/placeholder.png'
+    const displayImage = React.useMemo(() => getOptimizedImageUrl(rawImage, 450), [rawImage])
     const categoryName = product.category && typeof product.category === 'object' ? product.category.name : (product.category || 'Non classé')
     const cleanDescription = stripHtml(product.shortDescription || product.description || "Découvrez la performance chez Baraka Shop.")
 

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getOptimizedImageUrl } from '@/lib/utils'
 
 const DEFAULT_PROMOS = [
     {
@@ -195,7 +196,7 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                                 dragConstraints={{ left: 0, right: 0 }}
                                 dragElastic={0.15}
                                 onDragEnd={handleDragEnd}
-                                className="absolute inset-0"
+                                className="absolute inset-0 touch-pan-y will-change-transform"
                             >
                                 <PromoCard promo={promos[currentIndex]} isMobile={true} />
                             </motion.div>
@@ -274,7 +275,7 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
                 <div className="absolute right-[-2%] bottom-1 w-[48%] h-[72%] pointer-events-none transition-transform duration-700 group-hover:scale-105">
                     <div className="relative h-full w-full">
                         <Image
-                            src={promo.image}
+                            src={getOptimizedImageUrl(promo.image, 500)}
                             alt={promo.title}
                             fill
                             className="object-contain drop-shadow-[0_12px_18px_rgba(0,0,0,0.12)] select-none"
@@ -341,7 +342,7 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
             <div className="absolute right-[-5%] bottom-[2%] w-[55%] h-[75%] pointer-events-none transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-110 group-hover:-translate-y-6 group-hover:-rotate-2">
                 <div className="relative h-full w-full">
                     <Image
-                        src={promo.image}
+                        src={getOptimizedImageUrl(promo.image, 700)}
                         alt={promo.title}
                         fill
                         className="object-contain drop-shadow-[0_25px_25px_rgba(0,0,0,0.12)] select-none"

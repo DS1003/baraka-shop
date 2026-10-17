@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat', display: 'swap' })
 const roboto = Roboto({ 
   subsets: ['latin'], 
-  weight: ['100', '300', '400', '500', '700', '900'],
+  weight: ['400', '500', '700'],
   variable: '--font-roboto',
   display: 'swap'
 })
@@ -97,20 +97,27 @@ export default async function RootLayout({
   return (
     <html lang="fr" className="h-full antialiased scroll-smooth" suppressHydrationWarning>
       <head>
-        {/* Google Analytics (gtag.js) */}
+        {/* Resource Preconnections & DNS Prefetching for Ultra-Fast Image Loading */}
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://media.ldlc.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://sony.scene7.com" />
+
+        {/* Google Analytics (gtag.js) - Loaded lazily to prioritize interactive rendering */}
         <Script
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           src="https://www.googletagmanager.com/gtag/js?id=G-BY3SM39WNQ"
         />
         <Script
           id="google-analytics"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-BY3SM39WNQ');
+              gtag('config', 'G-BY3SM39WNQ', { page_path: window.location.pathname });
             `,
           }}
         />

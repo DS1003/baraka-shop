@@ -52,3 +52,20 @@ export function formatUniverseHref(rawHref?: string | null): string {
     return trimmed
 }
 
+/**
+ * Optimise dynamiquement les images Cloudinary (WebP/AVIF automatique, compression sans perte visible, redimensionnement ciblé)
+ * Réduit drastiquement le poids de la page (de plusieurs Mo à quelques dizaines de Ko)
+ */
+export function getOptimizedImageUrl(url?: string | null, width: number = 500): string {
+    if (!url || typeof url !== 'string') return '/placeholder.png';
+    const trimmed = url.trim();
+    if (!trimmed) return '/placeholder.png';
+
+    // Optimisation Cloudinary native sans passer par le quota Vercel
+    if (trimmed.includes('res.cloudinary.com') && trimmed.includes('/upload/')) {
+        if (!trimmed.includes('/upload/f_auto') && !trimmed.includes('/upload/w_')) {
+            return trimmed.replace('/upload/', `/upload/f_auto,q_auto:good,w_${width},c_limit/`);
+        }
+    }
+    return trimmed;
+}

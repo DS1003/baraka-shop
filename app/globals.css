@@ -229,8 +229,23 @@ html.dark {
     will-change: width;
 }
 
-/* 7. GPU rendering helpers */
-.gpu-layer {
+/* 7. GPU rendering helpers & high-performance transitions */
+.gpu-layer,
+.will-change-transform {
     transform: translateZ(0);
     backface-visibility: hidden;
-}
+    perspective: 1000px;
+    will-change: transform;
+}
+
+/* 8. Mobile touch fluidity (removes 300ms tap delay & unwanted tap flashes) */
+a, button, input, select, textarea, [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 9. Image rendering & smooth decoding */
+img {
+    image-rendering: auto;
+}
+

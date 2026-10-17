@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
-import { formatUniverseHref } from '@/lib/utils'
+import { formatUniverseHref, getOptimizedImageUrl } from '@/lib/utils'
 
 // Images locales dans /public/categories/ - garanties d'affichage (Fallback)
 const CLEAN_IMAGES: Record<string, string> = {
@@ -259,7 +259,8 @@ export function CategoryCarousel({
 }
 
 function UniverseCard({ item, idx }: { item: any, idx: number }) {
-    const imageSrc = item.image || CLEAN_IMAGES[(item.name || '').trim().toUpperCase()] || CLEAN_IMAGES['DEFAULT'];
+    const rawImage = item.image || CLEAN_IMAGES[(item.name || '').trim().toUpperCase()] || CLEAN_IMAGES['DEFAULT'];
+    const imageSrc = getOptimizedImageUrl(rawImage, 320);
     const subtitle = item.subtitle || SUBTITLES[(item.name || '').trim().toUpperCase()] || 'Découvrir nos offres';
 
     return (

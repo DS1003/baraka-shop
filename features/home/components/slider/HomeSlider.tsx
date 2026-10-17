@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { cn, getOptimizedImageUrl } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
 import { getCategoriesAction } from '@/lib/actions/product-actions'
@@ -88,13 +88,14 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.15}
                         onDragEnd={handleDragEnd}
-                        className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
+                        className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-pan-y"
                     >
                         <Link href={slides[currentSlide].href} className="block w-full h-full overflow-hidden bg-gray-50">
                             <Image
-                                src={slides[currentSlide].image}
+                                src={getOptimizedImageUrl(slides[currentSlide].image, 1400)}
                                 alt={slides[currentSlide].title}
                                 fill
+                                sizes="(max-width: 768px) 100vw, 1280px"
                                 className="object-cover hover:scale-105 transition-transform duration-[4000ms] ease-out pointer-events-none"
                                 priority
                             />

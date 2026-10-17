@@ -225,7 +225,7 @@ export function ProductSection({
                                 dragElastic={0.15}
                                 onDragEnd={handleDragEnd}
                                 className={cn(
-                                    "absolute inset-0 grid",
+                                    "absolute inset-0 grid touch-pan-y will-change-transform",
                                     isMobile ? "grid-cols-2 gap-2 sm:gap-3" : "grid-cols-4 gap-6 md:gap-8"
                                 )}
                             >
