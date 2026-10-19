@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, ArrowRight, X, ShoppingBag, Sparkles, ShieldCheck, Store } from 'lucide-react'
+import { 
+    Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, 
+    ArrowRight, X, ShoppingBag, Sparkles, ShieldCheck, Store,
+    Laptop, Smartphone, Tv, Gamepad2, Printer, Cable, Cpu, Home as HomeIcon, Shield, Wifi, Watch, BatteryCharging 
+} from 'lucide-react'
 import { Container } from '@/ui/Container'
 import { cn } from '@/lib/utils'
 import dynamic from 'next/dynamic'
@@ -19,6 +23,34 @@ const CartToast = dynamic(() => import('@/components/CartToast').then(mod => mod
 const MiniCart = dynamic(() => import('@/components/MiniCart').then(mod => mod.MiniCart), { ssr: false })
 import { BorderGlow } from '@/components/BorderGlow'
 import { ProfileDropdown } from './ProfileDropdown'
+
+const CATEGORY_ICONS: Record<string, any> = {
+    'INFORMATIQUE': Laptop,
+    'TELEPHONE & TABLETTE': Smartphone,
+    'TELEPHONE': Smartphone,
+    'IMAGE & SON': Tv,
+    'CONSOLES & JEUX': Gamepad2,
+    'JEUX & LOISIRS': Gamepad2,
+    'CONSOMMABLES': Printer,
+    'CONNECTIQUE': Cable,
+    'CABLE': Cable,
+    'CHARGEUR': BatteryCharging,
+    'BATTERIE': BatteryCharging,
+    'ELECTRONIQUE': Cpu,
+    'ELECTROMENAGER': HomeIcon,
+    'SECURITE': Shield,
+    'RESEAUX': Wifi,
+    'OBJETS CONNECTES': Watch,
+    'OBJETS CONNECTÉS': Watch,
+}
+
+function formatCategoryTitle(name: string) {
+    if (!name) return ''
+    return name
+        .toLowerCase()
+        .replace(/(?:^|\s|-|\/)\S/g, (char) => char.toUpperCase())
+        .replace(/\bEt\b/g, '&')
+}
 
 const SUGGESTIONS = [
     { id: 1, name: "MacBook Pro M3 Max", category: "INFORMATIQUE", price: "2 500 000FCFA", image: "https://media.ldlc.com/encart/p/28885_b.jpg" },
@@ -764,45 +796,45 @@ export function Header() {
                                                 <div className="grid grid-cols-2 gap-2 mb-3 shrink-0">
                                                     <button
                                                         onClick={() => navigateTo('/boutique')}
-                                                        className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-gray-50 border border-gray-100/80 hover:bg-white hover:border-primary/30 transition-all group text-left active:scale-98"
+                                                        className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50/90 border border-slate-100 hover:bg-white hover:border-primary/30 hover:shadow-xs transition-all group text-left active:scale-[0.98]"
                                                     >
-                                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                                            <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                        <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                                            <ShoppingBag className="w-4 h-4" />
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
-                                                            <span className="text-[11px] font-black uppercase text-[#1B1F3B] tracking-tight group-hover:text-primary transition-colors">Boutique</span>
-                                                            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Tout voir</span>
+                                                            <span className="text-xs font-bold text-[#1B1F3B] tracking-tight group-hover:text-primary transition-colors">Boutique</span>
+                                                            <span className="text-[9px] font-medium text-slate-400">Tout explorer</span>
                                                         </div>
                                                     </button>
 
                                                     <button
                                                         onClick={() => navigateTo('/promotions')}
-                                                        className="flex items-center gap-2 p-2 sm:p-2.5 rounded-xl bg-red-50/70 border border-red-100/80 hover:bg-red-50 hover:border-red-200 transition-all group relative overflow-hidden text-left active:scale-98"
+                                                        className="flex items-center gap-2.5 p-2.5 rounded-xl bg-rose-50/70 border border-rose-100/80 hover:bg-rose-50 hover:border-rose-200 hover:shadow-xs transition-all group relative overflow-hidden text-left active:scale-[0.98]"
                                                     >
-                                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-500 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                                            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                                        <div className="w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                                            <Zap className="w-4 h-4" />
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="text-[11px] font-black uppercase text-red-600 tracking-tight">Promos</span>
-                                                                <span className="bg-red-500 text-white text-[7px] px-1 py-0.2 rounded-full font-black leading-none">HOT</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-xs font-bold text-rose-600 tracking-tight">Promos</span>
+                                                                <span className="bg-rose-500 text-white text-[7.5px] px-1 py-0.5 rounded-full font-black leading-none uppercase">Hot</span>
                                                             </div>
-                                                            <span className="text-[8px] font-bold text-red-400 uppercase tracking-wider">Bons plans</span>
+                                                            <span className="text-[9px] font-medium text-rose-400">Bons plans</span>
                                                         </div>
                                                     </button>
                                                 </div>
 
                                                 {/* Nos Boutiques Partenaires */}
                                                 {stores.length > 0 && (
-                                                    <div className="mb-3.5 p-3 rounded-2xl bg-[#0F1420] text-white border border-white/10 shadow-sm shrink-0">
+                                                    <div className="mb-3.5 p-3 rounded-2xl bg-gradient-to-br from-[#0F1420] to-[#182032] text-white border border-white/10 shadow-sm shrink-0">
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-300 flex items-center gap-1.5">
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
                                                                 <Store className="w-3.5 h-3.5 text-primary" />
                                                                 Nos Boutiques
                                                             </span>
                                                             <button
                                                                 onClick={() => navigateTo('/boutiques')}
-                                                                className="text-[9px] font-black text-primary hover:text-orange-400 uppercase tracking-wider flex items-center gap-0.5 transition-colors"
+                                                                className="text-[9.5px] font-bold text-primary hover:text-orange-400 uppercase tracking-wider flex items-center gap-0.5 transition-colors"
                                                             >
                                                                 Tout voir
                                                                 <ArrowRight className="w-2.5 h-2.5" />
@@ -814,11 +846,11 @@ export function Header() {
                                                                 <button
                                                                     key={store.id}
                                                                     onClick={() => navigateTo(`/store/${store.slug}`)}
-                                                                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/15 bg-white/5 hover:bg-white active:scale-95 transition-all text-left shadow-xs"
+                                                                    className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/10 hover:bg-white active:scale-95 transition-all text-left shadow-xs"
                                                                     title={store.name}
                                                                 >
                                                                     {store.logo && (
-                                                                        <div className="relative w-4 h-4 rounded-full overflow-hidden bg-white/10 group-hover:bg-gray-100 transition-all shrink-0">
+                                                                        <div className="relative w-3.5 h-3.5 rounded-full overflow-hidden bg-white/10 group-hover:bg-gray-100 transition-all shrink-0">
                                                                             <Image
                                                                                 src={store.logo}
                                                                                 alt={store.name}
@@ -828,7 +860,7 @@ export function Header() {
                                                                             />
                                                                         </div>
                                                                     )}
-                                                                    <span className="text-[10px] sm:text-[11px] font-black text-gray-200 group-hover:text-[#1B1F3B] uppercase tracking-wider transition-colors whitespace-nowrap">
+                                                                    <span className="text-[10px] font-semibold text-slate-200 group-hover:text-[#1B1F3B] transition-colors whitespace-nowrap">
                                                                         {store.name}
                                                                     </span>
                                                                 </button>
@@ -837,8 +869,10 @@ export function Header() {
                                                     </div>
                                                 )}
 
-                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] mb-2 block shrink-0">Univers Populaires</span>
-                                                <div className="space-y-1.5 sm:space-y-2">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block shrink-0">
+                                                    Univers Populaires
+                                                </span>
+                                                <div className="space-y-1.5">
                                                     {(() => {
                                                         const prioritizedSlugs = [
                                                             'informatique',
@@ -868,39 +902,44 @@ export function Header() {
 
                                                         return finalDisplay.map((cat, idx) => {
                                                             const catKey = cat.name.trim().toUpperCase();
-                                                            const icon = cat.image || CLEAN_IMAGES[catKey] || CLEAN_IMAGES['DEFAULT'];
+                                                            const CategoryIcon = CATEGORY_ICONS[catKey] || Laptop;
                                                             const hasSubs = cat.subCategories && cat.subCategories.length > 0;
+                                                            const subtitle = SUBTITLES[catKey] || 'Découvrir';
 
                                                             return (
                                                                 <motion.div
-                                                                    initial={{ opacity: 0, y: 8 }}
+                                                                    initial={{ opacity: 0, y: 6 }}
                                                                     animate={{ opacity: 1, y: 0 }}
-                                                                    transition={{ delay: idx * 0.03 }}
+                                                                    transition={{ delay: idx * 0.02 }}
                                                                     key={cat.id}
                                                                 >
                                                                     <button
                                                                         onClick={() => {
                                                                             if (hasSubs) {
-                                                                                handlePushMenu(cat.name, 'category', cat);
+                                                                                handlePushMenu(formatCategoryTitle(cat.name), 'category', cat);
                                                                             } else {
                                                                                 navigateTo(`/boutique?category=${cat.slug}`);
                                                                             }
                                                                         }}
-                                                                        className="w-full flex items-center justify-between p-2 sm:p-2.5 bg-gray-50/70 hover:bg-white active:bg-gray-100 border border-gray-100/90 rounded-xl transition-all text-left group"
+                                                                        className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-50/70 hover:bg-white active:bg-slate-100 border border-slate-100 hover:border-slate-200 hover:shadow-xs transition-all text-left group"
                                                                     >
-                                                                        <div className="flex items-center gap-3 min-w-0">
-                                                                            <div className="relative w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-lg border border-gray-100/90 overflow-hidden shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                                                                                <Image src={icon} alt={cat.name} fill className="object-contain p-1.5" unoptimized />
+                                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                                            <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center text-slate-700 shadow-xs shrink-0 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                                                                                <CategoryIcon className="w-4 h-4 stroke-[1.8]" />
                                                                             </div>
                                                                             <div className="flex flex-col min-w-0">
-                                                                                <span className="text-xs sm:text-[13px] font-black text-[#1B1F3B] uppercase tracking-tight truncate group-hover:text-primary transition-colors">{cat.name}</span>
-                                                                                <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider truncate">{SUBTITLES[catKey] || 'Découvrir'}</span>
+                                                                                <span className="text-[12px] font-bold text-slate-900 truncate group-hover:text-primary transition-colors">
+                                                                                    {formatCategoryTitle(cat.name)}
+                                                                                </span>
+                                                                                <span className="text-[9.5px] font-medium text-slate-400 truncate">
+                                                                                    {subtitle}
+                                                                                </span>
                                                                             </div>
                                                                         </div>
                                                                         {hasSubs ? (
-                                                                            <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 group-hover:text-primary transition-colors shrink-0 ml-2" />
+                                                                            <ChevronDown className="w-3.5 h-3.5 text-slate-300 -rotate-90 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
                                                                         ) : (
-                                                                            <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors shrink-0 ml-2" />
+                                                                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
                                                                         )}
                                                                     </button>
                                                                 </motion.div>
@@ -909,12 +948,12 @@ export function Header() {
                                                     })()}
                                                 </div>
 
-                                                <div className="mt-4 pt-4 border-t border-gray-100 mb-4 shrink-0">
-                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] mb-2.5 block">Explorer</span>
-                                                    <div className="space-y-1.5">
+                                                <div className="mt-3.5 pt-3.5 border-t border-gray-100 mb-3 shrink-0">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Explorer</span>
+                                                    <div className="space-y-1">
                                                         <button
                                                             onClick={() => navigateTo('/nouveautes')}
-                                                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 active:bg-gray-100 text-xs font-bold text-[#1B1F3B] uppercase tracking-wide transition-colors group text-left"
+                                                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 active:bg-slate-100 text-xs font-bold text-[#1B1F3B] transition-colors group text-left"
                                                         >
                                                             <div className="flex items-center gap-2.5">
                                                                 <Sparkles className="w-4 h-4 text-primary" />
@@ -925,7 +964,7 @@ export function Header() {
 
                                                         <button
                                                             onClick={() => navigateTo('/boutiques')}
-                                                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 active:bg-gray-100 text-xs font-bold text-[#1B1F3B] uppercase tracking-wide transition-colors group text-left"
+                                                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 active:bg-slate-100 text-xs font-bold text-[#1B1F3B] transition-colors group text-left"
                                                         >
                                                             <div className="flex items-center gap-2.5">
                                                                 <MapPin className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />
@@ -936,7 +975,7 @@ export function Header() {
 
                                                         <button
                                                             onClick={() => navigateTo('/contact')}
-                                                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 active:bg-gray-100 text-xs font-bold text-primary uppercase tracking-wide transition-colors group text-left"
+                                                            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 active:bg-slate-100 text-xs font-bold text-primary transition-colors group text-left"
                                                         >
                                                             <span>Vendre sur Baraka</span>
                                                             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -947,15 +986,15 @@ export function Header() {
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             onClick={resetMenu}
-                                                            className="flex items-center justify-between p-2.5 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 text-[#128C7E] font-bold text-xs transition-colors active:scale-98 mt-1"
+                                                            className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-700 font-bold text-xs transition-colors active:scale-98 mt-1"
                                                         >
                                                             <div className="flex items-center gap-2">
-                                                                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-[#25D366] shrink-0" xmlns="http://www.w3.org/2000/svg">
+                                                                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-emerald-600 shrink-0" xmlns="http://www.w3.org/2000/svg">
                                                                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                                                                 </svg>
-                                                                <span className="text-[11px] font-bold text-[#1B1F3B]">WhatsApp 7j/7</span>
+                                                                <span className="text-[11px] font-bold text-slate-800">WhatsApp 7j/7</span>
                                                             </div>
-                                                            <span className="text-[8px] font-black uppercase tracking-wider bg-[#25D366] text-white px-2 py-0.5 rounded-full">En ligne</span>
+                                                            <span className="text-[8px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded-full">En ligne</span>
                                                         </a>
                                                     </div>
                                                 </div>
@@ -984,9 +1023,9 @@ export function Header() {
                                                                         navigateTo(`/boutique?category=${currentMenu.data.slug}&subCategory=${sub.slug}`);
                                                                     }
                                                                 }}
-                                                                className="w-full flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/60 hover:bg-white active:bg-gray-100 transition-colors text-left"
+                                                                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-white active:bg-slate-100 transition-colors text-left"
                                                             >
-                                                                <span className="text-xs sm:text-sm font-bold text-[#1B1F3B] uppercase tracking-wide truncate">{sub.name}</span>
+                                                                <span className="text-xs sm:text-sm font-bold text-[#1B1F3B] truncate">{sub.name}</span>
                                                                 {hasThird ? (
                                                                     <ChevronDown className="w-4 h-4 text-gray-300 -rotate-90 shrink-0 ml-2" />
                                                                 ) : (
@@ -1002,9 +1041,9 @@ export function Header() {
                                                     >
                                                         <button
                                                             onClick={() => navigateTo(`/boutique?category=${currentMenu.data.slug}`)}
-                                                            className="w-full h-11 flex items-center justify-center mt-4 bg-black text-white rounded-xl font-black text-[10px] uppercase tracking-[0.15em] hover:bg-primary transition-colors shadow-sm active:scale-98"
+                                                            className="w-full h-11 flex items-center justify-center mt-4 bg-black text-white rounded-xl font-bold text-[11px] uppercase tracking-wider hover:bg-primary transition-colors shadow-sm active:scale-98"
                                                         >
-                                                            Voir tout {currentMenu.data.name}
+                                                            Voir tout {formatCategoryTitle(currentMenu.data.name)}
                                                         </button>
                                                     </motion.div>
                                                 </div>
@@ -1048,29 +1087,29 @@ export function Header() {
                             </div>
 
                             {/* Drawer Footer - Refined, Mobile-first & Safe Area Padded */}
-                            <div className="p-3.5 sm:p-4 bg-white border-t border-gray-100 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+                            <div className="p-3 bg-white border-t border-gray-100 shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
                                 {isLoggedIn ? (
-                                    <div className="space-y-2">
+                                    <div className="space-y-1.5">
                                         <button
                                             onClick={() => navigateTo('/account')}
-                                            className="w-full h-10 sm:h-11 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-[#1B1F3B] rounded-xl flex items-center justify-between px-3.5 font-black text-[11px] uppercase tracking-wider transition-all text-left"
+                                            className="w-full h-10 bg-slate-100 hover:bg-slate-200 active:scale-[0.99] text-[#1B1F3B] rounded-xl flex items-center justify-between px-3 font-bold text-xs transition-all text-left"
                                         >
                                             <div className="flex items-center gap-2.5 min-w-0">
-                                                <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center text-[#1B1F3B] shadow-xs shrink-0">
+                                                <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center text-[#1B1F3B] shadow-xs shrink-0">
                                                     <User className="w-3.5 h-3.5" />
                                                 </div>
                                                 <span className="truncate">{session?.user?.name || "Mon Compte"}</span>
                                             </div>
-                                            <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                            <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                         </button>
 
                                         {(session?.user as any)?.role === 'ADMIN' && (
                                             <button
                                                 onClick={() => navigateTo('/admin')}
-                                                className="w-full h-10 sm:h-11 bg-[#1E293B] hover:bg-primary active:bg-primary/90 text-white rounded-xl flex items-center justify-between px-3.5 font-black text-[11px] uppercase tracking-wider shadow-sm transition-all text-left"
+                                                className="w-full h-10 bg-[#0F1420] hover:bg-primary active:scale-[0.99] text-white rounded-xl flex items-center justify-between px-3 font-bold text-xs shadow-xs transition-all text-left"
                                             >
                                                 <div className="flex items-center gap-2.5">
-                                                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
+                                                    <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
                                                         <ShieldCheck className="w-3.5 h-3.5" />
                                                     </div>
                                                     <span>Administration</span>
@@ -1082,18 +1121,18 @@ export function Header() {
                                 ) : (
                                     <button
                                         onClick={() => navigateTo('/login')}
-                                        className="w-full h-11 sm:h-12 bg-primary hover:bg-[#d95213] text-white rounded-xl flex items-center justify-between px-4 font-black text-[11px] uppercase tracking-wider shadow-md shadow-primary/20 transition-all active:scale-98 group text-left"
+                                        className="w-full h-10 bg-primary hover:bg-[#d95213] text-white rounded-xl flex items-center justify-between px-3.5 font-bold text-xs shadow-sm shadow-primary/25 transition-all active:scale-[0.99] group text-left"
                                     >
                                         <div className="flex items-center gap-2.5">
-                                            <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform">
+                                            <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0 group-hover:scale-105 transition-transform">
                                                 <User className="w-3.5 h-3.5" />
                                             </div>
                                             <span>Connexion / Inscription</span>
                                         </div>
-                                        <ArrowRight className="w-4 h-4 text-white/80 group-hover:translate-x-1 transition-transform" />
+                                        <ArrowRight className="w-3.5 h-3.5 text-white/80 group-hover:translate-x-0.5 transition-transform" />
                                     </button>
                                 )}
-                                <p className="text-center mt-2.5 text-[8px] sm:text-[9px] font-bold text-gray-300 uppercase tracking-widest">
+                                <p className="text-center mt-2 text-[9px] font-medium text-slate-400 tracking-wider">
                                     Baraka Shop — Qualité & Service
                                 </p>
                             </div>

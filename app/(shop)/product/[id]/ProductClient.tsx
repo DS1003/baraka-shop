@@ -27,7 +27,10 @@ import {
     ThumbsDown,
     Flag,
     X,
-    Package
+    Package,
+    PenLine,
+    Lock,
+    Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -41,6 +44,14 @@ import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 import { toast } from 'sonner'
 import { checkWishlistAction, toggleWishlistAction } from '@/lib/actions/user-actions'
 import { addReviewAction, voteReviewAction, reportReviewAction } from '@/lib/actions/product-actions'
+
+const RATING_LABELS: Record<number, string> = {
+    1: '1/5 — Décevant',
+    2: '2/5 — Passable',
+    3: '3/5 — Bon',
+    4: '4/5 — Très bon',
+    5: '5/5 — Excellent !',
+}
 
 interface ProductClientProps {
     product: any
@@ -241,6 +252,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
     useEffect(() => {
         let isSticky = false
         const handleScroll = () => {
+            if (typeof window !== 'undefined' && window.innerWidth < 768) return
             const nextSticky = window.scrollY > 600
             if (nextSticky !== isSticky) {
                 isSticky = nextSticky
@@ -961,6 +973,14 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                                 {words[1]}
                                             </span>
                                         )}
+                                        {tab.id === 'reviews' && reviews?.length > 0 && (
+                                            <span className={cn(
+                                                "text-[9px] sm:text-[11px] font-black px-1.5 py-0.5 rounded-full ml-1 sm:ml-1.5 transition-colors",
+                                                isActive ? "bg-primary text-white shadow-xs" : "bg-gray-200/80 text-gray-600"
+                                            )}>
+                                                {reviews.length}
+                                            </span>
+                                        )}
                                         {isActive && (
                                             <motion.div
                                                 layoutId="productTabUnderline"
@@ -1287,108 +1307,176 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="space-y-12"
+                                className="space-y-6 sm:space-y-8 md:space-y-10"
                             >
-                                <div className="flex flex-col md:flex-row gap-12">
+                                <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10 items-start">
                                     {/* Left: Reviews List & Stats */}
-                                    <div className="flex-1 space-y-10">
-                                        <div className="flex items-center justify-between border-b border-slate-100 pb-6">
-                                            <h3 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tight flex items-center gap-3">
-                                                <MessageSquare className="text-orange-500" size={28} />
-                                                Avis Clients
+                                    <div className="flex-1 w-full space-y-4 sm:space-y-6">
+                                        {/* Reviews Header: Responsive & Balanced */}
+                                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 sm:pb-5">
+                                            <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[#1B1F3B] uppercase tracking-tight flex items-center gap-2.5">
+                                                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-50 flex items-center justify-center text-primary shrink-0 border border-orange-100/60">
+                                                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                </div>
+                                                <span>Avis Clients</span>
                                             </h3>
-                                            <div className="bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 flex items-center gap-2 shadow-sm">
-                                                <span className="font-black text-xl text-[#1B1F3B]">
+
+                                            {/* Rating Pill */}
+                                            <div className="bg-slate-50/90 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-slate-200/70 flex items-center gap-1.5 sm:gap-2 shadow-xs">
+                                                <span className="font-black text-base sm:text-lg text-[#1B1F3B] leading-none">
                                                     {reviews?.length > 0 
                                                         ? (reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length).toFixed(1)
                                                         : '0.0'}
                                                 </span>
-                                                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                                                <div className="w-px h-6 bg-slate-200 mx-1"></div>
-                                                <span className="text-sm font-bold text-slate-500">
+                                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                                <div className="w-px h-3.5 sm:h-4 bg-slate-200 mx-0.5" />
+                                                <span className="text-xs sm:text-sm font-bold text-slate-500 whitespace-nowrap">
                                                     {reviews?.length || 0} {reviews?.length > 1 ? 'avis' : 'avis'}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {!reviews || reviews.length === 0 ? (
-                                            <div className="py-12 text-center border-2 border-dashed border-slate-200/60 rounded-[1.5rem] bg-gradient-to-b from-slate-50/50 to-transparent">
-                                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-4">
-                                                    <Star className="w-6 h-6 text-slate-300" />
+                                        {/* If reviews exist, show a sleek visual rating summary bar */}
+                                        {reviews?.length > 0 && (
+                                            <div className="bg-gradient-to-br from-slate-50/90 to-slate-50/50 rounded-2xl p-4 sm:p-5 border border-slate-100 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 shadow-xs">
+                                                <div className="flex flex-col items-center justify-center sm:border-r sm:border-slate-200/80 sm:pr-6 shrink-0 w-full sm:w-auto">
+                                                    <span className="text-3xl sm:text-4xl font-black text-[#1B1F3B] leading-none mb-1">
+                                                        {(reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length).toFixed(1)}
+                                                    </span>
+                                                    <div className="flex gap-0.5 mb-1.5">
+                                                        {[1, 2, 3, 4, 5].map((star) => {
+                                                            const avg = reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length;
+                                                            return (
+                                                                <Star key={star} size={13} className={star <= Math.round(avg) ? "text-yellow-400 fill-yellow-400" : "text-slate-200"} />
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                        Basé sur {reviews.length} avis
+                                                    </span>
                                                 </div>
-                                                <p className="text-[#1B1F3B] font-bold text-base mb-1">Aucun avis pour le moment</p>
-                                                <p className="text-slate-400 text-xs font-medium">Soyez le premier à partager votre expérience !</p>
+
+                                                <div className="flex-1 w-full space-y-1.5">
+                                                    {[5, 4, 3, 2, 1].map((stars) => {
+                                                        const count = reviews.filter((r: any) => r.rating === stars).length;
+                                                        const percentage = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+                                                        return (
+                                                            <div key={stars} className="flex items-center gap-2 text-xs">
+                                                                <span className="w-7 text-[11px] font-bold text-slate-500 flex items-center gap-0.5 shrink-0">
+                                                                    {stars} <Star size={9} className="text-yellow-400 fill-yellow-400" />
+                                                                </span>
+                                                                <div className="flex-1 h-2 bg-slate-200/60 rounded-full overflow-hidden">
+                                                                    <div 
+                                                                        className="h-full bg-primary rounded-full transition-all duration-500" 
+                                                                        style={{ width: `${percentage}%` }}
+                                                                    />
+                                                                </div>
+                                                                <span className="w-8 text-right text-[10px] font-bold text-slate-400 shrink-0">
+                                                                    {count}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Empty State Card */}
+                                        {!reviews || reviews.length === 0 ? (
+                                            <div className="py-8 sm:py-12 px-4 text-center border-2 border-dashed border-slate-200/70 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-slate-50/60 to-transparent">
+                                                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-2xl flex items-center justify-center shadow-xs mx-auto mb-3.5 border border-slate-100 text-yellow-400">
+                                                    <Star className="w-6 h-6 sm:w-7 sm:h-7 fill-yellow-400/20 text-yellow-400" />
+                                                </div>
+                                                <p className="text-[#1B1F3B] font-black text-sm sm:text-base mb-1 uppercase tracking-tight">Aucun avis pour le moment</p>
+                                                <p className="text-slate-400 text-xs font-medium max-w-sm mx-auto leading-relaxed">
+                                                    Soyez le premier à partager votre expérience et aidez la communauté Baraka !
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => document.getElementById('review-form-card')?.scrollIntoView({ behavior: 'smooth' })}
+                                                    className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-black uppercase tracking-wider transition-all lg:hidden active:scale-95"
+                                                >
+                                                    <PenLine className="w-3.5 h-3.5" /> Laisser un avis
+                                                </button>
                                             </div>
                                         ) : (
-                                            <div className="space-y-4">
+                                            <div className="space-y-3 sm:space-y-4">
                                                 {reviews.map((review: any) => (
                                                     <motion.div 
                                                         key={review.id} 
                                                         initial={{ opacity: 0, y: 10 }}
                                                         animate={{ opacity: 1, y: 0 }}
-                                                        className="group p-4 sm:p-5 bg-white border border-slate-100 rounded-[1.5rem] shadow-sm hover:shadow-md hover:border-orange-500/10 transition-all duration-300"
+                                                        className="group p-3.5 sm:p-5 bg-white border border-slate-100/90 rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-md hover:border-orange-500/20 transition-all duration-300"
                                                     >
-                                                        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-100 to-slate-50 flex items-center justify-center overflow-hidden border border-slate-100 shadow-sm relative">
+                                                        {/* Header of review card */}
+                                                        <div className="flex items-start justify-between gap-2 mb-2.5">
+                                                            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-slate-100 to-slate-50 flex items-center justify-center overflow-hidden border border-slate-100 shadow-xs shrink-0">
                                                                     {review.user?.image ? (
                                                                         <img src={review.user.image} alt={review.user.username || 'User'} className="w-full h-full object-cover" />
                                                                     ) : (
-                                                                        <span className="font-bold text-slate-400 text-sm">{review.user?.username?.charAt(0)?.toUpperCase() || 'U'}</span>
+                                                                        <span className="font-black text-slate-500 text-xs sm:text-sm">{review.user?.username?.charAt(0)?.toUpperCase() || 'U'}</span>
                                                                     )}
                                                                 </div>
-                                                                <div>
-                                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                                        <p className="font-bold text-[#1B1F3B] text-sm">{review.user?.username || 'Utilisateur'}</p>
-                                                                        <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase tracking-widest">
-                                                                            <CheckCircle2 size={10} strokeWidth={2.5} />
-                                                                            Achat vérifié
+                                                                <div className="min-w-0">
+                                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                                        <p className="font-bold text-[#1B1F3B] text-xs sm:text-sm truncate">{review.user?.username || 'Client vérifié'}</p>
+                                                                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider shrink-0">
+                                                                            <CheckCircle2 size={9} strokeWidth={2.5} />
+                                                                            Vérifié
                                                                         </span>
                                                                     </div>
-                                                                    <p className="text-[11px] text-slate-400 font-medium">Posté le {new Date(review.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                                                    <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium">
+                                                                        {new Date(review.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                    </p>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex gap-0.5 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
+
+                                                            <div className="flex gap-0.5 bg-slate-50/90 px-2 py-1 rounded-full border border-slate-100 shrink-0">
                                                                 {[1, 2, 3, 4, 5].map((star) => (
-                                                                    <Star key={star} size={12} className={star <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-200"} />
+                                                                    <Star key={star} size={11} className={star <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-200"} />
                                                                 ))}
                                                             </div>
                                                         </div>
 
+                                                        {/* Comment text */}
                                                         {review.comment && (
-                                                            <div className="pl-0 sm:pl-12">
-                                                                <p className="text-slate-600 text-[13px] leading-relaxed">{review.comment}</p>
+                                                            <div className="mt-2 text-slate-600 text-xs sm:text-[13px] leading-relaxed">
+                                                                <p className="whitespace-pre-line">{review.comment}</p>
                                                             </div>
                                                         )}
 
-                                                        <div className="pl-0 sm:pl-12 mt-4 pt-3 border-t border-slate-50 flex items-center gap-3">
-                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">Cet avis vous a-t-il aidé ?</span>
-                                                            <button 
-                                                                type="button"
-                                                                disabled={votedReviews.has(review.id)}
-                                                                onClick={() => handleReviewVote(review.id, 'helpful')}
-                                                                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md transition-colors ${votedReviews.has(review.id) ? 'text-orange-500 bg-orange-50 cursor-not-allowed' : 'text-slate-400 hover:text-orange-600 hover:bg-orange-50'}`}
-                                                            >
-                                                                <ThumbsUp size={12} strokeWidth={2.5} />
-                                                                Utile ({review.helpfulCount || 0})
-                                                            </button>
-                                                            <button 
-                                                                type="button"
-                                                                disabled={votedReviews.has(review.id)}
-                                                                onClick={() => handleReviewVote(review.id, 'unhelpful')}
-                                                                className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-md transition-colors ${votedReviews.has(review.id) ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'}`}
-                                                            >
-                                                                <ThumbsDown size={12} strokeWidth={2.5} />
-                                                            </button>
-                                                            <div className="flex-1"></div>
+                                                        {/* Action footer */}
+                                                        <div className="mt-3 pt-2.5 border-t border-slate-100/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline mr-1">Utile ?</span>
+                                                                <button 
+                                                                    type="button"
+                                                                    disabled={votedReviews.has(review.id)}
+                                                                    onClick={() => handleReviewVote(review.id, 'helpful')}
+                                                                    className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors ${votedReviews.has(review.id) ? 'text-primary bg-primary/10 cursor-not-allowed' : 'text-slate-500 hover:text-primary hover:bg-slate-50 active:scale-95'}`}
+                                                                >
+                                                                    <ThumbsUp size={12} strokeWidth={2.5} />
+                                                                    <span>{review.helpfulCount || 0}</span>
+                                                                </button>
+                                                                <button 
+                                                                    type="button"
+                                                                    disabled={votedReviews.has(review.id)}
+                                                                    onClick={() => handleReviewVote(review.id, 'unhelpful')}
+                                                                    className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg transition-colors ${votedReviews.has(review.id) ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-95'}`}
+                                                                >
+                                                                    <ThumbsDown size={12} strokeWidth={2.5} />
+                                                                </button>
+                                                            </div>
+
                                                             <button 
                                                                 type="button"
                                                                 disabled={reportedReviews.has(review.id)}
                                                                 onClick={() => openReportModal(review.id)}
-                                                                className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${reportedReviews.has(review.id) ? 'text-rose-500 cursor-not-allowed' : 'text-slate-300 hover:text-slate-500'}`}
+                                                                className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-colors ml-auto ${reportedReviews.has(review.id) ? 'text-rose-500 cursor-not-allowed' : 'text-slate-300 hover:text-slate-500'}`}
                                                             >
                                                                 <Flag size={10} strokeWidth={2.5} />
-                                                                {reportedReviews.has(review.id) ? 'Signalé' : 'Signaler'}
+                                                                <span>{reportedReviews.has(review.id) ? 'Signalé' : 'Signaler'}</span>
                                                             </button>
                                                         </div>
                                                     </motion.div>
@@ -1397,51 +1485,76 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                         )}
                                     </div>
 
-                                    {/* Right: Review Form */}
-                                    <div className="md:w-1/3 w-full">
-                                        <div className="bg-slate-50 rounded-[2rem] p-6 lg:p-8 border border-slate-100 sticky top-24">
-                                            <h4 className="text-lg font-black text-[#1B1F3B] uppercase tracking-tight mb-6">Laisser un avis</h4>
+                                    {/* Right: Review Form Card */}
+                                    <div id="review-form-card" className="lg:w-[360px] xl:w-[400px] w-full shrink-0">
+                                        <div className="bg-gradient-to-b from-slate-50/90 to-slate-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 border border-slate-100 shadow-xs lg:sticky lg:top-24">
+                                            <div className="flex items-center justify-between gap-2 mb-4 sm:mb-5">
+                                                <h4 className="text-base sm:text-lg font-black text-[#1B1F3B] uppercase tracking-tight flex items-center gap-2">
+                                                    <PenLine className="w-4 h-4 text-primary" />
+                                                    <span>Laisser un avis</span>
+                                                </h4>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">Votre expérience</span>
+                                            </div>
 
                                             {!session ? (
-                                                <div className="text-center py-6">
-                                                    <p className="text-sm text-gray-500 mb-4 font-medium">Vous devez être connecté pour partager votre expérience.</p>
-                                                    <Link href="/login" className="inline-flex items-center justify-center w-full bg-orange-600 text-white py-3 px-4 rounded-xl font-bold hover:bg-orange-700 transition-colors shadow-lg shadow-orange-600/20">
+                                                <div className="text-center py-6 px-3 bg-white rounded-2xl border border-slate-100">
+                                                    <div className="w-12 h-12 rounded-full bg-orange-50 border border-orange-100 text-primary flex items-center justify-center mx-auto mb-3">
+                                                        <Lock className="w-5 h-5" />
+                                                    </div>
+                                                    <h5 className="font-black text-[#1B1F3B] text-sm uppercase tracking-tight mb-1">Connexion requise</h5>
+                                                    <p className="text-xs text-gray-500 mb-4 font-medium leading-relaxed">
+                                                        Connectez-vous pour évaluer ce produit et aider la communauté d'acheteurs.
+                                                    </p>
+                                                    <Link
+                                                        href={`/login?callbackUrl=/product/${product.id}`}
+                                                        className="inline-flex items-center justify-center w-full h-11 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-[#1B1F3B] transition-all shadow-md shadow-primary/20 active:scale-95"
+                                                    >
                                                         Se connecter
                                                     </Link>
                                                 </div>
                                             ) : (
-                                                <form onSubmit={handleReviewSubmit} className="space-y-5">
+                                                <form onSubmit={handleReviewSubmit} className="space-y-4 sm:space-y-5">
                                                     <div className="space-y-2">
-                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Votre note</label>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Votre note</label>
+                                                            {reviewRating > 0 && (
+                                                                <span className="text-[11px] font-extrabold text-primary animate-in fade-in">
+                                                                    {RATING_LABELS[reviewRating]}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-white rounded-xl sm:rounded-2xl border border-slate-100 justify-center sm:justify-start">
                                                             {[1, 2, 3, 4, 5].map((star) => (
                                                                 <button
                                                                     key={star}
                                                                     type="button"
                                                                     onClick={() => setReviewRating(star)}
-                                                                    className="focus:outline-none transition-transform hover:scale-110"
+                                                                    className="p-1 focus:outline-none transition-transform hover:scale-125 active:scale-110 touch-manipulation"
+                                                                    aria-label={`Noter ${star} sur 5`}
                                                                 >
                                                                     <Star
-                                                                        size={28}
-                                                                        className={star <= reviewRating ? "text-yellow-400 fill-yellow-400 drop-shadow-sm" : "text-gray-200 hover:text-yellow-200"}
+                                                                        size={30}
+                                                                        className={star <= reviewRating ? "text-yellow-400 fill-yellow-400 drop-shadow-xs transition-colors" : "text-gray-200 hover:text-yellow-200 transition-colors"}
                                                                     />
                                                                 </button>
                                                             ))}
                                                         </div>
                                                     </div>
+
                                                     <div className="space-y-2">
-                                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Votre commentaire (optionnel)</label>
+                                                        <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Votre commentaire (optionnel)</label>
                                                         <textarea
                                                             value={reviewComment}
                                                             onChange={(e) => setReviewComment(e.target.value)}
-                                                            placeholder="Partagez votre avis sur ce produit..."
-                                                            className="w-full bg-white border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all min-h-[120px] resize-y"
+                                                            placeholder="Qualité, finitions, utilisation au quotidien... Partagez votre expérience !"
+                                                            className="w-full bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-3 sm:p-3.5 text-xs sm:text-sm focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/10 transition-all min-h-[90px] sm:min-h-[110px] resize-y placeholder:text-gray-400 font-medium"
                                                         />
                                                     </div>
+
                                                     <Button
                                                         type="submit"
                                                         disabled={isSubmittingReview || reviewRating === 0}
-                                                        className="w-full h-12 bg-[#1B1F3B] hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-lg disabled:opacity-50"
+                                                        className="w-full h-11 sm:h-12 bg-[#1B1F3B] hover:bg-primary active:bg-orange-600 text-white font-black text-xs uppercase tracking-wider rounded-xl sm:rounded-2xl transition-all shadow-md active:scale-[0.98] disabled:opacity-50"
                                                     >
                                                         {isSubmittingReview ? "Envoi en cours..." : "Publier mon avis"}
                                                     </Button>
@@ -1650,14 +1763,14 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                     )}
                 </AnimatePresence>
             </div>
-            {/* Sticky Buy Bar */}
+            {/* Sticky Buy Bar (Desktop only) */}
             <AnimatePresence>
                 {showStickyBar && (
                     <motion.div
                         initial={{ y: 100 }}
                         animate={{ y: 0 }}
                         exit={{ y: 100 }}
-                        className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] py-4"
+                        className="hidden md:block fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] py-4"
                     >
                         <Container>
                             <div className="flex items-center justify-between gap-8">

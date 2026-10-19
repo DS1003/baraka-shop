@@ -7,7 +7,7 @@ import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, Youtube } from 'luci
 
 export function Footer() {
     return (
-        <footer className="relative bg-[#0A0B14] text-white pt-10 sm:pt-14 md:pt-20 pb-6 sm:pb-8 md:pb-10 overflow-hidden border-t border-white/5">
+        <footer className="relative bg-[#0A0B14] text-white pt-10 sm:pt-14 md:pt-20 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-10 overflow-hidden border-t border-white/5">
             {/* Background Pattern */}
             <div
                 className="absolute inset-0 opacity-[0.03] pointer-events-none"

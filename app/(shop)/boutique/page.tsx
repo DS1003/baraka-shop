@@ -76,7 +76,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     const currentCategoryName = category ? (categories.find((c: any) => c.slug === category)?.name || 'Catégorie') : 'Boutique'
 
     return (
-        <main className="bg-[#f8f9fb] min-h-screen">
+        <div className="bg-[#f8f9fb] min-h-screen">
             {/* Page Header */}
             <div className="bg-[#1B1F3B] py-7 sm:py-10 md:py-14 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/10 blur-[100px] rounded-full translate-x-1/2" />
@@ -105,6 +105,6 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
                 brands={brands}
                 pagination={result.pagination}
             />
-        </main>
+        </div>
     )
 }

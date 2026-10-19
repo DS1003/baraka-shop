@@ -114,9 +114,9 @@ const config: Config = {
                 "float": "float 6s ease-in-out infinite",
             },
             fontFamily: {
-                sans: ["var(--font-inter)", "ui-sans-serif", "system-ui"],
-                montserrat: ["var(--font-montserrat)"],
-                roboto: ["var(--font-roboto)", "sans-serif"],
+                sans: ["var(--font-plus-jakarta)", "var(--font-inter)", "ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+                montserrat: ["var(--font-plus-jakarta)", "var(--font-montserrat)", "sans-serif"],
+                roboto: ["var(--font-plus-jakarta)", "var(--font-roboto)", "sans-serif"],
             },
         },
     },

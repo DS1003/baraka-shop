@@ -1,10 +1,16 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import { Inter, Montserrat, Roboto } from 'next/font/google'
+import { Plus_Jakarta_Sans, Inter, Montserrat, Roboto } from 'next/font/google'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { Providers } from '@/components/providers'
 
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-plus-jakarta',
+  display: 'swap',
+})
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat', display: 'swap' })
 const roboto = Roboto({ 
@@ -125,10 +131,11 @@ export default async function RootLayout({
       <body
         className={cn(
           "min-h-full flex flex-col bg-background font-sans text-foreground selection:bg-primary/20",
+          plusJakartaSans.variable,
           inter.variable,
           montserrat.variable,
           roboto.variable,
-          inter.className
+          plusJakartaSans.className
         )}
         suppressHydrationWarning
       >
