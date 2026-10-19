@@ -56,7 +56,7 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
     if (loading || slides.length === 0) {
         return (
             <section>
-                <div className="bg-gray-100 relative rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-sm h-[200px] sm:h-[300px] md:h-[500px] flex items-center justify-center">
+                <div className="bg-gray-100 relative rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-sm aspect-[8/3] md:aspect-auto md:h-[480px] lg:h-[500px] flex items-center justify-center">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 </div>
             </section>
@@ -76,27 +76,27 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
 
     return (
         <section>
-            <div className="bg-white relative rounded-2xl md:rounded-t-[2.5rem] md:rounded-b-none overflow-hidden shadow-sm h-[210px] sm:h-[320px] md:h-[500px]">
+            <div className="bg-white relative rounded-2xl md:rounded-t-[2.5rem] md:rounded-b-none overflow-hidden shadow-sm aspect-[8/3] md:aspect-auto md:h-[480px] lg:h-[500px]">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSlide}
-                        initial={{ opacity: 0, scale: 1.05 }}
+                        initial={{ opacity: 0, scale: 1.02 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.15}
                         onDragEnd={handleDragEnd}
                         className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-pan-y"
                     >
-                        <Link href={slides[currentSlide].href} className="block w-full h-full overflow-hidden bg-gray-50">
+                        <Link href={slides[currentSlide].href} className="block w-full h-full overflow-hidden bg-white">
                             <Image
                                 src={getOptimizedImageUrl(slides[currentSlide].image, 1400)}
                                 alt={slides[currentSlide].title}
                                 fill
-                                sizes="(max-width: 768px) 100vw, 1280px"
-                                className="object-cover hover:scale-105 transition-transform duration-[4000ms] ease-out pointer-events-none"
+                                sizes="(max-width: 768px) 100vw, 1400px"
+                                className="object-cover md:hover:scale-105 transition-transform duration-[4000ms] ease-out pointer-events-none"
                                 priority
                             />
                             <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent hidden md:block" />
@@ -105,15 +105,18 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
                 </AnimatePresence>
 
                 {/* Mobile Navigation Dots */}
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center items-center gap-1.5 md:hidden z-20 pointer-events-none">
+                <div className="absolute bottom-2 sm:bottom-3 left-0 right-0 flex justify-center items-center gap-1.5 md:hidden z-20 pointer-events-none">
                     {slides.map((_, index) => (
                         <button
                             key={index}
                             onClick={() => handleTabClick(index)}
                             className={cn(
-                                "w-2 h-2 rounded-full transition-all duration-300",
-                                currentSlide === index ? "bg-primary w-6" : "bg-white/50"
+                                "h-1.5 rounded-full transition-all duration-300 pointer-events-auto shadow-sm",
+                                currentSlide === index
+                                    ? "bg-primary w-5"
+                                    : "bg-black/30 backdrop-blur-xs w-1.5 border border-white/50"
                             )}
+                            aria-label={`Slide ${index + 1}`}
                         />
                     ))}
                 </div>
