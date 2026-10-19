@@ -228,8 +228,8 @@ export function CategoryCarousel({
                 <div className="md:hidden">
                     <div
                         ref={mobileScrollRef}
-                        className="flex items-stretch gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar pb-3 -mx-4 px-4"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden touch-pan-y snap-x snap-mandatory scroll-smooth no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
                     >
                         {displayItems.map((item, idx) => (
                             <div key={item.id} className="w-[160px] sm:w-[180px] shrink-0 snap-start">
@@ -265,8 +265,8 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: idx * 0.02, duration: 0.3, ease: "easeOut" }}
             className="h-full"
@@ -275,7 +275,7 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
             <Link
                 href={item.href}
                 suppressHydrationWarning
-                className="group relative flex flex-col h-[215px] md:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden"
+                className="group relative flex flex-col h-[215px] md:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 md:hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden"
             >
 
                 {/* Card Header */}
@@ -290,7 +290,7 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
 
                 {/* Image */}
                 <div className="relative flex-1 flex items-center justify-center my-1.5 md:my-2">
-                    <div className="relative w-full h-[105px] md:h-[145px] transform transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-1">
+                    <div className="relative w-full h-[105px] md:h-[145px] transform transition-all duration-500 group-hover:scale-110 md:group-hover:-translate-y-1">
                         <Image
                             src={imageSrc}
                             alt={item.name}

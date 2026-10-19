@@ -113,7 +113,7 @@ async function runTests() {
           }
         });
       }
-    });
+    }, { timeout: 25000, maxWait: 10000 });
 
     const p2After = await prisma.product.findUnique({ where: { id: p2.id } });
     const s2Passed = 
