@@ -16,7 +16,7 @@ export default function ShopLayout({
             <ScrollProgressBar />
             <MaintenanceAdminBanner />
             <Header />
-            <main className="flex-grow flex flex-col pb-16 md:pb-0" suppressHydrationWarning>
+            <main className="flex-grow flex flex-col pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))] md:pb-0" suppressHydrationWarning>
                 {children}
             </main>
             <Footer />

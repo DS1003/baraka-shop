@@ -53,7 +53,7 @@ export function MobileBottomNav() {
             badge: itemCount,
         },
         {
-            label: isLoggedIn ? 'Compte' : 'Connexion',
+            label: 'Compte',
             href: isLoggedIn ? '/account' : '/login',
             icon: User,
             isActive: pathname.startsWith('/account') || pathname.startsWith('/login') || pathname.startsWith('/register'),
@@ -63,9 +63,9 @@ export function MobileBottomNav() {
     return (
         <aside
             aria-label="Navigation mobile"
-            className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/95 backdrop-blur-2xl border-t border-slate-100 shadow-[0_-8px_30px_rgba(27,31,59,0.08)] pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-1.5 px-2"
+            className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/90 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-2px_12px_rgba(0,0,0,0.04)] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1"
         >
-            <nav className="grid grid-cols-5 items-center max-w-md mx-auto">
+            <nav className="grid grid-cols-5 items-center max-w-md mx-auto px-1">
                 {navItems.map((item) => {
                     const Icon = item.icon
                     const active = item.isActive
@@ -74,48 +74,36 @@ export function MobileBottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="relative flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-200 active:scale-90 select-none group"
+                            className="relative flex flex-col items-center justify-center py-1 rounded-lg transition-transform duration-150 active:scale-95 select-none group min-h-[44px]"
                         >
-                            {/* Icon Container with Capsule Spotlight */}
+                            {/* Icon with refined badge */}
                             <div className="relative flex items-center justify-center">
-                                <div
+                                <Icon
                                     className={cn(
-                                        "flex items-center justify-center w-11 h-7 rounded-full transition-all duration-300",
+                                        "w-5 h-5 transition-all duration-200",
                                         active
-                                            ? "bg-primary/10 text-primary shadow-xs ring-1 ring-primary/20 scale-105"
-                                            : "text-slate-400 group-hover:text-slate-600 group-hover:bg-slate-100/60"
+                                            ? "text-primary stroke-[2.25] scale-105"
+                                            : "text-slate-400 stroke-[1.65] group-hover:text-slate-600"
                                     )}
-                                >
-                                    <Icon
-                                        className={cn(
-                                            "w-5 h-5 transition-transform duration-200",
-                                            active ? "stroke-[2.4]" : "stroke-[1.8] group-hover:scale-105"
-                                        )}
-                                    />
-                                </div>
+                                />
                                 {typeof item.badge === 'number' && item.badge > 0 && (
-                                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-primary to-orange-600 text-white text-[9.5px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-xs shadow-primary/30">
+                                    <span className="absolute -top-1 -right-2 min-w-[16px] h-4 px-1 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center ring-2 ring-white shadow-xs pointer-events-none">
                                         {item.badge > 99 ? '99+' : item.badge}
                                     </span>
                                 )}
                             </div>
 
-                            {/* Label */}
+                            {/* Clean Micro-Label */}
                             <span
                                 className={cn(
-                                    "text-[10px] tracking-tight mt-1 transition-colors line-clamp-1 text-center",
-                                    active ? "text-primary font-black" : "text-slate-500 font-semibold group-hover:text-slate-700"
+                                    "text-[10px] tracking-tight leading-none mt-1 transition-colors duration-200 truncate max-w-full text-center",
+                                    active
+                                        ? "text-primary font-bold"
+                                        : "text-slate-400 font-medium group-hover:text-slate-600"
                                 )}
                             >
                                 {item.label}
                             </span>
-
-                            {/* Active subtle indicator pill (stable height to prevent jitter) */}
-                            <div className="h-1 mt-0.5 flex items-center justify-center">
-                                {active && (
-                                    <span className="w-3.5 h-1 rounded-full bg-primary shadow-xs shadow-primary/40 animate-in fade-in zoom-in-75 duration-200" />
-                                )}
-                            </div>
                         </Link>
                     )
                 })}
