@@ -105,6 +105,9 @@ export function CategoryCarousel({
     const mobileScrollRef = React.useRef<HTMLDivElement>(null)
     const desktopScrollRef = React.useRef<HTMLDivElement>(null)
 
+    const mobileDrag = useDragToScroll()
+    const desktopDrag = useDragToScroll()
+
     const slideNext = () => {
         if (mobileScrollRef.current) {
             const first = mobileScrollRef.current.firstElementChild as HTMLElement
@@ -130,7 +133,7 @@ export function CategoryCarousel({
     }
 
     return (
-        <section className="py-1 md:py-3 overflow-hidden">
+        <section className="py-1 md:py-3 overflow-hidden select-none">
             <Container>
                 <div className="mb-3 md:mb-8">
                     {/* Mobile Top Row: Eyebrow + Mobile Arrows */}
@@ -144,14 +147,14 @@ export function CategoryCarousel({
                             <button
                                 onClick={slidePrev}
                                 aria-label="Univers précédent"
-                                className="w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-xs active:scale-90 transition-all text-[#1B1F3B]"
+                                className="w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-xs active:scale-90 transition-all text-[#1B1F3B] cursor-pointer"
                             >
                                 <ChevronLeft className="w-3.5 h-3.5" />
                             </button>
                             <button
                                 onClick={slideNext}
                                 aria-label="Univers suivant"
-                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-90 transition-all text-primary"
+                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-90 transition-all text-primary cursor-pointer"
                             >
                                 <ChevronRight className="w-3.5 h-3.5" />
                             </button>
@@ -183,21 +186,21 @@ export function CategoryCarousel({
                                 <button
                                     onClick={slidePrev}
                                     aria-label="Précédent"
-                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B]"
+                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B] cursor-pointer"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={slideNext}
                                     aria-label="Suivant"
-                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B]"
+                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B] cursor-pointer"
                                 >
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
                             </div>
                             <Link
                                 href="/univers"
-                                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary"
+                                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary cursor-pointer"
                                 title="Voir tous les univers"
                             >
                                 <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
@@ -206,11 +209,17 @@ export function CategoryCarousel({
                     </div>
                 </div>
 
-                {/* Desktop Carousel Rail (Smooth hardware accelerated) */}
+                {/* Desktop Carousel Rail (Smooth hardware accelerated + Drag to scroll) */}
                 <div
                     ref={desktopScrollRef}
-                    className="hidden md:flex items-stretch gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-2 scroll-pl-1"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    className="hidden md:flex items-stretch gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-2 scroll-pl-1 cursor-grab active:cursor-grabbing select-none"
+                    style={{
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none',
+                        WebkitOverflowScrolling: 'touch',
+                        touchAction: 'pan-x pan-y'
+                    }}
+                    {...desktopDrag}
                 >
                     {displayItems.map((item, idx) => (
                         <div key={item.id} className="w-[calc(25%-18px)] shrink-0 snap-start">
@@ -221,25 +230,32 @@ export function CategoryCarousel({
                     <div className="w-[calc(25%-18px)] shrink-0 snap-start">
                         <Link
                             href="/univers"
-                            className="relative overflow-hidden flex flex-col items-center justify-center h-[280px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-3xl p-6 text-center group active:scale-95 transition-all shadow-md border border-white/10 hover:border-primary/50"
+                            draggable={false}
+                            className="relative overflow-hidden flex flex-col items-center justify-center h-[280px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-3xl p-6 text-center group active:scale-95 transition-all shadow-md border border-white/10 hover:border-primary/50 select-none"
                         >
-                            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90">
+                            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
                                 <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
                             </div>
-                            <span className="text-base font-black uppercase tracking-wider text-white">Tous les univers</span>
-                            <span className="text-xs font-bold text-primary uppercase tracking-widest mt-2 flex items-center gap-1.5">
+                            <span className="text-base font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
+                            <span className="text-xs font-bold text-primary uppercase tracking-widest mt-2 flex items-center gap-1.5 pointer-events-none">
                                 Explorer tout le catalogue <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                             </span>
                         </Link>
                     </div>
                 </div>
 
-                {/* Mobile Snap-Scroll Rail (Ultra-fluid native touch momentum) */}
+                {/* Mobile Snap-Scroll Rail (Ultra-fluid finger swipe + DevTools mouse drag) */}
                 <div className="md:hidden">
                     <div
                         ref={mobileScrollRef}
-                        className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden touch-pan-y snap-x snap-mandatory no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain scroll-pl-4 scroll-pr-4 transform-gpu"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                        className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain scroll-pl-4 scroll-pr-4 transform-gpu cursor-grab active:cursor-grabbing select-none"
+                        style={{
+                            scrollbarWidth: 'none',
+                            msOverflowStyle: 'none',
+                            WebkitOverflowScrolling: 'touch',
+                            touchAction: 'pan-x pan-y'
+                        }}
+                        {...mobileDrag}
                     >
                         {displayItems.map((item, idx) => (
                             <div key={item.id} className="w-[160px] sm:w-[180px] shrink-0 snap-start">
@@ -250,13 +266,14 @@ export function CategoryCarousel({
                         <div className="w-[140px] shrink-0 snap-start">
                             <Link
                                 href="/univers"
-                                className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl p-4 text-center group active:scale-95 transition-all shadow-md border border-white/10"
+                                draggable={false}
+                                className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl p-4 text-center group active:scale-95 transition-all shadow-md border border-white/10 select-none"
                             >
-                                <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90">
+                                <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
                                     <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
                                 </div>
-                                <span className="text-xs font-black uppercase tracking-wider text-white">Tous les univers</span>
-                                <span className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1 flex items-center gap-1">
+                                <span className="text-xs font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
+                                <span className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1 flex items-center gap-1 pointer-events-none">
                                     Voir tout <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-1 transition-transform" />
                                 </span>
                             </Link>
@@ -268,20 +285,74 @@ export function CategoryCarousel({
     )
 }
 
+/**
+ * Hook de glissement fluide à la souris et au doigt
+ * Permet de glisser avec le doigt sur smartphone tout en autorisant le drag souris dans Chrome DevTools
+ */
+function useDragToScroll() {
+    const isDown = React.useRef(false)
+    const startX = React.useRef(0)
+    const scrollLeft = React.useRef(0)
+    const hasDragged = React.useRef(false)
+
+    const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (e.button !== 0) return
+        const el = e.currentTarget
+        isDown.current = true
+        hasDragged.current = false
+        startX.current = e.pageX - el.offsetLeft
+        scrollLeft.current = el.scrollLeft
+    }
+
+    const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDown.current) return
+        const el = e.currentTarget
+        const x = e.pageX - el.offsetLeft
+        const walk = (x - startX.current) * 1.3
+        if (Math.abs(walk) > 4) {
+            hasDragged.current = true
+            el.scrollLeft = scrollLeft.current - walk
+        }
+    }
+
+    const onMouseUp = () => {
+        isDown.current = false
+        setTimeout(() => {
+            hasDragged.current = false
+        }, 80)
+    }
+
+    const onClickCapture = (e: React.MouseEvent) => {
+        if (hasDragged.current) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
+    }
+
+    return {
+        onMouseDown,
+        onMouseMove,
+        onMouseUp,
+        onMouseLeave: onMouseUp,
+        onClickCapture
+    }
+}
+
 function UniverseCard({ item, idx }: { item: any, idx: number }) {
     const rawImage = item.image || CLEAN_IMAGES[(item.name || '').trim().toUpperCase()] || CLEAN_IMAGES['DEFAULT'];
     const imageSrc = getOptimizedImageUrl(rawImage, 320);
     const subtitle = item.subtitle || SUBTITLES[(item.name || '').trim().toUpperCase()] || 'Découvrir nos offres';
 
     return (
-        <div className="h-full transform-gpu" suppressHydrationWarning>
+        <div className="h-full transform-gpu select-none" suppressHydrationWarning>
             <Link
                 href={item.href}
+                draggable={false}
                 suppressHydrationWarning
-                className="group relative flex flex-col h-[215px] md:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 md:hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden"
+                className="group relative flex flex-col h-[215px] md:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 md:hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden select-none cursor-pointer"
             >
                 {/* Card Header */}
-                <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="relative z-10 flex flex-col items-center text-center select-none pointer-events-none">
                     <h3 className="text-[11px] sm:text-xs md:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
                         {item.name}
                     </h3>
@@ -291,7 +362,7 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
                 </div>
 
                 {/* Image */}
-                <div className="relative flex-1 flex items-center justify-center my-1.5 md:my-2">
+                <div className="relative flex-1 flex items-center justify-center my-1.5 md:my-2 select-none pointer-events-none">
                     <div className="relative w-full h-[105px] md:h-[145px] transform transition-transform duration-300 group-hover:scale-105 md:group-hover:-translate-y-0.5">
                         <Image
                             src={imageSrc}
@@ -299,14 +370,15 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
                             fill
                             priority={idx < 3}
                             loading={idx < 3 ? undefined : 'lazy'}
-                            className="object-contain"
+                            draggable={false}
+                            className="object-contain pointer-events-none select-none"
                             sizes="(max-width: 768px) 170px, 25vw"
                         />
                     </div>
                 </div>
 
                 {/* Action Pill */}
-                <div className="relative z-10 flex items-center justify-center mt-auto pt-1">
+                <div className="relative z-10 flex items-center justify-center mt-auto pt-1 select-none pointer-events-none">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 group-hover:bg-primary text-[#1B1F3B] group-hover:text-white transition-all duration-300 shadow-xs group-hover:shadow-md group-hover:shadow-primary/25">
                         <span className="text-[8.5px] md:text-[10px] font-black uppercase tracking-wider">Explorer</span>
                         <ArrowRight className="w-2.5 h-2.5 md:w-3 md:h-3 group-hover:translate-x-0.5 transition-transform" />
