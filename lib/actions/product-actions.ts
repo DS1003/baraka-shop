@@ -1,6 +1,6 @@
 'use server';
 
-import prisma from '@/lib/prisma';
+import prisma, { withDbRetry } from '@/lib/prisma';
 import { getCache, setCache, rememberCache, invalidatePrefix } from '@/lib/redis';
 import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
@@ -128,7 +128,7 @@ export async function getProductsAction(options: {
             if (sort === 'price_desc') orderBy = { price: 'desc' };
             if (sort === 'oldest') orderBy = { createdAt: 'asc' };
 
-            const [products, total] = await Promise.all([
+            const [products, total] = await withDbRetry(() => Promise.all([
                 prisma.product.findMany({
                     where,
                     include: {
@@ -141,7 +141,7 @@ export async function getProductsAction(options: {
                     take: limit,
                 }),
                 prisma.product.count({ where })
-            ]);
+            ]));
 
             return {
                 products,
@@ -163,7 +163,7 @@ export async function getProductByIdAction(id: string) {
     if (!id) return null;
     return await rememberCache(`product:${id}`, 600, async () => {
         try {
-            return await prisma.product.findUnique({
+            return await withDbRetry(() => prisma.product.findUnique({
                 where: { id },
                 include: {
                     category: true,
@@ -183,7 +183,7 @@ export async function getProductByIdAction(id: string) {
                         take: 10
                     }
                 }
-            });
+            }));
         } catch (error) {
             console.error('[Get Product By Id Error]:', error);
             return null;
@@ -259,7 +259,7 @@ export async function getSimilarProductsAction(product: any, limit: number = 8) 
 export async function getCategoriesAction() {
     return await rememberCache('categories:all:with_sub_v4', 3600, async () => {
         try {
-            return await prisma.category.findMany({
+            return await withDbRetry(() => prisma.category.findMany({
                 where: { isPublished: true },
                 include: {
                     subCategories: {
@@ -272,7 +272,7 @@ export async function getCategoriesAction() {
                     }
                 },
                 orderBy: { name: 'asc' }
-            });
+            }));
         } catch (error) {
             return [];
         }
@@ -282,14 +282,14 @@ export async function getCategoriesAction() {
 export async function getBrandsAction() {
     return await rememberCache('brands:all_v3', 3600, async () => {
         try {
-            return await prisma.brand.findMany({
+            return await withDbRetry(() => prisma.brand.findMany({
                 include: {
                     _count: {
                         select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
                     }
                 },
                 orderBy: { name: 'asc' }
-            });
+            }));
         } catch (error) {
             return [];
         }
@@ -300,14 +300,14 @@ export async function getCategoryBySlugAction(slug: string) {
     if (!slug) return null;
     return await rememberCache(`category_v3:${slug}`, 3600, async () => {
         try {
-            return await prisma.category.findFirst({
+            return await withDbRetry(() => prisma.category.findFirst({
                 where: { slug, isPublished: true },
                 include: {
                     _count: {
                         select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
                     }
                 }
-            });
+            }));
         } catch (error) {
             return null;
         }
@@ -317,7 +317,7 @@ export async function getCategoryBySlugAction(slug: string) {
 export async function getMegaMenuAction() {
     return await rememberCache('megamenu:all_v2', 3600, async () => {
         try {
-            return await prisma.category.findMany({
+            return await withDbRetry(() => prisma.category.findMany({
                 where: { isPublished: true },
                 include: {
                     subCategories: {
@@ -327,7 +327,7 @@ export async function getMegaMenuAction() {
                     }
                 },
                 orderBy: { name: 'asc' }
-            });
+            }));
         } catch (error) {
             console.error('[Get Mega Menu Action Error]:', error);
             return [];
@@ -335,12 +335,12 @@ export async function getMegaMenuAction() {
     });
 }
 
-export async function getPopularUniversesAction() {
-    return await rememberCache('popular_universes:all_v2', 3600, async () => {
+export async function getPopularUniversesAction(): Promise<any[]> {
+    return await rememberCache<any[]>('popular_universes:all_v2', 3600, async () => {
         try {
-            return await (prisma as any).popularUniverse.findMany({
+            return await withDbRetry<any[]>(() => (prisma as any).popularUniverse.findMany({
                 orderBy: { order: 'asc' }
-            });
+            }));
         } catch (error) {
             console.error('[Get Popular Universes Error]:', error);
             return [];

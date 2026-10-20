@@ -46,6 +46,44 @@ if (globalThis.prismaGlobal) {
 
 const prisma: PrismaClient = globalThis.prismaGlobal ?? prismaClientSingleton();
 
+/**
+ * Exécute une opération Prisma avec tentatives automatiques (Retries avec backoff exponentiel)
+ * en cas de perturbation réseau temporaire ou de cold start de la base de données.
+ */
+export async function withDbRetry<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 2,
+    baseDelayMs: number = 150
+): Promise<T> {
+    let lastError: any;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await operation();
+        } catch (error: any) {
+            lastError = error;
+            const isTransient =
+                error.code === 'P1001' ||
+                error.code === 'P2024' ||
+                error.message?.includes("Can't reach database server") ||
+                error.message?.includes('connect ETIMEDOUT') ||
+                error.message?.includes('ECONNRESET') ||
+                error.message?.includes('Connection terminated unexpectedly') ||
+                error.message?.includes('Server has closed the connection') ||
+                error.message?.includes('Connection closed unexpectedly');
+
+            if (!isTransient || attempt === maxRetries) {
+                throw error;
+            }
+
+            const jitter = Math.floor(Math.random() * 50);
+            const delay = baseDelayMs * Math.pow(2, attempt) + jitter;
+            console.warn(`[Prisma HA] Transient DB glitch (${error.code || error.message}). Retrying in ${delay}ms (Attempt ${attempt + 1}/${maxRetries})...`);
+            await new Promise((res) => setTimeout(res, delay));
+        }
+    }
+    throw lastError;
+}
+
 export { prisma };
 export default prisma;
 

@@ -180,7 +180,7 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                 {/* Mobile Carousel */}
                 <div className="md:hidden relative">
                     <div className="relative h-[240px] sm:h-[280px] w-full mb-2">
-                        <AnimatePresence initial={false} custom={direction} mode="wait">
+                        <AnimatePresence initial={false} custom={direction} mode="popLayout">
                             <motion.div
                                 key={currentIndex}
                                 custom={direction}
@@ -189,14 +189,14 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                                 animate="center"
                                 exit="exit"
                                 transition={{
-                                    x: { type: "spring", stiffness: 220, damping: 26 },
-                                    opacity: { duration: 0.25 }
+                                    x: { type: "spring", stiffness: 350, damping: 32, mass: 0.8 },
+                                    opacity: { duration: 0.18 }
                                 }}
                                 drag="x"
                                 dragConstraints={{ left: 0, right: 0 }}
                                 dragElastic={0.15}
                                 onDragEnd={handleDragEnd}
-                                className="absolute inset-0 touch-pan-y will-change-transform"
+                                className="absolute inset-0 touch-pan-y transform-gpu will-change-transform"
                             >
                                 <PromoCard promo={promos[currentIndex]} isMobile={true} />
                             </motion.div>

@@ -4,7 +4,6 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
-import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { formatUniverseHref, getOptimizedImageUrl } from '@/lib/utils'
 
@@ -104,38 +103,30 @@ export function CategoryCarousel({
     if (displayItems.length === 0) return null;
 
     const mobileScrollRef = React.useRef<HTMLDivElement>(null)
+    const desktopScrollRef = React.useRef<HTMLDivElement>(null)
 
     const slideNext = () => {
         if (mobileScrollRef.current) {
-            mobileScrollRef.current.scrollBy({ left: 180, behavior: 'smooth' })
+            const first = mobileScrollRef.current.firstElementChild as HTMLElement
+            const stride = first ? first.offsetWidth + 12 : 172
+            mobileScrollRef.current.scrollBy({ left: stride * 1.5, behavior: 'smooth' })
         }
-        setDirection(1)
-        setCurrentIndex((prev) => (prev + 1) % displayItems.length)
+        if (desktopScrollRef.current) {
+            const stride = desktopScrollRef.current.clientWidth * 0.8
+            desktopScrollRef.current.scrollBy({ left: stride, behavior: 'smooth' })
+        }
     }
 
     const slidePrev = () => {
         if (mobileScrollRef.current) {
-            mobileScrollRef.current.scrollBy({ left: -180, behavior: 'smooth' })
+            const first = mobileScrollRef.current.firstElementChild as HTMLElement
+            const stride = first ? first.offsetWidth + 12 : 172
+            mobileScrollRef.current.scrollBy({ left: -stride * 1.5, behavior: 'smooth' })
         }
-        setDirection(-1)
-        setCurrentIndex((prev) => (prev - 1 + displayItems.length) % displayItems.length)
-    }
-
-    const variants = {
-        enter: (direction: number) => ({
-            x: direction > 0 ? 300 : -300,
-            opacity: 0
-        }),
-        center: {
-            zIndex: 1,
-            x: 0,
-            opacity: 1
-        },
-        exit: (direction: number) => ({
-            zIndex: 0,
-            x: direction < 0 ? 300 : -300,
-            opacity: 0
-        })
+        if (desktopScrollRef.current) {
+            const stride = desktopScrollRef.current.clientWidth * 0.8
+            desktopScrollRef.current.scrollBy({ left: -stride, behavior: 'smooth' })
+        }
     }
 
     return (
@@ -153,14 +144,14 @@ export function CategoryCarousel({
                             <button
                                 onClick={slidePrev}
                                 aria-label="Univers précédent"
-                                className="w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
+                                className="w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-xs active:scale-90 transition-all text-[#1B1F3B]"
                             >
                                 <ChevronLeft className="w-3.5 h-3.5" />
                             </button>
                             <button
                                 onClick={slideNext}
                                 aria-label="Univers suivant"
-                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-95 transition-all text-primary"
+                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-90 transition-all text-primary"
                             >
                                 <ChevronRight className="w-3.5 h-3.5" />
                             </button>
@@ -186,49 +177,68 @@ export function CategoryCarousel({
                             </p>
                         </div>
 
-                    {/* Desktop Arrows + See All Button */}
-                    <div className="hidden md:flex items-center gap-3">
-                        <div className="flex gap-2">
-                            <button
-                                onClick={slidePrev}
-                                aria-label="Précédent"
-                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
+                        {/* Desktop Arrows + See All Button */}
+                        <div className="hidden md:flex items-center gap-3">
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={slidePrev}
+                                    aria-label="Précédent"
+                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B]"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                    onClick={slideNext}
+                                    aria-label="Suivant"
+                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B]"
+                                >
+                                    <ChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <Link
+                                href="/univers"
+                                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary"
+                                title="Voir tous les univers"
                             >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={slideNext}
-                                aria-label="Suivant"
-                                className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1B1F3B]"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
+                                <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                            </Link>
                         </div>
-                        <Link
-                            href="/univers"
-                            className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary"
-                            title="Voir tous les univers"
-                        >
-                            <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
-                        </Link>
                     </div>
                 </div>
-            </div>
 
-                {/* Desktop Grid */}
-                <div className="hidden md:grid grid-cols-4 gap-6">
+                {/* Desktop Carousel Rail (Smooth hardware accelerated) */}
+                <div
+                    ref={desktopScrollRef}
+                    className="hidden md:flex items-stretch gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-2 scroll-pl-1"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
                     {displayItems.map((item, idx) => (
-                        <div key={item.id}>
+                        <div key={item.id} className="w-[calc(25%-18px)] shrink-0 snap-start">
                             <UniverseCard item={item} idx={idx} />
                         </div>
                     ))}
+                    {/* Final Discovery Card Desktop */}
+                    <div className="w-[calc(25%-18px)] shrink-0 snap-start">
+                        <Link
+                            href="/univers"
+                            className="relative overflow-hidden flex flex-col items-center justify-center h-[280px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-3xl p-6 text-center group active:scale-95 transition-all shadow-md border border-white/10 hover:border-primary/50"
+                        >
+                            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90">
+                                <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+                            </div>
+                            <span className="text-base font-black uppercase tracking-wider text-white">Tous les univers</span>
+                            <span className="text-xs font-bold text-primary uppercase tracking-widest mt-2 flex items-center gap-1.5">
+                                Explorer tout le catalogue <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                        </Link>
+                    </div>
                 </div>
 
-                {/* Mobile Snap-Scroll Rail (Mobile First) */}
+                {/* Mobile Snap-Scroll Rail (Ultra-fluid native touch momentum) */}
                 <div className="md:hidden">
                     <div
                         ref={mobileScrollRef}
-                        className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden touch-pan-y snap-x snap-mandatory scroll-smooth no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain"
+                        className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden touch-pan-y snap-x snap-mandatory no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain scroll-pl-4 scroll-pr-4 transform-gpu"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
                     >
                         {displayItems.map((item, idx) => (
@@ -236,7 +246,7 @@ export function CategoryCarousel({
                                 <UniverseCard item={item} idx={idx} />
                             </div>
                         ))}
-                        {/* Final Discovery Card */}
+                        {/* Final Discovery Card Mobile */}
                         <div className="w-[140px] shrink-0 snap-start">
                             <Link
                                 href="/univers"
@@ -264,20 +274,12 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
     const subtitle = item.subtitle || SUBTITLES[(item.name || '').trim().toUpperCase()] || 'Découvrir nos offres';
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: idx * 0.02, duration: 0.3, ease: "easeOut" }}
-            className="h-full"
-            suppressHydrationWarning
-        >
+        <div className="h-full transform-gpu" suppressHydrationWarning>
             <Link
                 href={item.href}
                 suppressHydrationWarning
                 className="group relative flex flex-col h-[215px] md:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 md:hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden"
             >
-
                 {/* Card Header */}
                 <div className="relative z-10 flex flex-col items-center text-center">
                     <h3 className="text-[11px] sm:text-xs md:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
@@ -290,12 +292,14 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
 
                 {/* Image */}
                 <div className="relative flex-1 flex items-center justify-center my-1.5 md:my-2">
-                    <div className="relative w-full h-[105px] md:h-[145px] transform transition-all duration-500 group-hover:scale-110 md:group-hover:-translate-y-1">
+                    <div className="relative w-full h-[105px] md:h-[145px] transform transition-transform duration-300 group-hover:scale-105 md:group-hover:-translate-y-0.5">
                         <Image
                             src={imageSrc}
                             alt={item.name}
                             fill
-                            className="object-contain drop-shadow-[0_6px_14px_rgba(0,0,0,0.08)]"
+                            priority={idx < 3}
+                            loading={idx < 3 ? undefined : 'lazy'}
+                            className="object-contain"
                             sizes="(max-width: 768px) 170px, 25vw"
                         />
                     </div>
@@ -309,6 +313,6 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
                     </span>
                 </div>
             </Link>
-        </motion.div>
+        </div>
     )
 }

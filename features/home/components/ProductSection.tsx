@@ -80,7 +80,7 @@ export function ProductSection({
 
     const variants = {
         enter: (direction: number) => ({
-            x: direction > 0 ? 300 : -300,
+            x: direction > 0 ? '100%' : '-100%',
             opacity: 0
         }),
         center: {
@@ -90,7 +90,7 @@ export function ProductSection({
         },
         exit: (direction: number) => ({
             zIndex: 0,
-            x: direction < 0 ? 300 : -300,
+            x: direction < 0 ? '100%' : '-100%',
             opacity: 0
         })
     }
@@ -207,7 +207,7 @@ export function ProductSection({
 
                 {/* Carousel Content */}
                 <div className="relative h-[272px] sm:h-[325px] md:h-[510px] mb-2 md:mb-5">
-                    <AnimatePresence initial={false} custom={direction} mode="wait">
+                    <AnimatePresence initial={false} custom={direction} mode="popLayout">
                         {productChunks.length > 0 ? (
                             <motion.div
                                 key={currentIndex}
@@ -217,15 +217,15 @@ export function ProductSection({
                                 animate="center"
                                 exit="exit"
                                 transition={{
-                                    x: { type: "spring", stiffness: 220, damping: 26 },
-                                    opacity: { duration: 0.25 }
+                                    x: { type: "spring", stiffness: 350, damping: 32, mass: 0.8 },
+                                    opacity: { duration: 0.18 }
                                 }}
                                 drag="x"
                                 dragConstraints={{ left: 0, right: 0 }}
                                 dragElastic={0.15}
                                 onDragEnd={handleDragEnd}
                                 className={cn(
-                                    "absolute inset-0 grid touch-pan-y will-change-transform",
+                                    "absolute inset-0 grid touch-pan-y transform-gpu will-change-transform",
                                     isMobile ? "grid-cols-2 gap-2 sm:gap-3" : "grid-cols-4 gap-6 md:gap-8"
                                 )}
                             >

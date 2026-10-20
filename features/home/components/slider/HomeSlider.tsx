@@ -77,18 +77,18 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
     return (
         <section>
             <div className="bg-white relative rounded-2xl md:rounded-t-[2.5rem] md:rounded-b-none overflow-hidden shadow-sm aspect-[8/3] md:aspect-auto md:h-[480px] lg:h-[500px]">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="popLayout">
                     <motion.div
                         key={currentSlide}
                         initial={{ opacity: 0, scale: 1.02 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.15}
                         onDragEnd={handleDragEnd}
-                        className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-pan-y"
+                        className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-pan-y transform-gpu"
                     >
                         <Link href={slides[currentSlide].href} className="block w-full h-full overflow-hidden bg-white">
                             <Image

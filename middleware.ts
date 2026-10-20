@@ -23,16 +23,22 @@ async function checkMaintenanceMode(req: NextRequest): Promise<boolean> {
         return maintenanceCookie.value === 'true';
     }
 
-    // Call API for visitors
+    // Call API for visitors with strict timeout (Fail-Open resilience)
     try {
         const url = new URL('/api/site-status', req.nextUrl.origin);
-        const res = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
+        const res = await fetch(url, {
+            signal: controller.signal,
+            next: { revalidate: 15 }
+        });
+        clearTimeout(timeoutId);
         if (res.ok) {
             const data = await res.json();
             return !!data.maintenanceMode;
         }
     } catch (err) {
-        // Ignore and fallback
+        // Fail-open: sur timeout ou erreur, continuer à servir le site sans bloquer l'utilisateur
     }
 
     return false;
