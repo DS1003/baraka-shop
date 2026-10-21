@@ -110,8 +110,8 @@ export async function notifyClientOrderStatusChange(
         });
         invalidatePrefix(`notifications:${order.userId}`).catch(() => {});
 
-        // Trigger email if the status is SHIPPED
-        if (newStatus === 'SHIPPED' && order.user.email) {
+        // Trigger transactional emails according to status change
+        if (order.user.email) {
             const items = order.items.map(item => ({
                 name: item.product.name,
                 quantity: item.quantity,
@@ -122,11 +122,19 @@ export async function notifyClientOrderStatusChange(
             const { headerLogo } = await getSiteLogos();
             const logoUrl = headerLogo || undefined;
 
-            let pStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY' = 'PENDING';
-            if (order.paymentMethod === 'CASH_ON_DELIVERY') pStatus = 'ON_DELIVERY';
-            else if (order.paymentMethod !== 'CASH_ON_DELIVERY' && order.paymentMethod != null) pStatus = 'PAID';
+            const formatPaymentMethodName = (method?: string | null): string => {
+                if (!method) return 'Paiement à la livraison';
+                const m = method.toLowerCase();
+                if (m === 'cash' || m === 'cash_on_delivery' || m.includes('livraison')) return 'Paiement à la livraison';
+                if (m.includes('wave')) return 'Wave';
+                if (m.includes('orange') || m === 'om') return 'Orange Money';
+                if (m.includes('card') || m.includes('carte')) return 'Carte bancaire';
+                return method;
+            };
 
-            await emailService.sendOrderShippedEmail({
+            const pStatus = (order as any).paymentStatus || (newStatus === 'DELIVERED' ? 'PAID' : 'PENDING');
+
+            const emailPayload = {
                 to: order.user.email,
                 orderRef: orderRef,
                 clientName: order.user.username || 'Client',
@@ -134,47 +142,25 @@ export async function notifyClientOrderStatusChange(
                 deliveryAddress: order.user.address || undefined,
                 phone: order.user.phone || undefined,
                 deliveryMethod: order.deliveryMethod === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile',
-                paymentMethod: order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Paiement à la livraison' : 'Paiement en ligne',
+                paymentMethod: formatPaymentMethodName(order.paymentMethod),
                 paymentStatus: pStatus,
                 total: order.total,
                 subtotal: order.total - (order.shippingCost || 0),
                 deliveryFee: order.shippingCost || 0,
-                discount: 0,
+                discount: (order as any).discountAmount || 0,
                 items: items,
                 logoUrl: logoUrl,
-            });
-        } else if (newStatus === 'PENDING' && order.user.email) {
-            const items = order.items.map(item => ({
-                name: item.product.name,
-                quantity: item.quantity,
-                price: item.price,
-                image: item.product.images?.[0] || 'https://via.placeholder.com/60',
-            }));
+            };
 
-            const { headerLogo } = await getSiteLogos();
-            const logoUrl = headerLogo || undefined;
-
-            let pStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY' = 'PENDING';
-            if (order.paymentMethod === 'CASH_ON_DELIVERY') pStatus = 'ON_DELIVERY';
-            else if (order.paymentMethod !== 'CASH_ON_DELIVERY' && order.paymentMethod != null) pStatus = 'PAID';
-
-            await emailService.sendOrderCreatedEmail({
-                to: order.user.email,
-                orderRef: orderRef,
-                clientName: order.user.username || 'Client',
-                date: order.createdAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-                deliveryAddress: order.user.address || undefined,
-                phone: order.user.phone || undefined,
-                deliveryMethod: order.deliveryMethod === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile',
-                paymentMethod: order.paymentMethod === 'CASH_ON_DELIVERY' ? 'Paiement à la livraison' : 'Paiement en ligne',
-                paymentStatus: pStatus,
-                total: order.total,
-                subtotal: order.total - (order.shippingCost || 0),
-                deliveryFee: order.shippingCost || 0,
-                discount: 0,
-                items: items,
-                logoUrl: logoUrl,
-            });
+            if (newStatus === 'PENDING') {
+                await emailService.sendOrderCreatedEmail(emailPayload);
+            } else if (newStatus === 'SHIPPED') {
+                await emailService.sendOrderShippedEmail(emailPayload);
+            } else if (newStatus === 'DELIVERED') {
+                await emailService.sendOrderDeliveredEmail(emailPayload);
+            } else if (newStatus === 'CANCELLED') {
+                await emailService.sendOrderCancelledEmail(emailPayload);
+            }
         }
     } catch (error) {
         console.error('[NotificationService] Client notification error:', error);

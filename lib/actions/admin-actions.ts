@@ -503,9 +503,15 @@ export async function updateOrderStatus(orderId: string, status: string) {
             include: { user: { select: { username: true, email: true } } }
         });
 
+        const updateData: any = { status: status as any };
+        // Si la commande est livrée et que le paiement était en attente (ex: paiement à la livraison), on valide le paiement
+        if (status === 'DELIVERED' && order && (order as any).paymentStatus === 'PENDING') {
+            updateData.paymentStatus = 'PAID';
+        }
+
         await prisma.order.update({
             where: { id: orderId },
-            data: { status: status as any }
+            data: updateData
         });
 
         // Send notifications asynchronously so network/email delays don't block response
@@ -528,6 +534,43 @@ export async function updateOrderStatus(orderId: string, status: string) {
         return { success: true };
     } catch (error: any) {
         console.error("Update order error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updateOrderPaymentStatus(orderId: string, paymentStatus: string) {
+    try {
+        await requireAdmin();
+        const validStatuses = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'];
+        if (!validStatuses.includes(paymentStatus)) {
+            return { success: false, error: 'Statut de paiement invalide.' };
+        }
+
+        const order = await prisma.order.findUnique({
+            where: { id: orderId },
+            select: { id: true, paymentStatus: true }
+        });
+
+        if (!order) {
+            return { success: false, error: 'Commande introuvable.' };
+        }
+
+        await prisma.order.update({
+            where: { id: orderId },
+            data: { paymentStatus }
+        });
+
+        await Promise.all([
+            invalidatePrefix('admin:orders:'),
+            invalidatePrefix('admin:dashboard:'),
+            invalidatePrefix('admin:category:revenue')
+        ]);
+
+        revalidatePath('/admin/orders');
+        revalidatePath('/account');
+        return { success: true };
+    } catch (error: any) {
+        console.error("Update order payment status error:", error);
         return { success: false, error: error.message };
     }
 }
@@ -1494,9 +1537,14 @@ export async function bulkUpdateOrderStatuses(orderIds: string[], status: string
             include: { user: { select: { username: true, email: true } } }
         });
 
+        const updateData: any = { status: status as any };
+        if (status === 'DELIVERED') {
+            updateData.paymentStatus = 'PAID';
+        }
+
         await prisma.order.updateMany({
             where: { id: { in: orderIds } },
-            data: { status: status as any }
+            data: updateData
         });
 
         // Send notifications for each order (non-blocking)

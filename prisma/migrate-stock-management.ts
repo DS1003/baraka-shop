@@ -22,7 +22,7 @@ export async function runMigration() {
         `);
 
         // 2. Add indexes on Product
-        await pool.query(`
+        await pool.query(`ù
             CREATE INDEX IF NOT EXISTS "Product_deactivationReason_idx" ON "Product"("deactivationReason");
             CREATE INDEX IF NOT EXISTS "Product_restockPendingReview_idx" ON "Product"("restockPendingReview");
         `);

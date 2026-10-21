@@ -2,6 +2,8 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import OrderShippedEmail from '@/emails/OrderShipped';
 import OrderCreatedEmail from '@/emails/OrderCreated';
+import OrderDeliveredEmail from '@/emails/OrderDelivered';
+import OrderCancelledEmail from '@/emails/OrderCancelled';
 
 // Initialize Resend
 // fallback to a dummy key to prevent crashes if env var is missing during build/dev
@@ -24,7 +26,7 @@ export interface OrderShippedPayload {
   phone?: string;
   deliveryMethod: string;
   paymentMethod: string;
-  paymentStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY';
+  paymentStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY' | 'REFUNDED' | 'FAILED' | string;
   total: number;
   subtotal: number;
   deliveryFee: number;
@@ -70,7 +72,7 @@ export const emailService = {
   },
 
   /**
-   * Envoyer l'email "Commande Validée"
+   * Envoyer l'email "Commande Validée / Confirmée"
    */
   async sendOrderCreatedEmail(payload: OrderShippedPayload) {
     try {
@@ -96,6 +98,68 @@ export const emailService = {
       return { success: true, data };
     } catch (error) {
       console.error('[EmailService] Exception lors de l\'envoi (Created):', error);
+      return { success: false, error };
+    }
+  },
+
+  /**
+   * Envoyer l'email "Commande Livrée"
+   */
+  async sendOrderDeliveredEmail(payload: OrderShippedPayload) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation de l\'envoi d\'email (Delivered) à', payload.to);
+        return { success: true, simulated: true };
+      }
+
+      const htmlContent = await render(OrderDeliveredEmail(payload));
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [payload.to],
+        subject: `✅ Votre commande ${payload.orderRef} a été livrée avec succès !`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur Resend (Delivered):', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception lors de l\'envoi (Delivered):', error);
+      return { success: false, error };
+    }
+  },
+
+  /**
+   * Envoyer l'email "Commande Annulée"
+   */
+  async sendOrderCancelledEmail(payload: OrderShippedPayload) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation de l\'envoi d\'email (Cancelled) à', payload.to);
+        return { success: true, simulated: true };
+      }
+
+      const htmlContent = await render(OrderCancelledEmail(payload));
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [payload.to],
+        subject: `ℹ️ Information sur l'annulation de votre commande ${payload.orderRef}`,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur Resend (Cancelled):', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception lors de l\'envoi (Cancelled):', error);
       return { success: false, error };
     }
   },

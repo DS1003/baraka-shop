@@ -140,6 +140,7 @@ model Order {
   id             String      @id @default(uuid())
   userId         String
   status         OrderStatus @default(PENDING)
+  paymentStatus  String      @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
   total          Float
   subtotal       Float?
   couponCode     String?
@@ -152,6 +153,10 @@ model Order {
   shippingCost   Float?      @default(0)
   user           User        @relation(fields: [userId], references: [id])
   items          OrderItem[]
+
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
 }
 
 model OrderItem {

@@ -26,7 +26,7 @@ export interface OrderShippedEmailProps {
   phone?: string;
   deliveryMethod: string;
   paymentMethod: string;
-  paymentStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY';
+  paymentStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY' | 'REFUNDED' | 'FAILED' | string;
   total: number;
   subtotal: number;
   deliveryFee: number;
@@ -38,32 +38,38 @@ export interface OrderShippedEmailProps {
 
 export const OrderShippedEmail = ({
   orderRef = '#BK-2026-154',
-  clientName = 'Seydina Diop',
-  date = '4 Août 2026',
+  clientName = 'Client',
+  date = new Date().toLocaleDateString('fr-FR'),
   deliveryAddress = 'Dakar, Sénégal',
-  phone = '+221 77 123 45 67',
+  phone = '',
   deliveryMethod = 'Livraison à domicile',
   paymentMethod = 'Paiement à la livraison',
-  paymentStatus = 'ON_DELIVERY',
-  total = 275000,
-  subtotal = 270000,
-  deliveryFee = 5000,
+  paymentStatus = 'PENDING',
+  total = 0,
+  subtotal = 0,
+  deliveryFee = 0,
   discount = 0,
-  estimatedDelivery = 'Demain entre 10h et 14h',
-  items = [
-    { name: 'MacBook Pro M3', quantity: 1, price: 270000, image: 'https://baraka-shop.com/placeholder.png' }
-  ],
+  estimatedDelivery = '',
+  items = [],
   logoUrl,
 }: OrderShippedEmailProps) => {
+  const isCashOnDelivery = paymentMethod?.toLowerCase().includes('livraison') || paymentMethod?.toLowerCase() === 'cash' || paymentStatus === 'ON_DELIVERY';
+  const isPaid = paymentStatus === 'PAID';
+
   const getPaymentStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PAID':
-        return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">✅ Payée</span>;
-      case 'ON_DELIVERY':
-        return <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold">⏳ Paiement à la livraison</span>;
-      default:
-        return <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">❌ Paiement en attente</span>;
+    if (status === 'PAID') {
+      return <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold">✅ Payée</span>;
     }
+    if (status === 'REFUNDED') {
+      return <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-semibold">↩️ Remboursée</span>;
+    }
+    if (status === 'FAILED') {
+      return <span className="bg-rose-100 text-rose-800 px-3 py-1 rounded-full text-xs font-semibold">❌ Échec du paiement</span>;
+    }
+    if (isCashOnDelivery) {
+      return <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold">⏳ À régler à la livraison</span>;
+    }
+    return <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold">⏳ En attente de paiement</span>;
   };
 
   return (
@@ -163,6 +169,28 @@ export const OrderShippedEmail = ({
             {getPaymentStatusBadge(paymentStatus)}
           </Column>
         </Row>
+
+        {isPaid ? (
+          <Row className="mt-4">
+            <Column>
+              <Section className="bg-emerald-50 border border-emerald-200 rounded-md p-3 text-left">
+                <Text className="text-emerald-900 text-xs m-0 leading-relaxed">
+                  ✅ <strong>Commande déjà réglée :</strong> Le livreur vous remettra votre colis sans demander de paiement.
+                </Text>
+              </Section>
+            </Column>
+          </Row>
+        ) : isCashOnDelivery ? (
+          <Row className="mt-4">
+            <Column>
+              <Section className="bg-amber-50 border border-amber-200 rounded-md p-3 text-left">
+                <Text className="text-amber-900 text-xs m-0 leading-relaxed">
+                  💵 <strong>Paiement à la livraison :</strong> Veuillez préparer le montant exact de <strong>{total.toLocaleString()} FCFA</strong> en espèces pour le livreur lors de la réception.
+                </Text>
+              </Section>
+            </Column>
+          </Row>
+        ) : null}
       </Section>
 
       {/* Actions */}

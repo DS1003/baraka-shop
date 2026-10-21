@@ -40,11 +40,14 @@ import {
     Filter,
     SlidersHorizontal,
     RotateCcw,
-    Mail
+    Mail,
+    EyeOff,
+    AlertCircle,
+    Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { updateProfile, toggleWishlistAction } from '@/lib/actions/user-actions';
+import { updateProfile, toggleWishlistAction, changeUserPassword, updateUserSettings } from '@/lib/actions/user-actions';
 import { markNotificationRead, markAllNotificationsRead } from '@/lib/actions/admin-actions';
 import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -167,6 +170,132 @@ export default function AccountContent({ user }: AccountContentProps) {
             toast.error(result.error || 'Erreur lors de la mise à jour');
         }
         setIsUpdating(false);
+    };
+
+    // ---------------- PASSWORD & SECURITY STATES ----------------
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+    // Notification preferences state
+    const initialNotifs = (user?.metadata as any)?.notifications || {};
+    const [emailNotifs, setEmailNotifs] = useState<boolean>(initialNotifs.emails ?? true);
+    const [smsNotifs, setSmsNotifs] = useState<boolean>(initialNotifs.sms ?? false);
+    const [isSavingPreferences, setIsSavingPreferences] = useState(false);
+
+    // Password criteria check (ANSSI / OWASP standard)
+    const passwordCriteria = useMemo(() => {
+        return {
+            minLength: newPassword.length >= 8,
+            hasUpper: /[A-Z]/.test(newPassword),
+            hasLower: /[a-z]/.test(newPassword),
+            hasNumber: /[0-9]/.test(newPassword),
+            hasSpecial: /[^A-Za-z0-9]/.test(newPassword),
+        };
+    }, [newPassword]);
+
+    const criteriaScore = useMemo(() => {
+        let score = 0;
+        if (passwordCriteria.minLength) score++;
+        if (passwordCriteria.hasUpper) score++;
+        if (passwordCriteria.hasLower) score++;
+        if (passwordCriteria.hasNumber) score++;
+        if (passwordCriteria.hasSpecial) score++;
+        return score;
+    }, [passwordCriteria]);
+
+    const allCriteriaMet = criteriaScore === 5;
+    const passwordsMatch = newPassword.length > 0 && confirmPassword.length > 0 && newPassword === confirmPassword;
+    const isSameAsCurrent = currentPassword.length > 0 && newPassword.length > 0 && currentPassword === newPassword;
+
+    const canSubmitPassword = 
+        currentPassword.trim().length > 0 &&
+        allCriteriaMet &&
+        passwordsMatch &&
+        !isSameAsCurrent &&
+        !isChangingPassword;
+
+    const strengthConfig = useMemo(() => {
+        if (!newPassword) return { label: 'Non renseigné', color: 'bg-gray-200', text: 'text-gray-400', level: 0 };
+        if (criteriaScore <= 2) return { label: 'Faible', color: 'bg-rose-500', text: 'text-rose-600', level: 1 };
+        if (criteriaScore === 3) return { label: 'Moyen', color: 'bg-amber-500', text: 'text-amber-600', level: 2 };
+        if (criteriaScore === 4) return { label: 'Bon', color: 'bg-blue-500', text: 'text-blue-600', level: 3 };
+        return { label: 'Robuste (Conforme)', color: 'bg-emerald-500', text: 'text-emerald-600', level: 4 };
+    }, [newPassword, criteriaScore]);
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!currentPassword) {
+            toast.error("Veuillez renseigner votre mot de passe actuel.");
+            return;
+        }
+        if (!allCriteriaMet) {
+            toast.error("Le nouveau mot de passe ne respecte pas tous les critères de sécurité.");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            toast.error("La confirmation du mot de passe ne correspond pas.");
+            return;
+        }
+        if (currentPassword === newPassword) {
+            toast.error("Le nouveau mot de passe doit être différent de l'ancien mot de passe.");
+            return;
+        }
+
+        setIsChangingPassword(true);
+        try {
+            const res = await changeUserPassword({
+                currentPassword,
+                newPassword,
+                confirmPassword
+            });
+
+            if (res.success) {
+                toast.success(res.message || "Mot de passe mis à jour avec succès !");
+                setPasswordSuccess(true);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setShowCurrentPassword(false);
+                setShowNewPassword(false);
+                setShowConfirmPassword(false);
+                setTimeout(() => setPasswordSuccess(false), 3000);
+            } else {
+                toast.error(res.error || "Erreur lors de la mise à jour du mot de passe.");
+            }
+        } catch {
+            toast.error("Une erreur inattendue est survenue.");
+        } finally {
+            setIsChangingPassword(false);
+        }
+    };
+
+    const handleSavePreferences = async () => {
+        setIsSavingPreferences(true);
+        try {
+            const res = await updateUserSettings({
+                settings: {
+                    notifications: {
+                        emails: emailNotifs,
+                        sms: smsNotifs
+                    }
+                }
+            });
+            if (res.success) {
+                toast.success("Vos préférences de notifications ont été enregistrées !");
+            } else {
+                toast.error(res.error || "Erreur lors de l'enregistrement des préférences.");
+            }
+        } catch {
+            toast.error("Erreur de connexion.");
+        } finally {
+            setIsSavingPreferences(false);
+        }
     };
 
     // Wishlist actions with undo
@@ -1353,89 +1482,334 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                 {/* ---------------- TAB: PARAMÈTRES & SÉCURITÉ ---------------- */}
                                 {activeTab === 'settings' && (
-                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3.5 sm:gap-5">
-                                        <div className="border-b border-gray-100 pb-3.5 sm:pb-4">
-                                            <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight mb-0.5">Paramètres & Sécurité</h3>
-                                            <p className="text-xs text-gray-500">Gérez la sécurité de votre compte et vos préférences de contact.</p>
+                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-4 sm:gap-6">
+                                        <div className="border-b border-gray-100 pb-3.5 sm:pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                            <div>
+                                                <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight mb-0.5">Paramètres & Sécurité</h3>
+                                                <p className="text-xs text-gray-500">Gérez la sécurité de votre compte et vos préférences de contact conformément aux normes de sécurité.</p>
+                                            </div>
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200/60 text-orange-800 text-xs font-semibold self-start sm:self-auto">
+                                                <ShieldCheck className="w-4 h-4 text-orange-600" />
+                                                <span>Normes ANSSI / OWASP</span>
+                                            </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                                            {/* Security */}
-                                            <motion.div variants={itemVariants} className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
-                                                <div>
-                                                    <div className="flex items-center gap-3 mb-3.5">
-                                                        <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-                                                            <Lock className="w-4 h-4" />
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-bold text-[#1B1F3B] text-sm">Sécurité du compte</h4>
-                                                            <p className="text-[11px] text-gray-400">Modifier votre mot de passe</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-2.5">
-                                                        <div className="flex flex-col gap-1">
-                                                            <label className="text-[11px] font-bold text-gray-500">Nouveau mot de passe</label>
-                                                            <input
-                                                                type="password"
-                                                                placeholder="••••••••••••"
-                                                                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-base sm:text-sm focus:border-orange-500 outline-none"
-                                                            />
-                                                        </div>
-                                                        <div className="flex flex-col gap-1">
-                                                            <label className="text-[11px] font-bold text-gray-500">Confirmer le mot de passe</label>
-                                                            <input
-                                                                type="password"
-                                                                placeholder="••••••••••••"
-                                                                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-base sm:text-sm focus:border-orange-500 outline-none"
-                                                            />
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start">
+                                            {/* Security Card */}
+                                            <motion.div variants={itemVariants} className="bg-gray-50/70 rounded-2xl p-4 sm:p-6 border border-gray-100 flex flex-col justify-between shadow-xs">
+                                                <form onSubmit={handleChangePassword} className="space-y-4">
+                                                    {/* Card Header */}
+                                                    <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3.5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                                                <Lock className="w-5 h-5" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-[#1B1F3B] text-sm sm:text-base">Sécurité du compte</h4>
+                                                                <p className="text-[11px] text-gray-500">Mise à jour sécurisée du mot de passe</p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => toast.success("Le mot de passe sera mis à jour prochainement.")}
-                                                    className="mt-4 w-full h-11 bg-white border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-xl text-xs font-bold transition-colors touch-manipulation active:scale-95"
-                                                >
-                                                    Mettre à jour le mot de passe
-                                                </button>
+
+                                                    {/* Inputs */}
+                                                    <div className="space-y-3.5">
+                                                        {/* Current Password */}
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center justify-between">
+                                                                <label className="text-[11px] font-bold text-gray-700">
+                                                                    Mot de passe actuel <span className="text-orange-500">*</span>
+                                                                </label>
+                                                                <span className="text-[10px] text-gray-400">Re-authentification requise</span>
+                                                            </div>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showCurrentPassword ? "text" : "password"}
+                                                                    value={currentPassword}
+                                                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                                                    placeholder="••••••••••••"
+                                                                    required
+                                                                    autoComplete="current-password"
+                                                                    className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-gray-200 bg-white text-base sm:text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 outline-none transition-all font-medium"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                                                                    tabIndex={-1}
+                                                                    aria-label={showCurrentPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                                                >
+                                                                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* New Password */}
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center justify-between">
+                                                                <label className="text-[11px] font-bold text-gray-700">
+                                                                    Nouveau mot de passe <span className="text-orange-500">*</span>
+                                                                </label>
+                                                                {newPassword && (
+                                                                    <span className={cn("text-[10px] font-bold", strengthConfig.text)}>
+                                                                        Force : {strengthConfig.label}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showNewPassword ? "text" : "password"}
+                                                                    value={newPassword}
+                                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                                    placeholder="••••••••••••"
+                                                                    required
+                                                                    autoComplete="new-password"
+                                                                    className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-gray-200 bg-white text-base sm:text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 outline-none transition-all font-medium"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                                                                    tabIndex={-1}
+                                                                    aria-label={showNewPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                                                >
+                                                                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Strength Gauge */}
+                                                            {newPassword && (
+                                                                <div className="mt-1 space-y-1">
+                                                                    <div className="flex gap-1.5 h-1.5 w-full">
+                                                                        {[1, 2, 3, 4].map((step) => (
+                                                                            <div
+                                                                                key={step}
+                                                                                className={cn(
+                                                                                    "flex-1 rounded-full transition-all duration-300",
+                                                                                    step <= strengthConfig.level ? strengthConfig.color : "bg-gray-200"
+                                                                                )}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Warning if same as current */}
+                                                            {isSameAsCurrent && (
+                                                                <div className="flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200/60 mt-1">
+                                                                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                                                                    <span>Le nouveau mot de passe doit être différent du mot de passe actuel.</span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Criteria Checklist */}
+                                                            <div className="mt-2 p-2.5 sm:p-3 bg-white rounded-xl border border-gray-100 space-y-1.5">
+                                                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Normes de robustesse requises :</p>
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {passwordCriteria.minLength ? (
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                                                        ) : (
+                                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                                                                <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                                                            </div>
+                                                                        )}
+                                                                        <span className={cn("text-[11px]", passwordCriteria.minLength ? "text-emerald-700 font-semibold" : "text-gray-500")}>
+                                                                            Au moins 8 caractères
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {passwordCriteria.hasUpper ? (
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                                                        ) : (
+                                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                                                                <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                                                            </div>
+                                                                        )}
+                                                                        <span className={cn("text-[11px]", passwordCriteria.hasUpper ? "text-emerald-700 font-semibold" : "text-gray-500")}>
+                                                                            1 majuscule (A-Z)
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {passwordCriteria.hasLower ? (
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                                                        ) : (
+                                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                                                                <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                                                            </div>
+                                                                        )}
+                                                                        <span className={cn("text-[11px]", passwordCriteria.hasLower ? "text-emerald-700 font-semibold" : "text-gray-500")}>
+                                                                            1 minuscule (a-z)
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {passwordCriteria.hasNumber ? (
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                                                        ) : (
+                                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                                                                <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                                                            </div>
+                                                                        )}
+                                                                        <span className={cn("text-[11px]", passwordCriteria.hasNumber ? "text-emerald-700 font-semibold" : "text-gray-500")}>
+                                                                            1 chiffre (0-9)
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <div className="flex items-center gap-1.5 sm:col-span-2">
+                                                                        {passwordCriteria.hasSpecial ? (
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                                                        ) : (
+                                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                                                                <div className="w-1 h-1 rounded-full bg-gray-300" />
+                                                                            </div>
+                                                                        )}
+                                                                        <span className={cn("text-[11px]", passwordCriteria.hasSpecial ? "text-emerald-700 font-semibold" : "text-gray-500")}>
+                                                                            1 caractère spécial (!@#$%^&*...)
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Confirm Password */}
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center justify-between">
+                                                                <label className="text-[11px] font-bold text-gray-700">
+                                                                    Confirmer le mot de passe <span className="text-orange-500">*</span>
+                                                                </label>
+                                                                {confirmPassword && (
+                                                                    <span className={cn("text-[10px] font-bold flex items-center gap-1", passwordsMatch ? "text-emerald-600" : "text-rose-500")}>
+                                                                        {passwordsMatch ? (
+                                                                            <>
+                                                                                <Check className="w-3 h-3" /> Correspondance valide
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <X className="w-3 h-3" /> Ne correspond pas
+                                                                            </>
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showConfirmPassword ? "text" : "password"}
+                                                                    value={confirmPassword}
+                                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                                    placeholder="••••••••••••"
+                                                                    required
+                                                                    autoComplete="new-password"
+                                                                    className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-gray-200 bg-white text-base sm:text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 outline-none transition-all font-medium"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                                                                    tabIndex={-1}
+                                                                    aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                                                                >
+                                                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Security reassurance banner */}
+                                                    <div className="p-2.5 rounded-xl bg-orange-50/60 border border-orange-100 flex items-center gap-2 text-[10px] text-gray-500">
+                                                        <ShieldCheck className="w-4 h-4 text-orange-500 shrink-0" />
+                                                        <span>Chiffrement Bcrypt et protection anti-bruteforce active.</span>
+                                                    </div>
+
+                                                    {/* Action Button */}
+                                                    <button
+                                                        type="submit"
+                                                        disabled={!canSubmitPassword || isChangingPassword}
+                                                        className={cn(
+                                                            "w-full h-11 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 touch-manipulation active:scale-98 shadow-xs",
+                                                            passwordSuccess
+                                                                ? "bg-emerald-600 text-white"
+                                                                : canSubmitPassword
+                                                                    ? "bg-[#1B1F3B] hover:bg-orange-500 text-white shadow-[#1B1F3B]/10 hover:shadow-orange-500/20"
+                                                                    : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                                        )}
+                                                    >
+                                                        {isChangingPassword ? (
+                                                            <>
+                                                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                                                <span>Mise à jour sécurisée en cours...</span>
+                                                            </>
+                                                        ) : passwordSuccess ? (
+                                                            <>
+                                                                <Check className="w-4 h-4 stroke-[3]" />
+                                                                <span>Mot de passe mis à jour !</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Lock className="w-4 h-4" />
+                                                                <span>Mettre à jour le mot de passe</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </form>
                                             </motion.div>
 
                                             {/* Preferences */}
-                                            <motion.div variants={itemVariants} className="bg-gray-50/70 rounded-2xl p-4 sm:p-5 border border-gray-100 flex flex-col justify-between">
+                                            <motion.div variants={itemVariants} className="bg-gray-50/70 rounded-2xl p-4 sm:p-6 border border-gray-100 flex flex-col justify-between shadow-xs">
                                                 <div>
-                                                    <div className="flex items-center gap-3 mb-3.5">
-                                                        <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                                                            <Bell className="w-4 h-4" />
+                                                    <div className="flex items-center gap-3 mb-3.5 border-b border-gray-100 pb-3.5">
+                                                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                                            <Bell className="w-5 h-5" />
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-bold text-[#1B1F3B] text-sm">Notifications & Alertes</h4>
-                                                            <p className="text-[11px] text-gray-400">Canaux de communication souhaités</p>
+                                                            <h4 className="font-bold text-[#1B1F3B] text-sm sm:text-base">Notifications & Alertes</h4>
+                                                            <p className="text-[11px] text-gray-500">Canaux de communication souhaités</p>
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-2.5">
-                                                        <label className="flex items-center justify-between cursor-pointer p-3 bg-white rounded-xl border border-gray-100 touch-manipulation select-none">
+                                                    <div className="space-y-3">
+                                                        <label className="flex items-center justify-between cursor-pointer p-3.5 bg-white rounded-xl border border-gray-100 hover:border-gray-200 transition-colors touch-manipulation select-none">
                                                             <div>
                                                                 <span className="text-xs font-bold text-gray-700 block">Emails promotionnels</span>
-                                                                <span className="text-[10px] text-gray-400">Offres exclusives & ventes flash</span>
+                                                                <span className="text-[11px] text-gray-400">Offres exclusives, nouveautés & ventes flash</span>
                                                             </div>
-                                                            <input type="checkbox" className="sr-only peer" defaultChecked />
-                                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative shrink-0"></div>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="sr-only peer"
+                                                                checked={emailNotifs}
+                                                                onChange={(e) => setEmailNotifs(e.target.checked)}
+                                                            />
+                                                            <div className="w-10 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-orange-500 relative shrink-0"></div>
                                                         </label>
 
-                                                        <label className="flex items-center justify-between cursor-pointer p-3 bg-white rounded-xl border border-gray-100 touch-manipulation select-none">
+                                                        <label className="flex items-center justify-between cursor-pointer p-3.5 bg-white rounded-xl border border-gray-100 hover:border-gray-200 transition-colors touch-manipulation select-none">
                                                             <div>
                                                                 <span className="text-xs font-bold text-gray-700 block">Alertes de commande (SMS)</span>
-                                                                <span className="text-[10px] text-gray-400">Suivi d'expédition en direct</span>
+                                                                <span className="text-[11px] text-gray-400">Suivi d'expédition et alertes livraison en direct</span>
                                                             </div>
-                                                            <input type="checkbox" className="sr-only peer" defaultChecked />
-                                                            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500 relative shrink-0"></div>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="sr-only peer"
+                                                                checked={smsNotifs}
+                                                                onChange={(e) => setSmsNotifs(e.target.checked)}
+                                                            />
+                                                            <div className="w-10 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-orange-500 relative shrink-0"></div>
                                                         </label>
                                                     </div>
                                                 </div>
                                                 <button
-                                                    onClick={() => toast.success("Vos préférences ont été enregistrées.")}
-                                                    className="mt-4 w-full h-11 bg-white border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-xl text-xs font-bold transition-colors touch-manipulation active:scale-95"
+                                                    onClick={handleSavePreferences}
+                                                    disabled={isSavingPreferences}
+                                                    className="mt-4 w-full h-11 bg-white border border-gray-200 hover:border-orange-500 hover:text-orange-600 rounded-xl text-xs font-bold transition-colors touch-manipulation active:scale-95 flex items-center justify-center gap-2"
                                                 >
-                                                    Enregistrer les préférences
+                                                    {isSavingPreferences ? (
+                                                        <>
+                                                            <div className="w-4 h-4 border-2 border-orange-500/20 border-t-orange-500 rounded-full animate-spin" />
+                                                            <span>Enregistrement...</span>
+                                                        </>
+                                                    ) : (
+                                                        <span>Enregistrer les préférences</span>
+                                                    )}
                                                 </button>
                                             </motion.div>
                                         </div>
@@ -1638,8 +2012,28 @@ function OrderCard({ order }: { order: any }) {
                                         <span>Zone : <strong className="text-[#1B1F3B]">{order.deliveryZone}</strong></span>
                                     )}
                                     {order.paymentMethod && (
-                                        <span>Paiement : <strong className="text-[#1B1F3B]">{order.paymentMethod}</strong></span>
+                                        <span>Règlement : <strong className="text-[#1B1F3B]">{order.paymentMethod === 'cash' ? 'Paiement à la livraison' : order.paymentMethod}</strong></span>
                                     )}
+                                    <span className="flex items-center gap-1.5">
+                                        Paiement :{' '}
+                                        {order.paymentStatus === 'PAID' ? (
+                                            <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Payée
+                                            </span>
+                                        ) : order.paymentStatus === 'REFUNDED' ? (
+                                            <span className="font-bold text-purple-700 bg-purple-50 border border-purple-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Remboursée
+                                            </span>
+                                        ) : order.paymentStatus === 'FAILED' ? (
+                                            <span className="font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Échoué
+                                            </span>
+                                        ) : (
+                                            <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> En attente
+                                            </span>
+                                        )}
+                                    </span>
                                 </div>
                             )}
                         </div>

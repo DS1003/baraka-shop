@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { rememberCache, invalidateCache } from "@/lib/redis";
+import bcrypt from "bcryptjs";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function getUserSettings() {
     const session = await auth();
@@ -162,4 +164,108 @@ export async function checkWishlistAction(productId: string) {
         return false;
     }
 }
+
+/**
+ * Modification sécurisée du mot de passe utilisateur
+ * Conforme aux normes OWASP ASVS v4.0 et ANSSI :
+ * - Re-authentification avec l'ancien mot de passe
+ * - Protection anti-bruteforce via rate limiting Redis
+ * - Politique de complexité stricte (8+ caractères, majuscule, minuscule, chiffre, symbole)
+ * - Interdiction de réutiliser le mot de passe actuel
+ * - Hachage robuste Bcrypt
+ */
+export async function changeUserPassword(data: {
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        return { success: false, error: "Vous devez être connecté pour modifier votre mot de passe." };
+    }
+
+    const currentPassword = (data?.currentPassword || "").trim();
+    const newPassword = (data?.newPassword || "").trim();
+    const confirmPassword = (data?.confirmPassword || "").trim();
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        return { success: false, error: "Tous les champs sont obligatoires." };
+    }
+
+    // Protection anti-bruteforce (OWASP ASVS 2.1.8) : max 5 tentatives par 15 minutes
+    const rateLimitKey = `pwd_change:${session.user.id}`;
+    const limiter = await rateLimit(rateLimitKey, 5, 900);
+    if (!limiter.success) {
+        return {
+            success: false,
+            error: `Trop de tentatives de modification. Par mesure de sécurité, veuillez patienter ${Math.ceil(limiter.reset / 60)} minutes avant de réessayer.`
+        };
+    }
+
+    // Vérification de la confirmation
+    if (newPassword !== confirmPassword) {
+        return { success: false, error: "Le nouveau mot de passe et sa confirmation ne correspondent pas." };
+    }
+
+    // Vérification des critères de sécurité (OWASP & ANSSI standards)
+    if (newPassword.length < 8) {
+        return { success: false, error: "Le mot de passe doit comporter au moins 8 caractères." };
+    }
+    if (newPassword.length > 128) {
+        return { success: false, error: "Le mot de passe ne doit pas dépasser 128 caractères." };
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+        return { success: false, error: "Le mot de passe doit contenir au moins une lettre majuscule." };
+    }
+    if (!/[a-z]/.test(newPassword)) {
+        return { success: false, error: "Le mot de passe doit contenir au moins une lettre minuscule." };
+    }
+    if (!/[0-9]/.test(newPassword)) {
+        return { success: false, error: "Le mot de passe doit contenir au moins un chiffre." };
+    }
+    if (!/[^A-Za-z0-9]/.test(newPassword)) {
+        return { success: false, error: "Le mot de passe doit contenir au moins un caractère spécial (@$!%*?&#...)." };
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { id: true, password: true }
+        });
+
+        if (!user || !user.password) {
+            return { success: false, error: "Compte utilisateur introuvable." };
+        }
+
+        // Vérification de l'ancien mot de passe (Re-authentification OWASP ASVS)
+        const isCurrentValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isCurrentValid) {
+            return { success: false, error: "Le mot de passe actuel est incorrect." };
+        }
+
+        // Le nouveau mot de passe doit être différent de l'actuel
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) {
+            return { success: false, error: "Le nouveau mot de passe doit être différent du mot de passe actuel." };
+        }
+
+        // Hachage sécurisé avec Bcrypt
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: { password: hashedPassword }
+        });
+
+        await invalidateCache(`user:settings:${session.user.id}`);
+        revalidatePath("/account");
+        revalidatePath("/admin/settings");
+
+        return { success: true, message: "Votre mot de passe a été mis à jour avec succès." };
+    } catch (error) {
+        console.error("Change password error:", error);
+        return { success: false, error: "Une erreur technique est survenue lors de la mise à jour." };
+    }
+}
+
 

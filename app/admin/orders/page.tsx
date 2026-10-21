@@ -5,11 +5,11 @@ import {
     Search, Download, Eye, Truck, PackageCheck, Clock, XCircle,
     ShoppingCart, Calendar, Zap, History, Loader2, X,
     MapPin, Phone, User, RefreshCw, Inbox,
-    CheckCircle2, Printer
+    CheckCircle2, Printer, CreditCard, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { updateOrderStatus, bulkUpdateOrderStatuses } from '@/lib/actions/admin-actions';
+import { updateOrderStatus, bulkUpdateOrderStatuses, updateOrderPaymentStatus } from '@/lib/actions/admin-actions';
 import { toast } from 'sonner';
 import { useRealtimeOrders } from '@/lib/hooks/useRealtimeOrders';
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
@@ -22,6 +22,13 @@ const statusConfig: any = {
     CANCELLED: { label: 'Annulée', color: 'text-rose-600', dot: 'bg-rose-500', bg: 'bg-rose-50', border: 'border-rose-200', icon: XCircle, next: null },
 };
 
+const paymentStatusConfig: Record<string, { label: string; color: string; dot: string; bg: string; border: string }> = {
+    PAID: { label: 'Payée', color: 'text-emerald-700', dot: 'bg-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    PENDING: { label: 'En attente', color: 'text-amber-700', dot: 'bg-amber-500', bg: 'bg-amber-50', border: 'border-amber-200' },
+    FAILED: { label: 'Échoué', color: 'text-rose-700', dot: 'bg-rose-500', bg: 'bg-rose-50', border: 'border-rose-200' },
+    REFUNDED: { label: 'Remboursée', color: 'text-purple-700', dot: 'bg-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
+};
+
 export default function OrdersPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('Toutes');
@@ -29,6 +36,7 @@ export default function OrdersPage() {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isUpdatingBulk, setIsUpdatingBulk] = useState(false);
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+    const [updatingPaymentOrderId, setUpdatingPaymentOrderId] = useState<string | null>(null);
 
     const handleNewOrder = useCallback((order: any) => {}, []);
 
@@ -47,9 +55,20 @@ export default function OrdersPage() {
         try {
             const res = await updateOrderStatus(orderId, newStatus);
             if (res?.success) {
-                setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+                setOrders(prev => prev.map(o => {
+                    if (o.id !== orderId) return o;
+                    return {
+                        ...o,
+                        status: newStatus,
+                        paymentStatus: (newStatus === 'DELIVERED' && (o.paymentStatus === 'PENDING' || !o.paymentStatus)) ? 'PAID' : o.paymentStatus
+                    };
+                }));
                 if (selectedOrder?.id === orderId) {
-                    setSelectedOrder((prev: any) => ({ ...prev, status: newStatus }));
+                    setSelectedOrder((prev: any) => ({
+                        ...prev,
+                        status: newStatus,
+                        paymentStatus: (newStatus === 'DELIVERED' && (prev.paymentStatus === 'PENDING' || !prev.paymentStatus)) ? 'PAID' : prev.paymentStatus
+                    }));
                 }
                 toast.success(`Statut mis à jour avec succès.`);
             } else {
@@ -60,6 +79,29 @@ export default function OrdersPage() {
             toast.error("La connexion au serveur a échoué. Veuillez réessayer.");
         } finally {
             setUpdatingOrderId(null);
+        }
+    };
+
+    const handlePaymentStatusUpdate = async (orderId: string, newPaymentStatus: string) => {
+        if (updatingPaymentOrderId) return;
+        setUpdatingPaymentOrderId(orderId);
+        try {
+            const res = await updateOrderPaymentStatus(orderId, newPaymentStatus);
+            if (res?.success) {
+                setOrders(prev => prev.map(o => o.id === orderId ? { ...o, paymentStatus: newPaymentStatus } : o));
+                if (selectedOrder?.id === orderId) {
+                    setSelectedOrder((prev: any) => ({ ...prev, paymentStatus: newPaymentStatus }));
+                }
+                const label = paymentStatusConfig[newPaymentStatus]?.label || newPaymentStatus;
+                toast.success(`Statut paiement : ${label}`);
+            } else {
+                toast.error(res?.error || 'Erreur lors de la mise à jour');
+            }
+        } catch (err: any) {
+            console.error("Payment status update error:", err);
+            toast.error("La connexion au serveur a échoué.");
+        } finally {
+            setUpdatingPaymentOrderId(null);
         }
     };
 
@@ -124,6 +166,11 @@ export default function OrdersPage() {
         const shippingCost = order.shippingCost || 0;
         const isDelivery = order.deliveryMethod === 'livraison';
         const paymentLabel = order.paymentMethod === 'cash' ? 'Paiement à la livraison' : (order.paymentMethod ? order.paymentMethod.toUpperCase() : 'Non spécifié');
+        const isPaid = order.paymentStatus === 'PAID';
+        const paymentStatusText = isPaid ? '✅ Payée' : (order.paymentStatus === 'REFUNDED' ? '↩️ Remboursée' : '⏳ En attente de règlement');
+        const paymentStatusStyle = isPaid 
+            ? 'background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0;' 
+            : 'background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A;';
 
         const html = `
             <!DOCTYPE html>
@@ -549,9 +596,12 @@ export default function OrdersPage() {
                             ${isDelivery && order.deliveryZone ? `
                                 <div><strong>Zone :</strong> ${order.deliveryZone}</div>
                             ` : ''}
-                            <div style="margin-top: 4px;">
+                            <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                 <strong>Règlement :</strong> 
-                                <span style="font-weight: 700; color: #EA580C;">${paymentLabel}</span>
+                                <span style="font-weight: 700; color: #0F172A;">${paymentLabel}</span>
+                                <span style="display: inline-block; padding: 1.5px 7px; border-radius: 9999px; font-size: 10px; font-weight: 800; ${paymentStatusStyle}">
+                                    ${paymentStatusText}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -799,6 +849,7 @@ export default function OrdersPage() {
                                     <th className="px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Client</th>
                                     <th className="px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Valeur</th>
                                     <th className="px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Statut</th>
+                                    <th className="px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Paiement</th>
                                     <th className="px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -806,6 +857,10 @@ export default function OrdersPage() {
                                 <AnimatePresence>
                                     {filteredOrders.map((order) => {
                                         const config = statusConfig[order.status] || statusConfig.PENDING;
+                                        const pStatusKey = order.paymentStatus || 'PENDING';
+                                        const pConf = paymentStatusConfig[pStatusKey] || paymentStatusConfig.PENDING;
+                                        const isThisPaymentUpdating = updatingPaymentOrderId === order.id;
+
                                         return (
                                             <motion.tr 
                                                 layout
@@ -871,6 +926,35 @@ export default function OrdersPage() {
                                                     )}>
                                                         <span className={cn("w-1.5 h-1.5 rounded-full", config.dot)} />
                                                         {config.label}
+                                                    </div>
+                                                </td>
+                                                <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
+                                                    {/* Quick Payment Status Dropdown */}
+                                                    <div className="relative inline-flex items-center">
+                                                        <select
+                                                            value={pStatusKey}
+                                                            disabled={isThisPaymentUpdating}
+                                                            onChange={(e) => handlePaymentStatusUpdate(order.id, e.target.value)}
+                                                            className={cn(
+                                                                "appearance-none cursor-pointer text-[11px] font-bold rounded-md px-2.5 py-1 pr-6 border transition-all focus:outline-none focus:ring-1 focus:ring-orange-500 shadow-2xs",
+                                                                pConf.bg,
+                                                                pConf.color,
+                                                                pConf.border,
+                                                                isThisPaymentUpdating && "opacity-50 pointer-events-none"
+                                                            )}
+                                                        >
+                                                            <option value="PENDING">⏳ En attente</option>
+                                                            <option value="PAID">✅ Payée</option>
+                                                            <option value="FAILED">❌ Échoué</option>
+                                                            <option value="REFUNDED">↩️ Remboursée</option>
+                                                        </select>
+                                                        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-70">
+                                                            {isThisPaymentUpdating ? (
+                                                                <Loader2 size={10} className="animate-spin text-orange-600" />
+                                                            ) : (
+                                                                <ChevronDown size={11} />
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
@@ -1002,6 +1086,63 @@ export default function OrdersPage() {
                                     </div>
                                 </section>
 
+                                {/* Payment Status Control Panel */}
+                                <section className="bg-white rounded-xl border border-slate-200/60 p-4 shadow-sm">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <CreditCard size={12} /> Statut du paiement
+                                        </h3>
+                                        {(() => {
+                                            const pKey = selectedOrder.paymentStatus || 'PENDING';
+                                            const pConf = paymentStatusConfig[pKey] || paymentStatusConfig.PENDING;
+                                            return (
+                                                <span className={cn(
+                                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1",
+                                                    pConf.bg, pConf.color, pConf.border
+                                                )}>
+                                                    <span className={cn("w-1.5 h-1.5 rounded-full", pConf.dot)} />
+                                                    {pConf.label}
+                                                </span>
+                                            );
+                                        })()}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {Object.entries(paymentStatusConfig).map(([pKey, pConf]) => {
+                                            const isPActive = (selectedOrder.paymentStatus || 'PENDING') === pKey;
+                                            const isPUpdating = updatingPaymentOrderId === selectedOrder.id;
+                                            return (
+                                                <button
+                                                    key={pKey}
+                                                    disabled={isPUpdating}
+                                                    onClick={() => handlePaymentStatusUpdate(selectedOrder.id, pKey)}
+                                                    className={cn(
+                                                        "flex items-center gap-2.5 p-2.5 rounded-lg border transition-all text-left relative",
+                                                        isPActive 
+                                                            ? cn(pConf.border, pConf.bg, "shadow-sm", pConf.color)
+                                                            : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50 text-slate-600",
+                                                        isPUpdating && "opacity-60 cursor-not-allowed"
+                                                    )}
+                                                >
+                                                    <span className={cn("w-2 h-2 rounded-full shrink-0", pConf.dot)} />
+                                                    <span className="text-[12px] font-bold flex-1 truncate">
+                                                        {pConf.label}
+                                                    </span>
+                                                    {isPUpdating && !isPActive && (
+                                                        <Loader2 size={12} className="animate-spin text-slate-400" />
+                                                    )}
+                                                    {isPActive && (
+                                                        isPUpdating ? (
+                                                            <Loader2 size={14} className="animate-spin text-current" />
+                                                        ) : (
+                                                            <CheckCircle2 size={14} className="text-current opacity-70" />
+                                                        )
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </section>
+
                                 <div className="grid grid-cols-2 gap-4">
                                     {/* Customer Box */}
                                     <section className="bg-white rounded-xl p-4 border border-slate-200/60 shadow-sm">
@@ -1090,10 +1231,25 @@ export default function OrdersPage() {
                                         </div>
                                         <div className="flex justify-between items-end pt-2">
                                             <div>
-                                                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Total Net</p>
-                                                <span className="inline-block px-1.5 py-0.5 bg-slate-200/50 rounded text-[10px] font-bold text-slate-600 uppercase">
-                                                    {selectedOrder.paymentMethod === 'cash' ? 'Payé Livraison' : selectedOrder.paymentMethod}
-                                                </span>
+                                                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">Règlement & Total</p>
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span className="inline-block px-2 py-0.5 bg-slate-200/60 rounded text-[10px] font-bold text-slate-700">
+                                                        {selectedOrder.paymentMethod === 'cash' ? 'Paiement à la livraison' : (selectedOrder.paymentMethod || 'Paiement en ligne')}
+                                                    </span>
+                                                    {(() => {
+                                                        const pKey = selectedOrder.paymentStatus || 'PENDING';
+                                                        const pConf = paymentStatusConfig[pKey] || paymentStatusConfig.PENDING;
+                                                        return (
+                                                            <span className={cn(
+                                                                "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border",
+                                                                pConf.bg, pConf.color, pConf.border
+                                                            )}>
+                                                                <span className={cn("w-1.5 h-1.5 rounded-full", pConf.dot)} />
+                                                                {pConf.label}
+                                                            </span>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                             <span className="text-[18px] font-black text-slate-900 leading-none">{selectedOrder.total.toLocaleString()} F</span>
                                         </div>

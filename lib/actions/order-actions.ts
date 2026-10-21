@@ -129,6 +129,7 @@ export async function createOrder(data: CreateOrderData) {
                     discountAmount: discountAmount,
                     total: serverTotal,
                     paymentMethod: typeof data.paymentMethod === 'string' ? data.paymentMethod : 'CASH_ON_DELIVERY',
+                    paymentStatus: 'PENDING',
                     deliveryMethod: data.deliveryMethod === 'retrait' ? 'retrait' : 'livraison',
                     deliveryZone: data.deliveryZone ? String(data.deliveryZone).slice(0, 100) : null,
                     shippingCost: shipping,

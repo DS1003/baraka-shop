@@ -24,12 +24,18 @@ import {
     History,
     SmartphoneNfc,
     Trash2,
-    Plus
+    Plus,
+    Eye,
+    EyeOff,
+    ShieldCheck,
+    CheckCircle2,
+    AlertCircle,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { getUserSettings, updateUserSettings } from '@/lib/actions/user-actions';
+import { getUserSettings, updateUserSettings, changeUserPassword } from '@/lib/actions/user-actions';
 import { signOut } from 'next-auth/react';
 import { SiteMaintenancePanel } from './_components/SiteMaintenancePanel';
 import { SiteLogosPanel } from './_components/SiteLogosPanel';
@@ -64,6 +70,68 @@ export default function SettingsPage() {
         twoFactor: false,
         loginAlerts: true,
     });
+
+    // Admin Password Change State
+    const [pwdCurrent, setPwdCurrent] = useState('');
+    const [pwdNew, setPwdNew] = useState('');
+    const [pwdConfirm, setPwdConfirm] = useState('');
+    const [showPwdCurrent, setShowPwdCurrent] = useState(false);
+    const [showPwdNew, setShowPwdNew] = useState(false);
+    const [showPwdConfirm, setShowPwdConfirm] = useState(false);
+    const [isUpdatingPwd, setIsUpdatingPwd] = useState(false);
+
+    const adminCriteria = {
+        minLength: pwdNew.length >= 8,
+        hasUpper: /[A-Z]/.test(pwdNew),
+        hasLower: /[a-z]/.test(pwdNew),
+        hasNumber: /[0-9]/.test(pwdNew),
+        hasSpecial: /[^A-Za-z0-9]/.test(pwdNew),
+    };
+    const adminCriteriaScore = Object.values(adminCriteria).filter(Boolean).length;
+    const adminAllCriteriaMet = adminCriteriaScore === 5;
+    const adminPasswordsMatch = pwdNew.length > 0 && pwdConfirm.length > 0 && pwdNew === pwdConfirm;
+    const adminCanSubmit = pwdCurrent.trim().length > 0 && adminAllCriteriaMet && adminPasswordsMatch && pwdCurrent !== pwdNew && !isUpdatingPwd;
+
+    const handleAdminChangePassword = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!pwdCurrent) {
+            toast.error("Veuillez saisir votre mot de passe actuel.");
+            return;
+        }
+        if (!adminAllCriteriaMet) {
+            toast.error("Le nouveau mot de passe ne respecte pas les critères de sécurité.");
+            return;
+        }
+        if (pwdNew !== pwdConfirm) {
+            toast.error("La confirmation du mot de passe ne correspond pas.");
+            return;
+        }
+        if (pwdCurrent === pwdNew) {
+            toast.error("Le nouveau mot de passe doit être différent de l'actuel.");
+            return;
+        }
+
+        setIsUpdatingPwd(true);
+        try {
+            const res = await changeUserPassword({
+                currentPassword: pwdCurrent,
+                newPassword: pwdNew,
+                confirmPassword: pwdConfirm
+            });
+            if (res.success) {
+                toast.success(res.message || "Mot de passe administrateur mis à jour !");
+                setPwdCurrent('');
+                setPwdNew('');
+                setPwdConfirm('');
+            } else {
+                toast.error(res.error || "Erreur lors de la modification du mot de passe.");
+            }
+        } catch {
+            toast.error("Erreur serveur inattendue.");
+        } finally {
+            setIsUpdatingPwd(false);
+        }
+    };
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -378,20 +446,148 @@ export default function SettingsPage() {
                                     {activeSection === 'Sécurité' && (
                                         <div className="space-y-12">
                                             {/* Password Change */}
-                                            <div className="space-y-6">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <Key size={18} className="text-orange-600" />
-                                                    <h3 className="text-[16px] font-black text-slate-900">Modifier le mot de passe</h3>
+                                            <div className="space-y-6 bg-slate-50/50 p-6 sm:p-8 rounded-3xl border border-slate-100">
+                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200/60 pb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                                                            <Key size={18} />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-[16px] font-black text-slate-900">Modifier le mot de passe administrateur</h3>
+                                                            <p className="text-[12px] text-slate-400 font-medium">Re-authentification obligatoire et chiffrement Bcrypt</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[11px] font-bold self-start sm:self-auto">
+                                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                                        <span>Normes OWASP & ANSSI</span>
+                                                    </div>
                                                 </div>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                    <SettingsInput label="Ancien mot de passe" type="password" placeholder="••••••••" />
-                                                    <div className="hidden md:block" />
-                                                    <SettingsInput label="Nouveau mot de passe" type="password" placeholder="••••••••" />
-                                                    <SettingsInput label="Confirmer le nouveau mot de passe" type="password" placeholder="••••••••" />
-                                                </div>
-                                                <button className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-[12px] hover:bg-orange-600 transition-all">
-                                                    Mettre à jour le mot de passe
-                                                </button>
+
+                                                <form onSubmit={handleAdminChangePassword} className="space-y-5">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                        {/* Current Password */}
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider">
+                                                                Mot de passe actuel <span className="text-orange-500">*</span>
+                                                            </label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showPwdCurrent ? "text" : "password"}
+                                                                    value={pwdCurrent}
+                                                                    onChange={(e) => setPwdCurrent(e.target.value)}
+                                                                    placeholder="••••••••••••"
+                                                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-[13px] font-bold text-slate-900 pr-10"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowPwdCurrent(!showPwdCurrent)}
+                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                                                                >
+                                                                    {showPwdCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="hidden md:block" />
+
+                                                        {/* New Password */}
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider">
+                                                                Nouveau mot de passe <span className="text-orange-500">*</span>
+                                                            </label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showPwdNew ? "text" : "password"}
+                                                                    value={pwdNew}
+                                                                    onChange={(e) => setPwdNew(e.target.value)}
+                                                                    placeholder="••••••••••••"
+                                                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-[13px] font-bold text-slate-900 pr-10"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowPwdNew(!showPwdNew)}
+                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                                                                >
+                                                                    {showPwdNew ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Criteria */}
+                                                            {pwdNew && (
+                                                                <div className="p-3 bg-white rounded-xl border border-slate-100 text-[11px] space-y-1 mt-2">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {adminCriteria.minLength ? <CheckCircle2 size={13} className="text-emerald-600" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />}
+                                                                        <span className={adminCriteria.minLength ? "text-emerald-700 font-bold" : "text-slate-400"}>8 caractères minimum</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {adminCriteria.hasUpper && adminCriteria.hasLower ? <CheckCircle2 size={13} className="text-emerald-600" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />}
+                                                                        <span className={adminCriteria.hasUpper && adminCriteria.hasLower ? "text-emerald-700 font-bold" : "text-slate-400"}>1 majuscule & 1 minuscule</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {adminCriteria.hasNumber ? <CheckCircle2 size={13} className="text-emerald-600" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />}
+                                                                        <span className={adminCriteria.hasNumber ? "text-emerald-700 font-bold" : "text-slate-400"}>1 chiffre</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {adminCriteria.hasSpecial ? <CheckCircle2 size={13} className="text-emerald-600" /> : <div className="w-3 h-3 rounded-full border border-slate-300" />}
+                                                                        <span className={adminCriteria.hasSpecial ? "text-emerald-700 font-bold" : "text-slate-400"}>1 caractère spécial</span>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Confirm New Password */}
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex items-center justify-between">
+                                                                <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider">
+                                                                    Confirmer le mot de passe <span className="text-orange-500">*</span>
+                                                                </label>
+                                                                {pwdConfirm && (
+                                                                    <span className={cn("text-[10px] font-bold", adminPasswordsMatch ? "text-emerald-600" : "text-rose-500")}>
+                                                                        {adminPasswordsMatch ? "Correspondance validée" : "Ne correspond pas"}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showPwdConfirm ? "text" : "password"}
+                                                                    value={pwdConfirm}
+                                                                    onChange={(e) => setPwdConfirm(e.target.value)}
+                                                                    placeholder="••••••••••••"
+                                                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-[13px] font-bold text-slate-900 pr-10"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowPwdConfirm(!showPwdConfirm)}
+                                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                                                                >
+                                                                    {showPwdConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="pt-2">
+                                                        <button
+                                                            type="submit"
+                                                            disabled={!adminCanSubmit}
+                                                            className={cn(
+                                                                "px-6 py-3 rounded-xl font-bold text-[12px] transition-all flex items-center gap-2",
+                                                                adminCanSubmit
+                                                                    ? "bg-slate-900 text-white hover:bg-orange-600 shadow-md shadow-slate-900/10"
+                                                                    : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                                                            )}
+                                                        >
+                                                            {isUpdatingPwd ? (
+                                                                <>
+                                                                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                                                    <span>Mise à jour sécurisée...</span>
+                                                                </>
+                                                            ) : (
+                                                                <span>Mettre à jour le mot de passe</span>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </form>
                                             </div>
 
                                             {/* 2FA Section */}
