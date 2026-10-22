@@ -110,108 +110,124 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
                     box-shadow: none !important;
                   }
                   .header-section {
-                    padding: 20px 14px 12px 14px !important;
+                    padding: 20px 18px 10px 18px !important;
                   }
                   .content-section {
-                    padding: 2px 14px 20px 14px !important;
+                    padding: 0 18px 24px 18px !important;
                   }
                   .footer-section {
-                    padding: 20px 14px 18px 14px !important;
+                    padding: 24px 18px 20px 18px !important;
                   }
                   .footer-pillar {
                     display: block !important;
                     width: 100% !important;
                     text-align: center !important;
-                    padding: 4px 0 !important;
-                    font-size: 11px !important;
+                    padding: 3px 0 !important;
+                    font-size: 10px !important;
                   }
                   .footer-divider {
                     display: none !important;
                   }
                   .footer-contact-wa {
                     display: block !important;
-                    margin: 8px auto !important;
-                    max-width: 270px !important;
-                    padding: 9px 12px !important;
+                    margin: 6px auto !important;
+                    max-width: 250px !important;
+                    padding: 8px 10px !important;
                     text-align: center !important;
                     box-sizing: border-box !important;
+                    font-size: 11.5px !important;
                   }
                   .footer-contact-link {
                     display: inline-block !important;
-                    margin: 6px 6px !important;
+                    margin: 4px 6px !important;
                     text-align: center !important;
+                    font-size: 11.5px !important;
                   }
                   .hero-title {
-                    font-size: 22px !important;
-                    line-height: 28px !important;
+                    font-size: 18px !important;
+                    line-height: 23px !important;
+                    margin-bottom: 5px !important;
                   }
                   .hero-subtitle {
-                    font-size: 13px !important;
-                    line-height: 19px !important;
-                    padding: 0 2px !important;
+                    font-size: 11.5px !important;
+                    line-height: 16px !important;
+                    padding: 0 6px !important;
                   }
                   .status-card {
-                    padding: 14px 12px !important;
+                    padding: 12px 14px !important;
                     border-radius: 14px !important;
                     margin-bottom: 10px !important;
                   }
+                  .status-ref {
+                    font-size: 12px !important;
+                  }
+                  .status-date {
+                    font-size: 11px !important;
+                  }
                   .detail-card {
-                    padding: 2px 12px 4px 12px !important;
+                    padding: 3px 14px 5px 14px !important;
                     border-radius: 14px !important;
                     margin-bottom: 10px !important;
                   }
                   .detail-label {
-                    font-size: 12px !important;
-                    padding: 8px 8px 8px 0 !important;
+                    font-size: 11px !important;
+                    padding: 7px 8px 7px 0 !important;
+                    width: 36% !important;
                   }
                   .detail-value {
-                    font-size: 13px !important;
-                    line-height: 18px !important;
-                    padding: 8px 0 !important;
+                    font-size: 11.5px !important;
+                    line-height: 16px !important;
+                    padding: 7px 0 !important;
                     word-break: break-word !important;
                   }
                   .callout-box {
                     padding: 12px 14px !important;
                     border-radius: 14px !important;
-                    margin-top: 16px !important;
+                    margin-top: 14px !important;
                   }
                   .cta-button {
                     display: block !important;
                     width: 100% !important;
-                    padding: 14px 16px !important;
+                    max-width: 280px !important;
+                    margin: 0 auto !important;
+                    padding: 12px 20px !important;
                     box-sizing: border-box !important;
                     text-align: center !important;
-                    font-size: 14px !important;
+                    font-size: 13px !important;
+                    border-radius: 12px !important;
                   }
                   .step-label {
-                    font-size: 9.5px !important;
-                    line-height: 12px !important;
+                    font-size: 8.5px !important;
+                    line-height: 10px !important;
                     letter-spacing: -0.02em !important;
+                    padding-top: 5px !important;
                     text-align: center !important;
                   }
                   .item-img-cell {
-                    width: 48px !important;
-                    padding: 10px 8px 10px 0 !important;
+                    width: 44px !important;
+                    padding: 8px 8px 8px 0 !important;
                   }
                   .item-img {
-                    width: 42px !important;
-                    height: 42px !important;
+                    width: 36px !important;
+                    height: 36px !important;
+                    border-radius: 8px !important;
                   }
                   .item-title {
-                    font-size: 13px !important;
-                    line-height: 17px !important;
+                    font-size: 12px !important;
+                    line-height: 16px !important;
                     word-break: break-word !important;
                   }
                   .item-meta {
-                    font-size: 11.5px !important;
+                    font-size: 10.5px !important;
+                    line-height: 14px !important;
                   }
                   .item-price {
-                    font-size: 13px !important;
+                    font-size: 12px !important;
                     padding-left: 6px !important;
                   }
                   .receipt-total {
-                    font-size: 20px !important;
-                    line-height: 24px !important;
+                    font-size: 16px !important;
+                    line-height: 20px !important;
                   }
                 }
               `,
@@ -224,7 +240,7 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
           style={{
             backgroundColor: '#F6F7F9',
             margin: 0,
-            padding: '24px 0 36px 0',
+            padding: '16px 0 28px 0',
             fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
             WebkitFontSmoothing: 'antialiased',
           }}
@@ -232,22 +248,22 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
           <Container
             className="email-container"
             style={{
-              maxWidth: '600px',
+              maxWidth: '560px',
               width: '100%',
               margin: '0 auto',
               backgroundColor: '#FFFFFF',
-              borderRadius: '18px',
+              borderRadius: '16px',
               border: '1px solid #ECEFF2',
               overflow: 'hidden',
-              boxShadow: '0 4px 24px rgba(15, 23, 42, 0.04)',
+              boxShadow: '0 4px 20px rgba(15, 23, 42, 0.03)',
             }}
           >
             {/* Minimalist 2027 Brand Header */}
-            <Section
+            <div
               className="header-section"
               style={{
                 backgroundColor: '#FFFFFF',
-                padding: '28px 20px 16px 20px',
+                padding: '24px 28px 12px 28px',
                 textAlign: 'center',
               }}
             >
@@ -256,12 +272,12 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
                   <Img
                     src={logoUrl}
                     alt="Baraka Shop"
-                    width="132"
+                    width="112"
                     style={{
                       margin: '0 auto',
-                      maxWidth: '132px',
+                      maxWidth: '112px',
                       height: 'auto',
-                      maxHeight: '40px',
+                      maxHeight: '34px',
                       display: 'block',
                       objectFit: 'contain',
                     }}
@@ -270,7 +286,7 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
                   <div style={{ textAlign: 'center' }}>
                     <span
                       style={{
-                        fontSize: '23px',
+                        fontSize: '20px',
                         fontWeight: 900,
                         letterSpacing: '-0.04em',
                         color: '#0B0F19',
@@ -282,20 +298,20 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
                   </div>
                 )}
               </Link>
-            </Section>
+            </div>
 
             {/* Content Area */}
-            <Section className="content-section" style={{ padding: '4px 20px 24px 20px' }}>
+            <div className="content-section" style={{ padding: '4px 28px 28px 28px' }}>
               {children}
-            </Section>
+            </div>
 
             {/* Premium 2027 Footer */}
-            <Section
+            <div
               className="footer-section"
               style={{
                 backgroundColor: '#FAFAFC',
                 borderTop: '1px solid #ECEFF2',
-                padding: '24px 18px 20px 18px',
+                padding: '26px 28px 22px 28px',
                 textAlign: 'center',
               }}
             >
@@ -409,7 +425,7 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
                   Conditions de vente
                 </Link>
               </Text>
-            </Section>
+            </div>
           </Container>
         </Body>
       </Tailwind>

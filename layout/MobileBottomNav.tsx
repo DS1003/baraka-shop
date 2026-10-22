@@ -1,15 +1,16 @@
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Home, ShoppingBag, LayoutGrid, ShoppingCart, User } from 'lucide-react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { Home, ShoppingBag, Package, ShoppingCart, User } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 
-export function MobileBottomNav() {
+function MobileBottomNavInner() {
     const pathname = usePathname()
+    const searchParams = useSearchParams()
     const { itemCount } = useCart()
     const { status } = useSession()
     const isLoggedIn = status === 'authenticated'
@@ -26,6 +27,18 @@ export function MobileBottomNav() {
         return null
     }
 
+    const currentTab = searchParams?.get('tab') || (pathname.startsWith('/account') ? 'orders' : null)
+
+    const isOrdersActive =
+        (pathname.startsWith('/account') && currentTab === 'orders') ||
+        pathname.startsWith('/order-success') ||
+        pathname.startsWith('/orders')
+
+    const isAccountActive =
+        (pathname.startsWith('/account') && currentTab !== 'orders') ||
+        pathname.startsWith('/login') ||
+        pathname.startsWith('/register')
+
     const navItems = [
         {
             label: 'Accueil',
@@ -37,13 +50,13 @@ export function MobileBottomNav() {
             label: 'Boutique',
             href: '/boutique',
             icon: ShoppingBag,
-            isActive: pathname.startsWith('/boutique') || pathname.startsWith('/category'),
+            isActive: pathname.startsWith('/boutique') || pathname.startsWith('/category') || pathname.startsWith('/univers'),
         },
         {
-            label: 'Univers',
-            href: '/univers',
-            icon: LayoutGrid,
-            isActive: pathname.startsWith('/univers'),
+            label: 'Commandes',
+            href: isLoggedIn ? '/account?tab=orders' : '/login?callbackUrl=%2Faccount%3Ftab%3Dorders',
+            icon: Package,
+            isActive: isOrdersActive,
         },
         {
             label: 'Panier',
@@ -54,9 +67,9 @@ export function MobileBottomNav() {
         },
         {
             label: 'Compte',
-            href: isLoggedIn ? '/account' : '/login',
+            href: isLoggedIn ? '/account?tab=profile' : '/login',
             icon: User,
-            isActive: pathname.startsWith('/account') || pathname.startsWith('/login') || pathname.startsWith('/register'),
+            isActive: isAccountActive,
         },
     ]
 
@@ -72,7 +85,7 @@ export function MobileBottomNav() {
 
                     return (
                         <Link
-                            key={item.href}
+                            key={item.label}
                             href={item.href}
                             className="relative flex flex-col items-center justify-center py-1 rounded-lg transition-transform duration-150 active:scale-95 select-none group min-h-[44px]"
                         >
@@ -109,5 +122,13 @@ export function MobileBottomNav() {
                 })}
             </nav>
         </aside>
+    )
+}
+
+export function MobileBottomNav() {
+    return (
+        <Suspense fallback={null}>
+            <MobileBottomNavInner />
+        </Suspense>
     )
 }

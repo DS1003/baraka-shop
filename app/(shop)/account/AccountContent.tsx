@@ -43,7 +43,9 @@ import {
     Mail,
     EyeOff,
     AlertCircle,
-    Key
+    Key,
+    Store,
+    MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatPrice, formatNumber } from '@/lib/utils';
@@ -73,6 +75,28 @@ export default function AccountContent({ user }: AccountContentProps) {
         }
         return 'orders';
     });
+
+    // Targeted order ID to auto-expand in orders tab
+    const [expandedOrderId, setExpandedOrderId] = useState<string | null>(() => {
+        return searchParams.get('orderId') || null;
+    });
+
+    // Sync expandedOrderId when searchParams change or when switching to orders tab
+    useEffect(() => {
+        const orderIdParam = searchParams.get('orderId');
+        if (orderIdParam) {
+            setExpandedOrderId(orderIdParam);
+            if (activeTab === 'orders') {
+                const timer = setTimeout(() => {
+                    const el = document.getElementById(`order-${orderIdParam}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 250);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [searchParams, activeTab]);
 
     // Mobile dropdown selector state
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -428,6 +452,97 @@ export default function AccountContent({ user }: AccountContentProps) {
         setClientNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
         setNotifUnreadCount(0);
         toast.success('Toutes les notifications ont été marquées comme lues.');
+    };
+
+    const handleNotificationClick = async (notif: any) => {
+        // 1. Marquer la notification comme lue de manière optimiste
+        if (!notif.isRead) {
+            setClientNotifications(prev =>
+                prev.map(n => (n.id === notif.id ? { ...n, isRead: true } : n))
+            );
+            setNotifUnreadCount(prev => Math.max(0, prev - 1));
+            markNotificationRead(notif.id).catch((err) =>
+                console.error('Erreur lors du marquage de la notification:', err)
+            );
+        }
+
+        // 2. Extraire la référence ou l'ID de commande ciblé
+        let targetOrderId = notif.orderId || null;
+        if (!targetOrderId) {
+            const textToSearch = `${notif.title || ''} ${notif.message || ''}`;
+            const match = textToSearch.match(/#ORD-([A-Za-z0-9]+)/i);
+            if (match) {
+                targetOrderId = match[1];
+            }
+        }
+
+        // 3. Cas administrateur : notification de commande client ou nouveau contact
+        const isAdmin = user?.role === 'ADMIN';
+        const isOrderInUserOrders = targetOrderId
+            ? user.orders?.some(
+                  (o: any) =>
+                      o.id === targetOrderId ||
+                      o.id.toLowerCase().startsWith(targetOrderId.toLowerCase()) ||
+                      targetOrderId.toLowerCase().startsWith(o.id.toLowerCase())
+              )
+            : false;
+
+        if (notif.type === 'NEW_ORDER_ADMIN' || (isAdmin && targetOrderId && !isOrderInUserOrders)) {
+            toast.info('Ouverture de la commande dans la gestion administrative...');
+            router.push(targetOrderId ? `/admin/orders?orderId=${targetOrderId}` : '/admin/orders');
+            return;
+        }
+
+        if (notif.type === 'NEW_CONTACT_MESSAGE') {
+            if (isAdmin) {
+                router.push('/admin/messages');
+            }
+            return;
+        }
+
+        // 4. Cas client : ouvrir directement la commande dans son historique
+        if (targetOrderId) {
+            const matchedOrder = user.orders?.find(
+                (o: any) =>
+                    o.id === targetOrderId ||
+                    o.id.toLowerCase().startsWith(targetOrderId.toLowerCase()) ||
+                    targetOrderId.toLowerCase().startsWith(o.id.toLowerCase())
+            );
+
+            if (matchedOrder) {
+                setActiveTab('orders');
+                setExpandedOrderId(matchedOrder.id);
+                router.replace(`/account?tab=orders&orderId=${matchedOrder.id}`, { scroll: false });
+                setTimeout(() => {
+                    const el = document.getElementById(`order-${matchedOrder.id}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('ring-4', 'ring-orange-400', 'ring-offset-2');
+                        setTimeout(() => {
+                            el.classList.remove('ring-4', 'ring-orange-400', 'ring-offset-2');
+                        }, 2500);
+                    }
+                }, 200);
+                return;
+            }
+
+            // Si la commande n'est pas dans user.orders (ex: invitée ou lien direct)
+            router.push(`/order-success?orderId=${targetOrderId}`);
+            return;
+        }
+
+        // 5. Cas général pour les notifications de statut commande
+        if (notif.type?.startsWith('ORDER_')) {
+            setActiveTab('orders');
+            router.replace('/account?tab=orders', { scroll: false });
+            return;
+        }
+
+        // 6. Notification produit (ex: restock, promo)
+        if (notif.productId) {
+            router.push(`/product/${notif.productId}`);
+            return;
+        }
     };
 
     // User initials helper
@@ -1110,14 +1225,17 @@ export default function AccountContent({ user }: AccountContentProps) {
                                         {clientNotifications.length > 0 ? (
                                             <div className="flex flex-col gap-2.5 sm:gap-3">
                                                 {clientNotifications.map((notif: any) => {
-                                                    const typeConfig: Record<string, { icon: any; bg: string; color: string }> = {
-                                                        ORDER_CREATED: { icon: Package, bg: 'bg-violet-50 text-violet-600', color: 'border-violet-100' },
-                                                        ORDER_PROCESSING: { icon: History, bg: 'bg-blue-50 text-blue-600', color: 'border-blue-100' },
-                                                        ORDER_SHIPPED: { icon: Truck, bg: 'bg-orange-50 text-orange-600', color: 'border-orange-100' },
-                                                        ORDER_DELIVERED: { icon: PackageCheck, bg: 'bg-emerald-50 text-emerald-600', color: 'border-emerald-100' },
-                                                        ORDER_CANCELLED: { icon: XCircle, bg: 'bg-rose-50 text-rose-600', color: 'border-rose-100' },
+                                                    const typeConfig: Record<string, { icon: any; bg: string; color: string; label?: string }> = {
+                                                        ORDER_CREATED: { icon: Package, bg: 'bg-violet-50 text-violet-600', color: 'border-violet-100', label: 'Commande reçue' },
+                                                        ORDER_PROCESSING: { icon: History, bg: 'bg-blue-50 text-blue-600', color: 'border-blue-100', label: 'En préparation' },
+                                                        ORDER_SHIPPED: { icon: Truck, bg: 'bg-orange-50 text-orange-600', color: 'border-orange-100', label: 'En cours de livraison' },
+                                                        ORDER_DELIVERED: { icon: PackageCheck, bg: 'bg-emerald-50 text-emerald-600', color: 'border-emerald-100', label: 'Livrée' },
+                                                        ORDER_CANCELLED: { icon: XCircle, bg: 'bg-rose-50 text-rose-600', color: 'border-rose-100', label: 'Annulée' },
+                                                        ORDER_READY_PICKUP: { icon: Store, bg: 'bg-amber-50 text-amber-600', color: 'border-amber-100', label: 'Prête au retrait' },
+                                                        NEW_ORDER_ADMIN: { icon: ShoppingBag, bg: 'bg-emerald-50 text-emerald-600', color: 'border-emerald-100', label: 'Nouvelle commande' },
+                                                        NEW_CONTACT_MESSAGE: { icon: MessageSquare, bg: 'bg-indigo-50 text-indigo-600', color: 'border-indigo-100', label: 'Nouveau message' },
                                                     };
-                                                    const config = typeConfig[notif.type] || { icon: Bell, bg: 'bg-gray-50 text-gray-600', color: 'border-gray-100' };
+                                                    const config = typeConfig[notif.type] || { icon: Bell, bg: 'bg-gray-50 text-gray-600', color: 'border-gray-100', label: 'Notification' };
                                                     const NotifIcon = config.icon;
                                                     const timeAgo = notif.createdAt
                                                         ? (() => {
@@ -1135,29 +1253,58 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                                     return (
                                                         <motion.div key={notif.id} variants={itemVariants}>
-                                                            <div className={cn(
-                                                                "p-3 sm:p-3.5 rounded-2xl border transition-all duration-200",
-                                                                !notif.isRead
-                                                                    ? "bg-orange-50/40 border-orange-100 shadow-xs"
-                                                                    : "bg-white border-gray-100 hover:border-gray-200"
-                                                            )}>
-                                                                <div className="flex gap-3 items-start">
-                                                                    <div className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border", config.bg, config.color)}>
+                                                            <div
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                onClick={() => handleNotificationClick(notif)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        handleNotificationClick(notif);
+                                                                    }
+                                                                }}
+                                                                className={cn(
+                                                                    "group p-3 sm:p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.99] touch-manipulation relative",
+                                                                    !notif.isRead
+                                                                        ? "bg-orange-50/40 border-orange-200 hover:border-orange-300 hover:bg-orange-50/70 shadow-xs hover:shadow-sm"
+                                                                        : "bg-white border-gray-100 hover:border-orange-200 hover:bg-gray-50/50"
+                                                                )}
+                                                            >
+                                                                <div className="flex gap-3 items-center">
+                                                                    <div className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105", config.bg, config.color)}>
                                                                         <NotifIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
-                                                                        <p className={cn(
-                                                                            "text-xs sm:text-sm line-clamp-1",
-                                                                            !notif.isRead ? "font-bold text-[#1B1F3B]" : "font-medium text-gray-700"
-                                                                        )}>
-                                                                            {notif.title}
-                                                                        </p>
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <p className={cn(
+                                                                                "text-xs sm:text-sm line-clamp-1",
+                                                                                !notif.isRead ? "font-bold text-[#1B1F3B]" : "font-medium text-gray-700"
+                                                                            )}>
+                                                                                {notif.title}
+                                                                            </p>
+                                                                            {!notif.isRead && (
+                                                                                <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-black bg-orange-100 text-orange-700 uppercase tracking-wider">
+                                                                                    Nouveau
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                         <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{notif.message}</p>
-                                                                        <p className="text-[10px] text-gray-400 mt-1 font-medium">{timeAgo}</p>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className="text-[10px] text-gray-400 font-medium">{timeAgo}</span>
+                                                                            <span className="text-[10px] text-gray-300">•</span>
+                                                                            <span className="text-[10px] font-bold text-orange-600 flex items-center gap-0.5 group-hover:underline">
+                                                                                Voir l'élément <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
-                                                                    {!notif.isRead && (
-                                                                        <div className="w-2 h-2 rounded-full bg-orange-500 mt-1 shrink-0 animate-pulse" />
-                                                                    )}
+                                                                    <div className="flex items-center gap-2 shrink-0">
+                                                                        {!notif.isRead && (
+                                                                            <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0 animate-pulse" />
+                                                                        )}
+                                                                        <div className="w-8 h-8 rounded-xl bg-gray-50 group-hover:bg-orange-500 text-gray-400 group-hover:text-white flex items-center justify-center transition-all duration-200">
+                                                                            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </motion.div>
@@ -1191,11 +1338,23 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                         {user.orders && user.orders.length > 0 ? (
                                             <div className="flex flex-col gap-3 sm:gap-4">
-                                                {user.orders.map((order: any) => (
-                                                    <motion.div key={order.id} variants={itemVariants}>
-                                                        <OrderCard order={order} />
-                                                    </motion.div>
-                                                ))}
+                                                {user.orders.map((order: any) => {
+                                                    const isTargeted = Boolean(
+                                                        expandedOrderId && (
+                                                            order.id === expandedOrderId ||
+                                                            order.id.toLowerCase().startsWith(expandedOrderId.toLowerCase()) ||
+                                                            expandedOrderId.toLowerCase().startsWith(order.id.toLowerCase())
+                                                        )
+                                                    );
+                                                    return (
+                                                        <motion.div key={order.id} variants={itemVariants}>
+                                                            <OrderCard 
+                                                                order={order} 
+                                                                isExpandedDefault={isTargeted}
+                                                            />
+                                                        </motion.div>
+                                                    );
+                                                })}
                                             </div>
                                         ) : (
                                             <motion.div variants={itemVariants} className="flex flex-col items-center justify-center py-12 sm:py-16 text-center">
@@ -1829,8 +1988,20 @@ export default function AccountContent({ user }: AccountContentProps) {
 }
 
 // ---------------- ORDER CARD COMPONENT (WITH TRACKING PROGRESS BAR) ----------------
-function OrderCard({ order }: { order: any }) {
-    const [expanded, setExpanded] = useState(false);
+function OrderCard({ 
+    order,
+    isExpandedDefault = false
+}: { 
+    order: any;
+    isExpandedDefault?: boolean;
+}) {
+    const [expanded, setExpanded] = useState(isExpandedDefault);
+
+    useEffect(() => {
+        if (isExpandedDefault) {
+            setExpanded(true);
+        }
+    }, [isExpandedDefault]);
 
     const statusConfig: Record<string, { label: string; color: string; bg: string; step: number; icon: any }> = {
         PENDING: { label: 'En attente', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200/80', step: 1, icon: Clock },
@@ -1853,7 +2024,15 @@ function OrderCard({ order }: { order: any }) {
     ];
 
     return (
-        <div className="bg-white border border-gray-100 hover:border-orange-200/80 rounded-2xl overflow-hidden transition-all duration-200 shadow-xs hover:shadow-sm">
+        <div 
+            id={`order-${order.id}`}
+            className={cn(
+                "bg-white border rounded-2xl overflow-hidden transition-all duration-300 shadow-xs hover:shadow-sm scroll-mt-28",
+                expanded && isExpandedDefault
+                    ? "border-orange-400 ring-2 ring-orange-300/60 shadow-md"
+                    : "border-gray-100 hover:border-orange-200/80"
+            )}
+        >
             <div
                 className="p-3 sm:p-4.5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer select-none touch-manipulation"
                 onClick={() => setExpanded(!expanded)}
@@ -2047,6 +2226,17 @@ function OrderCard({ order }: { order: any }) {
                                     </span>
                                 </div>
                             )}
+
+                            {/* Direct order page tracking link */}
+                            <div className="pt-2 flex items-center justify-end">
+                                <Link
+                                    href={`/order-success?orderId=${order.id}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100/80 text-orange-700 text-[11px] font-bold transition-all active:scale-95"
+                                >
+                                    <span>Page de suivi en direct</span>
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                </Link>
+                            </div>
                         </div>
                     </motion.div>
                 )}

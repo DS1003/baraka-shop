@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
     Search, Download, Eye, Truck, PackageCheck, Clock, XCircle,
     ShoppingCart, Calendar, Zap, History, Loader2, X,
@@ -31,7 +32,21 @@ const paymentStatusConfig: Record<string, { label: string; color: string; dot: s
 };
 
 export default function OrdersPage() {
-    const [searchQuery, setSearchQuery] = useState('');
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center p-12">
+                <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+            </div>
+        }>
+            <OrdersPageContent />
+        </Suspense>
+    );
+}
+
+function OrdersPageContent() {
+    const searchParams = useSearchParams();
+    const urlOrderId = searchParams.get('orderId') || searchParams.get('search');
+    const [searchQuery, setSearchQuery] = useState(urlOrderId ? urlOrderId.substring(0, 8) : '');
     const [activeTab, setActiveTab] = useState('Toutes');
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -53,6 +68,22 @@ export default function OrdersPage() {
         interval: 10_000,
         onNewOrder: handleNewOrder,
     });
+
+    useEffect(() => {
+        if (urlOrderId && orders.length > 0) {
+            const found = orders.find((o: any) => 
+                o.id === urlOrderId || 
+                o.id.toLowerCase().startsWith(urlOrderId.toLowerCase()) ||
+                urlOrderId.toLowerCase().startsWith(o.id.toLowerCase())
+            );
+            if (found) {
+                setSelectedOrder(found);
+                setSearchQuery(found.id.substring(0, 8));
+            } else {
+                setSearchQuery(urlOrderId.substring(0, 8));
+            }
+        }
+    }, [urlOrderId, orders]);
 
     const handleStatusUpdate = async (orderId: string, newStatus: string) => {
         if (updatingOrderId) return;

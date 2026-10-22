@@ -37,7 +37,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { signOut } from 'next-auth/react';
-import { getAdminNotifications, markAllNotificationsRead } from '@/lib/actions/admin-actions';
+import { getAdminNotifications, markAllNotificationsRead, markNotificationRead } from '@/lib/actions/admin-actions';
 import { ImportToast } from '@/features/admin/components/ImportToast';
 import { GlobalSearchModal } from '@/features/admin/components/GlobalSearchModal';
 import { Toaster } from 'sonner';
@@ -363,17 +363,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                                 })()
                                                                 : '';
 
+                                                            const handleAdminNotifClick = async (n: any) => {
+                                                                setIsNotificationsOpen(false);
+                                                                if (!n.isRead) {
+                                                                    setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, isRead: true } : item));
+                                                                    setUnreadCount(prev => Math.max(0, prev - 1));
+                                                                    markNotificationRead(n.id).catch(() => {});
+                                                                }
+                                                                if (n.type === 'NEW_CONTACT_MESSAGE') {
+                                                                    router.push('/admin/messages');
+                                                                } else if (n.orderId) {
+                                                                    router.push(`/admin/orders?orderId=${n.orderId}`);
+                                                                } else {
+                                                                    router.push('/admin/orders');
+                                                                }
+                                                            };
+
                                                             return (
                                                                 <div 
                                                                     key={n.id} 
-                                                                    onClick={() => {
-                                                                        setIsNotificationsOpen(false);
-                                                                        if (n.type === 'NEW_CONTACT_MESSAGE') {
-                                                                            router.push('/admin/messages');
-                                                                        } else if (n.orderId) {
-                                                                            router.push('/admin/orders');
-                                                                        }
-                                                                    }}
+                                                                    onClick={() => handleAdminNotifClick(n)}
                                                                     className={cn(
                                                                         "p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group",
                                                                         !n.isRead && "bg-orange-50/30"

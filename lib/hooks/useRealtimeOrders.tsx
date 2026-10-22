@@ -34,22 +34,53 @@ export function useRealtimeOrders({
     onNewOrderRef.current = onNewOrder;
   }, [onNewOrder]);
 
-  // Initialize audio once
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      audioRef.current = new Audio(NOTIFICATION_SOUND_URL);
-      audioRef.current.volume = 0.5;
-    }
-  }, []);
-
+  // Notification chime synthesizer (zero network latency, never fails or blocks)
   const playNotificationSound = useCallback(() => {
     try {
+      if (typeof window === 'undefined') return;
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+
+        const now = ctx.currentTime;
+
+        // Note 1 (E5 - 659.25 Hz)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, now);
+        gain1.gain.setValueAtTime(0, now);
+        gain1.gain.linearRampToValueAtTime(0.18, now + 0.02);
+        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.35);
+
+        // Note 2 (B5 - 987.77 Hz - carillon style Shopify/Apple)
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(987.77, now + 0.08);
+        gain2.gain.setValueAtTime(0, now + 0.08);
+        gain2.gain.linearRampToValueAtTime(0.22, now + 0.10);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.65);
+        return;
+      }
+
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => {});
       }
     } catch {
-      // Silently fail
+      // Silently fail if audio playback is blocked by browser policy
     }
   }, []);
 

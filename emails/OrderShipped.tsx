@@ -55,11 +55,11 @@ export const OrderShippedEmail = ({
         reached={3}
         note={
           estimatedDelivery ? (
-            <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
+            <table width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ tableLayout: 'fixed', width: '100%' }}>
               <tbody>
                 <tr>
-                  <td style={{ color: '#6B7280', fontSize: '13px' }}>Arrivée estimée</td>
-                  <td style={{ textAlign: 'right', fontWeight: 700, color: '#0B0F19', fontSize: '13px' }}>{estimatedDelivery}</td>
+                  <td style={{ color: '#6B7280', fontSize: '11.5px', lineHeight: '16px', width: '42%' }}>Arrivée estimée</td>
+                  <td style={{ textAlign: 'right', fontWeight: 700, color: '#0B0F19', fontSize: '11.5px', lineHeight: '16px', width: '58%', wordBreak: 'break-word' }}>{estimatedDelivery}</td>
                 </tr>
               </tbody>
             </table>

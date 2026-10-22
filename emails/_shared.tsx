@@ -54,7 +54,7 @@ export const tokens = {
 };
 
 export const SUPPORT_WHATSAPP = '221765149898';
-export const SHOP_URL = 'https://baraka.sn';
+export const SHOP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://baraka.sn';
 
 type Tone = 'accent' | 'success' | 'danger' | 'neutral';
 
@@ -107,18 +107,18 @@ export const Hero = ({
   title: string;
   subtitle: React.ReactNode;
 }) => (
-  <Section style={{ textAlign: 'center', padding: '4px 0 18px 0' }}>
-    <Text style={{ ...eyebrowStyle, color: tokens.ink, margin: '0 0 10px 0' }}>
-      <span style={{ color: toneColor(tone), fontSize: '9px', marginRight: '8px', verticalAlign: '1px' }}>●</span>
+  <Section style={{ textAlign: 'center', padding: '2px 0 10px 0' }}>
+    <Text style={{ ...eyebrowStyle, fontSize: '9.5px', color: tokens.ink, margin: '0 0 5px 0' }}>
+      <span style={{ color: toneColor(tone), fontSize: '8px', marginRight: '6px', verticalAlign: '1px' }}>●</span>
       {eyebrow}
     </Text>
     <Heading
       as="h1"
       className="hero-title"
       style={{
-        margin: '0 0 8px 0',
-        fontSize: '25px',
-        lineHeight: '32px',
+        margin: '0 0 6px 0',
+        fontSize: '20px',
+        lineHeight: '26px',
         fontWeight: 800,
         letterSpacing: '-0.03em',
         color: tokens.ink,
@@ -126,7 +126,7 @@ export const Hero = ({
     >
       {title}
     </Heading>
-    <Text className="hero-subtitle" style={{ margin: '0 auto', maxWidth: '440px', fontSize: '13.5px', lineHeight: '21px', color: tokens.muted }}>
+    <Text className="hero-subtitle" style={{ margin: '0 auto', maxWidth: '420px', fontSize: '12px', lineHeight: '17px', color: tokens.muted }}>
       {subtitle}
     </Text>
   </Section>
@@ -155,36 +155,38 @@ export const StatusCard = ({
 }) => {
   const color = toneColor(tone);
   return (
-    <Section
+    <div
       className="status-card"
       style={{
         backgroundColor: tokens.surface,
         border: `1px solid ${tokens.line}`,
-        borderRadius: '16px',
-        padding: '16px 16px',
+        borderRadius: '14px',
+        padding: '14px 18px',
         margin: '0 0 12px 0',
       }}
     >
-      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
+      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ tableLayout: 'fixed' }}>
         <tbody>
           <tr>
-            <td style={{ verticalAlign: 'top' }}>
-              <div style={{ ...eyebrowStyle, fontSize: '10px', marginBottom: '3px' }}>Commande</div>
+            <td style={{ verticalAlign: 'top', width: '55%' }}>
+              <div style={{ ...eyebrowStyle, fontSize: '9px', marginBottom: '2px' }}>Commande</div>
               <div
+                className="status-ref"
                 style={{
-                  fontSize: '14.5px',
+                  fontSize: '13px',
                   fontWeight: 700,
                   color: tokens.ink,
                   letterSpacing: '0.01em',
                   fontFamily: "'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace",
+                  wordBreak: 'break-all',
                 }}
               >
                 {orderRef}
               </div>
             </td>
-            <td style={{ verticalAlign: 'top', textAlign: 'right' }}>
-              <div style={{ ...eyebrowStyle, fontSize: '10px', marginBottom: '3px' }}>{dateLabel}</div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: tokens.ink }}>{date}</div>
+            <td style={{ verticalAlign: 'top', textAlign: 'right', width: '45%' }}>
+              <div style={{ ...eyebrowStyle, fontSize: '9px', marginBottom: '2px' }}>{dateLabel}</div>
+              <div className="status-date" style={{ fontSize: '12px', fontWeight: 600, color: tokens.ink }}>{date}</div>
             </td>
           </tr>
         </tbody>
@@ -196,16 +198,16 @@ export const StatusCard = ({
           cellPadding={0}
           cellSpacing={0}
           role="presentation"
-          style={{ marginTop: '16px', tableLayout: 'fixed' }}
+          style={{ marginTop: '12px', tableLayout: 'fixed' }}
         >
           <tbody>
             <tr>
               {STEPS.map((_, i) => (
-                <td key={i} style={{ padding: i === 0 ? '0 2px 0 0' : i === STEPS.length - 1 ? '0 0 0 2px' : '0 2px' }}>
+                <td key={i} style={{ padding: i === 0 ? '0 1.5px 0 0' : i === STEPS.length - 1 ? '0 0 0 1.5px' : '0 1.5px' }}>
                   <div
                     style={{
-                      height: '4px',
-                      lineHeight: '4px',
+                      height: '3.5px',
+                      lineHeight: '3.5px',
                       fontSize: '1px',
                       borderRadius: '999px',
                       backgroundColor: i < reached ? color : tokens.track,
@@ -225,13 +227,13 @@ export const StatusCard = ({
                     key={i}
                     className="step-label"
                     style={{
-                      paddingTop: '8px',
+                      paddingTop: '6px',
                       paddingLeft: i === 0 ? 0 : '1px',
                       paddingRight: i === STEPS.length - 1 ? 0 : '1px',
                       verticalAlign: 'top',
                       textAlign: 'center',
-                      fontSize: '10.5px',
-                      lineHeight: '13px',
+                      fontSize: '9.5px',
+                      lineHeight: '12px',
                       fontWeight: isCurrent ? 700 : 600,
                       color: isDone ? tokens.ink : tokens.subtle,
                       wordBreak: 'break-word',
@@ -249,11 +251,11 @@ export const StatusCard = ({
       {note && (
         <div
           style={{
-            marginTop: '12px',
-            paddingTop: '10px',
+            marginTop: '10px',
+            paddingTop: '8px',
             borderTop: `1px solid ${tokens.line}`,
-            fontSize: '12.5px',
-            lineHeight: '18px',
+            fontSize: '11.5px',
+            lineHeight: '16px',
             color: tokens.text,
             wordBreak: 'break-word',
           }}
@@ -261,7 +263,7 @@ export const StatusCard = ({
           {note}
         </div>
       )}
-    </Section>
+    </div>
   );
 };
 
@@ -274,19 +276,20 @@ export interface DetailRow {
 }
 
 export const DetailCard = ({ title, rows }: { title: string; rows: DetailRow[] }) => (
-  <Section
+  <div
     className="detail-card"
     style={{
       border: `1px solid ${tokens.line}`,
-      borderRadius: '16px',
-      padding: '2px 16px 4px 16px',
-      margin: '0 0 10px 0',
+      borderRadius: '14px',
+      padding: '8px 18px 10px 18px',
+      margin: '0 0 12px 0',
+      backgroundColor: '#FFFFFF',
     }}
   >
-    <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
+    <table width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ tableLayout: 'fixed', width: '100%' }}>
       <tbody>
         <tr>
-          <td colSpan={2} style={{ ...eyebrowStyle, fontSize: '10px', padding: '12px 0 6px 0' }}>
+          <td colSpan={2} style={{ ...eyebrowStyle, fontSize: '9.5px', padding: '6px 0 6px 0' }}>
             {title}
           </td>
         </tr>
@@ -295,12 +298,11 @@ export const DetailCard = ({ title, rows }: { title: string; rows: DetailRow[] }
             <td
               className="detail-label"
               style={{
-                width: '1%',
-                whiteSpace: 'nowrap',
-                padding: '9px 12px 9px 0',
+                width: '36%',
+                padding: '7px 8px 7px 0',
                 borderTop: `1px solid ${tokens.line}`,
-                fontSize: '12.5px',
-                lineHeight: '18px',
+                fontSize: '11.5px',
+                lineHeight: '16px',
                 color: tokens.muted,
                 verticalAlign: 'top',
               }}
@@ -310,10 +312,11 @@ export const DetailCard = ({ title, rows }: { title: string; rows: DetailRow[] }
             <td
               className="detail-value"
               style={{
-                padding: '9px 0',
+                width: '64%',
+                padding: '7px 0',
                 borderTop: `1px solid ${tokens.line}`,
-                fontSize: '13px',
-                lineHeight: '18px',
+                fontSize: '12px',
+                lineHeight: '16px',
                 fontWeight: 600,
                 color: tokens.ink,
                 textAlign: 'right',
@@ -328,7 +331,7 @@ export const DetailCard = ({ title, rows }: { title: string; rows: DetailRow[] }
         ))}
       </tbody>
     </table>
-  </Section>
+  </div>
 );
 
 /** Lien téléphone sans le bleu souligné imposé par Gmail */
@@ -344,36 +347,36 @@ export const PhoneLink = ({ phone }: { phone: string }) => (
 export const ItemsList = ({ items, title = 'Articles' }: { items: OrderItem[]; title?: string }) => {
   const count = items.reduce((acc, it) => acc + (it.quantity || 0), 0);
   return (
-    <Section className="items-list-section" style={{ margin: '20px 0 0 0' }}>
-      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ marginBottom: '6px' }}>
+    <Section className="items-list-section" style={{ margin: '14px 0 0 0' }}>
+      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ marginBottom: '4px', tableLayout: 'fixed', width: '100%' }}>
         <tbody>
           <tr>
-            <td style={{ ...eyebrowStyle, fontSize: '10px' }}>{title}</td>
-            <td style={{ textAlign: 'right', fontSize: '11.5px', color: tokens.subtle, fontWeight: 600 }}>
+            <td style={{ ...eyebrowStyle, fontSize: '9.5px' }}>{title}</td>
+            <td style={{ textAlign: 'right', fontSize: '11px', color: tokens.subtle, fontWeight: 600 }}>
               {count} article{count > 1 ? 's' : ''}
             </td>
           </tr>
         </tbody>
       </table>
-      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
+      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ tableLayout: 'fixed', width: '100%' }}>
         <tbody>
           {items.map((item, idx) => (
             <tr key={idx}>
               <td
                 className="item-img-cell"
-                width="56"
-                style={{ width: '56px', padding: '12px 10px 12px 0', borderTop: `1px solid ${tokens.line}`, verticalAlign: 'middle' }}
+                width="44"
+                style={{ width: '44px', padding: '8px 8px 8px 0', borderTop: `1px solid ${tokens.line}`, verticalAlign: 'middle' }}
               >
                 <Img
                   className="item-img"
                   src={item.image || 'https://via.placeholder.com/112'}
-                  width="46"
-                  height="46"
+                  width="36"
+                  height="36"
                   alt={item.name}
                   style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '10px',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
                     objectFit: 'contain',
                     border: `1px solid ${tokens.line}`,
                     backgroundColor: '#FFFFFF',
@@ -381,25 +384,27 @@ export const ItemsList = ({ items, title = 'Articles' }: { items: OrderItem[]; t
                   }}
                 />
               </td>
-              <td style={{ padding: '12px 0', borderTop: `1px solid ${tokens.line}`, verticalAlign: 'middle' }}>
-                <div className="item-title" style={{ fontSize: '13.5px', fontWeight: 600, color: tokens.ink, lineHeight: '18px', letterSpacing: '-0.01em', wordBreak: 'break-word' }}>
+              <td style={{ padding: '8px 6px 8px 0', borderTop: `1px solid ${tokens.line}`, verticalAlign: 'middle' }}>
+                <div className="item-title" style={{ fontSize: '12px', fontWeight: 600, color: tokens.ink, lineHeight: '16px', letterSpacing: '-0.01em', wordBreak: 'break-word' }}>
                   {item.name}
                 </div>
-                <div className="item-meta" style={{ fontSize: '11.5px', color: tokens.muted, marginTop: '2px', lineHeight: '16px' }}>
+                <div className="item-meta" style={{ fontSize: '10.5px', color: tokens.muted, marginTop: '2px', lineHeight: '14px' }}>
                   Qté {item.quantity}
-                  <span style={{ color: tokens.track, margin: '0 5px' }}>|</span>
+                  <span style={{ color: tokens.track, margin: '0 4px' }}>|</span>
                   {formatPrice(item.price)} l&apos;unité
                 </div>
               </td>
               <td
                 className="item-price"
+                width="82"
                 style={{
-                  padding: '12px 0 12px 8px',
+                  width: '82px',
+                  padding: '8px 0',
                   borderTop: `1px solid ${tokens.line}`,
                   verticalAlign: 'middle',
                   textAlign: 'right',
                   whiteSpace: 'nowrap',
-                  fontSize: '13.5px',
+                  fontSize: '12px',
                   fontWeight: 700,
                   color: tokens.ink,
                 }}
@@ -434,15 +439,15 @@ export const Receipt = ({
 }) => {
   const row = (label: string, value: React.ReactNode, color: string = tokens.ink) => (
     <tr>
-      <td style={{ padding: '5px 0', fontSize: '13px', color: tokens.muted }}>{label}</td>
-      <td style={{ padding: '5px 0', fontSize: '13px', fontWeight: 600, color, textAlign: 'right', whiteSpace: 'nowrap' }}>
+      <td style={{ padding: '3.5px 0', fontSize: '11.5px', lineHeight: '16px', color: tokens.muted }}>{label}</td>
+      <td style={{ padding: '3.5px 0', fontSize: '11.5px', lineHeight: '16px', fontWeight: 600, color, textAlign: 'right', whiteSpace: 'nowrap' }}>
         {value}
       </td>
     </tr>
   );
   return (
-    <Section style={{ borderTop: `1px solid ${tokens.line}`, padding: '12px 0 0 0', margin: '0 0 6px 0' }}>
-      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
+    <Section style={{ borderTop: `1px solid ${tokens.line}`, padding: '10px 0 0 0', margin: '0 0 4px 0' }}>
+      <table width="100%" cellPadding={0} cellSpacing={0} role="presentation" style={{ tableLayout: 'fixed', width: '100%' }}>
         <tbody>
           {row('Sous-total', formatPrice(subtotal))}
           {row(
@@ -452,24 +457,24 @@ export const Receipt = ({
           )}
           {discount > 0 && row('Réduction', `− ${formatPrice(discount)}`, tokens.accent)}
           <tr>
-            <td colSpan={2} style={{ padding: '10px 0 0 0' }}>
+            <td colSpan={2} style={{ padding: '8px 0 0 0' }}>
               <div style={{ borderTop: `1px dashed #DDE1E6`, height: '1px', lineHeight: '1px', fontSize: '1px' }}>&nbsp;</div>
             </td>
           </tr>
           <tr>
-            <td style={{ padding: '12px 0 0 0', verticalAlign: 'bottom' }}>
-              <div style={{ fontSize: '14.5px', fontWeight: 700, color: tokens.ink }}>{totalLabel}</div>
-              <div style={{ fontSize: '10.5px', color: tokens.subtle, marginTop: '2px' }}>Francs CFA, TTC</div>
+            <td style={{ padding: '10px 0 0 0', verticalAlign: 'bottom' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: tokens.ink }}>{totalLabel}</div>
+              <div style={{ fontSize: '9.5px', color: tokens.subtle, marginTop: '1px' }}>Francs CFA, TTC</div>
             </td>
             <td
               className="receipt-total"
               style={{
-                padding: '12px 0 0 0',
+                padding: '10px 0 0 0',
                 verticalAlign: 'bottom',
                 textAlign: 'right',
                 whiteSpace: 'nowrap',
-                fontSize: '22px',
-                lineHeight: '26px',
+                fontSize: '18px',
+                lineHeight: '22px',
                 fontWeight: 800,
                 letterSpacing: '-0.02em',
                 color: tokens.ink,
@@ -510,30 +515,30 @@ export const Callout = ({
 }) => {
   const c = CALLOUT_THEMES[theme];
   return (
-    <Section
+    <div
       className="callout-box"
       style={{
         backgroundColor: c.bg,
         border: `1px solid ${c.border}`,
-        borderRadius: '16px',
-        padding: '14px 16px',
-        margin: '18px 0 0 0',
+        borderRadius: '14px',
+        padding: '14px 18px',
+        margin: '14px 0 0 0',
       }}
     >
-      <div style={{ fontSize: '13px', fontWeight: 700, color: c.title, marginBottom: '5px' }}>
-        <span style={{ color: c.dot, fontSize: '9px', marginRight: '8px', verticalAlign: '1px' }}>●</span>
+      <div style={{ fontSize: '12px', fontWeight: 700, color: c.title, marginBottom: '4px' }}>
+        <span style={{ color: c.dot, fontSize: '8px', marginRight: '6px', verticalAlign: '1px' }}>●</span>
         {title}
       </div>
       {typeof amount === 'number' && (
-        <div style={{ margin: '6px 0 8px 0' }}>
-          {amountLabel && <div style={{ fontSize: '11.5px', color: tokens.muted, marginBottom: '2px' }}>{amountLabel}</div>}
-          <div className="receipt-total" style={{ fontSize: '22px', lineHeight: '28px', fontWeight: 800, letterSpacing: '-0.02em', color: tokens.ink }}>
+        <div style={{ margin: '4px 0 6px 0' }}>
+          {amountLabel && <div style={{ fontSize: '10.5px', color: tokens.muted, marginBottom: '1px' }}>{amountLabel}</div>}
+          <div className="receipt-total" style={{ fontSize: '18px', lineHeight: '22px', fontWeight: 800, letterSpacing: '-0.02em', color: tokens.ink }}>
             {formatPrice(amount)}
           </div>
         </div>
       )}
-      <div style={{ fontSize: '12.5px', lineHeight: '19px', color: tokens.text, wordBreak: 'break-word' }}>{children}</div>
-    </Section>
+      <div style={{ fontSize: '11.5px', lineHeight: '16px', color: tokens.text, wordBreak: 'break-word' }}>{children}</div>
+    </div>
   );
 };
 
@@ -558,40 +563,40 @@ export const Actions = ({
     href ||
     (trackingParam
       ? `${SHOP_URL}/order-success?orderId=${encodeURIComponent(trackingParam)}`
-      : `${SHOP_URL}/account`);
+      : `${SHOP_URL}/store`);
 
   const waText = orderRef
     ? `Bonjour Baraka, je vous contacte au sujet de ma commande ${orderRef}.`
     : 'Bonjour Baraka, j’ai une question.';
   return (
-    <Section style={{ textAlign: 'center', margin: '24px 0 4px 0' }}>
+    <Section style={{ textAlign: 'center', margin: '18px 0 2px 0' }}>
       <Button
         href={targetHref}
         className="cta-button"
         style={{
           backgroundColor: tokens.ink,
           color: '#FFFFFF',
-          borderRadius: '14px',
-          fontSize: '14px',
+          borderRadius: '12px',
+          fontSize: '13px',
           fontWeight: 700,
           letterSpacing: '-0.01em',
-          padding: '14px 28px',
+          padding: '11px 22px',
           display: 'inline-block',
           textDecoration: 'none',
         }}
       >
         {label}&nbsp;&nbsp;→
       </Button>
-      <div style={{ marginTop: '14px', fontSize: '12.5px', lineHeight: '19px' }}>
+      <div style={{ marginTop: '10px', fontSize: '11.5px', lineHeight: '16px' }}>
         {secondary ? (
-          <Link href={secondary.href} className="footer-contact-link" style={{ color: tokens.ink, fontWeight: 600, textDecoration: 'none', margin: '0 8px' }}>
+          <Link href={secondary.href} className="footer-contact-link" style={{ color: tokens.ink, fontWeight: 600, textDecoration: 'none', margin: '0 6px' }}>
             {secondary.label}
           </Link>
         ) : null}
         <Link
           href={`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(waText)}`}
           className="footer-contact-link"
-          style={{ color: tokens.success, fontWeight: 600, textDecoration: 'none', margin: '0 8px' }}
+          style={{ color: tokens.success, fontWeight: 600, textDecoration: 'none', margin: '0 6px' }}
         >
           Besoin d&apos;aide ? Écrire sur WhatsApp
         </Link>
