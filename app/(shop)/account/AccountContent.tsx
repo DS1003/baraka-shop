@@ -64,6 +64,23 @@ interface AccountContentProps {
 const VALID_TABS = ['orders', 'notifications', 'wishlist', 'profile', 'settings'] as const;
 type TabType = typeof VALID_TABS[number];
 
+function normalizeOrderId(id: string | null | undefined): string {
+    if (!id) return '';
+    return id.trim().replace(/^#?ORD-/i, '').replace(/^BK-/i, '').toLowerCase();
+}
+
+function isMatchingOrder(orderId: string, targetParam: string | null | undefined): boolean {
+    if (!targetParam || !orderId) return false;
+    const cleanTarget = normalizeOrderId(targetParam);
+    const cleanOrder = normalizeOrderId(orderId);
+    if (!cleanTarget || !cleanOrder) return false;
+    return (
+        cleanOrder === cleanTarget ||
+        cleanOrder.startsWith(cleanTarget) ||
+        cleanTarget.startsWith(cleanOrder)
+    );
+}
+
 export default function AccountContent({ user }: AccountContentProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -78,25 +95,44 @@ export default function AccountContent({ user }: AccountContentProps) {
 
     // Targeted order ID to auto-expand in orders tab
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(() => {
-        return searchParams.get('orderId') || null;
+        const param = searchParams.get('orderId');
+        if (!param) return null;
+        if (user?.orders) {
+            const matched = user.orders.find((o: any) => isMatchingOrder(o.id, param));
+            if (matched) return matched.id;
+        }
+        return param;
     });
 
     // Sync expandedOrderId when searchParams change or when switching to orders tab
     useEffect(() => {
         const orderIdParam = searchParams.get('orderId');
         if (orderIdParam) {
-            setExpandedOrderId(orderIdParam);
-            if (activeTab === 'orders') {
-                const timer = setTimeout(() => {
-                    const el = document.getElementById(`order-${orderIdParam}`);
-                    if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }, 250);
-                return () => clearTimeout(timer);
+            const matchedOrder = user?.orders?.find((o: any) => isMatchingOrder(o.id, orderIdParam));
+            const targetId = matchedOrder ? matchedOrder.id : orderIdParam;
+            setExpandedOrderId(targetId);
+
+            if (activeTab !== 'orders') {
+                setActiveTab('orders');
             }
+
+            let attempts = 0;
+            const maxAttempts = 6;
+            const tryScroll = () => {
+                const el = document.getElementById(`order-${targetId}`) || 
+                           (matchedOrder ? document.getElementById(`order-${normalizeOrderId(matchedOrder.id)}`) : null);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(tryScroll, 120);
+                }
+            };
+
+            const timer = setTimeout(tryScroll, 200);
+            return () => clearTimeout(timer);
         }
-    }, [searchParams, activeTab]);
+    }, [searchParams, activeTab, user?.orders]);
 
     // Mobile dropdown selector state
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -1340,11 +1376,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                             <div className="flex flex-col gap-3 sm:gap-4">
                                                 {user.orders.map((order: any) => {
                                                     const isTargeted = Boolean(
-                                                        expandedOrderId && (
-                                                            order.id === expandedOrderId ||
-                                                            order.id.toLowerCase().startsWith(expandedOrderId.toLowerCase()) ||
-                                                            expandedOrderId.toLowerCase().startsWith(order.id.toLowerCase())
-                                                        )
+                                                        expandedOrderId && isMatchingOrder(order.id, expandedOrderId)
                                                     );
                                                     return (
                                                         <motion.div key={order.id} variants={itemVariants}>
@@ -2026,10 +2058,11 @@ function OrderCard({
     return (
         <div 
             id={`order-${order.id}`}
+            data-order-id={order.id}
             className={cn(
                 "bg-white border rounded-2xl overflow-hidden transition-all duration-300 shadow-xs hover:shadow-sm scroll-mt-28",
-                expanded && isExpandedDefault
-                    ? "border-orange-400 ring-2 ring-orange-300/60 shadow-md"
+                isExpandedDefault
+                    ? "border-orange-500 ring-4 ring-orange-500/20 shadow-md shadow-orange-500/10"
                     : "border-gray-100 hover:border-orange-200/80"
             )}
         >
@@ -2050,6 +2083,12 @@ function OrderCard({
                                 <StatusIcon className="w-3 h-3" />
                                 {config.label}
                             </div>
+                            {isExpandedDefault && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-200 flex items-center gap-1">
+                                    <Sparkles className="w-2.5 h-2.5 text-orange-500" />
+                                    Commande ciblée
+                                </span>
+                            )}
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
                             <Clock className="w-3 h-3 shrink-0" />

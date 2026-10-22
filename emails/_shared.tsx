@@ -54,7 +54,9 @@ export const tokens = {
 };
 
 export const SUPPORT_WHATSAPP = '221765149898';
-export const SHOP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'https://baraka.sn';
+export const SHOP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.NODE_ENV === 'production' ? 'https://baraka.sn' : (process.env.NEXTAUTH_URL || 'http://localhost:3000'));
 
 type Tone = 'accent' | 'success' | 'danger' | 'neutral';
 
@@ -562,8 +564,8 @@ export const Actions = ({
   const targetHref =
     href ||
     (trackingParam
-      ? `${SHOP_URL}/order-success?orderId=${encodeURIComponent(trackingParam)}`
-      : `${SHOP_URL}/store`);
+      ? `${SHOP_URL}/track?orderId=${encodeURIComponent(trackingParam)}`
+      : `${SHOP_URL}/boutique`);
 
   const waText = orderRef
     ? `Bonjour Baraka, je vous contacte au sujet de ma commande ${orderRef}.`

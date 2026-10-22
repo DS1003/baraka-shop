@@ -4,11 +4,24 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import AccountContent from "./AccountContent";
 
-export default async function AccountPage() {
+export default async function AccountPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
     const session = await auth();
 
     if (!session?.user?.id) {
-        redirect("/login?callbackUrl=/account");
+        const resolvedParams = searchParams ? await searchParams : {};
+        const query = new URLSearchParams();
+        if (resolvedParams) {
+            Object.entries(resolvedParams).forEach(([k, v]) => {
+                if (typeof v === 'string') query.set(k, v);
+            });
+        }
+        const queryString = query.toString();
+        const callbackUrl = queryString ? `/account?${queryString}` : '/account';
+        redirect(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
     }
 
     const userData = await prisma.user.findUnique({
