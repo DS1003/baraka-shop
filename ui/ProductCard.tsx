@@ -4,7 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Heart, ShoppingCart, Star, Zap, Clock } from 'lucide-react'
-import { cn, getOptimizedImageUrl } from '@/lib/utils'
+import { cn, getOptimizedImageUrl, formatPrice, formatNumber } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
 import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
@@ -92,8 +92,8 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     </p>
                     <div className="flex items-center justify-between mt-auto">
                         <div className="flex flex-col">
-                            {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-300 text-[10px] line-through font-bold">{(product.oldPrice || product.compareAtPrice).toLocaleString()} FCFA</span>}
-                            <span className="text-xl font-black text-[#1B1F3B] tracking-tighter">{(product.price ?? 0).toLocaleString()} <span className="text-[10px]">FCFA</span></span>
+                            {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-300 text-[10px] line-through font-bold tabular-nums">{formatPrice(product.oldPrice || product.compareAtPrice)}</span>}
+                            <span className="text-xl font-black text-[#1B1F3B] tracking-normal tabular-nums">{formatNumber(product.price ?? 0)} <span className="text-[10px]">FCFA</span></span>
                         </div>
                         {customBadge === "Bientôt disponible" ? (
                             <span className="flex items-center gap-2 bg-amber-500 text-white px-6 h-12 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-amber-500/20">
@@ -234,12 +234,12 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                 <div className="mt-auto pt-1.5 sm:pt-2 md:pt-3 flex items-center justify-between">
                     <div className="flex flex-col min-w-0 pr-1">
                         {(product.oldPrice || product.compareAtPrice) && (
-                            <span className="text-gray-400 text-[7px] sm:text-[8px] md:text-[10px] line-through font-bold truncate leading-none">
-                                {(product.oldPrice || product.compareAtPrice).toLocaleString()} FCFA
+                            <span className="text-gray-400 text-[7px] sm:text-[8px] md:text-[10px] line-through font-bold truncate leading-none tabular-nums">
+                                {formatPrice(product.oldPrice || product.compareAtPrice)}
                             </span>
                         )}
-                        <span className="text-[#1B1F3B] font-black text-[11.5px] sm:text-[13px] md:text-[16px] tracking-tight truncate leading-tight">
-                            {(product.price ?? 0).toLocaleString()} <span className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
+                        <span className="text-[#1B1F3B] font-black text-[11.5px] sm:text-[13px] md:text-[16px] tracking-normal truncate leading-tight tabular-nums">
+                            {formatNumber(product.price ?? 0)} <span className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
                         </span>
                     </div>
 

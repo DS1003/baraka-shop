@@ -32,14 +32,19 @@ declare global {
     var prismaGlobal: PrismaClient | undefined;
 }
 
-// Invalidate stale in-memory singleton if schema models or new fields (like deactivationReason) are missing
+// Invalidate stale in-memory singleton if schema models or new fields (like deactivationReason or shippingAddress) are missing
 if (globalThis.prismaGlobal) {
     const runtimeFields = (globalThis.prismaGlobal as any)._runtimeDataModel?.models?.Product?.fields;
     const hasDeactivationReason = Array.isArray(runtimeFields)
         ? runtimeFields.some((f: any) => f.name === 'deactivationReason')
         : (runtimeFields && 'deactivationReason' in runtimeFields);
 
-    if (!(globalThis.prismaGlobal as any).contactMessage || !hasDeactivationReason) {
+    const orderFields = (globalThis.prismaGlobal as any)._runtimeDataModel?.models?.Order?.fields;
+    const hasShippingAddress = Array.isArray(orderFields)
+        ? orderFields.some((f: any) => f.name === 'shippingAddress')
+        : (orderFields && 'shippingAddress' in orderFields);
+
+    if (!(globalThis.prismaGlobal as any).contactMessage || !hasDeactivationReason || !hasShippingAddress) {
         globalThis.prismaGlobal = undefined;
     }
 }

@@ -20,6 +20,7 @@ export interface OrderItem {
 export interface OrderShippedPayload {
   to: string;
   orderRef: string;
+  orderId?: string;
   clientName: string;
   date: string;
   deliveryAddress?: string;

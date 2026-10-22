@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Zap, ShieldCheck, Truck } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { formatPrice } from '@/lib/utils'
 
 interface MiniCartProps {
     isOpen: boolean
@@ -118,8 +119,8 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                                                         <Plus className="w-2.5 h-2.5" />
                                                     </button>
                                                 </div>
-                                                <span className="text-xs font-black text-orange-600 tracking-tight">
-                                                    {(item.price * item.qty).toLocaleString()} FCFA
+                                                <span className="text-xs font-black text-orange-600 tracking-normal tabular-nums">
+                                                    {formatPrice(item.price * item.qty)}
                                                 </span>
                                             </div>
                                         </div>
@@ -152,7 +153,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                                 <div className="space-y-2 text-xs">
                                     <div className="flex justify-between items-center text-slate-500 font-medium">
                                         <span>Sous-total</span>
-                                        <span className="text-slate-800 font-bold">{subtotal.toLocaleString()} FCFA</span>
+                                        <span className="text-slate-800 font-bold tabular-nums">{formatPrice(subtotal)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-slate-500 font-medium">
                                         <span>Livraison</span>
@@ -160,8 +161,8 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps) {
                                     </div>
                                     <div className="pt-2 border-t border-slate-200/80 flex justify-between items-baseline">
                                         <span className="text-xs font-black text-[#1B1F3B] uppercase tracking-wider">Total</span>
-                                        <span className="text-xl font-black text-orange-600 tracking-tight">
-                                            {subtotal.toLocaleString()} FCFA
+                                        <span className="text-xl font-black text-orange-600 tracking-normal tabular-nums">
+                                            {formatPrice(subtotal)}
                                         </span>
                                     </div>
                                 </div>

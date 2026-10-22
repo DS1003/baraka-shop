@@ -122,8 +122,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 setNotifications(data.notifications || []);
                 setUnreadCount(data.unreadCount || 0);
             }
-        } catch (err) {
-            console.error('Notification fetch error:', err);
+        } catch (err: any) {
+            if (err?.name !== 'AbortError') {
+                console.warn('Notification fetch notice:', err?.message || err);
+            }
         }
     }, []);
 

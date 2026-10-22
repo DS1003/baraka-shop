@@ -24,7 +24,7 @@ import {
     Radio,
     RefreshCw
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatNumber, formatPrice } from '@/lib/utils';
 import { getDashboardStats, getCategoryRevenue, getRecentActivity } from '@/lib/actions/admin-actions';
 import {
     LineChart,
@@ -191,7 +191,7 @@ export default function AdminDashboard() {
                 <KPICard
                     icon={CreditCard}
                     label="Volume d'affaires"
-                    value={`${stats?.revenue?.total?.toLocaleString() || 0} F`}
+                    value={`${formatNumber(stats?.revenue?.total || 0)} F`}
                     percentage={stats?.revenue?.trend || "+0%"}
                     sparkData={[10, 40, 20, 50, 30, 70, 45, 80]}
                     color="orange"
@@ -199,7 +199,7 @@ export default function AdminDashboard() {
                 <KPICard
                     icon={ShoppingBag}
                     label="Commandes reçues"
-                    value={stats?.orders?.total || 0}
+                    value={formatNumber(stats?.orders?.total || 0)}
                     percentage={stats?.orders?.trend || "+0%"}
                     sparkData={[30, 20, 40, 30, 60, 40, 70, 65]}
                     color="emerald"
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
                 <KPICard
                     icon={Users}
                     label="Utilisateurs"
-                    value={stats?.customers?.total || 0}
+                    value={formatNumber(stats?.customers?.total || 0)}
                     percentage={stats?.customers?.trend || "+0%"}
                     sparkData={[80, 70, 75, 60, 65, 50, 55, 45]}
                     color="rose"
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
                 <KPICard
                     icon={Activity}
                     label="Panier Moyen"
-                    value={`${Math.round(stats?.avgBasket?.total || 0).toLocaleString()} F`}
+                    value={`${formatNumber(Math.round(stats?.avgBasket?.total || 0))} F`}
                     percentage={stats?.avgBasket?.trend || "+0%"}
                     sparkData={[20, 30, 25, 40, 35, 50, 55, 60]}
                     color="violet"
@@ -279,7 +279,7 @@ export default function AdminDashboard() {
                                 <Tooltip
                                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)', padding: '12px 16px', fontWeight: 'bold' }}
                                     itemStyle={{ color: '#1E293B', fontWeight: 900 }}
-                                    formatter={(value: any) => [chartMode === 'revenues' ? `${Number(value).toLocaleString()} F` : value, chartMode === 'revenues' ? 'Revenu' : 'Commandes']}
+                                    formatter={(value: any) => [chartMode === 'revenues' ? `${formatNumber(value)} F` : formatNumber(value), chartMode === 'revenues' ? 'Revenu' : 'Commandes']}
                                 />
                                 <Area
                                     type="monotone"
@@ -320,14 +320,14 @@ export default function AdminDashboard() {
                                     })}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value: any) => [`${Number(value).toLocaleString()} F`, 'Ventes']}
+                                    formatter={(value: any) => [`${formatNumber(value)} F`, 'Ventes']}
                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Global</span>
-                            <span className="text-[22px] font-black text-slate-900 truncate px-4">{totalCategoryRev >= 1000000 ? (totalCategoryRev / 1000000).toFixed(1) + 'M' : totalCategoryRev >= 1000 ? (totalCategoryRev / 1000).toFixed(1) + 'k' : totalCategoryRev.toLocaleString()}</span>
+                            <span className="text-[22px] font-black text-slate-900 truncate px-4">{totalCategoryRev >= 1000000 ? (totalCategoryRev / 1000000).toFixed(1) + 'M' : totalCategoryRev >= 1000 ? (totalCategoryRev / 1000).toFixed(1) + 'k' : formatNumber(totalCategoryRev)}</span>
                         </div>
                     </div>
 
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
                                     color={colors[i % colors.length]}
                                     label={cat.name}
                                     percentage={`${Math.round((cat.value / totalCategoryRev) * 100)}%`}
-                                    value={`${cat.value.toLocaleString()} F`}
+                                    value={`${formatNumber(cat.value)} F`}
                                 />
                             );
                         }) : (
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
                                     <p className="text-[12px] text-slate-400 font-medium">{new Date(act.time).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}</p>
                                 </div>
                             </div>
-                            {act.amount && <span className="text-[14px] font-black text-slate-900">{act.amount.toLocaleString()} F</span>}
+                            {act.amount && <span className="text-[14px] font-black text-slate-900 tabular-nums">{formatNumber(act.amount)} F</span>}
                         </div>
                     ))}
                     {recentActivities.length === 0 && (
@@ -416,7 +416,7 @@ function KPICard({ icon: Icon, label, value, percentage, sparkData, isNegative, 
             </div>
             <div className="space-y-1.5 relative z-10">
                 <p className="text-[13px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-                <h4 className="text-[28px] font-black text-slate-900 tracking-tighter leading-none">{value}</h4>
+                <h4 className="text-[28px] font-black text-slate-900 tracking-normal tabular-nums leading-none">{value}</h4>
             </div>
             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-slate-50 rounded-full blur-3xl group-hover:bg-orange-50/50 transition-colors duration-700" />
         </motion.div>

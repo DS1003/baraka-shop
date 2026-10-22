@@ -22,7 +22,7 @@ import {
     Headphones,
 } from 'lucide-react'
 import { Button } from '@/ui/Button'
-import { cn } from '@/lib/utils'
+import { cn, formatPrice, formatNumber } from '@/lib/utils'
 
 export const CHECKOUT_STEPS = [
     { id: 1, label: 'Mode & Zone', shortLabel: 'Livraison', icon: Truck },
@@ -319,8 +319,8 @@ export function MobileOrderSummaryAccordion({
                     </span>
                     <ChevronDown className={cn('w-4 h-4 text-slate-400 transition-transform duration-200', isOpen && 'rotate-180')} />
                 </div>
-                <span className="text-sm font-black text-orange-600 shrink-0">
-                    {total.toLocaleString()} FCFA
+                <span className="text-sm font-black text-orange-600 shrink-0 tabular-nums">
+                    {formatPrice(total)}
                 </span>
             </button>
 
@@ -342,8 +342,8 @@ export function MobileOrderSummaryAccordion({
                                         <p className="font-bold text-slate-800 truncate">{item.name}</p>
                                         <p className="text-[11px] text-slate-400">Qté: {item.qty}</p>
                                     </div>
-                                    <span className="font-black text-slate-900 shrink-0">
-                                        {(item.price * item.qty).toLocaleString()} F
+                                    <span className="font-black text-slate-900 shrink-0 tabular-nums">
+                                        {formatNumber(item.price * item.qty)} F
                                     </span>
                                 </div>
                             ))}
@@ -352,12 +352,12 @@ export function MobileOrderSummaryAccordion({
                         <div className="space-y-1.5 pt-2 border-t border-slate-200/60 text-xs">
                             <div className="flex justify-between text-slate-500">
                                 <span>Sous-total</span>
-                                <span>{subtotal.toLocaleString()} FCFA</span>
+                                <span className="tabular-nums">{formatPrice(subtotal)}</span>
                             </div>
                             {discount > 0 && (
                                 <div className="flex justify-between text-emerald-600 font-bold">
                                     <span>Réduction</span>
-                                    <span>-{discount.toLocaleString()} FCFA</span>
+                                    <span className="tabular-nums">-{formatPrice(discount)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between items-center text-slate-500">
@@ -367,7 +367,7 @@ export function MobileOrderSummaryAccordion({
                                 ) : isFreeShipping ? (
                                     <span className="font-bold text-emerald-600">Offerte</span>
                                 ) : selectedZoneName ? (
-                                    <span className="font-bold text-slate-800">{shipping.toLocaleString('fr-FR')} FCFA</span>
+                                    <span className="font-bold text-slate-800 tabular-nums">{formatPrice(shipping)}</span>
                                 ) : (
                                     <span className="text-slate-400 italic text-[11px]">À calculer</span>
                                 )}
@@ -433,8 +433,8 @@ export function CheckoutOrderSummary({
                             <p className="text-[11px] font-bold text-white/95 line-clamp-1">
                                 {item.name}
                             </p>
-                            <p className="text-xs font-black text-orange-400 mt-0.5">
-                                {(item.price * item.qty).toLocaleString()} FCFA
+                            <p className="text-xs font-black text-orange-400 mt-0.5 tabular-nums">
+                                {formatPrice(item.price * item.qty)}
                             </p>
                         </div>
                         <span className="text-[11px] font-black text-white/40 shrink-0">×{item.qty}</span>
@@ -446,13 +446,13 @@ export function CheckoutOrderSummary({
             <div className="flex flex-col gap-3 text-white relative z-10 text-sm">
                 <div className="flex justify-between text-slate-300 font-medium">
                     <span>Sous-total</span>
-                    <span>{subtotal.toLocaleString('fr-FR')} FCFA</span>
+                    <span className="tabular-nums">{formatPrice(subtotal)}</span>
                 </div>
 
                 {discount > 0 && couponCode && (
                     <div className="flex justify-between font-bold text-emerald-400">
                         <span>Code promo ({couponCode})</span>
-                        <span>-{discount.toLocaleString('fr-FR')} FCFA</span>
+                        <span className="tabular-nums">-{formatPrice(discount)}</span>
                     </div>
                 )}
 
@@ -480,8 +480,8 @@ export function CheckoutOrderSummary({
                             Offerte
                         </span>
                     ) : selectedZoneName ? (
-                        <span className="text-xs font-bold text-white">
-                            {shipping.toLocaleString('fr-FR')} FCFA
+                        <span className="text-xs font-bold text-white tabular-nums">
+                            {formatPrice(shipping)}
                         </span>
                     ) : (
                         <span className="text-xs font-medium text-slate-400 italic">
@@ -494,8 +494,8 @@ export function CheckoutOrderSummary({
 
                 <div className="flex justify-between items-baseline pt-1">
                     <span className="text-xs font-black uppercase tracking-widest text-slate-200">Total Net</span>
-                    <span className="text-2xl font-black tracking-tight text-orange-500">
-                        {total.toLocaleString('fr-FR')} <span className="text-xs text-orange-300">FCFA</span>
+                    <span className="text-2xl font-black tracking-normal tabular-nums text-orange-500">
+                        {formatNumber(total)} <span className="text-xs text-orange-300">FCFA</span>
                     </span>
                 </div>
             </div>
@@ -533,8 +533,8 @@ export function CheckoutMobileBar({
                         Étape {step}/4 · {itemCount} art.
                     </span>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-black text-[#1B1F3B] tracking-tight truncate">
-                            {total.toLocaleString()}
+                        <span className="text-lg font-black text-[#1B1F3B] tracking-normal tabular-nums truncate">
+                            {formatNumber(total)}
                         </span>
                         <span className="text-xs font-black text-orange-600">FCFA</span>
                     </div>

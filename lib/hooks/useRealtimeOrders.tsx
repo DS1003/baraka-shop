@@ -126,8 +126,10 @@ export function useRealtimeOrders({
       setOrders(data);
       setIsLive(true);
       setLastRefresh(new Date());
-    } catch (err) {
-      console.error('Realtime polling error:', err);
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        console.warn('Realtime polling notice:', err?.message || err);
+      }
       setIsLive(false);
     } finally {
       setLoading(false);

@@ -69,3 +69,34 @@ export function getOptimizedImageUrl(url?: string | null, width: number = 500): 
     }
     return trimmed;
 }
+
+/**
+ * Formate un nombre avec un séparateur de milliers nettement visible.
+ * Utilise un espace insécable (\u00A0) de largeur normale au lieu du narrow no-break space (\u202F)
+ * qui s'écrase dans les polices web et les styles de typographie moderne.
+ * 
+ * Exemples :
+ *   formatNumber(10000)   => "10 000"
+ *   formatNumber(100000)  => "100 000"
+ *   formatNumber(6113500) => "6 113 500"
+ */
+export function formatNumber(amount: any): string {
+    if (amount == null || amount === '') return '0';
+    const cleanStr = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/[\s\u00A0\u202F]/g, ''));
+    if (isNaN(cleanStr as number)) return '0';
+    const rounded = Math.round(Number(cleanStr));
+    return rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+}
+
+/**
+ * Formate un montant monétaire en FCFA (ou devise personnalisée) avec un espacement clair.
+ * 
+ * Exemples :
+ *   formatPrice(70000)          => "70 000 FCFA"
+ *   formatPrice(6113500, 'F')   => "6 113 500 F"
+ *   formatPrice(100000)         => "100 000 FCFA"
+ */
+export function formatPrice(amount: any, currency: string = 'FCFA'): string {
+    const formatted = formatNumber(amount);
+    return currency ? `${formatted}\u00A0${currency}` : formatted;
+}

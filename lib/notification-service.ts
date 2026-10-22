@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { rememberCache, invalidatePrefix } from '@/lib/redis';
+import { formatPrice } from '@/lib/utils';
 
 // ============================================
 // STATUS MESSAGE CONFIG
@@ -21,7 +22,7 @@ const STATUS_MESSAGES: Record<string, StatusMessageConfig> = {
         clientTitle: '🔧 Commande en traitement',
         clientMessage: (ref) => `Votre commande ${ref} est en cours de préparation par notre équipe. Nous vous tiendrons informé de l'avancement.`,
         adminTitle: (name) => `Commande de ${name} en traitement`,
-        adminMessage: (ref, total) => `La commande ${ref} (${total.toLocaleString()} FCFA) est passée en traitement.`,
+        adminMessage: (ref, total) => `La commande ${ref} (${formatPrice(total)}) est passée en traitement.`,
     },
     SHIPPED: {
         type: 'ORDER_SHIPPED',
@@ -31,7 +32,7 @@ const STATUS_MESSAGES: Record<string, StatusMessageConfig> = {
                 ? `Bonne nouvelle ! Votre commande ${ref} est prête pour le retrait en boutique. Rendez-vous en magasin avec votre numéro de commande.`
                 : `Votre commande ${ref} a été expédiée et est en cours de livraison. Elle arrivera bientôt !`,
         adminTitle: (name) => `Commande de ${name} expédiée`,
-        adminMessage: (ref, total) => `La commande ${ref} (${total.toLocaleString()} FCFA) a été expédiée.`,
+        adminMessage: (ref, total) => `La commande ${ref} (${formatPrice(total)}) a été expédiée.`,
     },
     DELIVERED: {
         type: 'ORDER_DELIVERED',
@@ -41,21 +42,21 @@ const STATUS_MESSAGES: Record<string, StatusMessageConfig> = {
                 ? `Votre commande ${ref} a été récupérée avec succès. Merci pour votre confiance !`
                 : `Votre commande ${ref} a été livrée avec succès. Merci pour votre confiance et à bientôt !`,
         adminTitle: (name) => `Commande de ${name} livrée`,
-        adminMessage: (ref, total) => `La commande ${ref} (${total.toLocaleString()} FCFA) a été livrée avec succès.`,
+        adminMessage: (ref, total) => `La commande ${ref} (${formatPrice(total)}) a été livrée avec succès.`,
     },
     CANCELLED: {
         type: 'ORDER_CANCELLED',
         clientTitle: '❌ Commande annulée',
         clientMessage: (ref) => `Votre commande ${ref} a été annulée. Si vous avez des questions, n'hésitez pas à nous contacter.`,
         adminTitle: (name) => `Commande de ${name} annulée`,
-        adminMessage: (ref, total) => `La commande ${ref} (${total.toLocaleString()} FCFA) a été annulée.`,
+        adminMessage: (ref, total) => `La commande ${ref} (${formatPrice(total)}) a été annulée.`,
     },
     PENDING: {
         type: 'ORDER_CREATED',
         clientTitle: '📦 Commande confirmée',
         clientMessage: (ref) => `Votre commande ${ref} a bien été enregistrée. Notre équipe va la traiter dans les plus brefs délais.`,
         adminTitle: (name) => `Nouvelle commande de ${name}`,
-        adminMessage: (ref, total) => `Nouvelle commande ${ref} reçue pour un montant de ${total.toLocaleString()} FCFA.`,
+        adminMessage: (ref, total) => `Nouvelle commande ${ref} reçue pour un montant de ${formatPrice(total)}.`,
     },
 };
 
@@ -112,15 +113,25 @@ export async function notifyClientOrderStatusChange(
 
         // Trigger transactional emails according to status change
         if (order.user.email) {
-            const items = order.items.map(item => ({
-                name: item.product.name,
-                quantity: item.quantity,
-                price: item.price,
-                image: item.product.images?.[0] || 'https://via.placeholder.com/60',
-            }));
-
             const { headerLogo } = await getSiteLogos();
-            const logoUrl = headerLogo || undefined;
+            const baseUrl = process.env.NEXTAUTH_URL || 'https://baraka.sn';
+            let logoUrl: string | undefined = undefined;
+            if (headerLogo) {
+                logoUrl = headerLogo.startsWith('http') ? headerLogo : `${baseUrl}${headerLogo.startsWith('/') ? '' : '/'}${headerLogo}`;
+            }
+
+            const items = order.items.map(item => {
+                let img = item.product.images?.[0] || 'https://via.placeholder.com/60';
+                if (img && !img.startsWith('http')) {
+                    img = `${baseUrl}${img.startsWith('/') ? '' : '/'}${img}`;
+                }
+                return {
+                    name: item.product.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    image: img,
+                };
+            });
 
             const formatPaymentMethodName = (method?: string | null): string => {
                 if (!method) return 'Paiement à la livraison';
@@ -133,14 +144,28 @@ export async function notifyClientOrderStatusChange(
             };
 
             const pStatus = (order as any).paymentStatus || (newStatus === 'DELIVERED' ? 'PAID' : 'PENDING');
+            const clientName = (order as any).customerName || order.user.username || 'Client';
+
+            let deliveryAddress: string | undefined = undefined;
+            if (order.deliveryMethod === 'retrait') {
+                deliveryAddress = 'Retrait en boutique Baraka Shop';
+            } else if ((order as any).shippingAddress) {
+                const zoneInfo = order.deliveryZone ? ` — ${order.deliveryZone}` : '';
+                deliveryAddress = `${(order as any).shippingAddress}${zoneInfo}`;
+            } else if (order.user.address) {
+                deliveryAddress = order.user.address;
+            }
+
+            const phone = (order as any).shippingPhone || order.user.phone || undefined;
 
             const emailPayload = {
                 to: order.user.email,
                 orderRef: orderRef,
-                clientName: order.user.username || 'Client',
+                orderId: order.id,
+                clientName: clientName,
                 date: order.createdAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-                deliveryAddress: order.user.address || undefined,
-                phone: order.user.phone || undefined,
+                deliveryAddress: deliveryAddress,
+                phone: phone,
                 deliveryMethod: order.deliveryMethod === 'retrait' ? 'Retrait en boutique' : 'Livraison à domicile',
                 paymentMethod: formatPaymentMethodName(order.paymentMethod),
                 paymentStatus: pStatus,
@@ -187,7 +212,7 @@ export async function notifyAdminsNewOrder(
             userId: admin.id,
             type: 'NEW_ORDER_ADMIN',
             title: `🛒 Nouvelle commande de ${clientName}`,
-            message: `Commande ${orderRef} reçue — ${total.toLocaleString()} FCFA`,
+            message: `Commande ${orderRef} reçue — ${formatPrice(total)}`,
             orderId: orderId,
         }));
 

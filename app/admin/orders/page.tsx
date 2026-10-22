@@ -5,11 +5,12 @@ import {
     Search, Download, Eye, Truck, PackageCheck, Clock, XCircle,
     ShoppingCart, Calendar, Zap, History, Loader2, X,
     MapPin, Phone, User, RefreshCw, Inbox,
-    CheckCircle2, Printer, CreditCard, ChevronDown
+    CheckCircle2, Printer, CreditCard, ChevronDown,
+    Edit3, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { updateOrderStatus, bulkUpdateOrderStatuses, updateOrderPaymentStatus } from '@/lib/actions/admin-actions';
+import { cn, formatNumber, formatPrice } from '@/lib/utils';
+import { updateOrderStatus, bulkUpdateOrderStatuses, updateOrderPaymentStatus, updateOrderShippingAddress } from '@/lib/actions/admin-actions';
 import { toast } from 'sonner';
 import { useRealtimeOrders } from '@/lib/hooks/useRealtimeOrders';
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
@@ -37,6 +38,10 @@ export default function OrdersPage() {
     const [isUpdatingBulk, setIsUpdatingBulk] = useState(false);
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
     const [updatingPaymentOrderId, setUpdatingPaymentOrderId] = useState<string | null>(null);
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [addressInput, setAddressInput] = useState('');
+    const [phoneInput, setPhoneInput] = useState('');
+    const [isSavingAddress, setIsSavingAddress] = useState(false);
 
     const handleNewOrder = useCallback((order: any) => {}, []);
 
@@ -102,6 +107,46 @@ export default function OrdersPage() {
             toast.error("La connexion au serveur a échoué.");
         } finally {
             setUpdatingPaymentOrderId(null);
+        }
+    };
+
+    const startEditingAddress = (order: any) => {
+        setAddressInput(order.shippingAddress || order.user?.address || '');
+        setPhoneInput(order.shippingPhone || order.user?.phone || '');
+        setIsEditingAddress(true);
+    };
+
+    const handleSaveAddress = async () => {
+        if (!selectedOrder) return;
+        if (!addressInput.trim()) {
+            toast.error('Veuillez renseigner une adresse valide.');
+            return;
+        }
+        setIsSavingAddress(true);
+        try {
+            const res = await updateOrderShippingAddress(selectedOrder.id, addressInput.trim(), phoneInput.trim());
+            if (res.success) {
+                const newAddr = res.shippingAddress;
+                const newPhone = res.shippingPhone;
+                setSelectedOrder((prev: any) => ({
+                    ...prev,
+                    shippingAddress: newAddr,
+                    shippingPhone: newPhone || prev.shippingPhone,
+                }));
+                setOrders((prev) => prev.map((o) => o.id === selectedOrder.id ? {
+                    ...o,
+                    shippingAddress: newAddr,
+                    shippingPhone: newPhone || o.shippingPhone,
+                } : o));
+                setIsEditingAddress(false);
+                toast.success('Adresse de livraison mise à jour avec succès.');
+            } else {
+                toast.error(res.error || 'Erreur lors de la mise à jour');
+            }
+        } catch {
+            toast.error('Erreur de connexion au serveur.');
+        } finally {
+            setIsSavingAddress(false);
         }
     };
 
@@ -570,10 +615,10 @@ export default function OrdersPage() {
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             Destinataire / Client
                         </div>
-                        <div class="client-name">${order.user.username || 'Client'}</div>
+                        <div class="client-name">${order.customerName || order.user.username || 'Client'}</div>
                         <div class="client-details">
                             <div><strong>Email :</strong> ${order.user.email}</div>
-                            <div><strong>Téléphone :</strong> <span style="font-weight: 700; color: #0F172A;">${order.user.phone || 'Non renseigné'}</span></div>
+                            <div><strong>Téléphone :</strong> <span style="font-weight: 700; color: #0F172A;">${order.shippingPhone || order.user.phone || 'Non renseigné'}</span></div>
                         </div>
                     </div>
 
@@ -590,8 +635,8 @@ export default function OrdersPage() {
                                     ${isDelivery ? '🚚 Livraison à domicile' : '🏪 Retrait en boutique'}
                                 </span>
                             </div>
-                            ${isDelivery && order.shippingAddress ? `
-                                <div><strong>Adresse :</strong> ${order.shippingAddress}</div>
+                            ${isDelivery ? `
+                                <div><strong>Adresse :</strong> ${order.shippingAddress || order.user.address || 'Aucune adresse renseignée'}</div>
                             ` : ''}
                             ${isDelivery && order.deliveryZone ? `
                                 <div><strong>Zone :</strong> ${order.deliveryZone}</div>
@@ -638,9 +683,9 @@ export default function OrdersPage() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style="text-align: right;" class="mono-num">${item.price.toLocaleString()} F</td>
+                                        <td style="text-align: right;" class="mono-num">${formatNumber(item.price)} F</td>
                                         <td style="text-align: center;" class="mono-num">${item.quantity}</td>
-                                        <td style="text-align: right; font-weight: 700;" class="mono-num">${(item.price * item.quantity).toLocaleString()} F</td>
+                                        <td style="text-align: right; font-weight: 700;" class="mono-num">${formatNumber(item.price * item.quantity)} F</td>
                                     </tr>
                                 `;
                             }).join('')}
@@ -666,15 +711,15 @@ export default function OrdersPage() {
                     <div class="summary-box">
                         <div class="summary-line">
                             <span>Sous-total articles</span>
-                            <strong>${subtotal.toLocaleString()} FCFA</strong>
+                            <strong>${formatPrice(subtotal)}</strong>
                         </div>
                         <div class="summary-line">
                             <span>Frais de livraison</span>
-                            <strong>${shippingCost > 0 ? `${shippingCost.toLocaleString()} FCFA` : 'Offerte (0 F)'}</strong>
+                            <strong>${shippingCost > 0 ? formatPrice(shippingCost) : 'Offerte (0 F)'}</strong>
                         </div>
                         <div class="summary-total">
                             <span class="summary-total-label">Net à Payer</span>
-                            <span class="summary-total-val">${order.total.toLocaleString()} FCFA</span>
+                            <span class="summary-total-val">${formatPrice(order.total)}</span>
                         </div>
                     </div>
                 </div>
@@ -904,17 +949,17 @@ export default function OrdersPage() {
                                                         </div>
                                                         <div className="flex flex-col min-w-0">
                                                             <span className="text-[13px] font-bold text-slate-900 truncate">
-                                                                {order.user.username || 'Client'}
+                                                                {order.customerName || order.user.username || 'Client'}
                                                             </span>
                                                             <span className="text-[11px] text-slate-500 truncate">
-                                                                {order.user.phone || order.user.email}
+                                                                {order.shippingPhone || order.user.phone || order.user.email}
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-5 py-4 text-right">
                                                     <div className="flex flex-col items-end">
-                                                        <span className="text-[13px] font-bold text-slate-900">{order.total.toLocaleString()} F</span>
+                                                        <span className="text-[13px] font-bold text-slate-900 tabular-nums">{formatNumber(order.total)} F</span>
                                                         <span className="text-[11px] text-slate-400">{order.items.length} art.</span>
                                                     </div>
                                                 </td>
@@ -999,7 +1044,7 @@ export default function OrdersPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setSelectedOrder(null)}
+                            onClick={() => { setSelectedOrder(null); setIsEditingAddress(false); }}
                             className="fixed inset-0 bg-slate-900/10 backdrop-blur-[2px] z-[100]"
                         />
                         <motion.div
@@ -1028,7 +1073,7 @@ export default function OrdersPage() {
                                         <Printer size={14} />
                                     </button>
                                     <button
-                                        onClick={() => setSelectedOrder(null)}
+                                        onClick={() => { setSelectedOrder(null); setIsEditingAddress(false); }}
                                         className="w-8 h-8 flex items-center justify-center rounded-md bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
                                     >
                                         <X size={16} />
@@ -1150,11 +1195,11 @@ export default function OrdersPage() {
                                             <User size={12} /> Client
                                         </h3>
                                         <div className="space-y-2">
-                                            <p className="text-[13px] font-bold text-slate-900">{selectedOrder.user.username || 'Non renseigné'}</p>
+                                            <p className="text-[13px] font-bold text-slate-900">{selectedOrder.customerName || selectedOrder.user.username || 'Non renseigné'}</p>
                                             <p className="text-[12px] text-slate-500 break-all">{selectedOrder.user.email}</p>
-                                            {selectedOrder.user.phone && (
+                                            {(selectedOrder.shippingPhone || selectedOrder.user.phone) && (
                                                 <p className="text-[12px] text-slate-600 font-medium flex items-center gap-1.5 pt-1">
-                                                    <Phone size={12} className="text-slate-400" /> {selectedOrder.user.phone}
+                                                    <Phone size={12} className="text-slate-400" /> {selectedOrder.shippingPhone || selectedOrder.user.phone}
                                                 </p>
                                             )}
                                         </div>
@@ -1162,9 +1207,20 @@ export default function OrdersPage() {
 
                                     {/* Delivery Box */}
                                     <section className="bg-white rounded-xl p-4 border border-slate-200/60 shadow-sm">
-                                        <h3 className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-widest flex items-center gap-2">
-                                            <MapPin size={12} /> Logistique
-                                        </h3>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                <MapPin size={12} /> Logistique
+                                            </h3>
+                                            {selectedOrder.deliveryMethod === 'livraison' && !isEditingAddress && (
+                                                <button
+                                                    onClick={() => startEditingAddress(selectedOrder)}
+                                                    className="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 transition-colors px-2 py-0.5 rounded hover:bg-orange-50"
+                                                    title="Modifier l'adresse"
+                                                >
+                                                    <Edit3 size={11} /> Modifier
+                                                </button>
+                                            )}
+                                        </div>
                                         <div className="space-y-2 text-[12px]">
                                             <p className="font-bold text-slate-900 flex items-center gap-1.5">
                                                 {selectedOrder.deliveryMethod === 'livraison' ? <Truck size={14} className="text-slate-400"/> : <MapPin size={14} className="text-slate-400"/>}
@@ -1172,12 +1228,76 @@ export default function OrdersPage() {
                                             </p>
                                             {selectedOrder.deliveryMethod === 'livraison' && (
                                                 <>
-                                                    <p className="text-slate-600 line-clamp-2 leading-relaxed">
-                                                        {selectedOrder.shippingAddress || 'Aucune adresse'}
-                                                    </p>
-                                                    <p className="text-slate-500 font-medium pt-1">
-                                                        Zone: <span className="text-slate-900">{selectedOrder.deliveryZone || 'Standard'}</span>
-                                                    </p>
+                                                    {isEditingAddress ? (
+                                                        <div className="space-y-2.5 pt-1">
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                                                    Adresse de livraison
+                                                                </label>
+                                                                <textarea
+                                                                    value={addressInput}
+                                                                    onChange={(e) => setAddressInput(e.target.value)}
+                                                                    placeholder="Ex: Fass Mosquée Sidy Jammil, Dakar..."
+                                                                    className="w-full text-[12px] p-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-slate-800 bg-white"
+                                                                    rows={2}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                                                    Téléphone pour la livraison
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={phoneInput}
+                                                                    onChange={(e) => setPhoneInput(e.target.value)}
+                                                                    placeholder="Ex: 77 000 00 00"
+                                                                    className="w-full text-[12px] px-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-slate-800 bg-white"
+                                                                />
+                                                            </div>
+                                                            <div className="flex gap-2 justify-end pt-1">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setIsEditingAddress(false)}
+                                                                    className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 rounded-md"
+                                                                >
+                                                                    Annuler
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={handleSaveAddress}
+                                                                    disabled={isSavingAddress}
+                                                                    className="px-3 py-1 text-[11px] font-bold bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                                                                >
+                                                                    {isSavingAddress ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                                                                    Enregistrer
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="text-slate-700 font-medium leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                                                {selectedOrder.shippingAddress || selectedOrder.user?.address ? (
+                                                                    <span>{selectedOrder.shippingAddress || selectedOrder.user?.address}</span>
+                                                                ) : (
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-amber-700 font-semibold text-[11px]">
+                                                                            Aucune adresse renseignée
+                                                                        </span>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => startEditingAddress(selectedOrder)}
+                                                                            className="text-[11px] font-bold text-orange-600 hover:underline"
+                                                                        >
+                                                                            + Ajouter
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-slate-500 font-medium pt-1">
+                                                                Zone: <span className="text-slate-900 font-bold">{selectedOrder.deliveryZone || 'Standard'}</span>
+                                                            </p>
+                                                        </>
+                                                    )}
                                                 </>
                                             )}
                                         </div>
@@ -1212,7 +1332,7 @@ export default function OrdersPage() {
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-[11px] font-semibold text-slate-500">x{item.quantity}</span>
-                                                        <span className="text-[12px] font-black text-slate-900">{(item.price * item.quantity).toLocaleString()} F</span>
+                                                        <span className="text-[12px] font-black text-slate-900 tabular-nums">{formatNumber(item.price * item.quantity)} F</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1223,11 +1343,11 @@ export default function OrdersPage() {
                                     <div className="bg-slate-50 p-4 border-t border-slate-100 space-y-2 text-[12px]">
                                         <div className="flex justify-between items-center text-slate-500 font-medium">
                                             <span>Sous-total articles</span>
-                                            <span>{(selectedOrder.total - (selectedOrder.shippingCost || 0)).toLocaleString()} F</span>
+                                            <span className="tabular-nums">{formatNumber(selectedOrder.total - (selectedOrder.shippingCost || 0))} F</span>
                                         </div>
                                         <div className="flex justify-between items-center text-slate-500 font-medium pb-2 border-b border-slate-200/60">
                                             <span>Frais de livraison</span>
-                                            <span>{(selectedOrder.shippingCost || 0).toLocaleString()} F</span>
+                                            <span className="tabular-nums">{formatNumber(selectedOrder.shippingCost || 0)} F</span>
                                         </div>
                                         <div className="flex justify-between items-end pt-2">
                                             <div>
@@ -1251,7 +1371,7 @@ export default function OrdersPage() {
                                                     })()}
                                                 </div>
                                             </div>
-                                            <span className="text-[18px] font-black text-slate-900 leading-none">{selectedOrder.total.toLocaleString()} F</span>
+                                            <span className="text-[18px] font-black text-slate-900 leading-none tabular-nums">{formatNumber(selectedOrder.total)} F</span>
                                         </div>
                                     </div>
                                 </section>

@@ -21,7 +21,7 @@ import {
     X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, formatNumber } from '@/lib/utils';
 import { getAdminProducts, updateProductStock, getAdminCategories, getAdminBrands } from '@/lib/actions/admin-actions';
 import { createPortal } from 'react-dom';
 
@@ -144,8 +144,8 @@ export default function InventoryPage() {
             {/* Strategic KPI Grid */}
             {!loading && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <InventoryStatCard label="VALEUR STOCK" value={`${Math.round(totalValue / 1000).toLocaleString()}k F`} icon={TrendingUp} color="text-orange-600" bg="bg-orange-50" trend="+0%" />
-                    <InventoryStatCard label="UNITÉS TOTALES" value={totalStock.toLocaleString()} icon={Box} color="text-slate-600" bg="bg-slate-50" />
+                    <InventoryStatCard label="VALEUR STOCK" value={`${formatNumber(Math.round(totalValue / 1000))}k F`} icon={TrendingUp} color="text-orange-600" bg="bg-orange-50" trend="+0%" />
+                    <InventoryStatCard label="UNITÉS TOTALES" value={formatNumber(totalStock)} icon={Box} color="text-slate-600" bg="bg-slate-50" />
                     <InventoryStatCard label="RUPTURE CRITIQUE" value={criticalRupture} icon={AlertTriangle} color="text-rose-600" bg="bg-rose-50" isWarning={criticalRupture > 0} />
                     <InventoryStatCard label="SANTÉ STOCK" value="98%" icon={PackageCheck} color="text-emerald-600" bg="bg-emerald-50" />
                 </div>
@@ -361,7 +361,7 @@ export default function InventoryPage() {
                                 <div className="p-8 space-y-8">
                                     <div className="flex flex-col items-center justify-center py-6 bg-slate-50 rounded-[32px] border border-slate-100">
                                         <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-2">Quantité Actuelle</span>
-                                        <div className="text-[48px] font-black text-slate-900 leading-none tracking-tighter tabular-nums">
+                                        <div className="text-[48px] font-black text-slate-900 leading-none tracking-normal tabular-nums">
                                             {adjustValue}
                                         </div>
                                     </div>
@@ -427,7 +427,7 @@ function InventoryStatCard({ label, value, icon: Icon, color, bg, isWarning, tre
             </div>
             <div className="relative z-10">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{label}</p>
-                <h3 className="text-[28px] font-black text-slate-900 tracking-tighter leading-none">{value}</h3>
+                <h3 className="text-[28px] font-black text-slate-900 tracking-normal tabular-nums leading-none">{value}</h3>
             </div>
             <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-slate-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-1000 pointer-events-none" />
         </motion.div>

@@ -23,7 +23,7 @@ import {
     Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, formatNumber } from '@/lib/utils';
 import { getAdminProducts } from '@/lib/actions/admin-actions';
 
 export default function POSPage() {
@@ -111,7 +111,7 @@ export default function POSPage() {
                                     <h4 className="text-[13px] font-bold text-slate-900 line-clamp-1">{product.name}</h4>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{product.category?.name || 'GÉNÉRAL'}</p>
                                     <div className="pt-2 flex items-center justify-between">
-                                        <span className="text-[15px] font-black text-orange-600">{product.price.toLocaleString()} F</span>
+                                        <span className="text-[15px] font-black text-orange-600 tabular-nums">{formatNumber(product.price)} F</span>
                                         <div className="w-7 h-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                             <Plus size={14} strokeWidth={3} />
                                         </div>
@@ -176,7 +176,7 @@ export default function POSPage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[13px] font-bold text-slate-900 leading-snug truncate">{item.name}</p>
-                                        <p className="text-[11px] text-slate-400 font-bold tabular-nums">{item.price.toLocaleString()} F</p>
+                                        <p className="text-[11px] text-slate-400 font-bold tabular-nums">{formatNumber(item.price)} F</p>
                                     </div>
                                     <div className="flex items-center bg-slate-50 rounded-lg p-1 gap-1 border border-slate-100">
                                         <button
@@ -204,11 +204,11 @@ export default function POSPage() {
                     <div className="space-y-3">
                         <div className="flex justify-between items-center text-slate-500">
                             <span className="text-[12px] font-bold">Sous-total</span>
-                            <span className="text-[13px] font-bold tabular-nums">{total.toLocaleString()} F</span>
+                            <span className="text-[13px] font-bold tabular-nums">{formatNumber(total)} F</span>
                         </div>
                         <div className="pt-3 border-t border-slate-200/60 flex justify-between items-center">
                             <span className="text-[14px] font-black text-slate-900 uppercase tracking-widest">Total Net</span>
-                            <span className="text-[22px] font-black text-orange-600 tabular-nums">{total.toLocaleString()} F</span>
+                            <span className="text-[22px] font-black text-orange-600 tabular-nums">{formatNumber(total)} F</span>
                         </div>
                     </div>
 

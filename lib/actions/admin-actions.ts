@@ -575,6 +575,44 @@ export async function updateOrderPaymentStatus(orderId: string, paymentStatus: s
     }
 }
 
+export async function updateOrderShippingAddress(orderId: string, shippingAddress: string, shippingPhone?: string) {
+    try {
+        await requireAdmin();
+        if (!orderId || !shippingAddress?.trim()) {
+            return { success: false, error: 'Une adresse valide est requise.' };
+        }
+
+        const cleanAddress = shippingAddress.trim();
+        const cleanPhone = shippingPhone?.trim() || null;
+
+        try {
+            await prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    shippingAddress: cleanAddress,
+                    ...(cleanPhone ? { shippingPhone: cleanPhone } : {})
+                } as any
+            });
+        } catch {
+            // Fallback raw query en cas de client prisma mémoire non rechargé
+            await prisma.$executeRawUnsafe(
+                `UPDATE "Order" SET "shippingAddress" = $1, "shippingPhone" = COALESCE($2, "shippingPhone") WHERE id = $3`,
+                cleanAddress,
+                cleanPhone,
+                orderId
+            );
+        }
+
+        await invalidatePrefix('admin:orders:');
+        revalidatePath('/admin/orders');
+        revalidatePath('/account');
+        return { success: true, shippingAddress: cleanAddress, shippingPhone: cleanPhone };
+    } catch (error: any) {
+        console.error("Update order shipping address error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function updateProductStock(productId: string, stock: number) {
     try {
         await requireAdmin();

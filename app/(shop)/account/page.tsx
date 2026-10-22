@@ -8,7 +8,7 @@ export default async function AccountPage() {
     const session = await auth();
 
     if (!session?.user?.id) {
-        redirect("/login");
+        redirect("/login?callbackUrl=/account");
     }
 
     const userData = await prisma.user.findUnique({
@@ -40,6 +40,29 @@ export default async function AccountPage() {
 
     if (!userData) {
         redirect("/login");
+    }
+
+    if (userData.orders && userData.orders.length > 0) {
+        try {
+            const rawShippingRows: any[] = await prisma.$queryRaw`
+                SELECT id, "shippingAddress", "shippingPhone", "customerName", "shippingCity" 
+                FROM "Order" 
+                WHERE "userId" = ${session.user.id}
+            `;
+            const map = new Map(rawShippingRows.map(r => [r.id, r]));
+            userData.orders = userData.orders.map((o: any) => {
+                const extra = map.get(o.id);
+                return {
+                    ...o,
+                    shippingAddress: o.shippingAddress || extra?.shippingAddress || userData.address || null,
+                    shippingPhone: o.shippingPhone || extra?.shippingPhone || userData.phone || null,
+                    customerName: o.customerName || extra?.customerName || userData.username || null,
+                    shippingCity: o.shippingCity || extra?.shippingCity || 'Dakar',
+                };
+            });
+        } catch (err) {
+            console.error('[AccountPage] shipping enrichment error:', err);
+        }
     }
 
     return (

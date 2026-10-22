@@ -17,7 +17,7 @@ import {
     Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { cn, formatPrice } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
 import { toggleWishlistAction } from '@/lib/actions/user-actions'
 import { useRouter } from 'next/navigation'
@@ -66,12 +66,6 @@ export default function WishlistContent({ products: initialProducts }: WishlistC
         })
     }
 
-    const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('fr-SN', {
-            style: 'decimal',
-            minimumFractionDigits: 0,
-        }).format(price) + ' FCFA'
-    }
 
     return (
         <main className="bg-[#f8f9fb] min-h-screen pb-32">

@@ -9,7 +9,7 @@ import {
     Laptop, Smartphone, Tv, Gamepad2, Printer, Cable, Cpu, Home as HomeIcon, Shield, Wifi, Watch, BatteryCharging 
 } from 'lucide-react'
 import { Container } from '@/ui/Container'
-import { cn } from '@/lib/utils'
+import { cn, formatPrice } from '@/lib/utils'
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useSession } from 'next-auth/react'
@@ -375,7 +375,7 @@ export function Header() {
                                                             <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category?.name || item.category}</span>
                                                         </div>
                                                         <div className="ml-auto flex flex-col items-end gap-1">
-                                                            <span className="text-sm font-black text-[#1B1F3B]">{item.price.toLocaleString()} FCFA</span>
+                                                            <span className="text-sm font-black text-[#1B1F3B] tabular-nums">{formatPrice(item.price)}</span>
                                                             {item.stock > 0 ? (
                                                                 <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-green-100 flex items-center gap-1">
                                                                     <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
@@ -432,7 +432,7 @@ export function Header() {
                                 </div>
                                 <div className="hidden lg:flex flex-col ml-3 pl-3 border-l border-gray-200">
                                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Panier</span>
-                                    <span className="text-[12px] font-black text-[#1B1F3B] group-hover:text-primary transition-colors">{subtotal.toLocaleString()} FCFA</span>
+                                    <span className="text-[12px] font-black text-[#1B1F3B] group-hover:text-primary transition-colors tabular-nums">{formatPrice(subtotal)}</span>
                                 </div>
                             </div>
                         </div>
@@ -663,7 +663,7 @@ export function Header() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="text-sm font-bold text-[#1B1F3B] truncate group-hover:text-primary transition-colors uppercase tracking-tight">{item.name}</h4>
-                                                <p className="text-[10px] font-black text-primary">{item.price.toLocaleString()} FCFA</p>
+                                                <p className="text-[10px] font-black text-primary tabular-nums">{formatPrice(item.price)}</p>
                                             </div>
                                         </Link>
                                     ))}

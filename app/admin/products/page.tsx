@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { cn } from '@/lib/utils';
+import { cn, formatNumber } from '@/lib/utils';
 import {
     getAdminProducts,
     deleteProduct,
@@ -628,7 +628,7 @@ function ProductsPageContent() {
                                             )}
                                         </td>
                                         <td className="px-3 py-3 text-right font-bold text-slate-900 text-[14px] tabular-nums whitespace-nowrap border-b border-slate-50">
-                                            {p.price.toLocaleString()} F
+                                            {formatNumber(p.price)} F
                                         </td>
                                         <td className="px-3 py-3 border-b border-slate-50">
                                             <div className="flex flex-col items-center gap-1">
@@ -812,7 +812,7 @@ function ProductsPageContent() {
                                         <h2 className="text-2xl font-black text-slate-900 leading-tight mb-4">{detailProduct.name}</h2>
 
                                         <div className="flex items-center gap-2 mb-8">
-                                            <p className="text-[28px] font-black text-orange-600">{detailProduct.price.toLocaleString()} F</p>
+                                            <p className="text-[28px] font-black text-orange-600 tabular-nums">{formatNumber(detailProduct.price)} F</p>
                                             <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[13px] font-bold">FCFA</span>
                                         </div>
 

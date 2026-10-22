@@ -121,32 +121,90 @@ export async function createOrder(data: CreateOrderData) {
                 }
             }
 
-            const newOrder = await tx.order.create({
-                data: {
-                    userId: session.user.id!,
-                    subtotal: serverSubtotal,
-                    couponCode: couponCode,
-                    discountAmount: discountAmount,
-                    total: serverTotal,
-                    paymentMethod: typeof data.paymentMethod === 'string' ? data.paymentMethod : 'CASH_ON_DELIVERY',
-                    paymentStatus: 'PENDING',
-                    deliveryMethod: data.deliveryMethod === 'retrait' ? 'retrait' : 'livraison',
-                    deliveryZone: data.deliveryZone ? String(data.deliveryZone).slice(0, 100) : null,
-                    shippingCost: shipping,
-                    status: 'PENDING',
-                    items: {
-                        create: data.items.map(item => {
-                            const p = productMap.get(item.productId)!;
-                            return {
-                                productId: item.productId,
-                                quantity: item.quantity,
-                                price: Math.max(0, p.price ?? 0), // Prix officiel de la BDD
-                                selectedColor: item.selectedColor ? String(item.selectedColor).slice(0, 50) : null
-                            };
-                        })
-                    }
+            const fullName = data.shippingDetails?.firstName
+                ? `${data.shippingDetails.firstName} ${data.shippingDetails.lastName || ''}`.trim()
+                : (session.user.name || null);
+            const shippingAddress = data.deliveryMethod === 'retrait'
+                ? 'Retrait boutique Baraka Shop'
+                : (data.shippingDetails?.address?.trim() || null);
+            const shippingPhone = data.shippingDetails?.phone?.trim() || (session.user as any)?.phone || null;
+            const shippingCity = data.shippingDetails?.city?.trim() || 'Dakar';
+
+            const baseOrderData = {
+                userId: session.user.id!,
+                subtotal: serverSubtotal,
+                couponCode: couponCode,
+                discountAmount: discountAmount,
+                total: serverTotal,
+                paymentMethod: typeof data.paymentMethod === 'string' ? data.paymentMethod : 'CASH_ON_DELIVERY',
+                paymentStatus: 'PENDING',
+                deliveryMethod: data.deliveryMethod === 'retrait' ? 'retrait' : 'livraison',
+                deliveryZone: data.deliveryZone ? String(data.deliveryZone).slice(0, 100) : null,
+                shippingCost: shipping,
+                status: 'PENDING' as const,
+                items: {
+                    create: data.items.map(item => {
+                        const p = productMap.get(item.productId)!;
+                        return {
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: Math.max(0, p.price ?? 0), // Prix officiel de la BDD
+                            selectedColor: item.selectedColor ? String(item.selectedColor).slice(0, 50) : null
+                        };
+                    })
                 }
-            });
+            };
+
+            let newOrder: any;
+            try {
+                newOrder = await tx.order.create({
+                    data: {
+                        ...baseOrderData,
+                        shippingAddress,
+                        shippingPhone,
+                        customerName: fullName,
+                        shippingCity,
+                    }
+                });
+            } catch (createErr: any) {
+                if (createErr?.message?.includes('shippingAddress') || createErr?.message?.includes('Unknown argument')) {
+                    console.warn('[OrderActions] Stale Prisma client detected, falling back to base create + SQL update...');
+                    newOrder = await tx.order.create({
+                        data: baseOrderData
+                    });
+                    await tx.$executeRawUnsafe(
+                        `UPDATE "Order" SET "shippingAddress" = $1, "shippingPhone" = $2, "customerName" = $3, "shippingCity" = $4 WHERE id = $5`,
+                        shippingAddress,
+                        shippingPhone,
+                        fullName,
+                        shippingCity,
+                        newOrder.id
+                    ).catch((e: any) => console.error('[OrderActions] Failed raw update of shipping fields:', e));
+                    newOrder.shippingAddress = shippingAddress;
+                    newOrder.shippingPhone = shippingPhone;
+                    newOrder.customerName = fullName;
+                    newOrder.shippingCity = shippingCity;
+                } else {
+                    throw createErr;
+                }
+            }
+
+            // Sauvegarder également l'adresse et le téléphone sur le profil utilisateur s'ils sont vides
+            if (shippingAddress && shippingAddress !== 'Retrait boutique Baraka Shop') {
+                await tx.user.update({
+                    where: { id: session.user.id! },
+                    data: {
+                        address: shippingAddress,
+                        ...(shippingPhone ? { phone: shippingPhone } : {})
+                    }
+                }).catch(() => {
+                    // Si le téléphone a un conflit unique, on met à jour uniquement l'adresse
+                    return tx.user.update({
+                        where: { id: session.user.id! },
+                        data: { address: shippingAddress }
+                    }).catch(() => {});
+                });
+            }
 
             const depletedProductIds: string[] = [];
 
@@ -232,30 +290,58 @@ export async function getOrderSuccessDetails(orderId: string) {
     }
 
     try {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
-            select: {
-                id: true,
-                total: true,
-                status: true,
-                deliveryMethod: true,
-                deliveryZone: true,
-                createdAt: true,
-                items: {
-                    select: {
-                        id: true,
-                        quantity: true,
-                        price: true,
-                        product: {
-                            select: {
-                                name: true,
-                                images: true,
-                            }
+        const trimmed = orderId.trim();
+        const cleanRef = trimmed.replace(/^#ORD-/i, '').trim();
+
+        const selectFields = {
+            id: true,
+            total: true,
+            subtotal: true,
+            status: true,
+            paymentStatus: true,
+            paymentMethod: true,
+            deliveryMethod: true,
+            deliveryZone: true,
+            shippingAddress: true,
+            shippingPhone: true,
+            customerName: true,
+            shippingCity: true,
+            shippingCost: true,
+            createdAt: true,
+            items: {
+                select: {
+                    id: true,
+                    quantity: true,
+                    price: true,
+                    selectedColor: true,
+                    product: {
+                        select: {
+                            name: true,
+                            images: true,
                         }
                     }
                 }
             }
+        };
+
+        // 1. Try finding by exact ID (UUID)
+        let order = await prisma.order.findUnique({
+            where: { id: trimmed },
+            select: selectFields
         });
+
+        // 2. If not found, try searching by UUID prefix (orderRef like 4EDDF84A)
+        if (!order && cleanRef.length >= 6) {
+            order = await prisma.order.findFirst({
+                where: {
+                    id: {
+                        startsWith: cleanRef.toLowerCase(),
+                        mode: 'insensitive',
+                    }
+                },
+                select: selectFields
+            });
+        }
 
         if (!order) {
             return { success: false, order: null };

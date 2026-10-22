@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/ui/Button'
 import { useCart } from '@/context/CartContext'
+import { formatPrice, formatNumber } from '@/lib/utils'
 
 interface AppliedCoupon {
     couponCode: string;
@@ -254,10 +255,10 @@ export default function CartPage() {
                                 </div>
                                 <div className="min-w-0">
                                     <p className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight">
-                                        Plus que <span className="font-extrabold text-[#E8621A]">{missingForFreeShipping.toLocaleString('fr-FR')} FCFA</span> pour la livraison offerte
+                                        Plus que <span className="font-extrabold text-[#E8621A] tabular-nums">{formatPrice(missingForFreeShipping)}</span> pour la livraison offerte
                                     </p>
                                     <p className="text-[11px] text-slate-500 font-medium mt-0.5 hidden sm:block">
-                                        Livraison gratuite offerte dès {FREE_SHIPPING_THRESHOLD.toLocaleString('fr-FR')} FCFA d'achats.
+                                        Livraison gratuite offerte dès {formatPrice(FREE_SHIPPING_THRESHOLD)} d'achats.
                                     </p>
                                 </div>
                             </div>
@@ -357,12 +358,12 @@ export default function CartPage() {
 
                                             {/* Total line price */}
                                             <div className="text-right">
-                                                <span className="text-sm sm:text-base font-black text-[#1B1F3B] tracking-tight block">
-                                                    {(item.price * item.qty).toLocaleString()} FCFA
+                                                <span className="text-sm sm:text-base font-black text-[#1B1F3B] tracking-normal tabular-nums block">
+                                                    {formatPrice(item.price * item.qty)}
                                                 </span>
                                                 {item.qty > 1 && (
-                                                    <span className="text-[10px] text-slate-400 font-medium block">
-                                                        {item.price.toLocaleString()} F / unité
+                                                    <span className="text-[10px] text-slate-400 font-medium tabular-nums block">
+                                                        {formatNumber(item.price)} F / unité
                                                     </span>
                                                 )}
                                             </div>
@@ -403,7 +404,7 @@ export default function CartPage() {
                                 <div className="flex flex-col gap-3.5 mb-6 text-sm">
                                     <div className="flex items-center justify-between text-slate-300 font-medium">
                                         <span>Sous-total</span>
-                                        <span className="text-white font-bold">{subtotal.toLocaleString()} FCFA</span>
+                                        <span className="text-white font-bold tabular-nums">{formatPrice(subtotal)}</span>
                                     </div>
 
                                     {appliedCoupon && (
@@ -419,7 +420,7 @@ export default function CartPage() {
                                                     <X className="w-3.5 h-3.5" />
                                                 </button>
                                             </span>
-                                            <span>-{discount.toLocaleString()} FCFA</span>
+                                            <span className="tabular-nums">-{formatPrice(discount)}</span>
                                         </motion.div>
                                     )}
 
@@ -447,8 +448,8 @@ export default function CartPage() {
                                                 <span className="text-[10px] text-slate-400 font-medium mt-0.5">Paiement à la réception</span>
                                             </div>
                                             <div className="text-right flex items-baseline gap-1.5">
-                                                <span className="text-2xl sm:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-amber-300 drop-shadow-[0_2px_8px_rgba(232,98,26,0.3)]">
-                                                    {total.toLocaleString()}
+                                                <span className="text-2xl sm:text-3xl font-black tracking-normal tabular-nums text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-amber-300 drop-shadow-[0_2px_8px_rgba(232,98,26,0.3)]">
+                                                    {formatNumber(total)}
                                                 </span>
                                                 <span className="text-xs sm:text-sm font-black text-orange-400 uppercase tracking-wider">FCFA</span>
                                             </div>
@@ -575,8 +576,8 @@ export default function CartPage() {
                             Total ({itemCount} article{itemCount > 1 ? 's' : ''})
                         </span>
                         <div className="flex items-baseline gap-1.5">
-                            <span className="text-lg font-black text-[#1B1F3B] tracking-tight truncate">
-                                {total.toLocaleString()}
+                            <span className="text-lg font-black text-[#1B1F3B] tracking-normal tabular-nums truncate">
+                                {formatNumber(total)}
                             </span>
                             <span className="text-xs font-black text-orange-600">FCFA</span>
                         </div>

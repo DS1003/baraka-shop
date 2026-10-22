@@ -1,45 +1,28 @@
 import * as React from 'react';
-import {
-  Section,
-  Text,
-  Heading,
-  Row,
-  Column,
-  Button,
-  Img,
-  Hr
-} from '@react-email/components';
 import { Layout } from './Layout';
+import {
+  Hero,
+  StatusCard,
+  DetailCard,
+  ItemsList,
+  Receipt,
+  Callout,
+  Actions,
+  StatusDot,
+  PhoneLink,
+  getPaymentState,
+  isCashOnDeliveryPayment,
+  type OrderShippedEmailProps,
+} from './_shared';
 
-export interface OrderItem {
-  name: string;
-  quantity: number;
-  price: number;
-  image?: string;
-}
-
-export interface OrderShippedEmailProps {
-  orderRef: string;
-  clientName: string;
-  date: string;
-  deliveryAddress?: string;
-  phone?: string;
-  deliveryMethod: string;
-  paymentMethod: string;
-  paymentStatus: 'PAID' | 'PENDING' | 'ON_DELIVERY' | 'REFUNDED' | 'FAILED' | string;
-  total: number;
-  subtotal: number;
-  deliveryFee: number;
-  discount: number;
-  estimatedDelivery?: string;
-  items: OrderItem[];
-  logoUrl?: string;
-}
+// Ré-export des types pour compatibilité avec les imports existants
+export type { OrderItem, OrderShippedEmailProps } from './_shared';
 
 export const OrderShippedEmail = ({
-  orderRef = '#BK-2026-154',
+  orderRef = '#ORD-7D07A337',
+  orderId,
   clientName = 'Client',
-  date = new Date().toLocaleDateString('fr-FR'),
+  date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
   deliveryAddress = 'Dakar, Sénégal',
   phone = '',
   deliveryMethod = 'Livraison à domicile',
@@ -49,165 +32,74 @@ export const OrderShippedEmail = ({
   subtotal = 0,
   deliveryFee = 0,
   discount = 0,
-  estimatedDelivery = '',
+  estimatedDelivery = 'Livraison sous 24h à 48h',
   items = [],
   logoUrl,
 }: OrderShippedEmailProps) => {
-  const isCashOnDelivery = paymentMethod?.toLowerCase().includes('livraison') || paymentMethod?.toLowerCase() === 'cash' || paymentStatus === 'ON_DELIVERY';
+  const isCod = isCashOnDeliveryPayment(paymentMethod, paymentStatus);
   const isPaid = paymentStatus === 'PAID';
-
-  const getPaymentStatusBadge = (status: string) => {
-    if (status === 'PAID') {
-      return <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold">✅ Payée</span>;
-    }
-    if (status === 'REFUNDED') {
-      return <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-semibold">↩️ Remboursée</span>;
-    }
-    if (status === 'FAILED') {
-      return <span className="bg-rose-100 text-rose-800 px-3 py-1 rounded-full text-xs font-semibold">❌ Échec du paiement</span>;
-    }
-    if (isCashOnDelivery) {
-      return <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold">⏳ À régler à la livraison</span>;
-    }
-    return <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold">⏳ En attente de paiement</span>;
-  };
+  const isPickup = deliveryMethod.toLowerCase().includes('retrait');
+  const firstName = (clientName || 'Client').split(' ')[0];
 
   return (
-    <Layout previewText={`Votre commande ${orderRef} est en cours de livraison !`} logoUrl={logoUrl}>
-      <Section className="text-center mb-6">
-        <Text className="text-4xl mb-2">🚚</Text>
-        <Heading className="text-2xl font-semibold text-gray-900 m-0">
-          Votre commande est en cours de livraison
-        </Heading>
-      </Section>
+    <Layout previewText={`Votre commande ${orderRef} est en route — ${estimatedDelivery}.`} logoUrl={logoUrl}>
+      <Hero
+        eyebrow="En cours de livraison"
+        title={`${firstName}, votre colis est en route.`}
+        subtitle="Il a été remis à notre livreur et vous parviendra dans les meilleurs délais."
+      />
 
-      {/* Informations de commande */}
-      <Section className="bg-gray-50 border border-gray-100 rounded-lg p-6 mb-6">
-        <Row className="mb-4">
-          <Column>
-            <Text className="text-gray-500 text-xs uppercase font-bold m-0 mb-1">Commande</Text>
-            <Text className="text-[#E8621A] font-semibold m-0">{orderRef}</Text>
-          </Column>
-          <Column>
-            <Text className="text-gray-500 text-xs uppercase font-bold m-0 mb-1">Date</Text>
-            <Text className="text-gray-900 font-medium m-0">{date}</Text>
-          </Column>
-        </Row>
-        
-        <Row className="mb-4">
-          <Column>
-            <Text className="text-gray-500 text-xs uppercase font-bold m-0 mb-1">Client</Text>
-            <Text className="text-gray-900 font-medium m-0">{clientName}</Text>
-            <Text className="text-gray-600 text-sm m-0 mt-1">{phone}</Text>
-          </Column>
-          <Column>
-            <Text className="text-gray-500 text-xs uppercase font-bold m-0 mb-1">Adresse</Text>
-            <Text className="text-gray-900 font-medium m-0">{deliveryAddress || 'Retrait en boutique'}</Text>
-          </Column>
-        </Row>
+      <StatusCard
+        orderRef={orderRef}
+        date={date}
+        reached={3}
+        note={
+          estimatedDelivery ? (
+            <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
+              <tbody>
+                <tr>
+                  <td style={{ color: '#6B7280', fontSize: '13px' }}>Arrivée estimée</td>
+                  <td style={{ textAlign: 'right', fontWeight: 700, color: '#0B0F19', fontSize: '13px' }}>{estimatedDelivery}</td>
+                </tr>
+              </tbody>
+            </table>
+          ) : undefined
+        }
+      />
 
-        <Row>
-          <Column>
-            <Text className="text-gray-500 text-xs uppercase font-bold m-0 mb-1">Mode de livraison</Text>
-            <Text className="text-gray-900 font-medium m-0">{deliveryMethod}</Text>
-          </Column>
-          {estimatedDelivery && (
-            <Column>
-              <Text className="text-gray-500 text-xs uppercase font-bold m-0 mb-1">Livraison estimée</Text>
-              <Text className="text-green-600 font-semibold m-0">{estimatedDelivery}</Text>
-            </Column>
-          )}
-        </Row>
-      </Section>
+      <DetailCard
+        title={isPickup ? 'Retrait' : 'Livraison'}
+        rows={[
+          { label: 'Destinataire', value: clientName },
+          ...(phone ? [{ label: 'Téléphone', value: <PhoneLink phone={phone} /> }] : []),
+          { label: 'Mode', value: deliveryMethod },
+          ...(!isPickup ? [{ label: 'Adresse', value: deliveryAddress || 'Dakar, Sénégal' }] : []),
+        ]}
+      />
 
-      {/* Table des produits */}
-      <Section className="mb-6">
-        <Heading as="h3" className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-4">
-          Articles commandés ({items.length})
-        </Heading>
-        {items.map((item, idx) => (
-          <Row key={idx} className="mb-4">
-            <Column className="w-[60px] pr-4">
-              <Img src={item.image || 'https://via.placeholder.com/60'} width="60" height="60" className="rounded-md object-cover border border-gray-100" />
-            </Column>
-            <Column>
-              <Text className="text-gray-900 font-medium m-0">{item.name}</Text>
-              <Text className="text-gray-500 text-sm m-0 mt-1">Qté : {item.quantity} × {item.price.toLocaleString()} FCFA</Text>
-            </Column>
-            <Column align="right">
-              <Text className="text-gray-900 font-semibold m-0">{(item.quantity * item.price).toLocaleString()} FCFA</Text>
-            </Column>
-          </Row>
-        ))}
-      </Section>
+      <DetailCard
+        title="Paiement"
+        rows={[
+          { label: 'Moyen', value: paymentMethod },
+          { label: 'Statut', value: <StatusDot {...getPaymentState(paymentStatus, isCod)} /> },
+        ]}
+      />
 
-      {/* Résumé de la commande */}
-      <Section className="bg-gray-50 border border-gray-100 rounded-lg p-6 mb-8">
-        <Row className="mb-2">
-          <Column><Text className="text-gray-600 m-0 text-sm">Sous-total</Text></Column>
-          <Column align="right"><Text className="text-gray-900 font-medium m-0 text-sm">{subtotal.toLocaleString()} FCFA</Text></Column>
-        </Row>
-        <Row className="mb-2">
-          <Column><Text className="text-gray-600 m-0 text-sm">Frais de livraison</Text></Column>
-          <Column align="right"><Text className="text-gray-900 font-medium m-0 text-sm">{deliveryFee.toLocaleString()} FCFA</Text></Column>
-        </Row>
-        {discount > 0 && (
-          <Row className="mb-2">
-            <Column><Text className="text-red-600 m-0 text-sm">Réduction</Text></Column>
-            <Column align="right"><Text className="text-red-600 font-medium m-0 text-sm">- {discount.toLocaleString()} FCFA</Text></Column>
-          </Row>
-        )}
-        <Hr className="border-gray-200 my-4" />
-        <Row className="mb-4">
-          <Column><Text className="text-gray-900 font-bold m-0 text-lg">Montant total</Text></Column>
-          <Column align="right"><Text className="text-[#E8621A] font-bold m-0 text-lg">{total.toLocaleString()} FCFA</Text></Column>
-        </Row>
-        
-        <Row>
-          <Column><Text className="text-gray-600 m-0 text-sm mt-1">Statut du paiement</Text></Column>
-          <Column align="right">
-            {getPaymentStatusBadge(paymentStatus)}
-          </Column>
-        </Row>
+      <ItemsList items={items} title="Dans votre colis" />
 
-        {isPaid ? (
-          <Row className="mt-4">
-            <Column>
-              <Section className="bg-emerald-50 border border-emerald-200 rounded-md p-3 text-left">
-                <Text className="text-emerald-900 text-xs m-0 leading-relaxed">
-                  ✅ <strong>Commande déjà réglée :</strong> Le livreur vous remettra votre colis sans demander de paiement.
-                </Text>
-              </Section>
-            </Column>
-          </Row>
-        ) : isCashOnDelivery ? (
-          <Row className="mt-4">
-            <Column>
-              <Section className="bg-amber-50 border border-amber-200 rounded-md p-3 text-left">
-                <Text className="text-amber-900 text-xs m-0 leading-relaxed">
-                  💵 <strong>Paiement à la livraison :</strong> Veuillez préparer le montant exact de <strong>{total.toLocaleString()} FCFA</strong> en espèces pour le livreur lors de la réception.
-                </Text>
-              </Section>
-            </Column>
-          </Row>
-        ) : null}
-      </Section>
+      <Receipt subtotal={subtotal} deliveryFee={deliveryFee} discount={discount} total={total} isPickup={isPickup} />
 
-      {/* Actions */}
-      <Section className="text-center mb-6">
-        <Button 
-          href="https://baraka.sn/account" 
-          className="bg-[#E8621A] text-white rounded-lg font-semibold text-center px-6 py-3 mr-4 inline-block"
-        >
-          Suivre ma commande
-        </Button>
-        <Button 
-          href="https://baraka.sn/account" 
-          className="bg-white text-gray-800 border border-gray-300 rounded-lg font-semibold text-center px-6 py-3 inline-block"
-        >
-          Voir ma commande
-        </Button>
-      </Section>
+      {isPaid ? (
+        <Callout theme="success" title="Commande déjà réglée">
+          Le livreur vous remettra votre colis sans demander de paiement supplémentaire.
+        </Callout>
+      ) : isCod ? (
+        <Callout theme="warm" title="Rappel — paiement à la livraison" amountLabel="Montant à remettre au livreur" amount={total}>
+          Gardez votre téléphone à portée de main : notre livreur vous appellera juste avant son arrivée.
+        </Callout>
+      ) : null}
+
+      <Actions label="Suivre mon colis" orderRef={orderRef} orderId={orderId} />
     </Layout>
   );
 };

@@ -320,15 +320,18 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
                     </p>
                 </div>
 
-                {promo.price && (
-                    <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#1B1F3B]/30">Offre Spéciale</span>
-                        <div className="flex items-baseline gap-1.5">
-                            <span className="text-3xl font-extrabold tracking-tighter text-[#1B1F3B]">{promo.price.split(' ')[0]}</span>
-                            <span className="text-[13px] font-bold text-primary italic font-serif leading-none">{promo.price.split(' ').slice(1).join(' ')}</span>
+                {promo.price && (() => {
+                    const cleanPrice = promo.price.replace(/FCFA/i, '').trim();
+                    return (
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#1B1F3B]/30">Offre Spéciale</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-3xl font-extrabold tracking-normal tabular-nums text-[#1B1F3B]">{cleanPrice}</span>
+                                <span className="text-[13px] font-bold text-primary italic font-serif leading-none">FCFA</span>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
             </div>
 
             <div className="relative z-10 mt-10 flex items-center gap-4 rounded-full bg-[#1B1F3B] pl-8 pr-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white transition-all duration-500 group-hover:bg-primary group-hover:scale-[1.02] shadow-xl group-hover:shadow-primary/20">

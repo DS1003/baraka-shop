@@ -46,7 +46,7 @@ import {
     Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { cn, formatPrice, formatNumber } from '@/lib/utils';
 import { updateProfile, toggleWishlistAction, changeUserPassword, updateUserSettings } from '@/lib/actions/user-actions';
 import { markNotificationRead, markAllNotificationsRead } from '@/lib/actions/admin-actions';
 import { signOut } from 'next-auth/react';
@@ -410,8 +410,10 @@ export default function AccountContent({ user }: AccountContentProps) {
                 setClientNotifications(data.notifications || []);
                 setNotifUnreadCount(data.unreadCount || 0);
             }
-        } catch (err) {
-            console.error('Failed to fetch notifications:', err);
+        } catch (err: any) {
+            if (err?.name !== 'AbortError') {
+                console.warn('Client notifications notice:', err?.message || err);
+            }
         }
     }, []);
 
@@ -827,7 +829,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                 </div>
                                                 <p className="text-xs text-gray-500">
                                                     {wishlist.length > 0
-                                                        ? `${wishlist.length} article${wishlist.length > 1 ? 's' : ''} sauvegardé${wishlist.length > 1 ? 's' : ''} • Valeur : ${wishlistTotal.toLocaleString()} FCFA`
+                                                        ? `${wishlist.length} article${wishlist.length > 1 ? 's' : ''} sauvegardé${wishlist.length > 1 ? 's' : ''} • Valeur : ${formatPrice(wishlistTotal)}`
                                                         : "Articles que vous avez mis de côté."
                                                     }
                                                 </p>
@@ -977,12 +979,12 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                     {/* Price & Stock */}
                                                                     <div>
                                                                         <div className="flex items-baseline gap-1.5 flex-wrap">
-                                                                            <span className="text-sm sm:text-base font-black text-[#1B1F3B] tracking-tight">
-                                                                                {price.toLocaleString()} <span className="text-[10px] font-bold text-gray-500">FCFA</span>
+                                                                            <span className="text-sm sm:text-base font-black text-[#1B1F3B] tracking-normal tabular-nums">
+                                                                                {formatNumber(price)} <span className="text-[10px] font-bold text-gray-500">FCFA</span>
                                                                             </span>
                                                                             {hasDiscount && (
-                                                                                <span className="text-[11px] text-gray-400 line-through font-medium">
-                                                                                    {oldPrice.toLocaleString()} FCFA
+                                                                                <span className="text-[11px] text-gray-400 line-through font-medium tabular-nums">
+                                                                                    {formatPrice(oldPrice)}
                                                                                 </span>
                                                                             )}
                                                                         </div>
@@ -1882,8 +1884,8 @@ function OrderCard({ order }: { order: any }) {
                 <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-5 border-t border-gray-100 md:border-t-0 pt-2.5 md:pt-0">
                     <div className="text-left md:text-right">
                         <span className="text-[10px] sm:text-xs text-gray-400 block font-medium">Total</span>
-                        <span className="text-base sm:text-lg font-black text-[#1B1F3B] tracking-tight">
-                            {order.total.toLocaleString()} <span className="text-[10px] sm:text-xs font-bold text-gray-500">FCFA</span>
+                        <span className="text-base sm:text-lg font-black text-[#1B1F3B] tracking-normal tabular-nums">
+                            {formatNumber(order.total)} <span className="text-[10px] sm:text-xs font-bold text-gray-500">FCFA</span>
                         </span>
                     </div>
                     <button
@@ -1991,8 +1993,8 @@ function OrderCard({ order }: { order: any }) {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-[#1B1F3B] whitespace-nowrap text-right text-xs sm:text-sm">
-                                                    {(item.price * item.quantity).toLocaleString()} FCFA
+                                                <span className="font-black text-[#1B1F3B] whitespace-nowrap text-right text-xs sm:text-sm tabular-nums">
+                                                    {formatPrice(item.price * item.quantity)}
                                                 </span>
                                             </div>
                                         );
@@ -2003,16 +2005,25 @@ function OrderCard({ order }: { order: any }) {
                             )}
 
                             {/* Order Details Footer */}
-                            {(order.deliveryMethod || order.deliveryZone || order.paymentMethod) && (
-                                <div className="pt-2 border-t border-gray-200/60 flex flex-wrap gap-2.5 sm:gap-4 text-[11px] text-gray-500">
+                            {(order.deliveryMethod || order.deliveryZone || (order as any).shippingAddress || order.paymentMethod) && (
+                                <div className="pt-2.5 border-t border-gray-200/60 flex flex-wrap gap-2.5 sm:gap-4 text-[11px] text-gray-500 items-center">
                                     {order.deliveryMethod && (
-                                        <span>Livraison : <strong className="text-[#1B1F3B]">{order.deliveryMethod}</strong></span>
+                                        <span>Livraison : <strong className="text-[#1B1F3B]">{order.deliveryMethod === 'retrait' ? 'Retrait boutique' : 'À domicile'}</strong></span>
                                     )}
                                     {order.deliveryZone && (
                                         <span>Zone : <strong className="text-[#1B1F3B]">{order.deliveryZone}</strong></span>
                                     )}
+                                    {((order as any).shippingAddress || order.user?.address) && order.deliveryMethod !== 'retrait' && (
+                                        <span className="flex items-center gap-1">
+                                            <MapPin size={11} className="text-orange-500 shrink-0" />
+                                            <span>Adresse : <strong className="text-[#1B1F3B]">{(order as any).shippingAddress || order.user?.address}</strong></span>
+                                        </span>
+                                    )}
+                                    {(order as any).shippingPhone && (
+                                        <span>Contact : <strong className="text-[#1B1F3B]">{(order as any).shippingPhone}</strong></span>
+                                    )}
                                     {order.paymentMethod && (
-                                        <span>Règlement : <strong className="text-[#1B1F3B]">{order.paymentMethod === 'cash' ? 'Paiement à la livraison' : order.paymentMethod}</strong></span>
+                                        <span>Règlement : <strong className="text-[#1B1F3B]">{order.paymentMethod === 'cash' || order.paymentMethod?.toLowerCase().includes('livraison') ? 'Paiement à la livraison' : order.paymentMethod}</strong></span>
                                     )}
                                     <span className="flex items-center gap-1.5">
                                         Paiement :{' '}

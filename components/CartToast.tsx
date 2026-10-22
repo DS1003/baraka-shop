@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Check, ShoppingBag, X, ArrowRight } from 'lucide-react'
+import { formatPrice } from '@/lib/utils'
 
 interface CartToastProps {
     product: {
@@ -19,10 +20,6 @@ interface CartToastProps {
     onClose: () => void
     itemCount: number
     subtotal: number
-}
-
-function formatPrice(amount: number): string {
-    return new Intl.NumberFormat('fr-FR').format(Number(amount) || 0) + ' FCFA'
 }
 
 export function CartToast({ product, isVisible, onClose, itemCount, subtotal }: CartToastProps) {

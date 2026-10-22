@@ -33,7 +33,7 @@ import {
     Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { cn, formatNumber, formatPrice } from '@/lib/utils'
 import { ProductCard } from '@/ui/ProductCard'
 import { useCart } from '@/context/CartContext'
 import { MediaViewer, buildProductMedia, getYouTubeId, getYouTubeThumbnail } from '@/components/MediaViewer'
@@ -821,12 +821,12 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                             <div className="flex flex-col gap-1">
                                 <span className="text-gray-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">Prix de vente officiel</span>
                                 <div className="flex items-baseline gap-3 md:gap-4">
-                                    <span className="text-2xl md:text-5xl font-black text-white tracking-tighter">
-                                        {product.price.toLocaleString()} <span className="text-sm uppercase font-black text-primary italic">FCFA</span>
+                                    <span className="text-2xl md:text-5xl font-black text-white tracking-normal tabular-nums">
+                                        {formatNumber(product.price)} <span className="text-sm uppercase font-black text-primary italic">FCFA</span>
                                     </span>
                                     {product.oldPrice && (
-                                        <span className="text-sm md:text-xl font-bold text-gray-500 line-through tracking-tighter italic">
-                                            {product.oldPrice.toLocaleString()} FCFA
+                                        <span className="text-sm md:text-xl font-bold text-gray-500 line-through tracking-normal italic tabular-nums">
+                                            {formatPrice(product.oldPrice)}
                                         </span>
                                     )}
                                 </div>
@@ -931,7 +931,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
 
                         <div className="mt-5 pt-5 border-t border-white/5 flex flex-col items-center">
                             <a
-                                href={`https://wa.me/221765149898?text=${encodeURIComponent(`Bonjour Baraka Shop, je souhaiterais commander le produit : ${product.name} (Prix: ${product.price.toLocaleString()} FCFA)`)}`}
+                                href={`https://wa.me/221765149898?text=${encodeURIComponent(`Bonjour Baraka Shop, je souhaiterais commander le produit : ${product.name} (Prix: ${formatPrice(product.price)})`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-full sm:w-auto h-14 px-6 rounded-2xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] group"
@@ -1279,7 +1279,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                         // Format value
                                         let formattedValue = String(value);
                                         if (key.toLowerCase() === 'price') {
-                                            formattedValue = `${Number(value).toLocaleString()} FCFA`;
+                                            formattedValue = formatPrice(value as any);
                                         } else if (key.toLowerCase().includes('date') || key.toLowerCase() === 'createdat') {
                                             formattedValue = new Date(String(value)).toLocaleDateString('fr-FR');
                                         } else if (typeof value === 'object') {
@@ -1787,8 +1787,8 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                 <div className="flex items-center gap-8 ml-auto">
                                     <div className="flex flex-col items-end">
                                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Prix Total</span>
-                                        <span className="text-xl md:text-2xl font-black text-[#1B1F3B] tracking-tighter">
-                                            {(product.price * quantity).toLocaleString()} <span className="text-[10px] text-primary italic lowercase">FCFA</span>
+                                        <span className="text-xl md:text-2xl font-black text-[#1B1F3B] tracking-normal tabular-nums">
+                                            {formatNumber(product.price * quantity)} <span className="text-[10px] text-primary italic lowercase">FCFA</span>
                                         </span>
                                     </div>
 
@@ -1918,8 +1918,8 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                             />
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-sm font-black text-[#1B1F3B] tracking-tight truncate">
-                                {product.price.toLocaleString()} <span className="text-[10px] text-primary uppercase">FCFA</span>
+                            <span className="text-sm font-black text-[#1B1F3B] tracking-normal truncate tabular-nums">
+                                {formatNumber(product.price)} <span className="text-[10px] text-primary uppercase">FCFA</span>
                             </span>
                             {product.stock > 0 ? (
                                 <span className="text-[9px] font-bold text-green-600 flex items-center gap-1">
@@ -1936,7 +1936,7 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                     <div className="flex items-center gap-2 shrink-0">
                         {/* WhatsApp quick contact */}
                         <a
-                            href={`https://wa.me/221765149898?text=${encodeURIComponent(`Bonjour Baraka Shop, je m'intéresse au produit : ${product.name} (${product.price.toLocaleString()} FCFA)`)}`}
+                            href={`https://wa.me/221765149898?text=${encodeURIComponent(`Bonjour Baraka Shop, je m'intéresse au produit : ${product.name} (${formatPrice(product.price)})`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="Commander par WhatsApp"

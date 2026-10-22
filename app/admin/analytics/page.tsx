@@ -244,7 +244,7 @@ function MetricCard({ label, value, trend, isNegative, icon: Icon, color, bg }: 
             </div>
             <div className="relative z-10">
                 <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{label}</p>
-                <h3 className="text-[30px] font-black text-slate-900 tracking-tighter tabular-nums leading-none">{value}</h3>
+                <h3 className="text-[30px] font-black text-slate-900 tracking-normal tabular-nums leading-none">{value}</h3>
             </div>
             {/* Subtle Gradient Halo */}
             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-slate-50 rounded-full blur-3xl group-hover:bg-orange-50/50 transition-colors duration-700 pointer-events-none" />

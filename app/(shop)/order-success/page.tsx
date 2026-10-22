@@ -27,17 +27,26 @@ import { getOrderSuccessDetails } from '@/lib/actions/order-actions'
 interface OrderDetails {
     id: string
     total: number
+    subtotal?: number | null
     status: string
+    paymentStatus?: string | null
+    paymentMethod?: string | null
     deliveryMethod: string | null
     deliveryZone: string | null
+    shippingAddress?: string | null
+    shippingPhone?: string | null
+    customerName?: string | null
+    shippingCity?: string | null
+    shippingCost?: number | null
     createdAt: Date
-    items: Array<{
+    items?: Array<{
         id: string
         quantity: number
         price: number
+        selectedColor?: string | null
         product: {
             name: string
-            image: string
+            images?: string[]
         }
     }>
 }
@@ -54,22 +63,24 @@ function OrderSuccessContent() {
     const [copied, setCopied] = useState(false)
     const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
 
-    // Trigger gentle celebratory confetti on mount
+    // Trigger gentle celebratory confetti on mount (for fresh orders)
     useEffect(() => {
-        try {
-            confetti({
-                particleCount: 45,
-                spread: 60,
-                origin: { y: 0.6 },
-                colors: ['#E8621A', '#10B981', '#1B1F3B', '#F59E0B'],
-                disableForReducedMotion: true,
-            })
-        } catch {
-            // Silently ignore if canvas-confetti is not available
+        if (!orderDetails || orderDetails.status === 'PENDING') {
+            try {
+                confetti({
+                    particleCount: 40,
+                    spread: 60,
+                    origin: { y: 0.6 },
+                    colors: ['#E8621A', '#10B981', '#1B1F3B', '#F59E0B'],
+                    disableForReducedMotion: true,
+                })
+            } catch {
+                // Silently ignore if canvas-confetti is not available
+            }
         }
-    }, [])
+    }, [orderDetails])
 
-    // Fetch optional order details if available in database
+    // Fetch order details if available in database (public, no auth required)
     useEffect(() => {
         if (rawOrderId && !rawOrderId.startsWith('BK-')) {
             getOrderSuccessDetails(rawOrderId).then((res) => {
@@ -91,27 +102,69 @@ function OrderSuccessContent() {
     }
 
     const isPickup = orderDetails?.deliveryMethod === 'retrait'
+    const status = orderDetails?.status || 'PENDING'
 
+    // Dynamic steps based on actual status
     const steps = [
         {
             title: 'Commande validée',
-            description: 'Enregistrée avec succès',
-            status: 'completed', // completed | current | upcoming
+            description: orderDetails?.createdAt
+                ? `Enregistrée le ${new Date(orderDetails.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                : 'Enregistrée avec succès',
+            status: 'completed',
             icon: CheckCircle2,
         },
         {
             title: 'Préparation du colis',
-            description: 'En cours dans nos locaux à Dakar',
-            status: 'current',
+            description: status === 'PENDING'
+                ? 'Notre équipe prépare votre colis à Dakar'
+                : status === 'PROCESSING'
+                    ? 'Préparation en cours dans nos locaux'
+                    : status === 'CANCELLED'
+                        ? 'Commande annulée'
+                        : 'Colis préparé avec soin',
+            status: status === 'PENDING' || status === 'PROCESSING'
+                ? 'current'
+                : status === 'CANCELLED'
+                    ? 'upcoming'
+                    : 'completed',
             icon: Package,
         },
         {
             title: isPickup ? 'Mise à disposition' : 'Expédition & Livraison',
-            description: isPickup ? 'Disponible sous 2h en magasin' : 'Sous 24h à Dakar & banlieue',
-            status: 'upcoming',
+            description: isPickup
+                ? (status === 'DELIVERED' ? 'Colis remis en boutique' : 'Disponible sous 2h en magasin')
+                : (status === 'SHIPPED'
+                    ? 'En cours d\'acheminement avec notre livreur'
+                    : status === 'DELIVERED'
+                        ? 'Colis remis avec succès'
+                        : 'Sous 24h à Dakar & banlieue'),
+            status: status === 'DELIVERED'
+                ? 'completed'
+                : status === 'SHIPPED'
+                    ? 'current'
+                    : 'upcoming',
             icon: isPickup ? Store : Truck,
         },
     ]
+
+    const heroTitle =
+        status === 'DELIVERED'
+            ? 'Commande livrée !'
+            : status === 'SHIPPED'
+                ? 'Votre colis est en route !'
+                : status === 'CANCELLED'
+                    ? 'Commande annulée'
+                    : 'Commande confirmée !'
+
+    const heroSubtitle =
+        status === 'DELIVERED'
+            ? 'Votre commande vous a bien été remise. Merci pour votre confiance chez Baraka Shop !'
+            : status === 'SHIPPED'
+                ? 'Votre colis a été remis à notre livreur et arrive très prochainement à votre adresse.'
+                : status === 'CANCELLED'
+                    ? 'Cette commande a été annulée. Contactez notre support pour toute question.'
+                    : 'Merci pour votre achat chez Baraka Shop. Votre commande a été transmise à notre équipe logistique.'
 
     return (
         <main className="min-h-screen bg-[#F8F9FB] py-10 sm:py-20 px-4 flex items-center justify-center">
@@ -138,17 +191,28 @@ function OrderSuccessContent() {
                             <div className="absolute inset-0 rounded-full bg-emerald-500/15 blur-xl pointer-events-none animate-pulse" />
 
                             {/* Dual-ring check container */}
-                            <div className="relative w-18 h-18 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                                <Check className="w-9 h-9 stroke-[3]" />
+                            <div className={cn(
+                                "relative w-18 h-18 rounded-full text-white flex items-center justify-center shadow-lg",
+                                status === 'CANCELLED'
+                                    ? 'bg-rose-600 shadow-rose-500/25'
+                                    : status === 'SHIPPED'
+                                        ? 'bg-gradient-to-br from-orange-500 to-amber-600 shadow-orange-500/25'
+                                        : 'bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-emerald-500/25'
+                            )}>
+                                {status === 'SHIPPED' ? (
+                                    <Truck className="w-9 h-9 stroke-[2.5]" />
+                                ) : (
+                                    <Check className="w-9 h-9 stroke-[3]" />
+                                )}
                             </div>
                         </motion.div>
 
                         <h1 className="text-2xl sm:text-3xl font-black text-[#1B1F3B] tracking-tight mb-2">
-                            Commande confirmée !
+                            {heroTitle}
                         </h1>
 
                         <p className="text-slate-500 text-xs sm:text-sm font-medium leading-relaxed max-w-sm mx-auto mb-6">
-                            Merci pour votre achat chez <span className="font-bold text-slate-700">Baraka Shop</span>. Votre commande a été transmise à notre équipe logistique.
+                            {heroSubtitle}
                         </p>
 
                         {/* Minimalist Order Reference Pill */}
@@ -183,7 +247,7 @@ function OrderSuccessContent() {
                         </div>
 
                         {/* Connected Tracking Timeline (Airy & Modern) */}
-                        <div className="text-left mb-7 p-4 sm:p-5 bg-slate-50/60 rounded-2xl border border-slate-100">
+                        <div className="text-left mb-6 p-4 sm:p-5 bg-slate-50/60 rounded-2xl border border-slate-100">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3.5 pl-0.5">
                                 Suivi d&apos;avancement
                             </span>
@@ -255,6 +319,74 @@ function OrderSuccessContent() {
                             </div>
                         </div>
 
+                        {/* Order Items & Summary Card */}
+                        {orderDetails?.items && orderDetails.items.length > 0 && (
+                            <div className="mb-6 p-4 sm:p-5 bg-slate-50/60 rounded-2xl border border-slate-100 text-left">
+                                <div className="flex items-center justify-between mb-3.5 pl-0.5">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                        Articles ({orderDetails.items.reduce((acc, it) => acc + (it.quantity || 1), 0)})
+                                    </span>
+                                    <span className="text-xs font-bold text-[#1B1F3B]">
+                                        Total : {orderDetails.total.toLocaleString('fr-FR')} FCFA
+                                    </span>
+                                </div>
+                                <div className="space-y-3">
+                                    {orderDetails.items.map((item, idx) => (
+                                        <div key={item.id || idx} className="flex items-center gap-3">
+                                            <div className="w-11 h-11 rounded-xl bg-white border border-slate-200/80 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                                                {item.product?.images?.[0] ? (
+                                                    <img
+                                                        src={item.product.images[0]}
+                                                        alt={item.product.name}
+                                                        className="w-full h-full object-contain"
+                                                    />
+                                                ) : (
+                                                    <ShoppingBag className="w-4 h-4 text-slate-300" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-bold text-[#1B1F3B] truncate leading-tight">
+                                                    {item.product?.name}
+                                                </p>
+                                                <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                                                    Qté {item.quantity} {item.selectedColor ? `• ${item.selectedColor}` : ''} • {item.price.toLocaleString('fr-FR')} FCFA
+                                                </p>
+                                            </div>
+                                            <span className="text-xs font-bold text-[#1B1F3B] whitespace-nowrap">
+                                                {(item.quantity * item.price).toLocaleString('fr-FR')} FCFA
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Recipient & Address summary */}
+                                {(orderDetails.customerName || orderDetails.shippingAddress || orderDetails.shippingPhone) && (
+                                    <div className="mt-4 pt-3.5 border-t border-slate-200/60 text-xs space-y-1">
+                                        {orderDetails.customerName && (
+                                            <div className="flex justify-between text-slate-600">
+                                                <span className="text-slate-400 text-[11px]">Destinataire :</span>
+                                                <span className="font-semibold text-slate-800">{orderDetails.customerName}</span>
+                                            </div>
+                                        )}
+                                        {orderDetails.shippingPhone && (
+                                            <div className="flex justify-between text-slate-600">
+                                                <span className="text-slate-400 text-[11px]">Téléphone :</span>
+                                                <span className="font-semibold text-slate-800">{orderDetails.shippingPhone}</span>
+                                            </div>
+                                        )}
+                                        {orderDetails.shippingAddress && (
+                                            <div className="flex justify-between text-slate-600">
+                                                <span className="text-slate-400 text-[11px]">Adresse :</span>
+                                                <span className="font-semibold text-slate-800 text-right max-w-[220px] truncate">
+                                                    {orderDetails.shippingAddress}{orderDetails.shippingCity ? `, ${orderDetails.shippingCity}` : ''}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Logistics Summary Row */}
                         <div className="grid grid-cols-2 gap-3 mb-8 text-left">
                             <div className="p-3.5 bg-slate-50/50 rounded-2xl border border-slate-100 flex items-center gap-3">
@@ -288,16 +420,16 @@ function OrderSuccessContent() {
 
                         {/* Action CTAs */}
                         <div className="space-y-3">
-                            {/* WhatsApp follow button (Refined, no harsh neon green) */}
+                            {/* WhatsApp follow button */}
                             <a
-                                href={`https://wa.me/221338223422?text=${encodeURIComponent(
-                                    `Bonjour Baraka Shop, je viens de passer la commande ${orderRef}. Pourriez-vous me confirmer le suivi ?`
+                                href={`https://wa.me/221765149898?text=${encodeURIComponent(
+                                    `Bonjour Baraka Shop, je viens aux nouvelles concernant ma commande ${orderRef}. Pourriez-vous me confirmer le suivi ?`
                                 )}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="block w-full"
                             >
-                                <button className="w-full h-12 sm:h-13 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 border border-emerald-200/70 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-xs">
+                                <button className="w-full h-12 sm:h-13 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 border border-emerald-200/70 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-xs cursor-pointer">
                                     <MessageCircle className="w-4 h-4 text-emerald-600" />
                                     <span>Suivre via WhatsApp</span>
                                 </button>
@@ -305,7 +437,7 @@ function OrderSuccessContent() {
 
                             {/* Continue shopping button */}
                             <Link href="/boutique" className="block w-full">
-                                <button className="w-full h-12 sm:h-13 bg-[#1B1F3B] hover:bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-md shadow-[#1B1F3B]/10">
+                                <button className="w-full h-12 sm:h-13 bg-[#1B1F3B] hover:bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-md shadow-[#1B1F3B]/10 cursor-pointer">
                                     <span>Continuer mes achats</span>
                                     <ArrowRight className="w-4 h-4" />
                                 </button>
@@ -327,11 +459,11 @@ function OrderSuccessContent() {
                         <p className="text-[11px] font-medium text-slate-400 flex items-center justify-center gap-1.5 flex-wrap">
                             <span>Une question sur votre livraison ?</span>
                             <a
-                                href="tel:+221338223422"
+                                href="tel:+221765149898"
                                 className="inline-flex items-center gap-1 text-orange-600 font-bold hover:underline"
                             >
                                 <PhoneCall className="w-3 h-3" />
-                                +221 33 822 34 22
+                                +221 76 514 98 98
                             </a>
                         </p>
                     </div>

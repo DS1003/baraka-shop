@@ -29,7 +29,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/ui/Button'
-import { cn } from '@/lib/utils'
+import { cn, formatPrice, formatNumber } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
 import { useSession } from 'next-auth/react'
 import { createOrder } from '@/lib/actions/order-actions'
@@ -472,11 +472,11 @@ export default function CheckoutPage() {
                                                             <p className="text-xs font-black text-[#1B1F3B]">{selectedZone.name}</p>
                                                             {isFreeShipping ? (
                                                                 <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
-                                                                    <span className="line-through text-slate-400 font-normal">{selectedZone.price.toLocaleString()} FCFA</span>
+                                                                    <span className="line-through text-slate-400 font-normal tabular-nums">{formatPrice(selectedZone.price)}</span>
                                                                     <span>· Offert (0 FCFA)</span>
                                                                 </p>
                                                             ) : (
-                                                                <p className="text-[11px] font-bold text-orange-600">Frais: {selectedZone.price.toLocaleString()} FCFA</p>
+                                                                <p className="text-[11px] font-bold text-orange-600">Frais: <span className="tabular-nums">{formatPrice(selectedZone.price)}</span></p>
                                                             )}
                                                         </div>
                                                     </div>
@@ -547,7 +547,7 @@ export default function CheckoutPage() {
                                                                                 ? "text-emerald-600" 
                                                                                 : "text-slate-500"
                                                                     )}>
-                                                                        {isFreeShipping ? '· Offert' : `· ${match.price.toLocaleString()}F`}
+                                                                        {isFreeShipping ? '· Offert' : `· ${formatNumber(match.price)} F`}
                                                                     </span>
                                                                 </button>
                                                             )
@@ -604,10 +604,10 @@ export default function CheckoutPage() {
                                                                                 {isFreeShipping ? (
                                                                                     <div className="flex items-center gap-1.5 mt-1">
                                                                                         <span className={cn(
-                                                                                            "text-[10px] line-through",
+                                                                                            "text-[10px] line-through tabular-nums",
                                                                                             isSel ? "text-orange-200/80" : "text-slate-400"
                                                                                         )}>
-                                                                                            {zone.price.toLocaleString()} F
+                                                                                            {formatNumber(zone.price)} F
                                                                                         </span>
                                                                                         <span className={cn(
                                                                                             "text-[10px] font-black uppercase tracking-wider",
@@ -617,8 +617,8 @@ export default function CheckoutPage() {
                                                                                         </span>
                                                                                     </div>
                                                                                 ) : (
-                                                                                    <span className={cn("text-[10px] font-black mt-1", isSel ? "text-orange-200" : "text-orange-600")}>
-                                                                                        {zone.price.toLocaleString()} FCFA
+                                                                                    <span className={cn("text-[10px] font-black mt-1 tabular-nums", isSel ? "text-orange-200" : "text-orange-600")}>
+                                                                                        {formatPrice(zone.price)}
                                                                                     </span>
                                                                                 )}
                                                                             </button>
@@ -835,12 +835,12 @@ export default function CheckoutPage() {
                                                     {deliveryMethod === 'livraison' && selectedZone && (
                                                         isFreeShipping ? (
                                                             <span className="text-[11px] text-emerald-600 font-bold block mt-0.5">
-                                                                <span className="line-through text-slate-400 font-normal mr-1">{selectedZone.price.toLocaleString()} FCFA</span>
+                                                                <span className="line-through text-slate-400 font-normal mr-1 tabular-nums">{formatPrice(selectedZone.price)}</span>
                                                                 Livraison offerte (0 FCFA)
                                                             </span>
                                                         ) : (
                                                             <span className="text-[11px] text-orange-600 font-bold block mt-0.5">
-                                                                Frais: {selectedZone.price.toLocaleString()} FCFA
+                                                                Frais: <span className="tabular-nums">{formatPrice(selectedZone.price)}</span>
                                                             </span>
                                                         )
                                                     )}
