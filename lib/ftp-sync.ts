@@ -364,32 +364,34 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
         updateSyncProgress(60, 'Mise à jour des prix et stocks...')
         addSyncLog(`Mise à jour de ${updateValues.length} produit(s) existant(s)...`)
         const CHUNK_SIZE = 1000
+        const escapeSql = (str: any) => String(str).replace(/'/g, "''");
+
         for (let i = 0; i < updateValues.length; i += CHUNK_SIZE) {
             const chunk = updateValues.slice(i, i + CHUNK_SIZE)
             let sql = ''
             for (const item of chunk) {
                 let sets = []
-                if (item.price !== undefined) sets.push(`"price" = ${item.price}`)
-                if (item.stock !== undefined) sets.push(`"stock" = ${item.stock}`)
-                if (item.categoryId !== undefined) sets.push(`"categoryId" = '${item.categoryId}'`)
+                if (item.price !== undefined && !isNaN(Number(item.price))) sets.push(`"price" = ${Number(item.price)}`)
+                if (item.stock !== undefined && !isNaN(Number(item.stock))) sets.push(`"stock" = ${Math.floor(Number(item.stock))}`)
+                if (item.categoryId !== undefined) sets.push(`"categoryId" = '${escapeSql(item.categoryId)}'`)
                 
                 // Handle potentially null relations for raw SQL
                 if (item.subCategoryId !== undefined) {
-                    sets.push(`"subCategoryId" = ${item.subCategoryId ? `'${item.subCategoryId}'` : 'NULL'}`)
+                    sets.push(`"subCategoryId" = ${item.subCategoryId ? `'${escapeSql(item.subCategoryId)}'` : 'NULL'}`)
                 }
                 if (item.thirdLevelCategoryId !== undefined) {
-                    sets.push(`"thirdLevelCategoryId" = ${item.thirdLevelCategoryId ? `'${item.thirdLevelCategoryId}'` : 'NULL'}`)
+                    sets.push(`"thirdLevelCategoryId" = ${item.thirdLevelCategoryId ? `'${escapeSql(item.thirdLevelCategoryId)}'` : 'NULL'}`)
                 }
 
                 if (item.isPublished !== undefined) sets.push(`"isPublished" = ${item.isPublished ? 'TRUE' : 'FALSE'}`)
-                if (item.deactivationReason !== undefined) sets.push(`"deactivationReason" = '${item.deactivationReason}'`)
+                if (item.deactivationReason !== undefined) sets.push(`"deactivationReason" = '${escapeSql(item.deactivationReason)}'`)
                 if (item.setDeactivatedAt) sets.push(`"deactivatedAt" = NOW()`)
                 if (item.restockPendingReview !== undefined) sets.push(`"restockPendingReview" = ${item.restockPendingReview ? 'TRUE' : 'FALSE'}`)
                 if (item.setRestockedAt) sets.push(`"restockedAt" = NOW()`)
-                if (item.lastRestockedQty !== undefined) sets.push(`"lastRestockedQty" = ${item.lastRestockedQty}`)
+                if (item.lastRestockedQty !== undefined && !isNaN(Number(item.lastRestockedQty))) sets.push(`"lastRestockedQty" = ${Math.floor(Number(item.lastRestockedQty))}`)
 
                 if (sets.length > 0) {
-                    sql += `UPDATE "Product" SET ${sets.join(', ')} WHERE "id" = '${item.id}';\n`
+                    sql += `UPDATE "Product" SET ${sets.join(', ')} WHERE "id" = '${escapeSql(item.id)}';\n`
                     productsUpdatedCount++
                 }
             }

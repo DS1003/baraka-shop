@@ -787,6 +787,13 @@ export async function voteReviewAction(reviewId: string, type: 'helpful' | 'unhe
             return { success: false, message: "Vous devez être connecté pour voter." };
         }
 
+        // Vérifier si l'utilisateur a déjà voté pour cet avis
+        const voteKey = `review_vote:${session.user.id}:${reviewId}`;
+        const hasVoted = await getCache(voteKey);
+        if (hasVoted) {
+            return { success: false, message: "Vous avez déjà voté pour cet avis." };
+        }
+
         if (type === 'helpful') {
             await prisma.review.update({
                 where: { id: reviewId },
@@ -798,6 +805,8 @@ export async function voteReviewAction(reviewId: string, type: 'helpful' | 'unhe
                 data: { unhelpfulCount: { increment: 1 } }
             });
         }
+
+        await setCache(voteKey, type, 86400 * 30); // Enregistrer le vote pendant 30 jours
         
         if (productId) {
             await invalidatePrefix(`product:${productId}`);

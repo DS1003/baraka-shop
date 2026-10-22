@@ -19,7 +19,11 @@ export async function GET() {
         ])
         dbStatus = { ok: true, latencyMs: Date.now() - dbStart }
     } catch (err: any) {
-        dbStatus = { ok: false, latencyMs: Date.now() - dbStart, error: err.message || 'Database unreachable' }
+        dbStatus = {
+            ok: false,
+            latencyMs: Date.now() - dbStart,
+            error: process.env.NODE_ENV === 'production' ? 'Database unreachable' : (err.message || 'Database unreachable')
+        }
     }
 
     // 2. Test Cache Connectivity (Upstash Redis)

@@ -96,6 +96,17 @@ export default auth(async (req) => {
         return response
     }
 
+    // ── Admin API protection (Defense-in-depth) ──
+    if (pathname.startsWith('/api/admin')) {
+        if (!isAdmin) {
+            return NextResponse.json(
+                { error: 'Accès administrateur requis.' },
+                { status: 401 }
+            )
+        }
+        return
+    }
+
     // ── Admin route protection ──
     const isAdminRoute = pathname.startsWith('/admin')
     const isLoginRoute = pathname === '/login'
@@ -115,5 +126,5 @@ export default auth(async (req) => {
 })
 
 export const config = {
-    matcher: ['/((?!api|_next/static|_next/image|sitemap\\.xml|robots\\.txt|.*\\.png$).*)'],
+    matcher: ['/((?!api/(?!admin)|_next/static|_next/image|sitemap\\.xml|robots\\.txt|.*\\.png$).*)'],
 }

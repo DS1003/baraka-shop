@@ -49,6 +49,6 @@ export async function GET(
         return NextResponse.json({ store, products });
     } catch (error: any) {
         console.error('API /store/[slug] error:', error.message);
-        return NextResponse.json({ store: null, products: [], error: error.message }, { status: 500 });
+        return NextResponse.json({ store: null, products: [], error: 'Erreur lors de la récupération de la boutique' }, { status: 500 });
     }
 }

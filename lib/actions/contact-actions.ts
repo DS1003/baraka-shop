@@ -3,6 +3,8 @@
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
+import { rateLimit } from '@/lib/rate-limit';
 import { emailService } from '@/lib/email-service';
 import { notifyAdminsNewContactMessage } from '@/lib/notification-service';
 
@@ -36,10 +38,25 @@ export interface ContactSubmissionInput {
 }
 
 /**
- * Soumission publique du formulaire de contact
+ * Soumission publique du formulaire de contact (sécurisée avec Rate Limiting)
  */
 export async function submitContactMessage(input: ContactSubmissionInput) {
     try {
+        let ip = 'anon';
+        try {
+            const h = await headers();
+            ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anon';
+        } catch {}
+
+        // Rate limiting anti-spam : max 5 messages par 15 minutes par IP
+        const limiter = await rateLimit(`contact:${ip}`, 5, 900);
+        if (!limiter.success) {
+            return {
+                success: false,
+                error: `Trop de messages envoyés. Par mesure de sécurité, veuillez patienter ${Math.ceil(limiter.reset / 60)} minute(s).`
+            };
+        }
+
         const name = input.name?.trim();
         const email = input.email?.trim().toLowerCase();
         const phone = input.phone?.trim() || null;
@@ -53,9 +70,16 @@ export async function submitContactMessage(input: ContactSubmissionInput) {
             };
         }
 
+        if (name.length > 100 || subject.length > 200 || message.length > 4000) {
+            return {
+                success: false,
+                error: 'Votre message dépasse la taille maximale autorisée (4000 caractères).'
+            };
+        }
+
         // Email basic validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
+        if (!emailRegex.test(email) || email.length > 100) {
             return {
                 success: false,
                 error: 'Adresse email invalide.'

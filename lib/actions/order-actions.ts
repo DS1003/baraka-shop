@@ -3,6 +3,8 @@
 import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
+import { rateLimit } from '@/lib/rate-limit';
 import { notifyClientOrderStatusChange, notifyAdminsNewOrder } from '@/lib/notification-service';
 import { validateCoupon } from '@/lib/promotions/validation';
 import { calculateDiscount } from '@/lib/promotions/calculation';
@@ -284,17 +286,57 @@ export async function createOrder(data: CreateOrderData) {
     }
 }
 
+function maskName(name?: string | null): string | null {
+    if (!name) return null;
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    return `${parts[0]} ${parts.slice(1).map(p => p[0] ? p[0] + '***' : '').join(' ')}`.trim();
+}
+
+function maskPhone(phone?: string | null): string | null {
+    if (!phone) return null;
+    const clean = phone.trim();
+    if (clean.length <= 4) return clean;
+    const prefix = clean.slice(0, 3);
+    const suffix = clean.slice(-2);
+    return `${prefix} ••• •• ${suffix}`;
+}
+
+function maskAddress(addr?: string | null, city?: string | null): string | null {
+    if (!addr) return city || null;
+    if (addr.toLowerCase().includes('retrait')) return addr;
+    return city ? `Adresse enregistrée (${city})` : 'Adresse enregistrée';
+}
+
 export async function getOrderSuccessDetails(orderId: string) {
     if (!orderId || typeof orderId !== 'string') {
         return { success: false, order: null };
     }
 
     try {
+        // Protection anti-bruteforce & anti-énumération (25 requêtes par minute par IP)
+        let clientIp = 'anon';
+        try {
+            const h = await headers();
+            clientIp = h.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anon';
+        } catch {}
+
+        const limiter = await rateLimit(`order_lookup:${clientIp}`, 25, 60);
+        if (!limiter.success) {
+            return { success: false, order: null, error: 'Trop de requêtes. Veuillez patienter.' };
+        }
+
         const trimmed = orderId.trim();
-        const cleanRef = trimmed.replace(/^#ORD-/i, '').trim();
+        const cleanRef = trimmed.replace(/^#?ORD-/i, '').trim();
+
+        // Refuser les préfixes trop courts (sécurité anti-énumération)
+        if (cleanRef.length < 8 && trimmed.length < 8) {
+            return { success: false, order: null };
+        }
 
         const selectFields = {
             id: true,
+            userId: true,
             total: true,
             subtotal: true,
             status: true,
@@ -324,14 +366,14 @@ export async function getOrderSuccessDetails(orderId: string) {
             }
         };
 
-        // 1. Try finding by exact ID (UUID)
+        // 1. Recherche par ID exact (UUID)
         let order = await prisma.order.findUnique({
             where: { id: trimmed },
             select: selectFields
         });
 
-        // 2. If not found, try searching by UUID prefix (orderRef like 4EDDF84A)
-        if (!order && cleanRef.length >= 6) {
+        // 2. Si non trouvé, recherche par préfixe UUID (au moins 8 caractères)
+        if (!order && cleanRef.length >= 8) {
             order = await prisma.order.findFirst({
                 where: {
                     id: {
@@ -345,6 +387,25 @@ export async function getOrderSuccessDetails(orderId: string) {
 
         if (!order) {
             return { success: false, order: null };
+        }
+
+        // 3. Masquage PII si la requête est anonyme ou non-propriétaire
+        const session = await auth();
+        const isOwnerOrAdmin = session?.user && (
+            session.user.role === 'ADMIN' || 
+            session.user.id === order.userId
+        );
+
+        if (!isOwnerOrAdmin) {
+            return {
+                success: true,
+                order: {
+                    ...order,
+                    customerName: maskName(order.customerName),
+                    shippingPhone: maskPhone(order.shippingPhone),
+                    shippingAddress: maskAddress(order.shippingAddress, order.shippingCity),
+                }
+            };
         }
 
         return { success: true, order };

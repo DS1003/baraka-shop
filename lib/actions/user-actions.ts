@@ -72,8 +72,33 @@ export async function updateUserSettings(data: {
     try {
         const currentUser = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { metadata: true }
+            select: { email: true, metadata: true }
         });
+
+        // Validation stricte du changement d'adresse email
+        let targetEmail: string | undefined = undefined;
+        if (data.profile?.email) {
+            const normalizedEmail = data.profile.email.trim().toLowerCase();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(normalizedEmail) || normalizedEmail.length > 100) {
+                return { success: false, error: "Adresse email invalide." };
+            }
+
+            if (normalizedEmail !== currentUser?.email) {
+                const existingUser = await prisma.user.findFirst({
+                    where: {
+                        email: normalizedEmail,
+                        NOT: { id: session.user.id }
+                    },
+                    select: { id: true }
+                });
+
+                if (existingUser) {
+                    return { success: false, error: "Cette adresse email est déjà associée à un autre compte." };
+                }
+                targetEmail = normalizedEmail;
+            }
+        }
 
         const currentMetadata = (currentUser?.metadata as any) || {};
         const newMetadata = {
@@ -85,11 +110,11 @@ export async function updateUserSettings(data: {
         await prisma.user.update({
             where: { id: session.user.id },
             data: {
-                ...(data.profile?.username && { username: data.profile.username }),
-                ...(data.profile?.phone && { phone: data.profile.phone }),
-                ...(data.profile?.email && { email: data.profile.email }),
+                ...(data.profile?.username && { username: data.profile.username.trim().slice(0, 50) }),
+                ...(data.profile?.phone !== undefined && { phone: data.profile.phone ? data.profile.phone.trim().slice(0, 25) : null }),
+                ...(targetEmail && { email: targetEmail }),
                 ...(data.profile?.image && { image: data.profile.image }),
-                ...(data.profile?.address && { address: data.profile.address }),
+                ...(data.profile?.address !== undefined && { address: data.profile.address ? data.profile.address.trim().slice(0, 255) : null }),
                 metadata: newMetadata,
             } as any,
         });
