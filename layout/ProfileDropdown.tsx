@@ -5,18 +5,18 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     User,
-    LayoutDashboard,
+    Category as LayoutDashboard,
     ShoppingBag,
     Package,
-    PackageCheck,
+    BoxTick as PackageCheck,
     Heart,
-    LogOut,
-    LogIn,
-    UserPlus,
+    Logout as LogOut,
+    Login as LogIn,
+    UserAdd as UserPlus,
     ChevronRight,
-    MapPin,
-    HelpCircle
-} from 'lucide-react'
+    Location as MapPin,
+    InfoCircle as HelpCircle
+} from 'reicon-react'
 import { cn } from '@/lib/utils'
 import { signOut } from 'next-auth/react'
 

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/ui/Button'
 import { Container } from '@/ui/Container'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'reicon-react'
 
 export function Hero() {
     return (

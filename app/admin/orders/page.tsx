@@ -2,13 +2,14 @@
 
 import React, { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import {
-    Search, Download, Eye, Truck, PackageCheck, Clock, XCircle,
-    ShoppingCart, Calendar, Zap, History, Loader2, X,
-    MapPin, Phone, User, RefreshCw, Inbox,
-    CheckCircle2, Printer, CreditCard, ChevronDown,
-    Edit3, Check
-} from 'lucide-react';
+    Search, Export as Download, Eye, Truck, BoxTick as PackageCheck, Clock, XCircle,
+    ShoppingCart, Calendar, Flash as Zap, History, X,
+    Location as MapPin, Phone, User, Refresh as RefreshCw, Inbox,
+    CheckCircle as CheckCircle2, Printer, CreditCard, ChevronDown,
+    Edit as Edit3, Check
+} from 'reicon-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatNumber, formatPrice } from '@/lib/utils';
 import { updateOrderStatus, bulkUpdateOrderStatuses, updateOrderPaymentStatus, updateOrderShippingAddress } from '@/lib/actions/admin-actions';

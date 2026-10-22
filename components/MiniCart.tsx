@@ -4,7 +4,7 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Zap, ShieldCheck, Truck } from 'lucide-react'
+import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Flash as Zap, ShieldCheck, Truck } from 'reicon-react'
 import { useCart } from '@/context/CartContext'
 import { formatPrice } from '@/lib/utils'
 

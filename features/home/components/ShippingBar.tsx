@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Container } from '@/ui/Container'
-import { Truck, RotateCcw, ShieldCheck, Headphones, CreditCard } from 'lucide-react'
+import { Truck, Refresh as RotateCcw, ShieldCheck, Headphones, CreditCard } from 'reicon-react'
 
 const features = [
     {

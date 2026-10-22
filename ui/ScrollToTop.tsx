@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowUp } from 'lucide-react'
+import { ArrowUp } from 'reicon-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { usePathname } from 'next/navigation'

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus } from 'reicon-react'
 import { Container } from '@/ui/Container'
 import { ProductCard } from '@/ui/ProductCard'
 import { Product } from '@/types'

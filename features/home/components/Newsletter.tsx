@@ -3,7 +3,7 @@
 import React from 'react'
 import { Container } from '@/ui/Container'
 import { Button } from '@/ui/Button'
-import { Send } from 'lucide-react'
+import { Send } from 'reicon-react'
 import Link from 'next/link'
 
 export function Newsletter() {

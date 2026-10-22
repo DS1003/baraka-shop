@@ -3,7 +3,8 @@
 import React from 'react'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
-import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, Youtube } from 'lucide-react'
+import { Facebook, Twitter, Youtube } from 'lucide-react'
+import { Instagram, Location as MapPin, Call as Phone, Sms as Mail } from 'reicon-react'
 
 export function Footer() {
     return (

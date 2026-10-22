@@ -3,7 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Heart, ShoppingCart, Star, Zap, Clock } from 'lucide-react'
+import { Heart, ShoppingCart, Star, Flash as Zap, Clock } from 'reicon-react'
 import { cn, getOptimizedImageUrl, formatPrice, formatNumber } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'

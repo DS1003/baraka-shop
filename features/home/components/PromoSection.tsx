@@ -4,7 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import { Container } from '@/ui/Container'
 import { Button } from '@/ui/Button'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'reicon-react'
 
 export function PromoSection() {
     return (

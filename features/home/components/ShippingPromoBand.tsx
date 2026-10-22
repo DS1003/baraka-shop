@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Container } from '@/ui/Container'
-import { Ticket, Truck, CreditCard, RotateCcw } from 'lucide-react'
+import { Ticket, Truck, CreditCard, Refresh as RotateCcw } from 'reicon-react'
 
 export function ShippingPromoBand() {
     return (

@@ -4,7 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
-import { ArrowRight, ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Plus } from 'reicon-react'
 import { formatUniverseHref, getOptimizedImageUrl } from '@/lib/utils'
 
 // Images locales dans /public/categories/ - garanties d'affichage (Fallback)

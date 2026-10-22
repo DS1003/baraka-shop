@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Check, ShoppingBag, X, ArrowRight } from 'lucide-react'
+import { Check, ShoppingBag, X, ArrowRight } from 'reicon-react'
 import { formatPrice } from '@/lib/utils'
 
 interface CartToastProps {

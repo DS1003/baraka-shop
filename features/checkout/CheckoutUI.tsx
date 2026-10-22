@@ -4,8 +4,9 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Loader2 } from 'lucide-react'
 import {
-    CheckCircle2,
+    CheckCircle as CheckCircle2,
     Check,
     ChevronRight,
     ChevronDown,
@@ -14,13 +15,12 @@ import {
     ShieldCheck,
     Store,
     Truck,
-    Smartphone,
+    Mobile as Smartphone,
     Wallet,
     ShoppingBag,
-    Loader2,
-    RotateCcw,
+    Refresh as RotateCcw,
     Headphones,
-} from 'lucide-react'
+} from 'reicon-react'
 import { Button } from '@/ui/Button'
 import { cn, formatPrice, formatNumber } from '@/lib/utils'
 

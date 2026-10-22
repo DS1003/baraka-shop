@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { 
-    Search, User, ShoppingCart, Heart, Menu, ChevronDown, Zap, MapPin, PhoneCall, 
+    Search, User, ShoppingCart, Heart, Menu, ChevronDown, Flash as Zap, Location as MapPin, Call as PhoneCall, 
     ArrowRight, X, ShoppingBag, Sparkles, ShieldCheck, Store,
-    Laptop, Smartphone, Tv, Gamepad2, Printer, Cable, Cpu, Home as HomeIcon, Shield, Wifi, Watch, BatteryCharging 
-} from 'lucide-react'
+    Laptop, Mobile as Smartphone, Tv, Gamepad2, Printer, Plug as Cable, Cpu, Home as HomeIcon, Shield, Wifi, Watch, BatteryCharging 
+} from 'reicon-react'
 import { Container } from '@/ui/Container'
 import { cn, formatPrice } from '@/lib/utils'
 import dynamic from 'next/dynamic'

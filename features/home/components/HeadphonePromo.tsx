@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
 import { Button } from '@/ui/Button'
-import { ArrowRight, Zap } from 'lucide-react'
+import { ArrowRight, Flash as Zap } from 'reicon-react'
 import { getOptimizedImageUrl } from '@/lib/utils'
 
 export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {

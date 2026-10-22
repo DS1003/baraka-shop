@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Box, Layers, User, ChevronRight, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Search, X, Box, Layers, User, ChevronRight } from 'reicon-react';
 import { useRouter } from 'next/navigation';
 import { globalAdminSearch } from '@/lib/actions/search-actions';
 

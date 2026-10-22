@@ -5,11 +5,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { WashingMachine } from 'lucide-react'
 import {
-    ChevronRight, Laptop, Smartphone, Headphones, Camera,
-    Zap, Tablet, Monitor, Cpu, Mouse, Tv, Speaker, HardDrive, Gamepad2,
-    WashingMachine, Scissors, Cable, LayoutGrid, Radio
-} from 'lucide-react'
+    ChevronRight, Laptop, Mobile as Smartphone, Headphones, Camera,
+    Flash as Zap, Tablet, Monitor, Cpu, Mouse, Tv, Speaker, HardDrive, Gamepad2,
+    Scissors, Plug as Cable, Category as LayoutGrid, Radio
+} from 'reicon-react'
 import { cn } from '@/lib/utils'
 
 import { MENU_CATEGORIES } from '@/lib/data'

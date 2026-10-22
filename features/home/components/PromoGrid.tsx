@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
-import { ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react'
+import { ChevronRight, ChevronLeft, ArrowRight } from 'reicon-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getOptimizedImageUrl } from '@/lib/utils'
 

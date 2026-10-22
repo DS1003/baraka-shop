@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-    LayoutDashboard,
-    BarChart2,
+    Category as LayoutDashboard,
+    Chart as BarChart2,
     Box,
     Layers,
     Image as ImageIcon,
@@ -15,10 +15,10 @@ import {
     Users,
     User,
     Settings,
-    LogOut,
+    Logout as LogOut,
     Search,
     Bell,
-    ExternalLink,
+    Export as ExternalLink,
     Command,
     ChevronLeft,
     Menu,
@@ -26,14 +26,14 @@ import {
     CreditCard,
     ShieldCheck,
     Tag,
-    Zap,
+    Flash as Zap,
     Store,
     Maximize,
     Server,
-    MessageSquareWarning,
-    Mail,
-    AlertOctagon
-} from 'lucide-react';
+    MessageSquare as MessageSquareWarning,
+    Sms as Mail,
+    Danger as AlertOctagon
+} from 'reicon-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { signOut } from 'next-auth/react';

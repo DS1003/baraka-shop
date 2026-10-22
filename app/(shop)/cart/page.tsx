@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Container } from '@/ui/Container'
 import Image from 'next/image'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
 import {
     Trash2,
     Plus,
@@ -15,13 +16,12 @@ import {
     ShoppingBag,
     ArrowLeft,
     Tag,
-    Loader2,
     Check,
     X,
     Sparkles,
-    Zap,
+    Flash as Zap,
     ArrowRight
-} from 'lucide-react'
+} from 'reicon-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/ui/Button'
 import { useCart } from '@/context/CartContext'

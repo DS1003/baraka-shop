@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Container } from '@/ui/Container'
-import { Laptop, Camera, Smartphone, Tv, Gamepad2, Headphones } from 'lucide-react'
+import { Laptop, Camera, Mobile as Smartphone, Tv, Gamepad2, Headphones } from 'reicon-react'
 import { cn } from '@/lib/utils'
 
 const categories = [
