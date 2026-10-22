@@ -163,6 +163,13 @@ export default function AccountContent({ user }: AccountContentProps) {
     }, [tabParam, activeTab]);
 
     const handleTabChange = (tabId: TabType) => {
+        if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+            try {
+                navigator.vibrate(8);
+            } catch {
+                // Ignore silent failure on unsupported webviews
+            }
+        }
         setActiveTab(tabId);
         router.replace(`/account?tab=${tabId}`, { scroll: false });
     };
@@ -199,6 +206,15 @@ export default function AccountContent({ user }: AccountContentProps) {
             profileData.address !== (user.address || '')
         );
     }, [profileData, user.username, user.phone, user.address]);
+
+    const profileCompleteness = useMemo(() => {
+        let score = 0;
+        if (user.email) score += 25;
+        if (profileData.username?.trim()) score += 25;
+        if (profileData.phone?.trim()) score += 25;
+        if (profileData.address?.trim()) score += 25;
+        return score;
+    }, [user.email, profileData.username, profileData.phone, profileData.address]);
 
     const handleResetProfile = () => {
         setProfileData({
@@ -597,11 +613,11 @@ export default function AccountContent({ user }: AccountContentProps) {
     }, [user.username, user.email]);
 
     const menuItems = [
-        { id: 'orders' as TabType, label: 'Mes commandes', icon: Package, badge: user.orders?.length || 0 },
-        { id: 'notifications' as TabType, label: 'Notifications', icon: Bell, badge: notifUnreadCount, isUrgentBadge: notifUnreadCount > 0 },
-        { id: 'wishlist' as TabType, label: 'Coups de cœur', icon: Heart, badge: wishlist.length },
-        { id: 'profile' as TabType, label: 'Mon profil', icon: UserIcon, badge: 0 },
-        { id: 'settings' as TabType, label: 'Paramètres', icon: Settings, badge: 0 },
+        { id: 'orders' as TabType, label: 'Mes commandes', shortLabel: 'Commandes', icon: Package, badge: user.orders?.length || 0 },
+        { id: 'notifications' as TabType, label: 'Notifications', shortLabel: 'Notifs', icon: Bell, badge: notifUnreadCount, isUrgentBadge: notifUnreadCount > 0 },
+        { id: 'wishlist' as TabType, label: 'Coups de cœur', shortLabel: 'Favoris', icon: Heart, badge: wishlist.length },
+        { id: 'profile' as TabType, label: 'Mon profil', shortLabel: 'Profil', icon: UserIcon, badge: 0 },
+        { id: 'settings' as TabType, label: 'Paramètres', shortLabel: 'Sécurité', icon: Settings, badge: 0 },
     ];
 
     const activeMenuItem = menuItems.find(item => item.id === activeTab) || menuItems[0];
@@ -617,39 +633,39 @@ export default function AccountContent({ user }: AccountContentProps) {
 
     const itemVariants = {
         hidden: { opacity: 0, y: 8 },
-        show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 380, damping: 26 } }
+        show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 350, damping: 25 } }
     };
 
     return (
-        <div className="w-full py-3 sm:py-6 md:py-10 pb-28 sm:pb-20 md:pb-16 relative flex-grow bg-[#FAFAFC] overflow-x-hidden">
+        <div className="w-full py-3 sm:py-6 md:py-10 pb-36 sm:pb-28 md:pb-20 relative flex-grow bg-[#FAFAFC] overflow-x-hidden">
             {/* Ambient background decoration */}
             <div className="absolute top-0 left-0 w-full h-[260px] sm:h-[320px] bg-gradient-to-b from-orange-50/50 via-amber-50/20 to-transparent pointer-events-none" />
 
             <Container className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                 
                 {/* ================= MOBILE COMPACT HEADER (MOBILE FIRST) ================= */}
-                <div className="lg:hidden mb-2.5 bg-white rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-xs">
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="lg:hidden mb-3 bg-white rounded-3xl p-4 border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-3 min-w-0">
                             {/* Avatar */}
-                            <div className="relative w-11 h-11 rounded-xl p-0.5 bg-gradient-to-tr from-[#1B1F3B] via-[#2A3158] to-orange-500 shrink-0 shadow-xs">
-                                <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
+                            <div className="relative w-12 h-12 rounded-2xl p-0.5 bg-gradient-to-tr from-[#1B1F3B] via-[#2A3158] to-orange-500 shrink-0 shadow-xs">
+                                <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
                                     {user.image ? (
                                         <Image
                                             src={user.image}
                                             alt={user.username || 'Avatar'}
-                                            width={44}
-                                            height={44}
+                                            width={48}
+                                            height={48}
                                             className="w-full h-full object-cover"
                                             unoptimized
                                         />
                                     ) : (
-                                        <span className="text-sm font-black bg-gradient-to-tr from-[#1B1F3B] to-orange-500 bg-clip-text text-transparent">
+                                        <span className="text-base font-black bg-gradient-to-tr from-[#1B1F3B] to-orange-500 bg-clip-text text-transparent">
                                             {userInitials}
                                         </span>
                                     )}
                                 </div>
-                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-2xs" />
                             </div>
 
                             {/* User details */}
@@ -659,16 +675,16 @@ export default function AccountContent({ user }: AccountContentProps) {
                                         {user.username || "Client Privilège"}
                                     </h2>
                                     {user.role === 'ADMIN' ? (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                                             Admin
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase bg-orange-50 text-orange-700 border border-orange-100">
+                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase bg-orange-50 text-orange-700 border border-orange-200/80">
                                             VIP
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-gray-400 text-[11px] truncate mt-0.5">{user.email}</p>
+                                <p className="text-slate-400 text-[11px] truncate mt-0.5">{user.email}</p>
                             </div>
                         </div>
 
@@ -677,121 +693,164 @@ export default function AccountContent({ user }: AccountContentProps) {
                             {user.role === 'ADMIN' && (
                                 <Link
                                     href="/admin"
-                                    className="h-8 sm:h-9 px-2 sm:px-2.5 bg-[#1B1F3B] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 hover:bg-orange-500 transition-colors shadow-xs active:scale-95"
+                                    className="h-8 px-2.5 bg-[#1B1F3B] text-white rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 hover:bg-orange-500 transition-colors shadow-xs active:scale-95"
                                     title="Panel Administrateur"
                                 >
-                                    <Settings className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                    <Settings className="w-3.5 h-3.5" />
                                     <span>Admin</span>
                                 </Link>
                             )}
                             <button
                                 onClick={() => signOut({ callbackUrl: '/' })}
-                                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-50 hover:bg-rose-50 text-gray-400 hover:text-rose-500 flex items-center justify-center transition-colors active:scale-95"
+                                className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-500 border border-slate-100 flex items-center justify-center transition-colors active:scale-95"
                                 title="Déconnexion"
                             >
-                                <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                <LogOut className="w-3.5 h-3.5" />
                             </button>
                         </div>
                     </div>
+
+                    {/* Mobile Quick Stats Row */}
+                    <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-slate-100">
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange('orders')}
+                            className={cn(
+                                "flex items-center justify-between p-2 rounded-xl border transition-all text-left active:scale-[0.98]",
+                                activeTab === 'orders'
+                                    ? "bg-orange-50/70 border-orange-200 text-orange-700"
+                                    : "bg-slate-50/70 border-slate-100 text-slate-600 hover:bg-slate-100/70"
+                            )}
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center text-xs", activeTab === 'orders' ? "bg-orange-500 text-white" : "bg-white text-slate-500 shadow-2xs")}>
+                                    <Package className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="text-[11px] font-bold">Commandes</span>
+                            </div>
+                            <span className={cn("text-[11px] font-black px-1.5 py-0.5 rounded-full leading-none", activeTab === 'orders' ? "bg-orange-500 text-white" : "bg-slate-200/80 text-slate-700")}>
+                                {user.orders?.length || 0}
+                            </span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange('wishlist')}
+                            className={cn(
+                                "flex items-center justify-between p-2 rounded-xl border transition-all text-left active:scale-[0.98]",
+                                activeTab === 'wishlist'
+                                    ? "bg-rose-50/70 border-rose-200 text-rose-700"
+                                    : "bg-slate-50/70 border-slate-100 text-slate-600 hover:bg-slate-100/70"
+                            )}
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center text-xs", activeTab === 'wishlist' ? "bg-rose-500 text-white" : "bg-white text-slate-500 shadow-2xs")}>
+                                    <Heart className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="text-[11px] font-bold">Coups de cœur</span>
+                            </div>
+                            <span className={cn("text-[11px] font-black px-1.5 py-0.5 rounded-full leading-none", activeTab === 'wishlist' ? "bg-rose-500 text-white" : "bg-slate-200/80 text-slate-700")}>
+                                {wishlist.length}
+                            </span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* ================= MOBILE NAVIGATION DROPDOWN (MOBILE FIRST) ================= */}
-                <div ref={dropdownRef} className="lg:hidden relative mb-3.5 z-30">
-                    <button
-                        type="button"
-                        onClick={() => setIsDropdownOpen(prev => !prev)}
-                        className="w-full bg-white rounded-2xl p-3 sm:p-3.5 border border-gray-200/90 shadow-xs flex items-center justify-between gap-3 text-left transition-all active:scale-[0.99] touch-manipulation focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                        aria-expanded={isDropdownOpen}
-                    >
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                                <ActiveIcon className="w-5 h-5" />
-                            </div>
-                            <div className="min-w-0">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block leading-tight">
-                                    Section active
-                                </span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-black text-[#1B1F3B] truncate">
-                                        {activeMenuItem.label}
-                                    </span>
-                                    {activeMenuItem.badge > 0 && (
-                                        <span className={cn(
-                                            "px-1.5 py-0.5 text-[10px] font-black rounded-full leading-none",
-                                            activeMenuItem.isUrgentBadge ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-600"
-                                        )}>
-                                            {activeMenuItem.badge}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                {/* ================= MOBILE 5-TAB SEGMENTED DOCK (HYPER-FLUIDE & DYNAMIQUE) ================= */}
+                <div className="lg:hidden sticky top-[60px] z-20 mb-3.5 bg-[#FAFAFC]/95 backdrop-blur-xl py-1">
+                    <div className="bg-slate-100/80 p-1 rounded-2xl border border-slate-200/60 shadow-2xs">
+                        <div className="grid grid-cols-5 gap-1">
+                            {menuItems.map((item) => {
+                                const isActive = activeTab === item.id;
+                                const ItemIcon = item.icon;
+                                return (
+                                    <motion.button
+                                        key={item.id}
+                                        type="button"
+                                        whileTap={{ scale: 0.91 }}
+                                        onClick={() => handleTabChange(item.id)}
+                                        className={cn(
+                                            "relative flex flex-col items-center justify-center py-2 px-0.5 rounded-xl transition-colors duration-150 group touch-manipulation text-center select-none",
+                                            isActive
+                                                ? "text-[#1B1F3B]"
+                                                : "text-slate-400 hover:text-slate-600"
+                                        )}
+                                    >
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="mobile-account-active-pill"
+                                                className="absolute inset-0 bg-white rounded-xl shadow-[0_2px_8px_rgba(27,31,59,0.06),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-200/60"
+                                                transition={{ type: "spring", stiffness: 500, damping: 35, mass: 0.75 }}
+                                            />
+                                        )}
 
-                        <div className={cn(
-                            "w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 transition-transform duration-200 shrink-0",
-                            isDropdownOpen && "rotate-180 bg-orange-50 text-orange-600"
-                        )}>
-                            <ChevronDown className="w-4 h-4" />
-                        </div>
-                    </button>
+                                        <div className="relative z-10 flex flex-col items-center justify-center w-full">
+                                            {/* Icon Container with dynamic micro-animation per tab type */}
+                                            <div className="relative flex items-center justify-center w-6 h-6">
+                                                <motion.div
+                                                    animate={
+                                                        isActive
+                                                            ? item.id === 'notifications'
+                                                                ? { rotate: [0, -14, 14, -8, 8, 0], scale: [1, 1.18, 1] }
+                                                                : item.id === 'wishlist'
+                                                                    ? { scale: [1, 1.3, 0.92, 1.15, 1] }
+                                                                    : item.id === 'orders'
+                                                                        ? { y: [0, -3.5, 0], scale: [1, 1.15, 1] }
+                                                                        : item.id === 'settings'
+                                                                            ? { rotate: [0, 90], scale: [1, 1.15, 1] }
+                                                                            : { scale: [1, 1.2, 1], y: [0, -1.5, 0] }
+                                                            : { scale: 1, rotate: 0, y: 0 }
+                                                    }
+                                                    transition={{ duration: 0.45, ease: "easeOut" }}
+                                                    className="flex items-center justify-center"
+                                                >
+                                                    <ItemIcon className={cn(
+                                                        "w-4 h-4 transition-colors duration-200",
+                                                        isActive ? "text-orange-500" : "text-slate-400 group-hover:text-slate-600"
+                                                    )} />
+                                                </motion.div>
 
-                    {/* Dropdown Menu Popup */}
-                    <AnimatePresence>
-                        {isDropdownOpen && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -8, scale: 0.98 }}
-                                transition={{ duration: 0.16 }}
-                                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl shadow-[#1B1F3B]/10 overflow-hidden z-50 p-1.5"
-                            >
-                                <div className="flex flex-col gap-0.5">
-                                    {menuItems.map((item) => {
-                                        const isSelected = activeTab === item.id;
-                                        const ItemIcon = item.icon;
-                                        return (
-                                            <button
-                                                key={item.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    handleTabChange(item.id);
-                                                    setIsDropdownOpen(false);
-                                                }}
-                                                className={cn(
-                                                    "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-all text-left active:scale-[0.99] touch-manipulation",
-                                                    isSelected
-                                                        ? "bg-orange-50/80 text-orange-600 font-bold"
-                                                        : "text-gray-600 hover:text-[#1B1F3B] hover:bg-gray-50 font-medium"
+                                                {item.badge > 0 && (
+                                                    <motion.span
+                                                        initial={{ scale: 0 }}
+                                                        animate={{ scale: isActive ? [1, 1.2, 1] : item.isUrgentBadge ? [1, 1.1, 1] : 1 }}
+                                                        transition={{ duration: 0.35, repeat: !isActive && item.isUrgentBadge ? Infinity : 0, repeatDelay: 2 }}
+                                                        className={cn(
+                                                            "absolute -top-1 -right-2 min-w-[15px] h-[15px] px-1 rounded-full text-[8.5px] font-black flex items-center justify-center leading-none transition-colors",
+                                                            isActive
+                                                                ? "bg-orange-500 text-white shadow-2xs"
+                                                                : item.isUrgentBadge
+                                                                    ? "bg-orange-500 text-white animate-pulse"
+                                                                    : "bg-slate-200/90 text-slate-600"
+                                                        )}
+                                                    >
+                                                        {item.badge > 99 ? '99+' : item.badge}
+                                                    </motion.span>
                                                 )}
-                                            >
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className={cn(
-                                                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                                                        isSelected ? "bg-orange-500 text-white" : "bg-gray-100/80 text-gray-400"
-                                                    )}>
-                                                        <ItemIcon className="w-4 h-4" />
-                                                    </div>
-                                                    <span className="text-xs sm:text-sm truncate">{item.label}</span>
-                                                    {item.badge > 0 && (
-                                                        <span className={cn(
-                                                            "px-1.5 py-0.5 rounded-full text-[10px] font-black leading-none",
-                                                            isSelected ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-500"
-                                                        )}>
-                                                            {item.badge}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                            </div>
 
-                                                {isSelected && (
-                                                    <Check className="w-4 h-4 text-orange-600 stroke-[3] shrink-0" />
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                            {/* Label without truncation */}
+                                            <span className={cn(
+                                                "text-[10px] tracking-tight leading-none mt-1 whitespace-nowrap transition-colors duration-150",
+                                                isActive ? "font-bold text-[#1B1F3B]" : "font-medium text-slate-400 group-hover:text-slate-600"
+                                            )}>
+                                                {item.shortLabel || item.label}
+                                            </span>
+
+                                            {/* Micro-indicator underneath */}
+                                            {isActive && (
+                                                <motion.span
+                                                    layoutId="mobile-account-active-indicator"
+                                                    className="w-3 h-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 mt-0.5"
+                                                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                                                />
+                                            )}
+                                        </div>
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
 
                 {/* ================= MAIN GRID (DESKTOP SIDEBAR + RESPONSIVE CONTENT) ================= */}
@@ -956,11 +1015,11 @@ export default function AccountContent({ user }: AccountContentProps) {
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.18 }}
-                                className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 border border-gray-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] min-h-[420px] sm:min-h-[520px]"
+                                initial={{ opacity: 0, y: 12, scale: 0.995 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -10, scale: 0.995 }}
+                                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                                className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 border border-slate-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] min-h-[420px] sm:min-h-[520px]"
                             >
                                 
                                 {/* ---------------- TAB: COUPS DE CŒUR (WISHLIST) ---------------- */}
@@ -1407,35 +1466,128 @@ export default function AccountContent({ user }: AccountContentProps) {
                                     </motion.div>
                                 )}
 
-                                {/* ---------------- TAB: MON PROFIL ---------------- */}
+                                {/* ---------------- TAB: MON PROFIL (MOBILE FIRST) ---------------- */}
                                 {activeTab === 'profile' && (
-                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-6">
+                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-5 sm:gap-6">
                                         
-                                        {/* Header with Title & Metadata */}
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4 sm:pb-5">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight">
-                                                        Mon profil
-                                                    </h3>
-                                                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/80 flex items-center gap-1 shadow-2xs">
-                                                        <Check className="w-2.5 h-2.5 stroke-[3]" /> Compte vérifié
-                                                    </span>
+                                        {/* Floating Mobile Save Dock (appears above mobile bottom nav when changes exist) */}
+                                        <AnimatePresence>
+                                            {isProfileDirty && (
+                                                <motion.div
+                                                    initial={{ y: 90, opacity: 0 }}
+                                                    animate={{ y: 0, opacity: 1 }}
+                                                    exit={{ y: 90, opacity: 0 }}
+                                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                                    className="fixed bottom-[84px] inset-x-3 sm:hidden z-30 bg-[#1B1F3B]/95 text-white backdrop-blur-xl p-3 px-3.5 rounded-2xl shadow-2xl border border-white/10 flex items-center justify-between gap-3"
+                                                >
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                                                        <div className="min-w-0">
+                                                            <p className="text-[11px] font-bold text-white truncate">Modifications en cours</p>
+                                                            <p className="text-[9px] text-slate-300 truncate">Pensez à enregistrer</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleResetProfile}
+                                                            className="text-[11px] font-semibold text-slate-300 hover:text-white px-2 py-1 active:scale-95"
+                                                        >
+                                                            Annuler
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => handleUpdateProfile(e as any)}
+                                                            disabled={isUpdating}
+                                                            className="h-9 px-3.5 bg-gradient-to-r from-orange-500 to-orange-600 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-orange-500/30"
+                                                        >
+                                                            {isUpdating ? (
+                                                                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                            ) : (
+                                                                <Save className="w-3.5 h-3.5" />
+                                                            )}
+                                                            <span>Enregistrer</span>
+                                                        </button>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+
+                                        {/* Header with Title, Badges & Profile Completeness */}
+                                        <div className="flex flex-col gap-4 border-b border-slate-100 pb-5">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="relative w-12 h-12 rounded-2xl p-0.5 bg-gradient-to-tr from-[#1B1F3B] to-orange-500 shrink-0 shadow-xs">
+                                                        <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
+                                                            {user.image ? (
+                                                                <Image
+                                                                    src={user.image}
+                                                                    alt={user.username || 'Avatar'}
+                                                                    width={48}
+                                                                    height={48}
+                                                                    className="w-full h-full object-cover"
+                                                                    unoptimized
+                                                                />
+                                                            ) : (
+                                                                <span className="text-base font-black bg-gradient-to-tr from-[#1B1F3B] to-orange-500 bg-clip-text text-transparent">
+                                                                    {userInitials}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-2xs" />
+                                                    </div>
+
+                                                    <div>
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight">
+                                                                Mon profil
+                                                            </h3>
+                                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/80 flex items-center gap-1 shadow-2xs">
+                                                                <Check className="w-2.5 h-2.5 stroke-[3]" /> Compte vérifié
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-slate-500 mt-0.5">
+                                                            Coordonnées personnelles & adresse de livraison par défaut.
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-gray-500">
-                                                    Gérez vos informations personnelles et votre adresse de livraison par défaut.
-                                                </p>
+
+                                                {user.createdAt && (
+                                                    <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500 font-medium flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+                                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                                        <span>Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            {user.createdAt && (
-                                                <div className="px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-100 text-[11px] text-gray-500 font-medium flex items-center gap-1.5 self-start sm:self-auto shrink-0">
-                                                    <Clock className="w-3.5 h-3.5 text-gray-400" />
-                                                    <span>Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+                                            {/* Completion Progress Bar */}
+                                            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-orange-50/70 via-amber-50/40 to-slate-50/60 border border-orange-100/60">
+                                                <div className="flex items-center justify-between text-xs mb-1.5">
+                                                    <span className="font-bold text-[#1B1F3B] flex items-center gap-1.5">
+                                                        <Sparkles className="w-3.5 h-3.5 text-orange-500" />
+                                                        {profileCompleteness === 100 ? "Profil complété à 100%" : `Profil complété à ${profileCompleteness}%`}
+                                                    </span>
+                                                    <span className="text-[11px] font-medium text-slate-500">
+                                                        {profileCompleteness === 100 ? "Prêt pour commande en 1 clic ✨" : "Ajoutez votre adresse pour commander plus vite"}
+                                                    </span>
                                                 </div>
-                                            )}
+                                                <div className="w-full h-2 bg-white rounded-full overflow-hidden border border-orange-100/80 p-0.5">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${profileCompleteness}%` }}
+                                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                                        className={cn(
+                                                            "h-full rounded-full transition-all",
+                                                            profileCompleteness === 100
+                                                                ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                                                                : "bg-gradient-to-r from-orange-500 to-amber-400"
+                                                        )}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        {/* Unsaved changes alert strip */}
+                                        {/* Unsaved changes alert banner (Desktop & Tablet) */}
                                         <AnimatePresence>
                                             {isProfileDirty && (
                                                 <motion.div
@@ -1451,7 +1603,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                     <button
                                                         type="button"
                                                         onClick={handleResetProfile}
-                                                        className="text-[11px] font-semibold text-amber-700 hover:text-amber-950 underline underline-offset-2 shrink-0"
+                                                        className="text-[11px] font-semibold text-amber-700 hover:text-amber-950 underline underline-offset-2 shrink-0 active:scale-95"
                                                     >
                                                         Annuler les changements
                                                     </button>
@@ -1460,107 +1612,119 @@ export default function AccountContent({ user }: AccountContentProps) {
                                         </AnimatePresence>
 
                                         {/* Form Body */}
-                                        <form onSubmit={handleUpdateProfile} className="flex flex-col gap-6">
+                                        <form onSubmit={handleUpdateProfile} className="flex flex-col gap-5">
                                             
-                                            {/* Section 1: Informations Personnelles */}
-                                            <div className="flex flex-col gap-3.5">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-7 h-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
-                                                        <UserIcon className="w-3.5 h-3.5" />
+                                            {/* Card 1: Coordonnées & Identité */}
+                                            <motion.div variants={itemVariants} className="bg-slate-50/50 hover:bg-slate-50/80 transition-colors p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs">
+                                                <div className="flex items-center gap-2.5 mb-4">
+                                                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                                        <UserIcon className="w-4 h-4" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-[#1B1F3B]">Informations personnelles</h4>
-                                                        <p className="text-[11px] text-gray-400">Vos coordonnées principales pour vos commandes et livraisons.</p>
+                                                        <h4 className="text-sm font-bold text-[#1B1F3B]">Identité & Contact</h4>
+                                                        <p className="text-[11px] text-slate-400">Coordonnées utilisées sur vos factures et transmises au livreur.</p>
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                                                     {/* Nom complet */}
-                                                    <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
-                                                        <label className="text-xs font-bold text-[#1B1F3B]">
-                                                            Nom complet
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-xs font-bold text-[#1B1F3B] flex items-center justify-between">
+                                                            <span>Nom complet</span>
+                                                            <span className="text-[10px] text-slate-400 font-medium">Requis</span>
                                                         </label>
-                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/15 rounded-xl transition-all">
-                                                            <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors" />
+                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-xl transition-all">
+                                                            <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors pointer-events-none" />
                                                             <input
                                                                 type="text"
                                                                 autoComplete="name"
                                                                 value={profileData.username}
                                                                 onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                                                                className="w-full h-11 pl-10 pr-4 bg-gray-50/70 hover:bg-gray-50 focus:bg-white border border-gray-200 focus:border-orange-500 rounded-xl outline-none transition-all text-sm font-semibold text-[#1B1F3B] placeholder:text-gray-300"
+                                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-xl outline-none transition-all text-base sm:text-sm font-semibold text-[#1B1F3B] placeholder:text-slate-300"
                                                                 placeholder="Ex: Cheikhou Omar Touré"
                                                             />
                                                         </div>
-                                                        <span className="text-[11px] text-gray-400">Visible sur vos factures et récapitulatifs.</span>
-                                                    </motion.div>
+                                                        <span className="text-[11px] text-slate-400">Visible sur vos factures et bordereaux.</span>
+                                                    </div>
 
                                                     {/* Téléphone */}
-                                                    <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
-                                                        <label className="text-xs font-bold text-[#1B1F3B]">
-                                                            Numéro de téléphone
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <label className="text-xs font-bold text-[#1B1F3B] flex items-center justify-between">
+                                                            <span>Numéro de téléphone</span>
+                                                            <span className="text-[10px] text-orange-600 font-bold">Pour la livraison</span>
                                                         </label>
-                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/15 rounded-xl transition-all">
-                                                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors" />
+                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-xl transition-all">
+                                                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors pointer-events-none" />
                                                             <input
                                                                 type="tel"
                                                                 autoComplete="tel"
                                                                 value={profileData.phone}
                                                                 onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                                                                className="w-full h-11 pl-10 pr-4 bg-gray-50/70 hover:bg-gray-50 focus:bg-white border border-gray-200 focus:border-orange-500 rounded-xl outline-none transition-all text-sm font-semibold text-[#1B1F3B] placeholder:text-gray-300"
+                                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-xl outline-none transition-all text-base sm:text-sm font-semibold text-[#1B1F3B] placeholder:text-slate-300"
                                                                 placeholder="+221 77 000 00 00"
                                                             />
                                                         </div>
-                                                        <span className="text-[11px] text-gray-400">Requis pour vous joindre lors de la livraison.</span>
-                                                    </motion.div>
-                                                </div>
-                                            </div>
-
-                                            {/* Section 2: Adresse de Livraison par Défaut */}
-                                            <div className="flex flex-col gap-3.5 pt-2 border-t border-gray-100">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-7 h-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
-                                                        <MapPin className="w-3.5 h-3.5" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-sm font-bold text-[#1B1F3B]">Adresse de livraison</h4>
-                                                        <p className="text-[11px] text-gray-400">Coordonnées géographiques utilisées pour pré-remplir la commande.</p>
+                                                        <span className="text-[11px] text-slate-400">Le livreur vous appellera à ce numéro à son arrivée.</span>
                                                     </div>
                                                 </div>
+                                            </motion.div>
 
-                                                <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
+                                            {/* Card 2: Adresse de Livraison par Défaut */}
+                                            <motion.div variants={itemVariants} className="bg-slate-50/50 hover:bg-slate-50/80 transition-colors p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs">
+                                                <div className="flex items-center justify-between gap-2 mb-4">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                                            <MapPin className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="text-sm font-bold text-[#1B1F3B]">Adresse de livraison principale</h4>
+                                                            <p className="text-[11px] text-slate-400">Pré-remplie automatiquement lors de la validation du panier.</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100/70 text-orange-700 border border-orange-200/60">
+                                                        Par défaut
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex flex-col gap-2">
                                                     <label className="text-xs font-bold text-[#1B1F3B]">
-                                                        Adresse complète de livraison
+                                                        Adresse complète et repères précis
                                                     </label>
-                                                    <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/15 rounded-xl transition-all">
-                                                        <MapPin className="absolute left-3.5 top-3.5 text-gray-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors" />
+                                                    <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-xl transition-all">
+                                                        <MapPin className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors pointer-events-none" />
                                                         <textarea
                                                             rows={3}
                                                             autoComplete="street-address"
                                                             value={profileData.address}
                                                             onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                                                            className="w-full pl-10 pr-4 py-3 bg-gray-50/70 hover:bg-gray-50 focus:bg-white border border-gray-200 focus:border-orange-500 rounded-xl outline-none transition-all text-sm font-medium text-[#1B1F3B] resize-none placeholder:text-gray-300 leading-relaxed"
-                                                            placeholder="Ex: Quartier Mermoz, Villa n°12, près de la pharmacie, Dakar, Sénégal"
+                                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-xl outline-none transition-all text-base sm:text-sm font-medium text-[#1B1F3B] resize-none placeholder:text-slate-300 leading-relaxed min-h-[105px]"
+                                                            placeholder="Ex : Dakar, Mermoz, Villa n°12, en face de la Brioche Dorée, Sénégal"
                                                         />
                                                     </div>
-                                                    <span className="text-[11px] text-gray-400">Indiquez des repères précis (quartier, point de repère, ville) pour faciliter l'acheminement.</span>
-                                                </motion.div>
-                                            </div>
 
-                                            {/* Section 3: Sécurité & Statut du Compte */}
-                                            <div className="flex flex-col gap-3.5 pt-2 border-t border-gray-100">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                                        <ShieldCheck className="w-3.5 h-3.5" />
+                                                    {/* Helper tip banner */}
+                                                    <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 text-[11px] text-amber-900 leading-relaxed">
+                                                        <span className="shrink-0 text-amber-600 font-bold">💡 Astuce :</span>
+                                                        <span>Indiquez un point de repère connu (pharmacie, mosquée, rond-point) pour faciliter l'acheminement express de votre colis.</span>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+
+                                            {/* Card 3: Sécurité & Accès au Compte */}
+                                            <motion.div variants={itemVariants} className="bg-slate-50/50 hover:bg-slate-50/80 transition-colors p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs">
+                                                <div className="flex items-center gap-2.5 mb-4">
+                                                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                                        <ShieldCheck className="w-4 h-4" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-[#1B1F3B]">Sécurité & Statut du compte</h4>
-                                                        <p className="text-[11px] text-gray-400">Paramètres d'authentification et privilèges associés.</p>
+                                                        <h4 className="text-sm font-bold text-[#1B1F3B]">Sécurité & Authentification</h4>
+                                                        <p className="text-[11px] text-slate-400">Identifiants protégés et niveau de compte.</p>
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                                                     {/* Read-only email input */}
-                                                    <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
+                                                    <div className="flex flex-col gap-1.5">
                                                         <div className="flex items-center justify-between">
                                                             <label className="text-xs font-bold text-[#1B1F3B]">
                                                                 Adresse email principale
@@ -1569,44 +1733,49 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                 <Check className="w-3 h-3 stroke-[3]" /> Vérifiée
                                                             </span>
                                                         </div>
-                                                        <div className="relative rounded-xl bg-gray-100/70 border border-gray-200/80 h-11 flex items-center">
-                                                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                        <div className="relative rounded-xl bg-slate-100/80 border border-slate-200/80 h-12 flex items-center">
+                                                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                                                             <input
                                                                 type="email"
                                                                 value={user.email || ''}
                                                                 disabled
-                                                                className="w-full h-full pl-10 pr-10 bg-transparent rounded-xl text-sm font-semibold text-gray-600 cursor-not-allowed select-none"
+                                                                className="w-full h-full pl-10 pr-10 bg-transparent rounded-xl text-base sm:text-sm font-semibold text-slate-600 cursor-not-allowed select-none"
                                                             />
-                                                            <span title="Email sécurisé non modifiable directement" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                                                                <Lock className="w-3.5 h-3.5" />
+                                                            <span title="Email sécurisé non modifiable directement" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                                                                <Lock className="w-4 h-4" />
                                                             </span>
                                                         </div>
-                                                        <span className="text-[11px] text-gray-400">Identifiant unique lié à votre authentification.</span>
-                                                    </motion.div>
+                                                        <span className="text-[11px] text-slate-400">Identifiant unique et sécurisé de votre compte.</span>
+                                                    </div>
 
-                                                    {/* Role / Account status card */}
-                                                    <motion.div variants={itemVariants} className="flex flex-col gap-1.5">
+                                                    {/* Role & Password Shortcut */}
+                                                    <div className="flex flex-col gap-1.5">
                                                         <label className="text-xs font-bold text-[#1B1F3B]">
-                                                            Type de compte & Accès
+                                                            Privilèges & Mot de passe
                                                         </label>
-                                                        <div className="flex items-center justify-between px-3.5 bg-gray-50/80 border border-gray-200 rounded-xl h-11">
-                                                            <div className="flex items-center gap-2">
-                                                                <ShieldCheck className="w-4 h-4 text-orange-500" />
-                                                                <span className="text-xs font-bold text-[#1B1F3B]">
-                                                                    {user.role === 'ADMIN' ? 'Compte Administrateur' : 'Compte Client Privilégié'}
+                                                        <div className="flex items-center justify-between px-3.5 bg-white border border-slate-200 rounded-xl h-12">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                                                <span className="text-xs font-bold text-[#1B1F3B] truncate">
+                                                                    {user.role === 'ADMIN' ? 'Administrateur Baraka' : 'Client Privilégié'}
                                                                 </span>
                                                             </div>
-                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-2xs">
-                                                                Actif
-                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleTabChange('settings')}
+                                                                className="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-0.5 shrink-0 transition-colors active:scale-95"
+                                                            >
+                                                                <span>Sécurité</span>
+                                                                <ChevronRight className="w-3 h-3" />
+                                                            </button>
                                                         </div>
-                                                        <span className="text-[11px] text-gray-400">Privilèges et autorisations configurés automatiquement.</span>
-                                                    </motion.div>
+                                                        <span className="text-[11px] text-slate-400">Besoin de modifier votre mot de passe ? Allez dans Sécurité.</span>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </motion.div>
 
                                             {/* Action Footer */}
-                                            <motion.div variants={itemVariants} className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                            <motion.div variants={itemVariants} className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                                                 <div className="flex items-center gap-2 text-xs">
                                                     {isProfileDirty ? (
                                                         <span className="flex items-center gap-1.5 font-bold text-amber-700">
@@ -1619,8 +1788,8 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                             Profil mis à jour avec succès
                                                         </span>
                                                     ) : (
-                                                        <span className="flex items-center gap-1.5 font-medium text-gray-400">
-                                                            <CheckCircle2 className="w-3.5 h-3.5 text-gray-400" />
+                                                        <span className="flex items-center gap-1.5 font-medium text-slate-400">
+                                                            <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
                                                             Vos informations sont à jour
                                                         </span>
                                                     )}
@@ -1632,7 +1801,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                             type="button"
                                                             onClick={handleResetProfile}
                                                             disabled={isUpdating}
-                                                            className="w-full sm:w-auto px-4 h-11 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors active:scale-95 touch-manipulation"
+                                                            className="w-full sm:w-auto px-4 h-12 rounded-xl text-xs font-bold text-slate-500 hover:text-[#1B1F3B] hover:bg-slate-100 transition-colors active:scale-95 touch-manipulation"
                                                         >
                                                             Annuler
                                                         </button>
@@ -1642,12 +1811,12 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                         type="submit"
                                                         disabled={isUpdating || !isProfileDirty}
                                                         className={cn(
-                                                            "w-full sm:w-auto px-6 h-11 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-98 touch-manipulation shadow-xs",
+                                                            "w-full sm:w-auto px-6 h-12 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-98 touch-manipulation shadow-xs",
                                                             isSavedRecently
                                                                 ? "bg-emerald-600 text-white shadow-emerald-500/20"
                                                                 : isProfileDirty
-                                                                    ? "bg-[#1B1F3B] hover:bg-orange-500 text-white shadow-[#1B1F3B]/10 hover:shadow-orange-500/20"
-                                                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                                    ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md shadow-orange-500/25 hover:from-orange-700 hover:to-orange-600"
+                                                                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
                                                         )}
                                                     >
                                                         {isUpdating ? (
