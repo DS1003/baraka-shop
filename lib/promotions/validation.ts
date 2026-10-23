@@ -30,12 +30,47 @@ export async function validateCoupon(
   }
 
   // 1. Check existence
-  const campaign = await prisma.promotionCampaign.findUnique({
-    where: { couponCode: code.trim().toUpperCase() },
+  const cleanCode = code.trim().toUpperCase();
+  let campaign = await prisma.promotionCampaign.findUnique({
+    where: { couponCode: cleanCode },
     include: {
       _count: { select: { usages: true } },
     },
   });
+
+  // Auto-guarantee for official VIP newsletter welcome code
+  if (!campaign && cleanCode === 'BARAKAVIP') {
+    try {
+      campaign = await prisma.promotionCampaign.upsert({
+        where: { couponCode: 'BARAKAVIP' },
+        update: { isActive: true },
+        create: {
+          name: 'Bienvenue VIP Newsletter',
+          title: 'Offre Membre Privilège Baraka',
+          description: 'Réduction exclusive de 10% pour les abonnés à notre newsletter',
+          couponCode: 'BARAKAVIP',
+          discountType: 'PERCENTAGE',
+          discountValue: 10,
+          startDate: new Date('2026-01-01'),
+          endDate: new Date('2028-12-31'),
+          isActive: true,
+          showPopup: false,
+          ctaText: 'Profiter de mes 10%',
+          ctaLink: '/boutique',
+          maxUses: null,
+          maxUsesPerUser: 1,
+          minimumOrderAmount: 0,
+          firstPurchaseOnly: false,
+          displayFrequency: 'ONCE_PER_CAMPAIGN',
+        },
+        include: {
+          _count: { select: { usages: true } },
+        },
+      });
+    } catch (e) {
+      console.warn('[validateCoupon] Could not auto-upsert BARAKAVIP:', e);
+    }
+  }
 
   if (!campaign) {
     return { valid: false, error: 'Ce code promo est invalide.' };

@@ -55,8 +55,9 @@ export const tokens = {
 
 export const SUPPORT_WHATSAPP = '221765149898';
 export const SHOP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ||
-  (process.env.NODE_ENV === 'production' ? 'https://baraka.sn' : (process.env.NEXTAUTH_URL || 'http://localhost:3000'));
+  process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')
+    ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
+    : 'https://www.baraka.sn';
 
 type Tone = 'accent' | 'success' | 'danger' | 'neutral';
 
@@ -561,11 +562,22 @@ export const Actions = ({
   secondary?: { href: string; label: string };
 }) => {
   const trackingParam = orderId || orderRef;
-  const targetHref =
+  let targetHref =
     href ||
     (trackingParam
       ? `${SHOP_URL}/track?orderId=${encodeURIComponent(trackingParam)}`
       : `${SHOP_URL}/boutique`);
+
+  if (targetHref.includes('localhost') || targetHref.includes('127.0.0.1')) {
+    targetHref = targetHref.replace(/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, SHOP_URL);
+  }
+
+  const cleanSecondary = secondary
+    ? {
+        label: secondary.label,
+        href: secondary.href.replace(/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, SHOP_URL),
+      }
+    : null;
 
   const waText = orderRef
     ? `Bonjour Baraka, je vous contacte au sujet de ma commande ${orderRef}.`
@@ -590,9 +602,9 @@ export const Actions = ({
         {label}&nbsp;&nbsp;→
       </Button>
       <div style={{ marginTop: '10px', fontSize: '11.5px', lineHeight: '16px' }}>
-        {secondary ? (
-          <Link href={secondary.href} className="footer-contact-link" style={{ color: tokens.ink, fontWeight: 600, textDecoration: 'none', margin: '0 6px' }}>
-            {secondary.label}
+        {cleanSecondary ? (
+          <Link href={cleanSecondary.href} className="footer-contact-link" style={{ color: tokens.ink, fontWeight: 600, textDecoration: 'none', margin: '0 6px' }}>
+            {cleanSecondary.label}
           </Link>
         ) : null}
         <Link

@@ -36,16 +36,25 @@ export function ProductSection({
 
     const [currentIndex, setCurrentIndex] = useState(0)
     const [direction, setDirection] = useState(0)
-    const [isMobile, setIsMobile] = useState(false)
+    const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 768)
-        checkMobile()
-        window.addEventListener('resize', checkMobile)
-        return () => window.removeEventListener('resize', checkMobile)
+        const updateDeviceType = () => {
+            const width = window.innerWidth
+            if (width < 768) {
+                setDeviceType('mobile')
+            } else if (width < 1280) {
+                setDeviceType('tablet')
+            } else {
+                setDeviceType('desktop')
+            }
+        }
+        updateDeviceType()
+        window.addEventListener('resize', updateDeviceType)
+        return () => window.removeEventListener('resize', updateDeviceType)
     }, [])
 
-    const chunkSize = isMobile ? 2 : 4
+    const chunkSize = deviceType === 'mobile' ? 2 : deviceType === 'tablet' ? 3 : 4
     const productChunks = products.reduce((resultArray: any[][], item, index) => {
         const chunkIndex = Math.floor(index / chunkSize);
         if (!resultArray[chunkIndex]) {
@@ -54,6 +63,12 @@ export function ProductSection({
         resultArray[chunkIndex].push(item);
         return resultArray;
     }, []);
+
+    useEffect(() => {
+        if (currentIndex >= productChunks.length) {
+            setCurrentIndex(0)
+        }
+    }, [productChunks.length, currentIndex])
 
     const slideNext = () => {
         if (productChunks.length <= 1) return
@@ -206,7 +221,7 @@ export function ProductSection({
                 </div>
 
                 {/* Carousel Content */}
-                <div className="relative h-[272px] sm:h-[325px] md:h-[510px] mb-2 md:mb-5">
+                <div className="relative h-[272px] sm:h-[325px] md:h-[415px] lg:h-[425px] xl:h-[485px] mb-2 md:mb-5">
                     <AnimatePresence initial={false} custom={direction} mode="popLayout">
                         {productChunks.length > 0 ? (
                             <motion.div
@@ -226,7 +241,11 @@ export function ProductSection({
                                 onDragEnd={handleDragEnd}
                                 className={cn(
                                     "absolute inset-0 grid touch-pan-y transform-gpu will-change-transform",
-                                    isMobile ? "grid-cols-2 gap-2 sm:gap-3" : "grid-cols-4 gap-6 md:gap-8"
+                                    deviceType === 'mobile'
+                                        ? "grid-cols-2 gap-2.5 sm:gap-3"
+                                        : deviceType === 'tablet'
+                                            ? "grid-cols-3 gap-4 md:gap-5 lg:gap-6"
+                                            : "grid-cols-4 gap-6 xl:gap-8"
                                 )}
                             >
                                 {productChunks[currentIndex].map((product, idx) => (

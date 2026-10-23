@@ -64,6 +64,7 @@ const sidebarGroups = [
             { icon: Maximize, label: 'Bannières Larges', href: '/admin/big-banners' },
             { icon: Tag, label: 'Marques', href: '/admin/brands' },
             { icon: Zap, label: 'Campagnes Marketing', href: '/admin/marketing/campaigns' },
+            { icon: Mail, label: 'Newsletter & Abonnés', href: '/admin/marketing/newsletter' },
             { icon: ImageIcon, label: 'Médiathèque', href: '/admin/media' },
         ]
     },

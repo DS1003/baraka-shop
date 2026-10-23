@@ -28,14 +28,14 @@ export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {
                 <div className="absolute top-0 right-0 w-2/3 md:w-1/2 h-full bg-primary/15 blur-[90px] md:blur-[120px] rounded-full translate-x-1/3 pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-1/2 md:w-1/3 h-1/2 bg-blue-500/15 blur-[80px] md:blur-[100px] rounded-full -translate-x-1/3 pointer-events-none" />
 
-                <div className="flex flex-col md:grid md:grid-cols-2 gap-5 md:gap-12 items-center w-full px-5 py-6 sm:px-8 sm:py-8 md:px-20 md:py-0 relative z-10">
+                <div className="flex flex-col md:grid md:grid-cols-2 gap-5 md:gap-8 lg:gap-12 items-center w-full px-5 py-6 sm:px-8 sm:py-8 md:px-8 lg:px-14 xl:px-20 md:py-8 lg:py-0 relative z-10">
                     {/* Text Content */}
-                    <div className="flex flex-col gap-2.5 md:gap-6 items-center md:items-start text-center md:text-left w-full">
+                    <div className="flex flex-col gap-2.5 md:gap-4 lg:gap-6 items-center md:items-start text-center md:text-left w-full">
                         <span className="flex items-center gap-1.5 md:gap-2 px-2.5 py-1 md:px-3 md:py-1 bg-primary text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-xs">
                             <Zap className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" /> {banner.badge}
                         </span>
 
-                        <h2 className="text-2xl sm:text-3xl md:text-7xl font-black text-white leading-tight md:leading-[0.95] tracking-tight uppercase">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-tight md:leading-[1] lg:leading-[0.95] tracking-tight uppercase">
                             <span className="md:hidden">{displayTitle}</span>
                             <span className="hidden md:inline whitespace-pre-line">
                                 {displayTitle.includes(' ') && !displayTitle.includes('\n') ? displayTitle.replace(' ', '\n') : displayTitle}
@@ -48,7 +48,7 @@ export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {
 
                         <div className="pt-1 md:pt-4 flex flex-row items-center justify-center md:justify-start gap-3 md:gap-6 w-full sm:w-auto">
                             <Link href={banner.href}>
-                                <Button size="sm" className="rounded-xl px-6 h-10 md:h-14 md:px-12 bg-primary text-white hover:bg-white hover:text-black font-black text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                <Button size="sm" className="rounded-xl px-6 h-10 md:h-12 lg:h-14 md:px-8 lg:px-12 bg-primary text-white hover:bg-white hover:text-black font-black text-[10px] md:text-xs uppercase tracking-wider md:tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95">
                                     {banner.buttonText}
                                 </Button>
                             </Link>
@@ -60,7 +60,7 @@ export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {
                     </div>
 
                     {/* Image Content */}
-                    <div className="relative h-[170px] sm:h-[240px] md:h-[500px] w-full flex items-center justify-center">
+                    <div className="relative h-[170px] sm:h-[240px] md:h-[300px] lg:h-[400px] xl:h-[480px] w-full flex items-center justify-center">
                         <div className="absolute w-[180px] md:w-[80%] aspect-square rounded-full border border-white/5 animate-pulse" />
                         <div className="absolute w-[140px] md:w-[60%] aspect-square rounded-full border border-white/10" />
 
@@ -68,7 +68,7 @@ export function HeadphonePromo({ initialBanner }: { initialBanner?: any }) {
                             src={getOptimizedImageUrl(banner.image, 800)}
                             alt={banner.title}
                             fill
-                            sizes="(max-width: 768px) 100vw, 600px"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
                             className="object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.8)] transition-transform duration-700 group-hover:scale-105 z-10"
                             unoptimized
                         />

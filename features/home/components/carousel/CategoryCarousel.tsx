@@ -222,23 +222,23 @@ export function CategoryCarousel({
                     {...desktopDrag}
                 >
                     {displayItems.map((item, idx) => (
-                        <div key={item.id} className="w-[calc(25%-18px)] shrink-0 snap-start">
+                        <div key={item.id} className="w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] shrink-0 snap-start">
                             <UniverseCard item={item} idx={idx} />
                         </div>
                     ))}
                     {/* Final Discovery Card Desktop */}
-                    <div className="w-[calc(25%-18px)] shrink-0 snap-start">
+                    <div className="w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] shrink-0 snap-start">
                         <Link
                             href="/univers"
                             draggable={false}
-                            className="relative overflow-hidden flex flex-col items-center justify-center h-[280px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-3xl p-6 text-center group active:scale-95 transition-all shadow-md border border-white/10 hover:border-primary/50 select-none"
+                            className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] md:h-[260px] lg:h-[270px] xl:h-[280px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl md:rounded-3xl p-5 md:p-6 text-center group active:scale-95 transition-all shadow-md border border-white/10 hover:border-primary/50 select-none"
                         >
-                            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
-                                <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 md:mb-4 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
+                                <Plus className="w-6 h-6 md:w-7 md:h-7 text-white" strokeWidth={2.5} />
                             </div>
-                            <span className="text-base font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
-                            <span className="text-xs font-bold text-primary uppercase tracking-widest mt-2 flex items-center gap-1.5 pointer-events-none">
-                                Explorer tout le catalogue <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            <span className="text-sm md:text-base font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
+                            <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-widest mt-1.5 md:mt-2 flex items-center gap-1.5 pointer-events-none">
+                                Explorer tout le catalogue <ArrowRight className="w-3 md:w-3.5 h-3 md:h-3.5 group-hover:translate-x-1 transition-transform" />
                             </span>
                         </Link>
                     </div>
@@ -349,21 +349,21 @@ function UniverseCard({ item, idx }: { item: any, idx: number }) {
                 href={item.href}
                 draggable={false}
                 suppressHydrationWarning
-                className="group relative flex flex-col h-[215px] md:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 md:hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden select-none cursor-pointer"
+                className="group relative flex flex-col h-[215px] md:h-[260px] lg:h-[270px] xl:h-[280px] bg-white rounded-2xl md:rounded-3xl border border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_12px_32px_rgba(232,98,26,0.12)] hover:border-primary/30 md:hover:-translate-y-1 p-3.5 md:p-5 overflow-hidden select-none cursor-pointer"
             >
                 {/* Card Header */}
                 <div className="relative z-10 flex flex-col items-center text-center select-none pointer-events-none">
-                    <h3 className="text-[11px] sm:text-xs md:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
+                    <h3 className="text-[11px] sm:text-xs md:text-sm lg:text-base font-black text-[#1B1F3B] group-hover:text-primary transition-colors duration-300 uppercase tracking-tight line-clamp-1">
                         {item.name}
                     </h3>
-                    <p className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 group-hover:text-primary/70 transition-colors line-clamp-1">
+                    <p className="text-[8px] md:text-[9.5px] lg:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 group-hover:text-primary/70 transition-colors line-clamp-1">
                         {subtitle}
                     </p>
                 </div>
 
                 {/* Image */}
                 <div className="relative flex-1 flex items-center justify-center my-1.5 md:my-2 select-none pointer-events-none">
-                    <div className="relative w-full h-[105px] md:h-[145px] transform transition-transform duration-300 group-hover:scale-105 md:group-hover:-translate-y-0.5">
+                    <div className="relative w-full h-[105px] md:h-[130px] lg:h-[135px] xl:h-[145px] transform transition-transform duration-300 group-hover:scale-105 md:group-hover:-translate-y-0.5">
                         <Image
                             src={imageSrc}
                             alt={item.name}

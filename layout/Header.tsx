@@ -305,21 +305,21 @@ export function Header() {
                     "py-2 border-b border-gray-100 transition-all duration-300 w-full",
                     scrolled ? "py-2.5" : ""
                 )}>
-                    <Container className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <Container className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 lg:gap-6">
                         <Link href="/" className="shrink-0 flex items-center">
                             <img
                                 src={headerLogo}
                                 alt="Baraka Shop"
-                                className="h-10 md:h-14 w-auto object-contain"
+                                className="h-10 md:h-12 lg:h-14 w-auto object-contain"
                             />
                         </Link>
 
-                        <div className="flex-1 w-full max-w-2xl px-4 relative">
+                        <div className="flex-1 w-full max-w-2xl px-2 sm:px-4 relative min-w-0">
                             <form onSubmit={handleSearch} className={cn(
-                                "flex w-full h-[46px] bg-[#f4f4f4] border border-gray-200 rounded-lg overflow-hidden transition-all focus-within:bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
+                                "flex w-full h-[44px] md:h-[46px] bg-[#f4f4f4] border border-gray-200 rounded-lg overflow-hidden transition-all focus-within:bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
                                 scrolled && "h-[40px]"
                             )}>
-                                <div className="flex-1 relative flex items-center">
+                                <div className="flex-1 relative flex items-center min-w-0">
                                     <input
                                         type="text"
                                         placeholder="Rechercher un produit, une marque..."
@@ -327,7 +327,7 @@ export function Header() {
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onFocus={() => setIsSearchFocused(true)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                        className="w-full px-6 h-full bg-transparent outline-none text-base placeholder:text-gray-400 font-medium"
+                                        className="w-full px-4 md:px-6 h-full bg-transparent outline-none text-sm md:text-base placeholder:text-gray-400 font-medium truncate"
                                     />
                                     {searchQuery && (
                                         <button
@@ -339,8 +339,8 @@ export function Header() {
                                         </button>
                                     )}
                                 </div>
-                                <button type="submit" className="bg-primary hover:bg-primary/90 text-white w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
-                                    <Search className="w-5 h-5" />
+                                <button type="submit" className="bg-primary hover:bg-primary/90 text-white w-[46px] md:w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
+                                    <Search className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
                             </form>
 
@@ -412,7 +412,7 @@ export function Header() {
                             </AnimatePresence>
                         </div>
 
-                        <div className="flex items-center gap-6 md:gap-8">
+                        <div className="flex items-center gap-3 sm:gap-4 md:gap-4 lg:gap-8 shrink-0">
                             <HeaderAction icon={MapPin} label="Boutiques" href="/boutiques" />
                             <ProfileDropdown
                                 isLoggedIn={isLoggedIn}
@@ -420,11 +420,11 @@ export function Header() {
                             />
                             <div
                                 onClick={() => setIsCartOpen(true)}
-                                className="relative flex items-center group bg-gray-50 hover:bg-primary/5 pl-2 pr-4 py-1.5 rounded-2xl border border-gray-100 transition-all hover:border-primary/20 cursor-pointer"
+                                className="relative flex items-center group bg-gray-50 hover:bg-primary/5 pl-2 pr-3 md:pr-4 py-1.5 rounded-2xl border border-gray-100 transition-all hover:border-primary/20 cursor-pointer"
                             >
                                 <div className="relative flex flex-col items-center">
                                     <div className="relative p-1.5 transition-all duration-300">
-                                        <ShoppingCart className="w-7 h-7 text-[#1B1F3B] group-hover:text-primary transition-all duration-300 group-hover:scale-110" strokeWidth={1.5} />
+                                        <ShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-[#1B1F3B] group-hover:text-primary transition-all duration-300 group-hover:scale-110" strokeWidth={1.5} />
                                         <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full ring-2 ring-white shadow-lg shadow-primary/30">
                                             {itemCount}
                                         </span>
@@ -460,12 +460,13 @@ export function Header() {
                         <rect width="100%" height="100%" fill="url(#diagonal-stripes)" />
                     </svg>
                 </div>
-                <Container className="relative flex items-center h-[55px] lg:h-[60px] z-10">
+                <Container className="relative flex items-center h-[52px] md:h-[55px] lg:h-[60px] z-10">
                     {/* Menu Categories - Fixed Left */}
                     <div
-                        className="h-full flex items-center mr-2 md:mr-4 lg:mr-8 pr-2 md:pr-4 lg:pr-8 border-r border-white/10 cursor-pointer group shrink-0"
+                        className="h-full flex items-center mr-2 md:mr-3 lg:mr-6 pr-2 md:pr-3 lg:pr-6 border-r border-white/10 cursor-pointer group shrink-0"
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
+                        onClick={() => setShowMegaMenu(prev => !prev)}
                     >
                         <BorderGlow
                             glowColor="21 82 51"
@@ -476,45 +477,57 @@ export function Header() {
                             colors={['#d95213', '#ffffff', '#E8621A']}
                             animated={true}
                             edgeSensitivity={20}
-                            className="text-white px-4 lg:px-6 w-auto h-[36px] md:h-[40px] lg:h-[48px] font-black text-xs lg:text-sm uppercase tracking-wide shadow-[0_0_15px_rgba(232,98,26,0.2)] transition-all overflow-visible flex items-center justify-center border-none"
+                            className="text-white px-3 md:px-4 lg:px-6 w-auto h-[36px] md:h-[40px] lg:h-[48px] font-black text-xs lg:text-sm uppercase tracking-wide shadow-[0_0_15px_rgba(232,98,26,0.2)] transition-all overflow-visible flex items-center justify-center border-none"
                         >
-                            <div className="flex items-center justify-between w-full h-full gap-3 py-1">
+                            <div className="flex items-center justify-between w-full h-full gap-2 md:gap-3 py-1">
                                 <div className="flex items-center gap-1.5 lg:gap-3">
-                                    <Menu className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5" />
+                                    <Menu className="w-3.5 h-3.5 md:w-4 md:h-4 lg:w-5 lg:h-5 shrink-0" />
                                     <span className="whitespace-nowrap">Tous nos produits</span>
                                 </div>
-                                <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300", showMegaMenu && "rotate-180")} />
+                                <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300 shrink-0", showMegaMenu && "rotate-180")} />
                             </div>
                         </BorderGlow>
                         <AnimatePresence>
                             {showMegaMenu && (
-                                <div className="absolute top-full left-0 w-full z-[120] px-4 md:px-6 lg:px-8">
-                                    <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
-                                </div>
+                                <>
+                                    <div
+                                        className="fixed inset-0 top-[135px] md:top-[155px] lg:top-[170px] z-[115] bg-black/20 backdrop-blur-xs transition-opacity"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShowMegaMenu(false);
+                                        }}
+                                    />
+                                    <div
+                                        className="absolute top-full left-0 w-full z-[120] px-3 sm:px-4 md:px-6 lg:px-8 cursor-default"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
+                                    </div>
+                                </>
                             )}
                         </AnimatePresence>
                     </div>
 
-                    {/* Adaptive Container for Links and Stores (No Scroll) */}
-                    <div className="flex-1 flex items-center min-w-0 h-full">
-                        <div className="flex items-center justify-between w-full min-w-0 gap-2 lg:gap-8">
+                    {/* Scrollable Container for Links and Stores on Tablet */}
+                    <div className="flex-1 flex items-center min-w-0 h-full overflow-x-auto no-scrollbar scroll-smooth">
+                        <div className="flex items-center justify-between w-full min-w-max gap-2 lg:gap-6 xl:gap-8">
                             {/* Middle Navigation Links */}
-                            <nav className="flex items-center gap-0.5 md:gap-1 lg:gap-3 shrink min-w-0">
+                            <nav className="flex items-center gap-1 lg:gap-2 xl:gap-3 shrink-0">
                                 {navigation.map((item) => (
                                     <div
                                         key={item.name}
-                                        className="relative h-full flex items-center shrink min-w-0"
+                                        className="relative h-full flex items-center shrink-0"
                                         onMouseEnter={item.hasMegaMenu ? handleMenuEnter : undefined}
                                         onMouseLeave={item.hasMegaMenu ? handleMenuLeave : undefined}
                                     >
                                         <Link
                                             href={item.href}
                                             className={cn(
-                                                "text-[9px] md:text-[10px] lg:text-[12px] xl:text-[13px] font-bold transition-all uppercase tracking-tight hover:text-primary flex items-center gap-1 whitespace-nowrap px-1.5 md:px-2 lg:px-2.5 py-1 md:py-1.5 rounded-lg truncate",
+                                                "text-[10px] md:text-[11px] lg:text-[12px] xl:text-[13px] font-bold transition-all uppercase tracking-tight hover:text-primary flex items-center gap-1 whitespace-nowrap px-2 md:px-2.5 lg:px-3 py-1 md:py-1.5 rounded-lg shrink-0",
                                                 item.active ? "text-primary bg-white/5" : "text-gray-300 hover:bg-white/5 hover:text-white"
                                             )}
                                         >
-                                            <span className="truncate">{item.name}</span>
+                                            <span className="whitespace-nowrap">{item.name}</span>
                                             {item.hasMegaMenu && <ChevronDown className="w-2.5 h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 opacity-50 shrink-0" />}
                                             {item.isNew && <span className="text-[7px] md:text-[8px] lg:text-[9px] bg-red-500 text-white px-1 md:px-1.5 py-0.5 rounded-md ml-0.5 font-black shadow-sm shrink-0">HOT</span>}
                                         </Link>
@@ -523,14 +536,14 @@ export function Header() {
                             </nav>
 
                             {/* Right Link - Dynamic Stores */}
-                            <div className="flex items-center gap-1 lg:gap-2 shrink min-w-0 pl-2 lg:pl-8 border-l border-white/10">
+                            <div className="flex items-center gap-1.5 lg:gap-2 shrink-0 pl-2 lg:pl-6 xl:pl-8 border-l border-white/10">
                                 {stores.length > 0 ? (
-                                    <div className="flex items-center gap-1 lg:gap-2 min-w-0">
+                                    <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
                                         {stores.map((store) => (
                                             <Link
                                                 key={store.id}
                                                 href={`/store/${store.slug}`}
-                                                className="group flex items-center gap-1 md:gap-1.5 lg:gap-2 px-1.5 md:px-2 lg:px-3 py-1 lg:py-1.5 rounded-full border border-white/10 hover:bg-white transition-all shrink min-w-0 bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                                                className="group flex items-center gap-1.5 lg:gap-2 px-2 md:px-2.5 lg:px-3 py-1 lg:py-1.5 rounded-full border border-white/10 hover:bg-white transition-all shrink-0 bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
                                                 title={store.name}
                                             >
                                                 {store.logo && (
@@ -543,7 +556,7 @@ export function Header() {
                                                         />
                                                     </div>
                                                 )}
-                                                <span className="text-[8px] md:text-[9px] lg:text-[11px] xl:text-xs font-black text-gray-300 group-hover:text-[#1B1F3B] uppercase tracking-wider truncate transition-colors">
+                                                <span className="text-[9px] md:text-[10px] lg:text-[11px] xl:text-xs font-black text-gray-300 group-hover:text-[#1B1F3B] uppercase tracking-wider whitespace-nowrap transition-colors">
                                                     {store.name}
                                                 </span>
                                             </Link>

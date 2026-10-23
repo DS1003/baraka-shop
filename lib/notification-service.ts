@@ -114,7 +114,9 @@ export async function notifyClientOrderStatusChange(
         // Trigger transactional emails according to status change
         if (order.user.email) {
             const { headerLogo } = await getSiteLogos();
-            const baseUrl = process.env.NEXTAUTH_URL || 'https://baraka.sn';
+            const baseUrl = (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost'))
+                ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
+                : 'https://www.baraka.sn';
             let logoUrl: string | undefined = undefined;
             if (headerLogo) {
                 logoUrl = headerLogo.startsWith('http') ? headerLogo : `${baseUrl}${headerLogo.startsWith('/') ? '' : '/'}${headerLogo}`;

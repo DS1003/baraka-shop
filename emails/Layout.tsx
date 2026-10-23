@@ -268,35 +268,19 @@ export const Layout = ({ previewText, logoUrl, children }: LayoutProps) => {
               }}
             >
               <Link href="https://baraka.sn" style={{ textDecoration: 'none', display: 'inline-block' }}>
-                {logoUrl ? (
-                  <Img
-                    src={logoUrl}
-                    alt="Baraka Shop"
-                    width="112"
-                    style={{
-                      margin: '0 auto',
-                      maxWidth: '112px',
-                      height: 'auto',
-                      maxHeight: '34px',
-                      display: 'block',
-                      objectFit: 'contain',
-                    }}
-                  />
-                ) : (
-                  <div style={{ textAlign: 'center' }}>
-                    <span
-                      style={{
-                        fontSize: '20px',
-                        fontWeight: 900,
-                        letterSpacing: '-0.04em',
-                        color: '#0B0F19',
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      }}
-                    >
-                      Baraka<span style={{ color: '#EA580C' }}>.</span>
-                    </span>
-                  </div>
-                )}
+                <Img
+                  src={logoUrl || 'https://res.cloudinary.com/dt6ls5mte/image/upload/v1781307808/products_baraka/skfnsbval6bfd0otays0.png'}
+                  alt="Baraka Shop"
+                  width="128"
+                  style={{
+                    margin: '0 auto',
+                    maxWidth: '128px',
+                    height: 'auto',
+                    maxHeight: '38px',
+                    display: 'block',
+                    objectFit: 'contain',
+                  }}
+                />
               </Link>
             </div>
 

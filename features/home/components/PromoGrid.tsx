@@ -171,7 +171,7 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                 </div>
 
                 {/* Desktop Grid */}
-                <div className="hidden md:grid grid-cols-4 gap-8">
+                <div className="hidden md:grid grid-cols-4 gap-4 md:gap-5 lg:gap-6 xl:gap-8">
                     {promos.map((promo, idx) => (
                         <PromoCard key={idx} promo={promo} />
                     ))}
@@ -292,30 +292,30 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
     return (
         <Link
             href={promo.href}
-            className={`group relative flex flex-col items-start justify-between overflow-hidden rounded-[2.5rem] p-8 md:p-10 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${promo.bg} border ${promo.border} min-h-[360px] shadow-sm hover:shadow-2xl hover:shadow-slate-200 hover:-translate-y-2 ${promo.size}`}
+            className={`group relative flex flex-col items-start justify-between overflow-hidden rounded-2xl md:rounded-3xl lg:rounded-[2.5rem] p-5 md:p-6 lg:p-8 xl:p-10 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${promo.bg} border ${promo.border} min-h-[280px] md:min-h-[300px] lg:min-h-[360px] shadow-sm hover:shadow-2xl hover:shadow-slate-200 hover:-translate-y-2 ${promo.size}`}
         >
             {/* Minimalist Grid Pattern */}
             <div className="absolute inset-0 opacity-[0.015] pointer-events-none" style={{ backgroundImage: `radial-gradient(#1B1F3B 1px, transparent 1px)`, backgroundSize: '24px 24px' }} />
 
             {/* Sophisticated Inner Border */}
-            <div className="absolute inset-3 border border-white/40 rounded-[1.8rem] pointer-events-none" />
+            <div className="absolute inset-2 md:inset-3 border border-white/40 rounded-xl md:rounded-[1.8rem] pointer-events-none" />
 
-            <div className="relative z-10 flex w-full flex-col gap-8">
+            <div className="relative z-10 flex w-full flex-col gap-3 md:gap-5 lg:gap-8">
                 <div>
                     <motion.span
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="inline-block rounded-full bg-white/95 backdrop-blur-md px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#1B1F3B] shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-white"
+                        className="inline-block rounded-full bg-white/95 backdrop-blur-md px-3 md:px-4 py-1 md:py-1.5 text-[8.5px] md:text-[10px] font-bold uppercase tracking-[0.15em] text-[#1B1F3B] shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-white"
                     >
                         {promo.badge}
                     </motion.span>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                    <h3 className="text-3xl font-extrabold leading-[1.1] tracking-tight text-[#1B1F3B] uppercase max-w-[90%]">
+                <div className="flex flex-col gap-1.5 md:gap-3">
+                    <h3 className="text-xl sm:text-2xl md:text-xl lg:text-2xl xl:text-3xl font-extrabold leading-[1.1] tracking-tight text-[#1B1F3B] uppercase max-w-[90%]">
                         {promo.title}
                     </h3>
-                    <p className="max-w-[220px] text-sm font-medium text-[#1B1F3B]/50 leading-relaxed">
+                    <p className="max-w-[170px] lg:max-w-[220px] text-xs lg:text-sm font-medium text-[#1B1F3B]/50 leading-relaxed line-clamp-2">
                         {promo.subtitle}
                     </p>
                 </div>
@@ -323,21 +323,21 @@ function PromoCard({ promo, isMobile = false }: { promo: any, isMobile?: boolean
                 {promo.price && (() => {
                     const cleanPrice = promo.price.replace(/FCFA/i, '').trim();
                     return (
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#1B1F3B]/30">Offre Spéciale</span>
+                        <div className="flex flex-col gap-1 md:gap-1.5">
+                            <span className="text-[8.5px] md:text-[10px] font-bold uppercase tracking-[0.1em] text-[#1B1F3B]/30">Offre Spéciale</span>
                             <div className="flex items-baseline gap-1.5">
-                                <span className="text-3xl font-extrabold tracking-normal tabular-nums text-[#1B1F3B]">{cleanPrice}</span>
-                                <span className="text-[13px] font-bold text-primary italic font-serif leading-none">FCFA</span>
+                                <span className="text-xl sm:text-2xl md:text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-normal tabular-nums text-[#1B1F3B]">{cleanPrice}</span>
+                                <span className="text-[11px] lg:text-[13px] font-bold text-primary italic font-serif leading-none">FCFA</span>
                             </div>
                         </div>
                     );
                 })()}
             </div>
 
-            <div className="relative z-10 mt-10 flex items-center gap-4 rounded-full bg-[#1B1F3B] pl-8 pr-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white transition-all duration-500 group-hover:bg-primary group-hover:scale-[1.02] shadow-xl group-hover:shadow-primary/20">
+            <div className="relative z-10 mt-6 md:mt-6 lg:mt-10 flex items-center gap-2.5 lg:gap-4 rounded-full bg-[#1B1F3B] pl-5 pr-4 py-2.5 md:pl-5 md:pr-4 md:py-2.5 lg:pl-8 lg:pr-6 lg:py-4 text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.2em] text-white transition-all duration-500 group-hover:bg-primary group-hover:scale-[1.02] shadow-xl group-hover:shadow-primary/20">
                 Explorer
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 group-hover:bg-white/20 transition-all">
-                    <ArrowRight className="h-3.5 w-3.5 text-primary transition-transform duration-500 group-hover:translate-x-0.5" />
+                <div className="flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full bg-white/10 group-hover:bg-white/20 transition-all">
+                    <ArrowRight className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary transition-transform duration-500 group-hover:translate-x-0.5" />
                 </div>
             </div>
 

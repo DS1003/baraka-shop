@@ -118,7 +118,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
     }
 
     return (
-        <div className="group relative bg-white rounded-2xl md:rounded-3xl p-2.5 sm:p-3 md:p-4 transition-all duration-500 border border-gray-100/80 hover:border-gray-200 hover:shadow-2xl hover:shadow-blue-900/5 flex flex-col h-full">
+        <div className="group relative bg-white rounded-2xl md:rounded-3xl p-2 sm:p-2.5 md:p-3 lg:p-4 transition-all duration-500 border border-gray-100/80 hover:border-gray-200 hover:shadow-2xl hover:shadow-blue-900/5 flex flex-col h-full">
             {/* Image Container */}
             <div className="relative w-full aspect-square bg-[#fff] rounded-xl overflow-hidden group/img border border-gray-50 shrink-0">
                 <WatermarkOverlay logoUrl={headerLogo} isCard />
@@ -180,8 +180,8 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     </button>
                 </div>
 
-                <div className="relative w-full h-full p-1.5 md:p-4 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110 z-10">
-                    <Image src={displayImage} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-contain p-1.5 md:p-4" priority={priority} unoptimized />
+                <div className="relative w-full h-full p-1.5 md:p-3 lg:p-4 flex items-center justify-center transition-transform duration-700 group-hover/img:scale-110 z-10">
+                    <Image src={displayImage} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-contain p-1.5 md:p-3 lg:p-4" priority={priority} unoptimized />
                 </div>
 
                 {/* Add to Cart Overlay (Desktop Hover) */}
@@ -209,7 +209,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
             <div className="px-0.5 pt-2 sm:pt-2.5 md:pt-3 flex flex-col flex-1 justify-between">
                 <div>
                     <div className="flex items-center justify-between mb-1">
-                        <span className="text-[7.5px] sm:text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[70%]">{categoryName}</span>
+                        <span className="text-[7.5px] sm:text-[8px] md:text-[8.5px] lg:text-[9px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[75%]">{categoryName}</span>
                         <div className="flex items-center gap-1 shrink-0">
                             <Star className="w-2.5 md:w-3 h-2.5 md:h-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-[8.5px] sm:text-[9px] md:text-[10px] font-bold text-gray-500">{(product.rating || 5)}.0</span>
@@ -218,14 +218,14 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
 
                     <Link href={`/product/${product.id}`} className="block overflow-hidden">
                         <h3 
-                            className="font-bold text-[11px] sm:text-[12px] md:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[14px] sm:leading-[16px] md:leading-[18px] tracking-tight line-clamp-2 h-[28px] sm:h-[32px] md:h-[36px]"
+                            className="font-bold text-[11px] sm:text-[12px] md:text-[12.5px] lg:text-[13px] text-[#1B1F3B] hover:text-primary transition-colors leading-[14px] sm:leading-[16px] md:leading-[17px] lg:leading-[18px] tracking-tight line-clamp-2 h-[28px] sm:h-[32px] md:h-[34px] lg:h-[36px]"
                         >
                             {product.name}
                         </h3>
                     </Link>
 
                     <p 
-                        className="hidden sm:line-clamp-2 text-gray-400 text-[8px] md:text-[9px] leading-[12px] md:leading-[14px] mt-1 h-[24px] md:h-[28px] overflow-hidden"
+                        className="hidden sm:line-clamp-2 text-gray-400 text-[8px] md:text-[8.5px] lg:text-[9px] leading-[12px] md:leading-[13px] lg:leading-[14px] mt-1 h-[24px] md:h-[26px] lg:h-[28px] overflow-hidden"
                     >
                         {cleanDescription}
                     </p>
@@ -234,12 +234,12 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                 <div className="mt-auto pt-1.5 sm:pt-2 md:pt-3 flex items-center justify-between">
                     <div className="flex flex-col min-w-0 pr-1">
                         {(product.oldPrice || product.compareAtPrice) && (
-                            <span className="text-gray-400 text-[7px] sm:text-[8px] md:text-[10px] line-through font-bold truncate leading-none tabular-nums">
+                            <span className="text-gray-400 text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] line-through font-bold truncate leading-none tabular-nums">
                                 {formatPrice(product.oldPrice || product.compareAtPrice)}
                             </span>
                         )}
-                        <span className="text-[#1B1F3B] font-black text-[11.5px] sm:text-[13px] md:text-[16px] tracking-normal truncate leading-tight tabular-nums">
-                            {formatNumber(product.price ?? 0)} <span className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
+                        <span className="text-[#1B1F3B] font-black text-[11px] sm:text-[12.5px] md:text-[13.5px] lg:text-[16px] tracking-normal whitespace-nowrap leading-tight tabular-nums">
+                            {formatNumber(product.price ?? 0)} <span className="text-[7px] sm:text-[7.5px] md:text-[8px] lg:text-[9px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
                         </span>
                     </div>
 
@@ -254,7 +254,7 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                         disabled={customBadge === "Bientôt disponible" || product.stock <= 0}
                         aria-label={`Ajouter ${product.name} au panier`}
                         className={cn(
-                            "w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-lg sm:rounded-xl md:rounded-full flex items-center justify-center transition-all shadow-xs active:scale-90 shrink-0",
+                            "w-7 h-7 sm:w-7.5 sm:h-7.5 md:w-8 md:h-8 lg:w-9 lg:h-9 rounded-lg sm:rounded-xl md:rounded-full flex items-center justify-center transition-all shadow-xs active:scale-90 shrink-0",
                             product.stock <= 0 || customBadge === "Bientôt disponible"
                                 ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                                 : "bg-primary text-white md:bg-primary/10 md:text-primary md:group-hover:bg-primary md:group-hover:text-white shadow-primary/20 hover:bg-[#1B1F3B]"

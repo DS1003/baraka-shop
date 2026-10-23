@@ -235,7 +235,7 @@ export const emailService = {
             </div>
             <div class="footer">
               Ce message a été envoyé depuis le formulaire de contact sur <strong>baraka.sn</strong>.<br/>
-              Consultez tous vos messages dans votre <a href="${process.env.NEXTAUTH_URL || 'https://baraka.sn'}/admin/messages" style="color: #ea580c;">Tableau de bord Admin</a>.
+              Consultez tous vos messages dans votre <a href="https://baraka.sn/admin/messages" style="color: #ea580c;">Tableau de bord Admin</a>.
             </div>
           </div>
         </body>
@@ -288,7 +288,9 @@ export const emailService = {
         return { success: true, simulated: true };
       }
 
-      const baseUrl = process.env.NEXTAUTH_URL || 'https://baraka.sn';
+      const baseUrl = (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost'))
+        ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
+        : 'https://baraka.sn';
       const adminManageUrl = `${baseUrl}/admin/out-of-stock`;
 
       const formattedDate = (payload.restockedAt || new Date()).toLocaleString('fr-FR', {
@@ -360,6 +362,102 @@ export const emailService = {
       return { success: true, data };
     } catch (error) {
       console.error('[EmailService] Exception test email:', error);
+      return { success: false, error };
+    }
+  },
+
+  /**
+   * Envoyer l'email de bienvenue à la newsletter
+   */
+  async sendNewsletterWelcomeEmail(payload: {
+    to: string;
+    unsubscribeUrl?: string;
+    promoCode?: string;
+    logoUrl?: string;
+  }) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation de bienvenue newsletter pour', payload.to);
+        return { success: true, simulated: true };
+      }
+
+      const NewsletterWelcome = (await import('@/emails/NewsletterWelcome')).default;
+      const htmlContent = await render(NewsletterWelcome({
+        email: payload.to,
+        unsubscribeUrl: payload.unsubscribeUrl,
+        promoCode: payload.promoCode || 'BARAKAVIP',
+        logoUrl: payload.logoUrl,
+      }));
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [payload.to],
+        subject: '🎉 Bienvenue dans la communauté Baraka Shop !',
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur Resend Newsletter Welcome:', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception Newsletter Welcome:', error);
+      return { success: false, error };
+    }
+  },
+
+  /**
+   * Envoyer une campagne newsletter broadcast
+   */
+  async sendNewsletterBroadcastEmail(payload: {
+    to: string;
+    subject: string;
+    previewText?: string;
+    heading: string;
+    content: string;
+    imageUrl?: string | null;
+    ctaText?: string | null;
+    ctaUrl?: string | null;
+    unsubscribeUrl?: string;
+    logoUrl?: string;
+  }) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation envoi newsletter broadcast à', payload.to);
+        return { success: true, simulated: true };
+      }
+
+      const NewsletterBroadcast = (await import('@/emails/NewsletterBroadcast')).default;
+      const htmlContent = await render(NewsletterBroadcast({
+        email: payload.to,
+        subject: payload.subject,
+        previewText: payload.previewText,
+        heading: payload.heading,
+        content: payload.content,
+        imageUrl: payload.imageUrl,
+        ctaText: payload.ctaText,
+        ctaUrl: payload.ctaUrl,
+        unsubscribeUrl: payload.unsubscribeUrl,
+        logoUrl: payload.logoUrl,
+      }));
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [payload.to],
+        subject: payload.subject,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur Resend Newsletter Broadcast:', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception Newsletter Broadcast:', error);
       return { success: false, error };
     }
   }

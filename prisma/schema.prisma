@@ -464,3 +464,45 @@ model ContactMessage {
   @@index([email])
 }
 
+// ─── Newsletter ──────────────────────────────────────────────────────────────
+// Double opt-in : PENDING → (lien de confirmation) → ACTIVE → UNSUBSCRIBED
+model NewsletterSubscriber {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  status         String    @default("PENDING") // PENDING, ACTIVE, UNSUBSCRIBED
+  token          String    @unique             // jeton aléatoire 256 bits (confirmation + désinscription)
+  source         String?   @default("HOME")
+  userId         String?
+  ipHash         String?                       // SHA-256 salé, jamais l'IP en clair
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+  lastSentAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model NewsletterCampaign {
+  id             String    @id @default(uuid())
+  subject        String
+  previewText    String?
+  heading        String
+  content        String                        // texte brut, échappé au rendu (pas de HTML)
+  imageUrl       String?
+  ctaText        String?
+  ctaUrl         String?
+  status         String    @default("DRAFT")   // DRAFT, SENDING, SENT, FAILED
+  recipientCount Int       @default(0)
+  sentCount      Int       @default(0)
+  failedCount    Int       @default(0)
+  createdById    String?
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+

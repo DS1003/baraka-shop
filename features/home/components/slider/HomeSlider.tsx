@@ -56,7 +56,7 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
     if (loading || slides.length === 0) {
         return (
             <section>
-                <div className="bg-gray-100 relative rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-sm aspect-[8/3] md:aspect-auto md:h-[480px] lg:h-[500px] flex items-center justify-center">
+                <div className="bg-gray-100 relative rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-sm aspect-[2.3/1] sm:aspect-[2.4/1] md:aspect-[2.4/1] lg:aspect-auto lg:h-[460px] xl:h-[500px] flex items-center justify-center">
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                 </div>
             </section>
@@ -76,7 +76,7 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
 
     return (
         <section>
-            <div className="bg-white relative rounded-2xl md:rounded-t-[2.5rem] md:rounded-b-none overflow-hidden shadow-sm aspect-[8/3] md:aspect-auto md:h-[480px] lg:h-[500px]">
+            <div className="bg-white relative rounded-2xl md:rounded-t-[2.5rem] md:rounded-b-none overflow-hidden shadow-sm aspect-[2.3/1] sm:aspect-[2.4/1] md:aspect-[2.4/1] lg:aspect-auto lg:h-[460px] xl:h-[500px]">
                 <AnimatePresence mode="popLayout">
                     <motion.div
                         key={currentSlide}
@@ -95,8 +95,8 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
                                 src={getOptimizedImageUrl(slides[currentSlide].image, 1400)}
                                 alt={slides[currentSlide].title}
                                 fill
-                                sizes="(max-width: 768px) 100vw, 1400px"
-                                className="object-cover md:hover:scale-105 transition-transform duration-[4000ms] ease-out pointer-events-none"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 1400px"
+                                className="object-cover object-left md:object-center md:hover:scale-105 transition-transform duration-[4000ms] ease-out pointer-events-none"
                                 priority
                             />
                             <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent hidden md:block" />
@@ -123,19 +123,21 @@ export function HomeSlider({ initialSlides }: { initialSlides?: any[] }) {
             </div>
 
             {/* LDLC Style Bottom Tabs - Responsive Grid - Hidden on Mobile */}
-            <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border border-t-0 border-gray-100 bg-white rounded-b-2xl md:rounded-b-[2.5rem] overflow-hidden shadow-sm relative z-10">
+            <div className="hidden md:grid grid-cols-3 lg:grid-cols-6 border border-t-0 border-gray-100 bg-white rounded-b-2xl md:rounded-b-[2.5rem] overflow-hidden shadow-sm relative z-10">
                 {slides.map((slide, index) => (
                     <button
                         key={slide.id}
                         onClick={() => handleTabClick(index)}
                         className={cn(
-                            "relative py-4 px-2 text-center text-[10px] md:text-[11px] font-bold uppercase transition-all duration-300 h-16 md:h-20 flex items-center justify-center border-r border-gray-100 last:border-r-0",
+                            "relative py-3 lg:py-4 px-2 text-center text-[10px] md:text-[11px] font-bold uppercase transition-all duration-300 h-14 md:h-16 lg:h-20 flex items-center justify-center border-r border-gray-100",
+                            "[&:nth-child(3n)]:border-r-0 lg:[&:nth-child(3n)]:border-r lg:last:border-r-0",
+                            index < 3 ? "border-b lg:border-b-0" : "",
                             currentSlide === index
                                 ? "bg-gray-50 text-primary"
                                 : "bg-white text-[#1B1F3B]/60 hover:bg-gray-50 hover:text-primary"
                         )}
                     >
-                        <span className="relative z-10 leading-tight px-1">{slide.title}</span>
+                        <span className="relative z-10 leading-tight px-1 line-clamp-1">{slide.title}</span>
 
                         {/* Progress Bar */}
                         {currentSlide === index && (

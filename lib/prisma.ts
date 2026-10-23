@@ -44,7 +44,12 @@ if (globalThis.prismaGlobal) {
         ? orderFields.some((f: any) => f.name === 'shippingAddress')
         : (orderFields && 'shippingAddress' in orderFields);
 
-    if (!(globalThis.prismaGlobal as any).contactMessage || !hasDeactivationReason || !hasShippingAddress) {
+    if (
+        !(globalThis.prismaGlobal as any).contactMessage ||
+        !(globalThis.prismaGlobal as any).newsletterSubscriber ||
+        !hasDeactivationReason ||
+        !hasShippingAddress
+    ) {
         globalThis.prismaGlobal = undefined;
     }
 }
