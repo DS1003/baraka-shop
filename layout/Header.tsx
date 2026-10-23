@@ -612,77 +612,89 @@ export function Header() {
             </div>
 
             {/* Mobile Search Bar */}
-            <div className="md:hidden bg-white px-3 sm:px-4 py-2.5 border-b border-gray-100 relative">
-                <form onSubmit={handleSearch} className="flex w-full h-11 bg-[#f4f4f4] border border-gray-200/80 rounded-xl overflow-hidden focus-within:bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
-                    <div className="flex-1 relative flex items-center">
-                        <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0 pointer-events-none" />
-                        <input
-                            type="text"
-                            placeholder="Rechercher un produit..."
-                            className={cn(
-                                "w-full pl-2 bg-transparent outline-none text-xs sm:text-sm font-medium text-[#1B1F3B] placeholder:text-gray-400",
-                                searchQuery ? "pr-8" : "pr-2"
-                            )}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onFocus={() => setIsSearchFocused(true)}
-                        />
-                        {searchQuery && (
-                            <button
-                                type="button"
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-1 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 active:scale-90"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                    <button type="submit" aria-label="Rechercher" className="w-11 bg-primary hover:bg-[#d95213] text-white flex items-center justify-center transition-colors shrink-0 active:scale-95">
-                        <Search className="w-4 h-4" />
+            <div className="md:hidden bg-white px-3 py-1.5 border-b border-gray-100 relative z-[100]">
+                <form onSubmit={handleSearch} className="relative z-[150] flex items-center w-full h-[38px] bg-[#F3F4F6] border border-gray-200/60 rounded-full pl-3 pr-1 focus-within:bg-white focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                    <Search className="w-3.5 h-3.5 text-gray-400 shrink-0 pointer-events-none" />
+                    <input
+                        type="text"
+                        placeholder="Rechercher un produit, une marque..."
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        className="flex-1 min-w-0 bg-transparent pl-2 pr-1.5 outline-none text-xs font-normal text-[#1B1F3B] placeholder:text-gray-400"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => setIsSearchFocused(true)}
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="w-5 h-5 mr-1 rounded-full bg-gray-200/80 hover:bg-gray-300 text-gray-500 hover:text-gray-700 flex items-center justify-center shrink-0 active:scale-90 transition-all"
+                            aria-label="Effacer la recherche"
+                        >
+                            <X className="w-2.5 h-2.5" />
+                        </button>
+                    )}
+                    <button
+                        type="submit"
+                        aria-label="Rechercher"
+                        className="w-7 h-7 rounded-full bg-primary hover:bg-[#d95213] text-white flex items-center justify-center shrink-0 active:scale-95 shadow-xs shadow-primary/20 transition-all cursor-pointer"
+                    >
+                        <Search className="w-3 h-3" />
                     </button>
                 </form>
+
+                {/* Mobile Backdrop to close suggestions on outside tap */}
+                {isSearchFocused && (
+                    <div
+                        className="fixed inset-0 z-[140] bg-black/20 backdrop-blur-[1px] md:hidden"
+                        onClick={() => setIsSearchFocused(false)}
+                    />
+                )}
 
                 {/* Mobile Search Suggestions */}
                 <AnimatePresence>
                     {isSearchFocused && (searchQuery.length > 1 || searchSuggestions.length > 0) && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute left-0 right-0 top-full bg-white z-[150] shadow-2xl border-t border-gray-100 max-h-[70vh] overflow-y-auto"
+                            exit={{ opacity: 0, y: 6 }}
+                            className="absolute left-0 right-0 top-full bg-white z-[150] shadow-xl border-t border-gray-100 max-h-[65vh] overflow-y-auto rounded-b-xl"
                         >
                             {isSearching ? (
-                                <div className="p-8 text-center">
-                                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Recherche en cours...</p>
+                                <div className="py-6 px-4 text-center">
+                                    <div className="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2.5" />
+                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Recherche en cours...</p>
                                 </div>
                             ) : searchSuggestions.length > 0 ? (
                                 <div className="flex flex-col">
-                                    <div className="p-4 bg-gray-50/50 border-b border-gray-100">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Résultats suggérés</span>
+                                    <div className="px-3.5 py-1.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Résultats suggérés</span>
+                                        <span className="text-[10px] text-gray-400 font-medium">{searchSuggestions.length} trouvé{searchSuggestions.length > 1 ? 's' : ''}</span>
                                     </div>
                                     {searchSuggestions.map((item: any) => (
                                         <Link
                                             key={item.id}
                                             href={`/product/${item.id}`}
-                                            className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
+                                            className="flex items-center gap-3 px-3.5 py-2 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
                                             onClick={() => {
                                                 setIsSearchFocused(false)
                                                 setSearchQuery('')
                                             }}
                                         >
-                                            <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
-                                                <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" unoptimized />
+                                            <div className="relative w-9 h-9 bg-white rounded-lg border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                                                <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-0.5 group-hover:scale-105 transition-transform" unoptimized />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="text-sm font-bold text-[#1B1F3B] truncate group-hover:text-primary transition-colors uppercase tracking-tight">{item.name}</h4>
-                                                <p className="text-[10px] font-black text-primary tabular-nums">{formatPrice(item.price)}</p>
+                                                <h4 className="text-xs font-semibold text-[#1B1F3B] truncate group-hover:text-primary transition-colors">{item.name}</h4>
+                                                <p className="text-[11px] font-bold text-primary tabular-nums mt-0.5">{formatPrice(item.price)}</p>
                                             </div>
                                         </Link>
                                     ))}
                                     <Link
                                         href={`/boutique?q=${searchQuery}`}
-                                        className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
+                                        className="block py-2.5 px-4 text-center text-xs font-bold text-primary hover:bg-primary hover:text-white transition-all bg-primary/5"
                                         onClick={() => {
                                             setIsSearchFocused(false)
                                             setSearchQuery('')
@@ -692,9 +704,9 @@ export function Header() {
                                     </Link>
                                 </div>
                             ) : searchQuery.length > 1 ? (
-                                <div className="p-8 text-center text-gray-400">
-                                    <Search className="w-8 h-8 mx-auto mb-4 opacity-20" />
-                                    <p className="text-xs font-black uppercase tracking-widest">Aucun résultat trouvé</p>
+                                <div className="py-6 px-4 text-center text-gray-400">
+                                    <Search className="w-6 h-6 mx-auto mb-2 opacity-25" />
+                                    <p className="text-xs font-bold text-gray-500">Aucun résultat trouvé</p>
                                 </div>
                             ) : null}
                         </motion.div>

@@ -136,21 +136,21 @@ export const WatermarkOverlay = ({
         return (
             <div className={cn("absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]", className)}>
                 {/* Bottom Left Corner Mark */}
-                <div className="absolute bottom-0 left-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 opacity-75">
+                <div className="absolute bottom-0 left-0 w-[46px] h-[46px] sm:w-[54px] sm:h-[54px] md:w-[62px] md:h-[62px] opacity-85">
                     <div className="w-full h-full scale-x-[-1]">
                         {cornerMarkSvg}
                     </div>
                 </div>
 
                 {/* Bottom Right Corner Mark */}
-                <div className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 opacity-75">
+                <div className="absolute bottom-0 right-0 w-[46px] h-[46px] sm:w-[54px] sm:h-[54px] md:w-[62px] md:h-[62px] opacity-85">
                     {cornerMarkSvg}
                 </div>
 
                 {/* Centered Proportionate Logo */}
                 {logoUrl && (
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
-                        <div className="relative w-11 h-3 sm:w-13 sm:h-3.5 md:w-15 md:h-4 max-w-[40%] opacity-85">
+                    <div className="absolute bottom-1.5 sm:bottom-2 left-1/2 -translate-x-1/2">
+                        <div className="relative w-[86px] h-[25px] sm:w-[102px] sm:h-[30px] md:w-[118px] md:h-[34px] max-w-[55%] opacity-95">
                             <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
                         </div>
                     </div>
@@ -163,21 +163,21 @@ export const WatermarkOverlay = ({
     return (
         <div className={cn("absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]", className)}>
             {/* Bottom Left Corner Mark */}
-            <div className="absolute bottom-0 left-0 w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 lg:w-26 lg:h-26 opacity-80">
+            <div className="absolute bottom-0 left-0 w-[60px] h-[60px] sm:w-[76px] sm:h-[76px] md:w-[92px] md:h-[92px] lg:w-[108px] lg:h-[108px] opacity-80">
                 <div className="w-full h-full scale-x-[-1]">
                     {cornerMarkSvg}
                 </div>
             </div>
 
             {/* Bottom Right Corner Mark */}
-            <div className="absolute bottom-0 right-0 w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 lg:w-26 lg:h-26 opacity-80">
+            <div className="absolute bottom-0 right-0 w-[60px] h-[60px] sm:w-[76px] sm:h-[76px] md:w-[92px] md:h-[92px] lg:w-[108px] lg:h-[108px] opacity-80">
                 {cornerMarkSvg}
             </div>
 
             {/* Centered Proportionate Logo */}
             {logoUrl && (
                 <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2">
-                    <div className="relative w-18 h-5 sm:w-22 sm:h-6 md:w-26 md:h-7 lg:w-28 lg:h-8 max-w-[35%] opacity-90">
+                    <div className="relative w-[88px] h-[26px] sm:w-[104px] sm:h-[30px] md:w-[124px] md:h-[36px] lg:w-[140px] lg:h-[40px] max-w-[40%] opacity-90">
                         <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
                     </div>
                 </div>
