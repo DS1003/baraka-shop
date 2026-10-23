@@ -141,29 +141,36 @@ function ProductsPageContent() {
         return () => clearTimeout(timer);
     }, [searchQuery, page, activeFilters]);
 
-    // Sync state to URL
+    // Sync state to URL without triggering Next.js route cancellations
     const isFirstRender = useRef(true);
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
             return;
         }
-        const params = new URLSearchParams();
-        if (searchQuery) params.set('search', searchQuery);
-        if (page > 1) params.set('page', page.toString());
-        if (activeFilters.categoryId) params.set('categoryId', activeFilters.categoryId);
-        if (activeFilters.subCategoryId) params.set('subCategoryId', activeFilters.subCategoryId);
-        if (activeFilters.thirdLevelCategoryId) params.set('thirdLevelCategoryId', activeFilters.thirdLevelCategoryId);
-        if (activeFilters.brandId) params.set('brandId', activeFilters.brandId);
-        if (activeFilters.stockStatus) params.set('stockStatus', activeFilters.stockStatus);
-        if (activeFilters.publishStatus) params.set('publishStatus', activeFilters.publishStatus);
+        const timer = setTimeout(() => {
+            const params = new URLSearchParams();
+            if (searchQuery) params.set('search', searchQuery);
+            if (page > 1) params.set('page', page.toString());
+            if (activeFilters.categoryId) params.set('categoryId', activeFilters.categoryId);
+            if (activeFilters.subCategoryId) params.set('subCategoryId', activeFilters.subCategoryId);
+            if (activeFilters.thirdLevelCategoryId) params.set('thirdLevelCategoryId', activeFilters.thirdLevelCategoryId);
+            if (activeFilters.brandId) params.set('brandId', activeFilters.brandId);
+            if (activeFilters.stockStatus) params.set('stockStatus', activeFilters.stockStatus);
+            if (activeFilters.publishStatus) params.set('publishStatus', activeFilters.publishStatus);
 
-        const newUrl = `${pathname}?${params.toString()}`;
-        // Only update if it actually changed to avoid loop
-        if (newUrl !== `${pathname}?${searchParams.toString()}`) {
-            router.replace(newUrl, { scroll: false });
-        }
-    }, [searchQuery, page, activeFilters, pathname, router, searchParams]);
+            const queryString = params.toString();
+            const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+            if (typeof window !== 'undefined') {
+                const currentQuery = window.location.search.replace(/^\?/, '');
+                if (currentQuery !== queryString) {
+                    window.history.replaceState(null, '', newUrl);
+                }
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, page, activeFilters, pathname]);
 
     useEffect(() => {
         setSelectedIds([]);
@@ -394,14 +401,33 @@ function ProductsPageContent() {
             <div className="space-y-3">
                 <div className="flex flex-col xl:flex-row gap-3 items-stretch">
                     <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={16} />
+                        <Search className={cn(
+                            "absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors",
+                            loading && searchQuery ? "text-orange-500 animate-pulse" : "group-focus-within:text-orange-500"
+                        )} size={16} />
                         <input
                             type="text"
-                            placeholder="Rechercher par nom, SKU..."
-                            className="w-full pl-11 pr-6 py-3 bg-white border border-slate-200 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm placeholder:text-slate-400"
+                            placeholder="Rechercher par référence (ex: RS143, RS-143), nom, marque..."
+                            className="w-full pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm placeholder:text-slate-400"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setPage(1);
+                            }}
                         />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearchQuery('');
+                                    setPage(1);
+                                }}
+                                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition-colors"
+                                title="Effacer la recherche"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -409,7 +435,10 @@ function ProductsPageContent() {
                             <SearchableDropdown
                                 options={categoryOptions}
                                 value={activeFilters.categoryId || ''}
-                                onChange={(val) => setActiveFilters(prev => ({ ...prev, categoryId: val || undefined }))}
+                                onChange={(val) => {
+                                    setActiveFilters(prev => ({ ...prev, categoryId: val || undefined }));
+                                    setPage(1);
+                                }}
                                 placeholder="Toutes Catégories"
                                 defaultLabel="Toutes Catégories"
                             />
@@ -419,7 +448,10 @@ function ProductsPageContent() {
                             <SearchableDropdown
                                 options={combinedSubCategoriesOptions}
                                 value={getCombinedSelectedId()}
-                                onChange={handleCombinedCategoryChange}
+                                onChange={(val) => {
+                                    handleCombinedCategoryChange(val);
+                                    setPage(1);
+                                }}
                                 placeholder="Toutes Sous-catégories"
                             />
                         </div>
@@ -428,7 +460,10 @@ function ProductsPageContent() {
                             <select
                                 className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                 value={activeFilters.brandId || ''}
-                                onChange={(e) => setActiveFilters(prev => ({ ...prev, brandId: e.target.value || undefined }))}
+                                onChange={(e) => {
+                                    setActiveFilters(prev => ({ ...prev, brandId: e.target.value || undefined }));
+                                    setPage(1);
+                                }}
                             >
                                 <option value="">Marque</option>
                                 {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -439,7 +474,10 @@ function ProductsPageContent() {
                             <select
                                 className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                 value={activeFilters.stockStatus || ''}
-                                onChange={(e) => setActiveFilters(prev => ({ ...prev, stockStatus: (e.target.value || undefined) as any }))}
+                                onChange={(e) => {
+                                    setActiveFilters(prev => ({ ...prev, stockStatus: (e.target.value || undefined) as any }));
+                                    setPage(1);
+                                }}
                             >
                                 <option value="">Stock</option>
                                 <option value="in_stock">En stock</option>
@@ -451,7 +489,10 @@ function ProductsPageContent() {
                             <select
                                 className="w-full px-3 py-3 bg-white border border-slate-200 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all appearance-none cursor-pointer"
                                 value={activeFilters.publishStatus || ''}
-                                onChange={(e) => setActiveFilters(prev => ({ ...prev, publishStatus: (e.target.value || undefined) as any }))}
+                                onChange={(e) => {
+                                    setActiveFilters(prev => ({ ...prev, publishStatus: (e.target.value || undefined) as any }));
+                                    setPage(1);
+                                }}
                             >
                                 <option value="">Statut de publication</option>
                                 <option value="published">Publiés</option>
@@ -463,6 +504,7 @@ function ProductsPageContent() {
                             onClick={() => {
                                 setActiveFilters({});
                                 setSearchQuery('');
+                                setPage(1);
                             }}
                             className="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all border border-transparent hover:border-rose-100"
                             title="Réinitialiser"

@@ -1,6 +1,6 @@
 'use server';
 // PROXY REFRESH 2
-import prisma from '@/lib/prisma';
+import { prisma, withDbRetry } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
 import { revalidatePath } from 'next/cache';
@@ -265,6 +265,147 @@ export async function deleteStore(id: string) {
     }
 }
 
+function generateSearchVariants(text: string): string[] {
+    const raw = text.trim();
+    if (!raw) return [];
+
+    const variants = new Set<string>();
+    variants.add(raw);
+
+    // Without special characters (alphanumeric only)
+    const alphanumeric = raw.replace(/[^a-zA-Z0-9]/g, '');
+    if (alphanumeric) {
+        variants.add(alphanumeric);
+    }
+
+    // Letters followed by numbers (ex: RS143 <-> RS-143 <-> RS 143 <-> RS_143)
+    const letterDigitMatch = raw.match(/^([a-zA-Z]+)[-_.\s]*(\d+)([a-zA-Z0-9]*)$/i);
+    if (letterDigitMatch) {
+        const [, letters, digits, rest] = letterDigitMatch;
+        variants.add(`${letters}${digits}${rest}`);
+        variants.add(`${letters}-${digits}${rest ? `-${rest}` : ''}`);
+        variants.add(`${letters} ${digits}${rest ? ` ${rest}` : ''}`);
+        variants.add(`${letters}_${digits}${rest ? `_${rest}` : ''}`);
+    }
+
+    // Numbers followed by letters (ex: 3M, 5M, 143RS)
+    const digitLetterMatch = raw.match(/^(\d+)[-_.\s]*([a-zA-Z]+)$/i);
+    if (digitLetterMatch) {
+        const [, digits, letters] = digitLetterMatch;
+        variants.add(`${digits}${letters}`);
+        variants.add(`${digits}-${letters}`);
+        variants.add(`${digits} ${letters}`);
+    }
+
+    // Separators (spaces, hyphens, slashes, underscores)
+    const separated = raw.split(/[-_.\s/]+/).filter(Boolean);
+    if (separated.length > 1) {
+        variants.add(separated.join(''));
+        variants.add(separated.join('-'));
+        variants.add(separated.join(' '));
+    }
+
+    return Array.from(variants).filter(v => v.length > 0);
+}
+
+function buildAdminProductWhere(
+    query?: string,
+    filters?: {
+        categoryId?: string;
+        subCategoryId?: string;
+        thirdLevelCategoryId?: string;
+        brandId?: string;
+        stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+        publishStatus?: 'published' | 'hidden';
+    }
+) {
+    const where: any = {};
+    const andFilters: any[] = [];
+
+    const raw = query?.trim();
+    if (raw) {
+        const variants = generateSearchVariants(raw);
+
+        const variantOrList: any[] = [];
+        variants.forEach(v => {
+            variantOrList.push({ reference: { contains: v, mode: 'insensitive' } });
+            variantOrList.push({ name: { contains: v, mode: 'insensitive' } });
+            variantOrList.push({ description: { contains: v, mode: 'insensitive' } });
+            variantOrList.push({ brand: { name: { contains: v, mode: 'insensitive' } } });
+            variantOrList.push({ category: { name: { contains: v, mode: 'insensitive' } } });
+            variantOrList.push({ subCategory: { name: { contains: v, mode: 'insensitive' } } });
+            variantOrList.push({ thirdLevelCategory: { name: { contains: v, mode: 'insensitive' } } });
+        });
+
+        const words = raw.split(/\s+/).filter(w => w.length > 0);
+        if (words.length > 1) {
+            const wordAndList = words.map(word => {
+                const wVariants = generateSearchVariants(word);
+                return {
+                    OR: wVariants.flatMap(wv => [
+                        { name: { contains: wv, mode: 'insensitive' } },
+                        { reference: { contains: wv, mode: 'insensitive' } },
+                        { description: { contains: wv, mode: 'insensitive' } },
+                        { brand: { name: { contains: wv, mode: 'insensitive' } } },
+                        { category: { name: { contains: wv, mode: 'insensitive' } } },
+                        { subCategory: { name: { contains: wv, mode: 'insensitive' } } },
+                        { thirdLevelCategory: { name: { contains: wv, mode: 'insensitive' } } }
+                    ])
+                };
+            });
+
+            andFilters.push({
+                OR: [
+                    ...variantOrList,
+                    { AND: wordAndList }
+                ]
+            });
+        } else {
+            andFilters.push({ OR: variantOrList });
+        }
+    }
+
+    if (filters?.categoryId) {
+        andFilters.push({ categoryId: filters.categoryId });
+    }
+
+    if (filters?.subCategoryId) {
+        andFilters.push({ subCategoryId: filters.subCategoryId });
+    }
+
+    if (filters?.thirdLevelCategoryId) {
+        andFilters.push({ thirdLevelCategoryId: filters.thirdLevelCategoryId });
+    }
+
+    if (filters?.brandId) {
+        andFilters.push({ brandId: filters.brandId });
+    }
+
+    if (filters?.stockStatus) {
+        if (filters.stockStatus === 'in_stock') {
+            andFilters.push({ stock: { gt: 0 } });
+        } else if (filters.stockStatus === 'low_stock') {
+            andFilters.push({ stock: { gt: 0, lt: 10 } });
+        } else if (filters.stockStatus === 'out_of_stock') {
+            andFilters.push({ stock: 0 });
+        }
+    }
+
+    if (filters?.publishStatus) {
+        if (filters.publishStatus === 'published') {
+            andFilters.push({ isPublished: true });
+        } else if (filters.publishStatus === 'hidden') {
+            andFilters.push({ isPublished: false });
+        }
+    }
+
+    if (andFilters.length > 0) {
+        where.AND = andFilters;
+    }
+
+    return where;
+}
+
 export async function getAdminProducts(
     query?: string,
     page = 1,
@@ -280,68 +421,15 @@ export async function getAdminProducts(
 ) {
     try {
         await requireAdmin();
-        const cacheKey = `admin:products:${(query || '').trim().toLowerCase()}:${page}:${pageSize}:${JSON.stringify(filters || {})}`;
-        return await rememberCache(cacheKey, 120, async () => {
-            const skip = (page - 1) * pageSize;
-            const where: any = {};
-            const andFilters: any[] = [];
+        const skip = (page - 1) * pageSize;
+        const where = buildAdminProductWhere(query, filters);
 
-            if (query) {
-                andFilters.push({
-                    OR: [
-                        { name: { contains: query, mode: 'insensitive' } },
-                        { description: { contains: query, mode: 'insensitive' } },
-                        { reference: { contains: query, mode: 'insensitive' } },
-                        { brand: { name: { contains: query, mode: 'insensitive' } } }
-                    ]
-                });
-            }
-
-            if (filters?.categoryId) {
-                andFilters.push({ categoryId: filters.categoryId });
-            }
-
-            if (filters?.subCategoryId) {
-                andFilters.push({ subCategoryId: filters.subCategoryId });
-            }
-
-            if (filters?.thirdLevelCategoryId) {
-                andFilters.push({ thirdLevelCategoryId: filters.thirdLevelCategoryId });
-            }
-
-            if (filters?.brandId) {
-                andFilters.push({ brandId: filters.brandId });
-            }
-
-            if (filters?.stockStatus) {
-                if (filters.stockStatus === 'in_stock') {
-                    andFilters.push({ stock: { gt: 0 } });
-                } else if (filters.stockStatus === 'out_of_stock') {
-                    andFilters.push({ stock: 0 });
-                }
-            }
-
-            if (filters?.publishStatus) {
-                if (filters.publishStatus === 'published') {
-                    andFilters.push({ isPublished: true });
-                } else if (filters.publishStatus === 'hidden') {
-                    andFilters.push({ isPublished: false });
-                }
-            }
-
-            if (andFilters.length > 0) {
-                where.AND = andFilters;
-            }
-
-            // Stats should be global-ish based on the SEARCH but not pagination
-            const [total, activeCount, lowStockCount, categoriesCount] = await Promise.all([
-                prisma.product.count({ where }),
-                prisma.product.count({ where: { ...where, stock: { gt: 0 } } }),
-                prisma.product.count({ where: { ...where, stock: { gt: 0, lt: 10 } } }),
-                prisma.category.count()
-            ]);
-
-            const products = await prisma.product.findMany({
+        const [total, activeCount, lowStockCount, categoriesCount, products] = await withDbRetry(() => Promise.all([
+            prisma.product.count({ where }),
+            prisma.product.count({ where: { ...where, stock: { gt: 0 } } }),
+            prisma.product.count({ where: { ...where, stock: { gt: 0, lt: 10 } } }),
+            prisma.category.count(),
+            prisma.product.findMany({
                 where,
                 include: {
                     category: true,
@@ -356,29 +444,14 @@ export async function getAdminProducts(
                 orderBy: { createdAt: 'desc' },
                 take: pageSize,
                 skip: skip
-            });
+            })
+        ]));
 
-            let finalProducts = products || [];
-            if (finalProducts.length === 0 && !query && (!filters || Object.keys(filters).length === 0)) {
-                // Check if there's REALLY something in the DB
-                const rawCount = await prisma.product.count();
-                if (rawCount > 0) {
-                    finalProducts = [{
-                        id: 'debug-id',
-                        name: `⚠️ SYNC ISSUE: ${rawCount} items in DB, but query returned 0. Try refreshing or clearing filters.`,
-                        price: 0,
-                        stock: 0,
-                        category: { name: 'DEBUG' }
-                    }] as any;
-                }
-            }
-
-            return {
-                products: finalProducts,
-                total: total || (finalProducts.length > 1 ? total : 0),
-                stats: { activeCount, lowStockCount, categoriesCount }
-            };
-        });
+        return {
+            products: products || [],
+            total: total || 0,
+            stats: { activeCount, lowStockCount, categoriesCount }
+        };
     } catch (error: any) {
         console.error("ADMIN FETCH PRODUCTS ERROR:", error);
         return {
@@ -402,44 +475,12 @@ export async function getAllFilteredProductIds(
 ) {
     try {
         await requireAdmin();
-        const where: any = {};
-        const andFilters: any[] = [];
+        const where = buildAdminProductWhere(query, filters);
 
-        if (query) {
-            andFilters.push({
-                OR: [
-                    { name: { contains: query, mode: 'insensitive' } },
-                    { description: { contains: query, mode: 'insensitive' } },
-                    { reference: { contains: query, mode: 'insensitive' } },
-                    { brand: { name: { contains: query, mode: 'insensitive' } } }
-                ]
-            });
-        }
-
-        if (filters?.categoryId) andFilters.push({ categoryId: filters.categoryId });
-        if (filters?.subCategoryId) andFilters.push({ subCategoryId: filters.subCategoryId });
-        if (filters?.thirdLevelCategoryId) andFilters.push({ thirdLevelCategoryId: filters.thirdLevelCategoryId });
-        if (filters?.brandId) andFilters.push({ brandId: filters.brandId });
-
-        if (filters?.stockStatus) {
-            if (filters.stockStatus === 'in_stock') andFilters.push({ stock: { gt: 10 } });
-            else if (filters.stockStatus === 'low_stock') andFilters.push({ stock: { gt: 0, lt: 10 } });
-            else if (filters.stockStatus === 'out_of_stock') andFilters.push({ stock: 0 });
-        }
-
-        if (filters?.publishStatus) {
-            if (filters.publishStatus === 'published') andFilters.push({ isPublished: true });
-            else if (filters.publishStatus === 'hidden') andFilters.push({ isPublished: false });
-        }
-
-        if (andFilters.length > 0) {
-            where.AND = andFilters;
-        }
-
-        const products = await prisma.product.findMany({
+        const products = await withDbRetry(() => prisma.product.findMany({
             where,
             select: { id: true }
-        });
+        }));
 
         return products.map((p: { id: string }) => p.id);
     } catch (error) {
@@ -1006,6 +1047,8 @@ export async function deleteBulkProducts(ids: string[]) {
         revalidatePath('/admin/products');
         revalidatePath('/admin/out-of-stock');
         revalidatePath('/boutique');
+        revalidatePath('/nouveautes');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error("Delete bulk products error:", error);
@@ -1035,6 +1078,8 @@ export async function deleteProduct(id: string) {
         revalidatePath('/admin/products');
         revalidatePath('/admin/out-of-stock');
         revalidatePath('/boutique');
+        revalidatePath('/nouveautes');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error("Delete product error:", error);
@@ -1061,6 +1106,8 @@ export async function deleteAllProducts() {
         revalidatePath('/admin/products');
         revalidatePath('/admin/out-of-stock');
         revalidatePath('/boutique');
+        revalidatePath('/nouveautes');
+        revalidatePath('/');
         return { success: true };
     } catch (error) {
         console.error("Delete all products error:", error);
@@ -1087,6 +1134,8 @@ export async function updateProduct(id: string, data: any) {
 
         revalidatePath('/admin/promotions');
         revalidatePath('/boutique');
+        revalidatePath('/nouveautes');
+        revalidatePath('/');
         return { success: true, product };
     } catch (error) {
         console.error("Update product error:", error);
@@ -1491,6 +1540,7 @@ export async function upsertProduct(data: any, id?: string) {
         if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Revalidating paths...`);
         revalidatePath('/admin/products');
         revalidatePath('/boutique');
+        revalidatePath('/nouveautes');
         revalidatePath(`/product/${product.id}`);
         revalidatePath('/');
         
@@ -2041,6 +2091,8 @@ export async function toggleProductPublish(id: string, isPublished: boolean) {
                 invalidatePrefix('admin:dashboard:')
             ]);
             revalidatePath('/');
+            revalidatePath('/boutique');
+            revalidatePath('/nouveautes');
             revalidatePath('/admin/products');
             revalidatePath('/admin/out-of-stock');
         }
@@ -2110,6 +2162,8 @@ export async function bulkTogglePublishProducts(ids: string[], isPublished: bool
             invalidatePrefix('admin:dashboard:')
         ]);
         revalidatePath('/');
+        revalidatePath('/boutique');
+        revalidatePath('/nouveautes');
         revalidatePath('/admin/products');
         revalidatePath('/admin/out-of-stock');
         return { success: true };

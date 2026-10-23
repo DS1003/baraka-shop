@@ -352,10 +352,10 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                 </div>
                                 <div className="min-w-0">
                                     <h2 className="text-base sm:text-xl md:text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter truncate">
-                                        Les {initialProducts.length} dernières <span className="text-primary italic">nouveautés</span>
+                                        Les {pagination.total || initialProducts.length} dernières <span className="text-primary italic">nouveautés</span>
                                     </h2>
                                     <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">
-                                        Derniers arrivages mis à jour
+                                        Derniers arrivages en direct {pagination.pages > 1 ? `• Page ${pagination.currentPage} sur ${pagination.pages}` : '• Mis à jour en temps réel'}
                                     </p>
                                 </div>
                             </div>
@@ -553,7 +553,75 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                         )}
                     </div>
 
-                    {/* Pagination removed as per request to only show the 20 latest products */}
+                    {/* Pagination Dynamique */}
+                    {pagination.pages > 1 && (
+                        <div className="pt-8 sm:pt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100">
+                            <span className="text-xs font-bold text-gray-400">
+                                Page <span className="text-[#1B1F3B] font-black">{pagination.currentPage}</span> sur <span className="text-[#1B1F3B] font-black">{pagination.pages}</span> ({pagination.total} nouveautés au total)
+                            </span>
+
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                <button
+                                    onClick={() => updateFilters({ page: pagination.currentPage - 1 })}
+                                    disabled={pagination.currentPage <= 1}
+                                    aria-label="Page précédente"
+                                    className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center bg-white border border-gray-100 text-gray-400 hover:text-primary hover:border-primary/20 disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:border-gray-100 transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
+                                >
+                                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </button>
+
+                                <div className="flex items-center gap-1 sm:gap-1.5">
+                                    {(() => {
+                                        const totalPages = pagination.pages;
+                                        const currentPage = pagination.currentPage;
+                                        const pages: (number | string)[] = [];
+                                        
+                                        if (totalPages <= 5) {
+                                            for (let i = 1; i <= totalPages; i++) pages.push(i);
+                                        } else {
+                                            pages.push(1);
+                                            if (currentPage > 3) pages.push('...');
+                                            const start = Math.max(2, currentPage - 1);
+                                            const end = Math.min(totalPages - 1, currentPage + 1);
+                                            for (let i = start; i <= end; i++) {
+                                                if (!pages.includes(i)) pages.push(i);
+                                            }
+                                            if (currentPage < totalPages - 2) pages.push('...');
+                                            if (!pages.includes(totalPages)) pages.push(totalPages);
+                                        }
+
+                                        return pages.map((pageNumber, i) => (
+                                            typeof pageNumber === 'string' ? (
+                                                <span key={`dots-${i}`} className="w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center text-gray-300 font-bold text-xs">...</span>
+                                            ) : (
+                                                <button
+                                                    key={pageNumber}
+                                                    onClick={() => updateFilters({ page: pageNumber })}
+                                                    className={cn(
+                                                        "w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center text-[11px] sm:text-xs font-black transition-all border cursor-pointer",
+                                                        pageNumber === currentPage
+                                                            ? "bg-[#1B1F3B] text-white border-[#1B1F3B] shadow-md shadow-[#1B1F3B]/20 scale-105"
+                                                            : "bg-white text-gray-500 border-gray-100 hover:border-primary/30 hover:text-primary shadow-sm"
+                                                    )}
+                                                >
+                                                    {pageNumber}
+                                                </button>
+                                            )
+                                        ));
+                                    })()}
+                                </div>
+
+                                <button
+                                    onClick={() => updateFilters({ page: pagination.currentPage + 1 })}
+                                    disabled={pagination.currentPage >= pagination.pages}
+                                    aria-label="Page suivante"
+                                    className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center bg-white border border-gray-100 text-gray-400 hover:text-primary hover:border-primary/20 disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:border-gray-100 transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
+                                >
+                                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </Container>

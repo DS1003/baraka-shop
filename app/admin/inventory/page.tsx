@@ -82,7 +82,8 @@ export default function InventoryPage() {
                 setLoading(false);
             }
         }
-        loadInventory();
+        const timer = setTimeout(loadInventory, 300);
+        return () => clearTimeout(timer);
     }, [searchQuery, page, selectedCategory, selectedBrand, stockStatus, pageSize]);
 
     const handleAdjustConfirm = async () => {
@@ -154,14 +155,30 @@ export default function InventoryPage() {
             {/* Technical Tools Bar */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                 <div className="relative col-span-1 md:col-span-2 group">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-focus-within:text-orange-500 transition-colors" size={18} />
+                    <Search className={cn(
+                        "absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-colors",
+                        loading && searchQuery ? "text-orange-500 animate-pulse" : "group-focus-within:text-orange-500"
+                    )} size={18} />
                     <input
                         type="text"
-                        placeholder="Rechercher par nom de produit..."
-                        className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm"
+                        placeholder="Rechercher par référence (ex: RS143, RS-143), nom..."
+                        className="w-full pl-12 pr-10 py-3.5 bg-white border border-slate-200 rounded-2xl text-[14px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-500/20 transition-all shadow-sm"
                         value={searchQuery}
                         onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                     />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setPage(1);
+                            }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition-colors"
+                            title="Effacer la recherche"
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
                 </div>
                 
                 <select 

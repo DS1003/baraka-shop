@@ -24,6 +24,7 @@ export async function getProductsAction(options: {
     onSale?: boolean;
     isNew?: boolean;
     excludeIds?: string[];
+    noCache?: boolean;
 } = {}) {
     const query = options.query;
     const category = options.category;
@@ -39,27 +40,9 @@ export async function getProductsAction(options: {
     const onSale = options.onSale || false;
     const isNew = options.isNew || false;
     const excludeIds = options.excludeIds || [];
+    const noCache = options.noCache || false;
 
-    // Clé de cache déterministe normalisée : évite la fragmentation du cache
-    const cacheKey = [
-        'products:v4',
-        `q=${(query || '').trim().toLowerCase()}`,
-        `cat=${category || ''}`,
-        `sub=${subCategory || ''}`,
-        `third=${thirdLevelCategory || ''}`,
-        `b=${brand || ''}`,
-        `s=${store || ''}`,
-        `min=${minPrice ?? ''}`,
-        `max=${maxPrice ?? ''}`,
-        `sort=${sort}`,
-        `p=${page}`,
-        `lim=${limit}`,
-        `sale=${Boolean(onSale)}`,
-        `new=${Boolean(isNew)}`,
-        `ex=${[...excludeIds].sort().join(',')}`
-    ].join(':');
-
-    return await rememberCache(cacheKey, 300, async () => {
+    const executeFetch = async () => {
         const skip = (page - 1) * limit;
 
         try {
@@ -129,8 +112,8 @@ export async function getProductsAction(options: {
                 where.id = { notIn: excludeIds };
             }
 
-            // Construction du SORT
-            let orderBy: any = { createdAt: 'desc' };
+            // Construction du SORT (Nouveautés : ordre chronologique inversé strict et déterministe)
+            let orderBy: any = [{ createdAt: 'desc' }, { id: 'desc' }];
             if (sort === 'price_asc') {
                 orderBy = { price: 'asc' };
             } else if (sort === 'price_desc') {
@@ -173,7 +156,32 @@ export async function getProductsAction(options: {
             console.error('[Get Products Error]:', error);
             return { products: [], pagination: { total: 0, pages: 0, currentPage: 1, limit } };
         }
-    });
+    };
+
+    if (noCache) {
+        return await executeFetch();
+    }
+
+    // Clé de cache déterministe normalisée : évite la fragmentation du cache
+    const cacheKey = [
+        'products:v4',
+        `q=${(query || '').trim().toLowerCase()}`,
+        `cat=${category || ''}`,
+        `sub=${subCategory || ''}`,
+        `third=${thirdLevelCategory || ''}`,
+        `b=${brand || ''}`,
+        `s=${store || ''}`,
+        `min=${minPrice ?? ''}`,
+        `max=${maxPrice ?? ''}`,
+        `sort=${sort}`,
+        `p=${page}`,
+        `lim=${limit}`,
+        `sale=${Boolean(onSale)}`,
+        `new=${Boolean(isNew)}`,
+        `ex=${[...excludeIds].sort().join(',')}`
+    ].join(':');
+
+    return await rememberCache(cacheKey, 300, executeFetch);
 }
 
 export async function getProductByIdAction(id: string) {
@@ -747,6 +755,8 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
             revalidatePath('/admin/products');
             revalidatePath('/admin/out-of-stock');
             revalidatePath('/boutique');
+            revalidatePath('/nouveautes');
+            revalidatePath('/');
         }
 
         return { success: true, count: toCreate.length + toUpdate.length };

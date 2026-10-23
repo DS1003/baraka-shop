@@ -4,6 +4,10 @@ import { getProductsAction, getCategoriesAction, getBrandsAction } from '@/lib/a
 import { NouveautesClient } from './NouveautesClient'
 import { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
+
 export const metadata: Metadata = {
     title: {
         absolute: 'Nouveautés High-Tech | Baraka Shop Sénégal',
@@ -23,7 +27,7 @@ export default async function NouveautesPage({ searchParams }: { searchParams: P
     const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined
     const query = params.q || ''
 
-    // Fetch new products specifically
+    // Fetch new products specifically - 100% dynamic & temps réel
     const [result, categories, brands] = await Promise.all([
         getProductsAction({
             category,
@@ -33,7 +37,8 @@ export default async function NouveautesPage({ searchParams }: { searchParams: P
             minPrice,
             maxPrice,
             query,
-            limit: 50
+            limit: 48,
+            noCache: true
         }),
         getCategoriesAction(),
         getBrandsAction()

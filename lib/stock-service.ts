@@ -131,6 +131,7 @@ export async function processStockChange({
 
     safeRevalidatePath('/');
     safeRevalidatePath('/boutique');
+    safeRevalidatePath('/nouveautes');
     safeRevalidatePath(`/product/${productId}`);
     safeRevalidatePath('/admin/products');
     safeRevalidatePath('/admin/inventory');
@@ -257,6 +258,7 @@ export async function reactivateProduct(productId: string) {
 
   safeRevalidatePath('/');
   safeRevalidatePath('/boutique');
+  safeRevalidatePath('/nouveautes');
   safeRevalidatePath(`/product/${productId}`);
   safeRevalidatePath('/admin/products');
   safeRevalidatePath('/admin/inventory');

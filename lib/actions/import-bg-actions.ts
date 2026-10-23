@@ -186,6 +186,9 @@ async function processSync(jobId: string, products: any[]) {
         ]);
         revalidatePath('/admin/products');
         revalidatePath('/admin/inventory');
+        revalidatePath('/boutique');
+        revalidatePath('/nouveautes');
+        revalidatePath('/');
     } catch (e) {
         console.error('[Import Revalidate Error]:', e);
     }
