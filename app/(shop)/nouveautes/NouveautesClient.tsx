@@ -42,7 +42,7 @@ interface NouveautesClientProps {
 }
 
 const SORT_OPTIONS = [
-    { value: 'newest', label: 'Nouveautés', desc: 'Derniers arrivages en premier', icon: Sparkles },
+    { value: 'newest', label: 'Dernière mise à jour', desc: 'Du plus récemment mis à jour au plus ancien', icon: Sparkles },
     { value: 'price_asc', label: 'Prix croissant', desc: 'Du moins cher au plus cher', icon: ArrowUpRight },
     { value: 'price_desc', label: 'Prix décroissant', desc: 'Du plus cher au moins cher', icon: ArrowDownRight },
 ]
@@ -64,13 +64,15 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
     const query = searchParams.get('q') || ''
     const minPrice = searchParams.get('minPrice') || ''
     const maxPrice = searchParams.get('maxPrice') || ''
+    const currentBadge = searchParams.get('badge') || 'all'
 
     const activeFiltersCount = [
         currentCategory,
         currentBrand,
         minPrice,
         maxPrice,
-        query
+        query,
+        currentBadge !== 'all' ? currentBadge : ''
     ].filter(Boolean).length
 
     const updateFilters = (updates: Record<string, string | number | undefined>) => {
@@ -115,6 +117,55 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                             }}
                         />
                         <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                    </div>
+                </div>
+
+                {/* Badge Type Filter */}
+                <div className="space-y-3">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Type d'arrivage</label>
+                    <div className="flex flex-col gap-1.5">
+                        <button
+                            onClick={() => updateFilters({ badge: 'all' })}
+                            className={cn(
+                                "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all border text-left",
+                                currentBadge === 'all' || !currentBadge
+                                    ? "bg-[#1B1F3B] text-white border-[#1B1F3B] shadow-sm"
+                                    : "bg-white text-gray-600 border-gray-100 hover:border-primary/40 hover:text-primary"
+                            )}
+                        >
+                            <span className="flex items-center gap-2">
+                                <Sparkles className="w-3.5 h-3.5 text-primary" />
+                                Tous les arrivages
+                            </span>
+                        </button>
+                        <button
+                            onClick={() => updateFilters({ badge: 'nouveau' })}
+                            className={cn(
+                                "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all border text-left",
+                                currentBadge === 'nouveau'
+                                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                    : "bg-white text-blue-600 border-blue-100 hover:bg-blue-50/50"
+                            )}
+                        >
+                            <span className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                                Badge Nouveau
+                            </span>
+                        </button>
+                        <button
+                            onClick={() => updateFilters({ badge: 'bientot_disponible' })}
+                            className={cn(
+                                "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all border text-left",
+                                currentBadge === 'bientot_disponible'
+                                    ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+                                    : "bg-white text-amber-700 border-amber-200 hover:bg-amber-50/50"
+                            )}
+                        >
+                            <span className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                Bientôt disponible
+                            </span>
+                        </button>
                     </div>
                 </div>
 
@@ -231,10 +282,10 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                 {activeFiltersCount > 0 && (
                                     <button
                                         onClick={() => {
-                                            updateFilters({ category: '', brand: '', minPrice: '', maxPrice: '', q: '' })
+                                            updateFilters({ category: '', brand: '', minPrice: '', maxPrice: '', q: '', badge: 'all' })
                                             setIsFilterOpen(false)
                                         }}
-                                        className="px-4 h-12 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 transition-all shrink-0"
+                                        className="px-4 h-12 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 transition-all shrink-0 cursor-pointer"
                                     >
                                         Effacer
                                     </button>
@@ -352,10 +403,16 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                 </div>
                                 <div className="min-w-0">
                                     <h2 className="text-base sm:text-xl md:text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter truncate">
-                                        Les {pagination.total || initialProducts.length} dernières <span className="text-primary italic">nouveautés</span>
+                                        {currentBadge === 'nouveau' ? (
+                                            <>Produits avec badge <span className="text-blue-600 italic">Nouveau</span> ({pagination.total})</>
+                                        ) : currentBadge === 'bientot_disponible' ? (
+                                            <>Arrivages <span className="text-amber-600 italic">Bientôt Disponibles</span> ({pagination.total})</>
+                                        ) : (
+                                            <>Les {pagination.total || initialProducts.length} dernières <span className="text-primary italic">nouveautés</span></>
+                                        )}
                                     </h2>
                                     <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate">
-                                        Derniers arrivages en direct {pagination.pages > 1 ? `• Page ${pagination.currentPage} sur ${pagination.pages}` : '• Mis à jour en temps réel'}
+                                        Classés par dernière mise à jour (du haut vers le bas) {pagination.pages > 1 ? `• Page ${pagination.currentPage} sur ${pagination.pages}` : ''}
                                     </p>
                                 </div>
                             </div>
@@ -366,14 +423,14 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                     <button
                                         onClick={() => setViewMode('grid')}
                                         aria-label="Mode grille"
-                                        className={cn("p-2 rounded-lg transition-all", viewMode === 'grid' ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-[#1B1F3B]")}
+                                        className={cn("p-2 rounded-lg transition-all cursor-pointer", viewMode === 'grid' ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-[#1B1F3B]")}
                                     >
                                         <LayoutGrid size={18} />
                                     </button>
                                     <button
                                         onClick={() => setViewMode('list')}
                                         aria-label="Mode liste"
-                                        className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-[#1B1F3B]")}
+                                        className={cn("p-2 rounded-lg transition-all cursor-pointer", viewMode === 'list' ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-[#1B1F3B]")}
                                     >
                                         <List size={18} />
                                     </button>
@@ -383,11 +440,51 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                     onChange={(e) => updateFilters({ sort: e.target.value })}
                                     className="h-11 bg-white border border-gray-100 rounded-xl px-4 text-[11px] font-black uppercase tracking-widest text-[#1B1F3B] outline-none focus:border-primary transition-all shadow-sm cursor-pointer"
                                 >
-                                    <option value="newest">Trier par : Nouveautés</option>
+                                    <option value="newest">Trier par : Dernière mise à jour</option>
                                     <option value="price_asc">Prix : Croissant</option>
                                     <option value="price_desc">Prix : Décroissant</option>
                                 </select>
                             </div>
+                        </div>
+
+                        {/* Quick Badge Filter Pills */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100/80 overflow-x-auto no-scrollbar">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 shrink-0">Badge :</span>
+                            <button
+                                onClick={() => updateFilters({ badge: 'all' })}
+                                className={cn(
+                                    "px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shrink-0 border cursor-pointer",
+                                    currentBadge === 'all' || !currentBadge
+                                        ? "bg-[#1B1F3B] text-white border-[#1B1F3B] shadow-xs"
+                                        : "bg-gray-50 text-gray-600 border-gray-200/80 hover:bg-gray-100"
+                                )}
+                            >
+                                Tous
+                            </button>
+                            <button
+                                onClick={() => updateFilters({ badge: 'nouveau' })}
+                                className={cn(
+                                    "px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer",
+                                    currentBadge === 'nouveau'
+                                        ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                                        : "bg-blue-50/60 text-blue-600 border-blue-200 hover:bg-blue-100/60"
+                                )}
+                            >
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                                Nouveau
+                            </button>
+                            <button
+                                onClick={() => updateFilters({ badge: 'bientot_disponible' })}
+                                className={cn(
+                                    "px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer",
+                                    currentBadge === 'bientot_disponible'
+                                        ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                                        : "bg-amber-50/60 text-amber-700 border-amber-200 hover:bg-amber-100/60"
+                                )}
+                            >
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                Bientôt disponible
+                            </button>
                         </div>
 
                         {/* Mobile Controls (< md) */}
@@ -432,10 +529,19 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                     <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 shrink-0 mr-0.5">
                                         Actifs :
                                     </span>
+                                    {currentBadge && currentBadge !== 'all' && (
+                                        <button
+                                            onClick={() => updateFilters({ badge: 'all' })}
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
+                                        >
+                                            <span>Badge : {currentBadge === 'nouveau' ? 'Nouveau' : 'Bientôt disponible'}</span>
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    )}
                                     {currentCategory && (
                                         <button
                                             onClick={() => updateFilters({ category: '' })}
-                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
                                         >
                                             <span>{categories.find(c => c.slug === currentCategory)?.name || currentCategory}</span>
                                             <X className="w-3 h-3" />
@@ -444,7 +550,7 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                     {currentBrand && (
                                         <button
                                             onClick={() => updateFilters({ brand: '' })}
-                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
                                         >
                                             <span>Marque : {brands.find(b => b.slug === currentBrand)?.name || currentBrand}</span>
                                             <X className="w-3 h-3" />
@@ -453,7 +559,7 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                     {(minPrice || maxPrice) && (
                                         <button
                                             onClick={() => updateFilters({ minPrice: '', maxPrice: '' })}
-                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
                                         >
                                             <span>Prix : {minPrice || '0'} - {maxPrice || '∞'} F</span>
                                             <X className="w-3 h-3" />
@@ -462,15 +568,15 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                     {query && (
                                         <button
                                             onClick={() => updateFilters({ q: '' })}
-                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[11px] font-bold shrink-0 transition-colors cursor-pointer"
                                         >
                                             <span>"{query}"</span>
                                             <X className="w-3 h-3" />
                                         </button>
                                     )}
                                     <button
-                                        onClick={() => updateFilters({ category: '', brand: '', minPrice: '', maxPrice: '', q: '' })}
-                                        className="text-[10px] font-black uppercase tracking-wider text-gray-400 hover:text-primary shrink-0 px-2 py-1 transition-colors flex items-center gap-1"
+                                        onClick={() => updateFilters({ category: '', brand: '', minPrice: '', maxPrice: '', q: '', badge: 'all' })}
+                                        className="text-[10px] font-black uppercase tracking-wider text-gray-400 hover:text-primary shrink-0 px-2 py-1 transition-colors flex items-center gap-1 cursor-pointer"
                                     >
                                         <RotateCcw className="w-2.5 h-2.5" /> Tout effacer
                                     </button>
@@ -528,8 +634,8 @@ export function NouveautesClient({ initialProducts, categories, brands, paginati
                                 <h3 className="text-2xl font-black text-[#1B1F3B] uppercase tracking-tighter">Aucune nouveauté ici</h3>
                                 <p className="text-gray-400 text-sm mt-2 max-w-xs mx-auto">Revenez plus tard ou essayez d'autres filtres.</p>
                                 <button
-                                    onClick={() => updateFilters({ category: '', brand: '', q: '' })}
-                                    className="mt-8 px-10 py-4 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-primary transition-all shadow-xl"
+                                    onClick={() => updateFilters({ category: '', brand: '', minPrice: '', maxPrice: '', q: '', badge: 'all' })}
+                                    className="mt-8 px-10 py-4 bg-[#1B1F3B] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-primary transition-all shadow-xl cursor-pointer"
                                 >
                                     Tout voir
                                 </button>

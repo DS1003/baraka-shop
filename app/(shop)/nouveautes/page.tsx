@@ -26,8 +26,10 @@ export default async function NouveautesPage({ searchParams }: { searchParams: P
     const minPrice = params.minPrice ? Number(params.minPrice) : undefined
     const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined
     const query = params.q || ''
+    const badge = params.badge || 'all'
 
     // Fetch new products specifically - 100% dynamic & temps réel
+    // Uniquement les produits avec badge "Nouveau" & "Bientôt disponible"
     const [result, categories, brands] = await Promise.all([
         getProductsAction({
             category,
@@ -38,7 +40,9 @@ export default async function NouveautesPage({ searchParams }: { searchParams: P
             maxPrice,
             query,
             limit: 48,
-            noCache: true
+            noCache: true,
+            onlyNewAndComingSoon: true,
+            badgeFilter: badge as any
         }),
         getCategoriesAction(),
         getBrandsAction()

@@ -25,6 +25,8 @@ export async function getProductsAction(options: {
     isNew?: boolean;
     excludeIds?: string[];
     noCache?: boolean;
+    onlyNewAndComingSoon?: boolean;
+    badgeFilter?: 'all' | 'nouveau' | 'bientot_disponible';
 } = {}) {
     const query = options.query;
     const category = options.category;
@@ -41,79 +43,110 @@ export async function getProductsAction(options: {
     const isNew = options.isNew || false;
     const excludeIds = options.excludeIds || [];
     const noCache = options.noCache || false;
+    const onlyNewAndComingSoon = options.onlyNewAndComingSoon || false;
+    const badgeFilter = options.badgeFilter || 'all';
 
     const executeFetch = async () => {
         const skip = (page - 1) * limit;
 
         try {
-            // Construction du WHERE clause (Public: seuls les produits publiés et avec stock > 0 sont visibles)
-            const where: any = { 
-                isPublished: true,
-                stock: { gt: 0 }
-            };
+            // Construction du WHERE clause sécurisée via AND list
+            const andConditions: any[] = [
+                { isPublished: true }
+            ];
+
+            if (onlyNewAndComingSoon) {
+                // Uniquement les produits avec badge "Nouveau" ou "Bientôt disponible"
+                const nouveauConditions: any[] = [
+                    { isNew: true, stock: { gt: 0 } },
+                    { metadata: { path: ['badge'], string_contains: 'Nouveau' }, stock: { gt: 0 } }
+                ];
+
+                const bientotConditions: any[] = [
+                    { metadata: { path: ['badge'], equals: 'Bientôt disponible' } },
+                    { metadata: { path: ['badge'], equals: 'Bientot disponible' } },
+                    { metadata: { path: ['badge'], string_contains: 'disponible' } }
+                ];
+
+                let badgeConditions: any[] = [];
+                if (badgeFilter === 'nouveau') {
+                    badgeConditions = nouveauConditions;
+                } else if (badgeFilter === 'bientot_disponible') {
+                    badgeConditions = bientotConditions;
+                } else {
+                    badgeConditions = [...nouveauConditions, ...bientotConditions];
+                }
+
+                andConditions.push({ OR: badgeConditions });
+            } else {
+                andConditions.push({ stock: { gt: 0 } });
+            }
 
             if (query) {
-                where.OR = [
-                    { name: { contains: query, mode: 'insensitive' } },
-                    { description: { contains: query, mode: 'insensitive' } },
-                    { reference: { contains: query, mode: 'insensitive' } },
-                ];
+                andConditions.push({
+                    OR: [
+                        { name: { contains: query, mode: 'insensitive' } },
+                        { description: { contains: query, mode: 'insensitive' } },
+                        { reference: { contains: query, mode: 'insensitive' } },
+                    ]
+                });
             }
 
             if (category) {
-                where.category = { slug: category };
+                andConditions.push({ category: { slug: category } });
             }
 
             if (subCategory) {
-                where.subCategory = { slug: subCategory };
+                andConditions.push({ subCategory: { slug: subCategory } });
             }
 
             if (thirdLevelCategory) {
-                where.thirdLevelCategory = { slug: thirdLevelCategory };
+                andConditions.push({ thirdLevelCategory: { slug: thirdLevelCategory } });
             }
 
             if (brand) {
-                where.brand = { slug: brand };
+                andConditions.push({ brand: { slug: brand } });
             }
 
             if (store) {
-                where.store = { slug: store };
+                andConditions.push({ store: { slug: store } });
             }
 
-            if (isNew) {
-                where.isNew = true;
+            if (isNew && !onlyNewAndComingSoon) {
+                andConditions.push({ isNew: true });
             }
 
             if (onSale) {
                 const now = new Date();
-                where.AND = [
-                    { oldPrice: { not: null } },
-                    {
-                        OR: [
-                            { promotionId: null },
-                            {
-                                promotion: {
-                                    startDate: { lte: now },
-                                    endDate: { gte: now }
-                                }
+                andConditions.push({
+                    oldPrice: { not: null },
+                    OR: [
+                        { promotionId: null },
+                        {
+                            promotion: {
+                                startDate: { lte: now },
+                                endDate: { gte: now }
                             }
-                        ]
-                    }
-                ];
+                        }
+                    ]
+                });
             }
 
             if (minPrice !== undefined || maxPrice !== undefined) {
-                where.price = {};
-                if (minPrice !== undefined) where.price.gte = minPrice;
-                if (maxPrice !== undefined) where.price.lte = maxPrice;
+                const priceFilter: any = {};
+                if (minPrice !== undefined) priceFilter.gte = minPrice;
+                if (maxPrice !== undefined) priceFilter.lte = maxPrice;
+                andConditions.push({ price: priceFilter });
             }
 
             if (excludeIds && Array.isArray(excludeIds) && excludeIds.length > 0) {
-                where.id = { notIn: excludeIds };
+                andConditions.push({ id: { notIn: excludeIds } });
             }
 
-            // Construction du SORT (Nouveautés : ordre chronologique inversé strict et déterministe)
-            let orderBy: any = [{ createdAt: 'desc' }, { id: 'desc' }];
+            const where: any = { AND: andConditions };
+
+            // Construction du SORT (Nouveautés : ordre de dernière mise à jour allant du haut vers le bas)
+            let orderBy: any = [{ updatedAt: 'desc' }, { id: 'desc' }];
             if (sort === 'price_asc') {
                 orderBy = { price: 'asc' };
             } else if (sort === 'price_desc') {
@@ -126,6 +159,8 @@ export async function getProductsAction(options: {
                     { reviews: { _count: 'desc' } },
                     { updatedAt: 'desc' }
                 ];
+            } else if (sort === 'newest') {
+                orderBy = [{ updatedAt: 'desc' }, { id: 'desc' }];
             }
 
             const [products, total] = await withDbRetry(() => Promise.all([
