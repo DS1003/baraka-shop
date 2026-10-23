@@ -155,23 +155,34 @@ export default function AccountContent({ user }: AccountContentProps) {
         };
     }, [isDropdownOpen]);
 
-    // Keep activeTab in sync when query param changes
+    // Keep activeTab in sync with browser navigation (Back / Forward buttons)
     useEffect(() => {
-        if (tabParam && VALID_TABS.includes(tabParam) && tabParam !== activeTab) {
-            setActiveTab(tabParam);
-        }
-    }, [tabParam, activeTab]);
+        const handlePopState = () => {
+            const params = new URLSearchParams(window.location.search);
+            const currentTab = params.get('tab') as TabType;
+            if (currentTab && VALID_TABS.includes(currentTab)) {
+                setActiveTab(currentTab);
+            }
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
 
     const handleTabChange = (tabId: TabType) => {
         if (typeof window !== 'undefined' && 'vibrate' in navigator) {
             try {
                 navigator.vibrate(8);
             } catch {
-                // Ignore silent failure on unsupported webviews
+                // Ignore silent failure
             }
         }
+        // 1. Instant 0ms state update (immediate button activation & immediate content render)
         setActiveTab(tabId);
-        router.replace(`/account?tab=${tabId}`, { scroll: false });
+
+        // 2. Synchronously update URL bar without triggering expensive Next.js Server Component re-renders
+        if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', `/account?tab=${tabId}`);
+        }
     };
 
     // Wishlist local state for instant optimistic updates
@@ -564,7 +575,9 @@ export default function AccountContent({ user }: AccountContentProps) {
             if (matchedOrder) {
                 setActiveTab('orders');
                 setExpandedOrderId(matchedOrder.id);
-                router.replace(`/account?tab=orders&orderId=${matchedOrder.id}`, { scroll: false });
+                if (typeof window !== 'undefined') {
+                    window.history.replaceState(null, '', `/account?tab=orders&orderId=${matchedOrder.id}`);
+                }
                 setTimeout(() => {
                     const el = document.getElementById(`order-${matchedOrder.id}`);
                     if (el) {
@@ -1012,32 +1025,32 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                     {/* Main Content Area */}
                     <div className="lg:col-span-8 w-full">
-                        <AnimatePresence mode="wait">
+                        <AnimatePresence initial={false}>
                             <motion.div
                                 key={activeTab}
-                                initial={{ opacity: 0, y: 12, scale: 0.995 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -10, scale: 0.995 }}
-                                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                                className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 border border-slate-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] min-h-[420px] sm:min-h-[520px]"
+                                initial={{ opacity: 0.6 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.1, ease: "easeOut" }}
+                                className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-6 md:p-8 border border-slate-100 shadow-[0_4px_25px_rgb(0,0,0,0.03)] min-h-[420px] sm:min-h-[520px]"
                             >
                                 
                                 {/* ---------------- TAB: COUPS DE CŒUR (WISHLIST) ---------------- */}
                                 {activeTab === 'wishlist' && (
-                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3.5 sm:gap-5">
+                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3 sm:gap-4.5">
                                         
                                         {/* Header section with responsive summary */}
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3.5 sm:pb-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-gray-100 pb-3 sm:pb-3.5">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-0.5">
-                                                    <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight">
+                                                    <h3 className="text-base sm:text-xl font-black text-[#1B1F3B] tracking-tight">
                                                         Coups de cœur
                                                     </h3>
-                                                    <span className="px-2 py-0.5 rounded-full text-xs font-black bg-orange-50 text-orange-600 border border-orange-100/60">
+                                                    <span className="px-1.5 py-0.2 rounded-full text-[10px] sm:text-xs font-black bg-orange-50 text-orange-600 border border-orange-100/60">
                                                         {wishlist.length}
                                                     </span>
                                                 </div>
-                                                <p className="text-xs text-gray-500">
+                                                <p className="text-[11px] sm:text-xs text-gray-500">
                                                     {wishlist.length > 0
                                                         ? `${wishlist.length} article${wishlist.length > 1 ? 's' : ''} sauvegardé${wishlist.length > 1 ? 's' : ''} • Valeur : ${formatPrice(wishlistTotal)}`
                                                         : "Articles que vous avez mis de côté."
@@ -1048,7 +1061,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                             {wishlist.length > 0 && inStockCount > 0 && (
                                                 <button
                                                     onClick={handleAddAllToCart}
-                                                    className="w-full sm:w-auto h-10 px-4 bg-[#1B1F3B] hover:bg-orange-500 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all touch-manipulation"
+                                                    className="w-full sm:w-auto h-9 px-3.5 bg-[#1B1F3B] hover:bg-orange-500 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all touch-manipulation"
                                                 >
                                                     <ShoppingCart className="w-3.5 h-3.5" />
                                                     <span>Tout ajouter ({inStockCount})</span>
@@ -1058,33 +1071,33 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                         {/* Mobile-Friendly Search & Filter Strip */}
                                         {wishlist.length > 0 && (
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                                 {/* Search Input */}
                                                 <div className="relative flex-1">
-                                                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                                                     <input
                                                         type="text"
                                                         value={wishlistSearch}
                                                         onChange={(e) => setWishlistSearch(e.target.value)}
                                                         placeholder="Rechercher parmi vos favoris..."
-                                                        className="w-full pl-9 pr-8 py-2 bg-gray-50/80 hover:bg-gray-50 focus:bg-white border border-gray-200/70 focus:border-orange-500 rounded-xl text-xs font-medium text-[#1B1F3B] outline-none transition-all placeholder:text-gray-400"
+                                                        className="w-full pl-8 pr-7 py-1.5 bg-gray-50/80 hover:bg-gray-50 focus:bg-white border border-gray-200/70 focus:border-orange-500 rounded-lg text-xs font-medium text-[#1B1F3B] outline-none transition-all placeholder:text-gray-400"
                                                     />
                                                     {wishlistSearch && (
                                                         <button
                                                             onClick={() => setWishlistSearch('')}
-                                                            className="w-5 h-5 absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-300"
+                                                            className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-300"
                                                         >
-                                                            <X className="w-3 h-3" />
+                                                            <X className="w-2.5 h-2.5" />
                                                         </button>
                                                     )}
                                                 </div>
 
                                                 {/* Filter Chips */}
-                                                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+                                                <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5">
                                                     <button
                                                         onClick={() => setWishlistFilter('all')}
                                                         className={cn(
-                                                            "px-2.5 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors active:scale-95",
+                                                            "px-2 py-1 rounded-lg text-[10.5px] font-bold whitespace-nowrap transition-colors active:scale-95",
                                                             wishlistFilter === 'all'
                                                                 ? "bg-[#1B1F3B] text-white shadow-xs"
                                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200/70"
@@ -1095,7 +1108,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                     <button
                                                         onClick={() => setWishlistFilter('instock')}
                                                         className={cn(
-                                                            "px-2.5 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors active:scale-95",
+                                                            "px-2 py-1 rounded-lg text-[10.5px] font-bold whitespace-nowrap transition-colors active:scale-95",
                                                             wishlistFilter === 'instock'
                                                                 ? "bg-emerald-600 text-white shadow-xs"
                                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200/70"
@@ -1107,13 +1120,13 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                         <button
                                                             onClick={() => setWishlistFilter('promo')}
                                                             className={cn(
-                                                                "px-2.5 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors active:scale-95",
+                                                                "px-2 py-1 rounded-lg text-[10.5px] font-bold whitespace-nowrap transition-colors active:scale-95",
                                                                 wishlistFilter === 'promo'
                                                                     ? "bg-rose-600 text-white shadow-xs"
                                                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200/70"
-                                                            )}
+                                                                )}
                                                         >
-                                                            Promotions ({promoCount})
+                                                            Promos ({promoCount})
                                                         </button>
                                                     )}
                                                 </div>
@@ -1122,7 +1135,7 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                         {/* Products Grid */}
                                         {filteredWishlist.length > 0 ? (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-4.5">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                                                 {filteredWishlist.map((product: any) => {
                                                     const displayImage = product.images?.[0] || product.image || '/placeholder.png';
                                                     const categoryName = product.category?.name || 'Article';
@@ -1138,25 +1151,25 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                             key={product.id}
                                                             layout
                                                             variants={itemVariants}
-                                                            className="group relative bg-white border border-gray-100 hover:border-orange-200/90 rounded-2xl p-3 sm:p-3.5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+                                                            className="group relative bg-white border border-slate-100 hover:border-orange-200/90 rounded-xl p-2.5 sm:p-3 shadow-2xs hover:shadow-xs transition-all duration-200 flex flex-col justify-between"
                                                         >
-                                                            <div className="flex gap-3 sm:gap-3.5">
+                                                            <div className="flex gap-2.5 sm:gap-3">
                                                                 {/* Thumbnail */}
                                                                 <Link
                                                                     href={`/product/${product.slug || product.id}`}
-                                                                    className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gray-50/80 border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-1.5 group-hover:border-orange-100 transition-colors"
+                                                                    className="relative w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] rounded-lg bg-gray-50/80 border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-1 group-hover:border-orange-100 transition-colors"
                                                                 >
                                                                     <WatermarkOverlay logoUrl={headerLogo} isCard />
                                                                     <Image
                                                                         src={displayImage}
                                                                         alt={product.name}
                                                                         fill
-                                                                        sizes="(max-width: 640px) 80px, 96px"
-                                                                        className="object-contain p-1.5 group-hover:scale-105 transition-transform duration-300 z-10"
+                                                                        sizes="80px"
+                                                                        className="object-contain p-1 group-hover:scale-105 transition-transform duration-300 z-10"
                                                                         unoptimized
                                                                     />
                                                                     {hasDiscount && (
-                                                                        <span className="absolute top-1 left-1 z-20 px-1 py-0.5 rounded-md bg-rose-500 text-white text-[8px] font-black shadow-xs">
+                                                                        <span className="absolute top-1 left-1 z-20 px-1 py-0.2 rounded-md bg-rose-500 text-white text-[8px] font-black shadow-xs">
                                                                             -{discountPct}%
                                                                         </span>
                                                                     )}
@@ -1166,21 +1179,21 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                                                                     <div>
                                                                         <div className="flex items-center justify-between gap-1 mb-0.5">
-                                                                            <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider truncate">
+                                                                            <span className="text-[9.5px] font-bold text-orange-600 uppercase tracking-wider truncate">
                                                                                 {categoryName}
                                                                             </span>
                                                                             <button
                                                                                 onClick={() => handleRemoveWishlist(product.id, product.name)}
                                                                                 title="Retirer des coups de cœur"
-                                                                                className="w-7 h-7 -mr-1 -mt-1 rounded-full bg-gray-50/80 hover:bg-rose-50 text-gray-400 hover:text-rose-500 flex items-center justify-center transition-colors shrink-0 active:scale-95"
+                                                                                className="w-6 h-6 -mr-1 -mt-1 rounded-full bg-gray-50/80 hover:bg-rose-50 text-gray-400 hover:text-rose-500 flex items-center justify-center transition-colors shrink-0 active:scale-95"
                                                                             >
-                                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                                <Trash2 className="w-3 h-3" />
                                                                             </button>
                                                                         </div>
 
                                                                         <Link
                                                                             href={`/product/${product.slug || product.id}`}
-                                                                            className="font-bold text-xs sm:text-sm text-[#1B1F3B] hover:text-orange-600 transition-colors line-clamp-2 leading-snug mb-1 block"
+                                                                            className="font-bold text-xs sm:text-sm text-[#1B1F3B] hover:text-orange-600 transition-colors line-clamp-1 leading-snug mb-0.5 block"
                                                                         >
                                                                             {product.name}
                                                                         </Link>
@@ -1189,24 +1202,24 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                     {/* Price & Stock */}
                                                                     <div>
                                                                         <div className="flex items-baseline gap-1.5 flex-wrap">
-                                                                            <span className="text-sm sm:text-base font-black text-[#1B1F3B] tracking-normal tabular-nums">
-                                                                                {formatNumber(price)} <span className="text-[10px] font-bold text-gray-500">FCFA</span>
+                                                                            <span className="text-xs sm:text-sm font-black text-[#1B1F3B] tracking-normal tabular-nums">
+                                                                                {formatNumber(price)} <span className="text-[9px] font-bold text-gray-400">FCFA</span>
                                                                             </span>
                                                                             {hasDiscount && (
-                                                                                <span className="text-[11px] text-gray-400 line-through font-medium tabular-nums">
+                                                                                <span className="text-[10px] text-gray-400 line-through font-medium tabular-nums">
                                                                                     {formatPrice(oldPrice)}
                                                                                 </span>
                                                                             )}
                                                                         </div>
 
-                                                                        <div className="mt-0.5 flex items-center gap-1.5">
+                                                                        <div className="mt-0.5 flex items-center gap-1">
                                                                             {hasStock ? (
-                                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
-                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                                                <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-600">
+                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                                                                     En stock
                                                                                 </span>
                                                                             ) : (
-                                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-500">
+                                                                                <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-rose-500">
                                                                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
                                                                                     Rupture
                                                                                 </span>
@@ -1217,12 +1230,12 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                             </div>
 
                                                             {/* Action Footer (Touch friendly & Added State) */}
-                                                            <div className="mt-3 pt-2 border-t border-gray-100 flex items-center gap-2">
+                                                            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center gap-1.5">
                                                                 <button
                                                                     onClick={() => handleAddToCart(product)}
                                                                     disabled={!hasStock}
                                                                     className={cn(
-                                                                        "flex-1 h-9 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 touch-manipulation select-none",
+                                                                        "flex-1 h-8 px-2.5 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all active:scale-95 touch-manipulation select-none",
                                                                         isAdded
                                                                             ? "bg-emerald-600 text-white"
                                                                             : hasStock
@@ -1232,21 +1245,21 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                 >
                                                                     {isAdded ? (
                                                                         <>
-                                                                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                                                            <Check className="w-3 h-3 stroke-[3]" />
                                                                             <span>Ajouté !</span>
                                                                         </>
                                                                     ) : (
                                                                         <>
-                                                                            <ShoppingCart className="w-3.5 h-3.5" />
+                                                                            <ShoppingCart className="w-3 h-3" />
                                                                             <span>{hasStock ? 'Ajouter' : 'Indisponible'}</span>
                                                                         </>
                                                                     )}
                                                                 </button>
                                                                 <Link
                                                                     href={`/product/${product.slug || product.id}`}
-                                                                    className="h-9 px-3 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 text-xs font-bold flex items-center justify-center gap-1 transition-colors touch-manipulation active:scale-95"
+                                                                    className="h-8 px-2.5 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors touch-manipulation active:scale-95 shrink-0"
                                                                 >
-                                                                    <Eye className="w-3.5 h-3.5" />
+                                                                    <Eye className="w-3 h-3" />
                                                                     <span>Voir</span>
                                                                 </Link>
                                                             </div>
@@ -1294,23 +1307,23 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                 {/* ---------------- TAB: NOTIFICATIONS ---------------- */}
                                 {activeTab === 'notifications' && (
-                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3.5 sm:gap-5">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3.5 sm:pb-4">
+                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3 sm:gap-4">
+                                        <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-3 sm:pb-3.5">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-0.5">
-                                                    <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight">Notifications</h3>
+                                                    <h3 className="text-base sm:text-xl font-black text-[#1B1F3B] tracking-tight">Notifications</h3>
                                                     {notifUnreadCount > 0 && (
-                                                        <span className="px-2 py-0.5 rounded-full text-xs font-black bg-orange-50 text-orange-600 border border-orange-100/60">
+                                                        <span className="px-1.5 py-0.2 rounded-full text-[10px] sm:text-xs font-black bg-orange-50 text-orange-600 border border-orange-100/60">
                                                             {notifUnreadCount} nouvelle{notifUnreadCount > 1 ? 's' : ''}
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-gray-500">Suivez l'avancement de vos commandes en temps réel.</p>
+                                                <p className="text-[11px] sm:text-xs text-gray-500">Suivez l'avancement de vos commandes en temps réel.</p>
                                             </div>
                                             {notifUnreadCount > 0 && (
                                                 <button
                                                     onClick={handleMarkAllNotifRead}
-                                                    className="w-full sm:w-auto text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100/70 px-3.5 py-2 rounded-xl transition-colors text-center active:scale-95"
+                                                    className="shrink-0 text-[11px] font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100/70 px-2.5 py-1.5 rounded-lg transition-colors active:scale-95"
                                                 >
                                                     Tout marquer comme lu
                                                 </button>
@@ -1318,7 +1331,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                         </div>
 
                                         {clientNotifications.length > 0 ? (
-                                            <div className="flex flex-col gap-2.5 sm:gap-3">
+                                            <div className="flex flex-col gap-1.5 sm:gap-2">
                                                 {clientNotifications.map((notif: any) => {
                                                     const typeConfig: Record<string, { icon: any; bg: string; color: string; label?: string }> = {
                                                         ORDER_CREATED: { icon: Package, bg: 'bg-violet-50 text-violet-600', color: 'border-violet-100', label: 'Commande reçue' },
@@ -1359,46 +1372,35 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                     }
                                                                 }}
                                                                 className={cn(
-                                                                    "group p-3 sm:p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none active:scale-[0.99] touch-manipulation relative",
+                                                                    "group p-2.5 sm:p-3 rounded-xl border transition-all duration-150 cursor-pointer select-none active:scale-[0.99] touch-manipulation relative",
                                                                     !notif.isRead
-                                                                        ? "bg-orange-50/40 border-orange-200 hover:border-orange-300 hover:bg-orange-50/70 shadow-xs hover:shadow-sm"
-                                                                        : "bg-white border-gray-100 hover:border-orange-200 hover:bg-gray-50/50"
+                                                                        ? "bg-orange-50/30 border-orange-200 hover:border-orange-300 hover:bg-orange-50/50 shadow-2xs"
+                                                                        : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50/40"
                                                                 )}
                                                             >
-                                                                <div className="flex gap-3 items-center">
-                                                                    <div className={cn("w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105", config.bg, config.color)}>
-                                                                        <NotifIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                                                                <div className="flex gap-2.5 items-center">
+                                                                    <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-transform duration-200 group-hover:scale-105", config.bg, config.color)}>
+                                                                        <NotifIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
-                                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                                            <p className={cn(
-                                                                                "text-xs sm:text-sm line-clamp-1",
-                                                                                !notif.isRead ? "font-bold text-[#1B1F3B]" : "font-medium text-gray-700"
-                                                                            )}>
-                                                                                {notif.title}
-                                                                            </p>
-                                                                            {!notif.isRead && (
-                                                                                <span className="inline-flex items-center px-1.5 py-0.2 rounded-full text-[9px] font-black bg-orange-100 text-orange-700 uppercase tracking-wider">
-                                                                                    Nouveau
-                                                                                </span>
-                                                                            )}
+                                                                        <div className="flex items-center justify-between gap-1.5">
+                                                                            <div className="flex items-center gap-1.5 min-w-0">
+                                                                                <p className={cn(
+                                                                                    "text-xs sm:text-sm truncate",
+                                                                                    !notif.isRead ? "font-bold text-[#1B1F3B]" : "font-medium text-gray-700"
+                                                                                )}>
+                                                                                    {notif.title}
+                                                                                </p>
+                                                                                {!notif.isRead && (
+                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                                                                                )}
+                                                                            </div>
+                                                                            <span className="text-[10px] text-gray-400 font-medium shrink-0">{timeAgo}</span>
                                                                         </div>
-                                                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{notif.message}</p>
-                                                                        <div className="flex items-center gap-2 mt-1">
-                                                                            <span className="text-[10px] text-gray-400 font-medium">{timeAgo}</span>
-                                                                            <span className="text-[10px] text-gray-300">•</span>
-                                                                            <span className="text-[10px] font-bold text-orange-600 flex items-center gap-0.5 group-hover:underline">
-                                                                                Voir l'élément <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                                            </span>
-                                                                        </div>
+                                                                        <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1 leading-snug">{notif.message}</p>
                                                                     </div>
-                                                                    <div className="flex items-center gap-2 shrink-0">
-                                                                        {!notif.isRead && (
-                                                                            <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0 animate-pulse" />
-                                                                        )}
-                                                                        <div className="w-8 h-8 rounded-xl bg-gray-50 group-hover:bg-orange-500 text-gray-400 group-hover:text-white flex items-center justify-center transition-all duration-200">
-                                                                            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                                                                        </div>
+                                                                    <div className="shrink-0 text-gray-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all">
+                                                                        <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -1420,19 +1422,19 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                 {/* ---------------- TAB: HISTORIQUE DES COMMANDES ---------------- */}
                                 {activeTab === 'orders' && (
-                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3.5 sm:gap-5">
-                                        <div className="border-b border-gray-100 pb-3.5 sm:pb-4">
+                                    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-3 sm:gap-4">
+                                        <div className="border-b border-gray-100 pb-3 sm:pb-3.5">
                                             <div className="flex items-center gap-2 mb-0.5">
-                                                <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight">Historique des commandes</h3>
-                                                <span className="px-2 py-0.5 rounded-full text-xs font-black bg-gray-100 text-gray-600">
+                                                <h3 className="text-base sm:text-xl font-black text-[#1B1F3B] tracking-tight">Historique des commandes</h3>
+                                                <span className="px-1.5 py-0.2 rounded-full text-[10px] sm:text-xs font-black bg-gray-100 text-gray-600">
                                                     {user.orders?.length || 0}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-gray-500">Suivez l'état et retrouvez le détail de vos commandes.</p>
+                                            <p className="text-[11px] sm:text-xs text-gray-500">Suivez l'état et retrouvez le détail de vos commandes.</p>
                                         </div>
 
                                         {user.orders && user.orders.length > 0 ? (
-                                            <div className="flex flex-col gap-3 sm:gap-4">
+                                            <div className="flex flex-col gap-2 sm:gap-2.5">
                                                 {user.orders.map((order: any) => {
                                                     const isTargeted = Boolean(
                                                         expandedOrderId && isMatchingOrder(order.id, expandedOrderId)
@@ -1515,63 +1517,63 @@ export default function AccountContent({ user }: AccountContentProps) {
 
                                         {/* Header with Title, Badges & Profile Completeness */}
                                         <div className="flex flex-col gap-4 border-b border-slate-100 pb-5">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="relative w-12 h-12 rounded-2xl p-0.5 bg-gradient-to-tr from-[#1B1F3B] to-orange-500 shrink-0 shadow-xs">
-                                                        <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl p-0.5 bg-gradient-to-tr from-[#1B1F3B] to-orange-500 shrink-0 shadow-2xs">
+                                                        <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center overflow-hidden">
                                                             {user.image ? (
                                                                 <Image
                                                                     src={user.image}
                                                                     alt={user.username || 'Avatar'}
-                                                                    width={48}
-                                                                    height={48}
+                                                                    width={44}
+                                                                    height={44}
                                                                     className="w-full h-full object-cover"
                                                                     unoptimized
                                                                 />
                                                             ) : (
-                                                                <span className="text-base font-black bg-gradient-to-tr from-[#1B1F3B] to-orange-500 bg-clip-text text-transparent">
+                                                                <span className="text-sm font-black bg-gradient-to-tr from-[#1B1F3B] to-orange-500 bg-clip-text text-transparent">
                                                                     {userInitials}
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-2xs" />
+                                                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-2xs" />
                                                     </div>
 
                                                     <div>
                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                            <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight">
+                                                            <h3 className="text-base sm:text-xl font-black text-[#1B1F3B] tracking-tight">
                                                                 Mon profil
                                                             </h3>
-                                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/80 flex items-center gap-1 shadow-2xs">
-                                                                <Check className="w-2.5 h-2.5 stroke-[3]" /> Compte vérifié
+                                                            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100/80 flex items-center gap-1 shadow-2xs">
+                                                                <Check className="w-2.5 h-2.5 stroke-[3]" /> Vérifié
                                                             </span>
                                                         </div>
-                                                        <p className="text-xs text-slate-500 mt-0.5">
-                                                            Coordonnées personnelles & adresse de livraison par défaut.
+                                                        <p className="text-[11px] text-slate-400">
+                                                            Coordonnées et adresse de livraison par défaut.
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 {user.createdAt && (
-                                                    <div className="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500 font-medium flex items-center gap-1.5 self-start sm:self-auto shrink-0">
-                                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                        <span>Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+                                                    <div className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10.5px] text-slate-500 font-medium flex items-center gap-1 self-start sm:self-auto shrink-0">
+                                                        <Clock className="w-3 h-3 text-slate-400" />
+                                                        <span>Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}</span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             {/* Completion Progress Bar */}
-                                            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-orange-50/70 via-amber-50/40 to-slate-50/60 border border-orange-100/60">
-                                                <div className="flex items-center justify-between text-xs mb-1.5">
-                                                    <span className="font-bold text-[#1B1F3B] flex items-center gap-1.5">
-                                                        <Sparkles className="w-3.5 h-3.5 text-orange-500" />
-                                                        {profileCompleteness === 100 ? "Profil complété à 100%" : `Profil complété à ${profileCompleteness}%`}
+                                            <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-orange-50/60 via-amber-50/30 to-slate-50/50 border border-orange-100/60">
+                                                <div className="flex items-center justify-between text-xs mb-1">
+                                                    <span className="font-bold text-[#1B1F3B] text-[11px] flex items-center gap-1.5">
+                                                        <Sparkles className="w-3 h-3 text-orange-500" />
+                                                        {profileCompleteness === 100 ? "Profil 100% complété" : `Profil complété à ${profileCompleteness}%`}
                                                     </span>
-                                                    <span className="text-[11px] font-medium text-slate-500">
-                                                        {profileCompleteness === 100 ? "Prêt pour commande en 1 clic ✨" : "Ajoutez votre adresse pour commander plus vite"}
+                                                    <span className="text-[10px] text-slate-400">
+                                                        {profileCompleteness === 100 ? "Commande 1 clic activée ✨" : "Complétez votre adresse"}
                                                     </span>
                                                 </div>
-                                                <div className="w-full h-2 bg-white rounded-full overflow-hidden border border-orange-100/80 p-0.5">
+                                                <div className="w-full h-1.5 bg-white rounded-full overflow-hidden border border-orange-100/80 p-0.5">
                                                     <motion.div
                                                         initial={{ width: 0 }}
                                                         animate={{ width: `${profileCompleteness}%` }}
@@ -1591,217 +1593,213 @@ export default function AccountContent({ user }: AccountContentProps) {
                                         <AnimatePresence>
                                             {isProfileDirty && (
                                                 <motion.div
-                                                    initial={{ opacity: 0, y: -8, height: 0 }}
+                                                    initial={{ opacity: 0, y: -6, height: 0 }}
                                                     animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                                    exit={{ opacity: 0, y: -8, height: 0 }}
-                                                    className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs shadow-xs"
+                                                    exit={{ opacity: 0, y: -6, height: 0 }}
+                                                    className="flex items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs shadow-2xs"
                                                 >
                                                     <div className="flex items-center gap-2">
-                                                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                                                        <span className="font-bold">Modifications non enregistrées sur votre profil</span>
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                                                        <span className="font-bold text-[11px]">Modifications non enregistrées</span>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={handleResetProfile}
-                                                        className="text-[11px] font-semibold text-amber-700 hover:text-amber-950 underline underline-offset-2 shrink-0 active:scale-95"
+                                                        className="text-[10.5px] font-semibold text-amber-700 hover:text-amber-950 underline underline-offset-2 shrink-0 active:scale-95"
                                                     >
-                                                        Annuler les changements
+                                                        Annuler
                                                     </button>
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
 
                                         {/* Form Body */}
-                                        <form onSubmit={handleUpdateProfile} className="flex flex-col gap-5">
+                                        <form onSubmit={handleUpdateProfile} className="flex flex-col gap-3 sm:gap-4">
                                             
                                             {/* Card 1: Coordonnées & Identité */}
-                                            <motion.div variants={itemVariants} className="bg-slate-50/50 hover:bg-slate-50/80 transition-colors p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs">
-                                                <div className="flex items-center gap-2.5 mb-4">
-                                                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 shadow-2xs">
-                                                        <UserIcon className="w-4 h-4" />
+                                            <motion.div variants={itemVariants} className="bg-slate-50/40 p-3 sm:p-4 rounded-xl border border-slate-200/70 shadow-2xs">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-7 h-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                                        <UserIcon className="w-3.5 h-3.5" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-[#1B1F3B]">Identité & Contact</h4>
-                                                        <p className="text-[11px] text-slate-400">Coordonnées utilisées sur vos factures et transmises au livreur.</p>
+                                                        <h4 className="text-xs sm:text-sm font-bold text-[#1B1F3B]">Identité & Contact</h4>
+                                                        <p className="text-[10px] text-slate-400">Coordonnées utilisées sur vos factures et transmises au livreur.</p>
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                                                     {/* Nom complet */}
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-xs font-bold text-[#1B1F3B] flex items-center justify-between">
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[11px] font-bold text-[#1B1F3B] flex items-center justify-between">
                                                             <span>Nom complet</span>
-                                                            <span className="text-[10px] text-slate-400 font-medium">Requis</span>
+                                                            <span className="text-[9.5px] text-slate-400 font-medium">Requis</span>
                                                         </label>
-                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-xl transition-all">
-                                                            <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors pointer-events-none" />
+                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-lg transition-all">
+                                                            <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 w-3.5 h-3.5 transition-colors pointer-events-none" />
                                                             <input
                                                                 type="text"
                                                                 autoComplete="name"
                                                                 value={profileData.username}
                                                                 onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-xl outline-none transition-all text-base sm:text-sm font-semibold text-[#1B1F3B] placeholder:text-slate-300"
+                                                                className="w-full h-10 pl-9 pr-3.5 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-lg outline-none transition-all text-xs sm:text-sm font-semibold text-[#1B1F3B] placeholder:text-slate-300"
                                                                 placeholder="Ex: Cheikhou Omar Touré"
                                                             />
                                                         </div>
-                                                        <span className="text-[11px] text-slate-400">Visible sur vos factures et bordereaux.</span>
                                                     </div>
 
                                                     {/* Téléphone */}
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-xs font-bold text-[#1B1F3B] flex items-center justify-between">
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[11px] font-bold text-[#1B1F3B] flex items-center justify-between">
                                                             <span>Numéro de téléphone</span>
-                                                            <span className="text-[10px] text-orange-600 font-bold">Pour la livraison</span>
+                                                            <span className="text-[9.5px] text-orange-600 font-bold">Pour la livraison</span>
                                                         </label>
-                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-xl transition-all">
-                                                            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors pointer-events-none" />
+                                                        <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-lg transition-all">
+                                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 w-3.5 h-3.5 transition-colors pointer-events-none" />
                                                             <input
                                                                 type="tel"
                                                                 autoComplete="tel"
                                                                 value={profileData.phone}
                                                                 onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                                                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-xl outline-none transition-all text-base sm:text-sm font-semibold text-[#1B1F3B] placeholder:text-slate-300"
+                                                                className="w-full h-10 pl-9 pr-3.5 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-lg outline-none transition-all text-xs sm:text-sm font-semibold text-[#1B1F3B] placeholder:text-slate-300"
                                                                 placeholder="+221 77 000 00 00"
                                                             />
                                                         </div>
-                                                        <span className="text-[11px] text-slate-400">Le livreur vous appellera à ce numéro à son arrivée.</span>
                                                     </div>
                                                 </div>
                                             </motion.div>
 
                                             {/* Card 2: Adresse de Livraison par Défaut */}
-                                            <motion.div variants={itemVariants} className="bg-slate-50/50 hover:bg-slate-50/80 transition-colors p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs">
-                                                <div className="flex items-center justify-between gap-2 mb-4">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 shadow-2xs">
-                                                            <MapPin className="w-4 h-4" />
+                                            <motion.div variants={itemVariants} className="bg-slate-50/40 p-3 sm:p-4 rounded-xl border border-slate-200/70 shadow-2xs">
+                                                <div className="flex items-center justify-between gap-2 mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-7 h-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                                            <MapPin className="w-3.5 h-3.5" />
                                                         </div>
                                                         <div>
-                                                            <h4 className="text-sm font-bold text-[#1B1F3B]">Adresse de livraison principale</h4>
-                                                            <p className="text-[11px] text-slate-400">Pré-remplie automatiquement lors de la validation du panier.</p>
+                                                            <h4 className="text-xs sm:text-sm font-bold text-[#1B1F3B]">Adresse de livraison principale</h4>
+                                                            <p className="text-[10px] text-slate-400">Pré-remplie automatiquement lors du paiement.</p>
                                                         </div>
                                                     </div>
-                                                    <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100/70 text-orange-700 border border-orange-200/60">
+                                                    <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-orange-100/70 text-orange-700 border border-orange-200/60">
                                                         Par défaut
                                                     </span>
                                                 </div>
 
-                                                <div className="flex flex-col gap-2">
-                                                    <label className="text-xs font-bold text-[#1B1F3B]">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <label className="text-[11px] font-bold text-[#1B1F3B]">
                                                         Adresse complète et repères précis
                                                     </label>
-                                                    <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-xl transition-all">
-                                                        <MapPin className="absolute left-3.5 top-3.5 text-slate-400 group-focus-within:text-orange-500 w-4 h-4 transition-colors pointer-events-none" />
+                                                    <div className="relative group focus-within:ring-2 focus-within:ring-orange-500/20 focus-within:border-orange-500 rounded-lg transition-all">
+                                                        <MapPin className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-orange-500 w-3.5 h-3.5 transition-colors pointer-events-none" />
                                                         <textarea
-                                                            rows={3}
+                                                            rows={2}
                                                             autoComplete="street-address"
                                                             value={profileData.address}
                                                             onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-xl outline-none transition-all text-base sm:text-sm font-medium text-[#1B1F3B] resize-none placeholder:text-slate-300 leading-relaxed min-h-[105px]"
-                                                            placeholder="Ex : Dakar, Mermoz, Villa n°12, en face de la Brioche Dorée, Sénégal"
+                                                            className="w-full pl-9 pr-3.5 py-2 bg-white border border-slate-200 hover:border-slate-300 focus:border-orange-500 rounded-lg outline-none transition-all text-xs sm:text-sm font-medium text-[#1B1F3B] resize-none placeholder:text-slate-300 leading-snug min-h-[70px]"
+                                                            placeholder="Ex : Dakar, Mermoz, Villa n°12, en face de la Brioche Dorée"
                                                         />
                                                     </div>
 
                                                     {/* Helper tip banner */}
-                                                    <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 text-[11px] text-amber-900 leading-relaxed">
+                                                    <div className="flex items-center gap-1.5 p-2 rounded-lg bg-amber-50/70 border border-amber-200/60 text-[10px] text-amber-900 leading-normal">
                                                         <span className="shrink-0 text-amber-600 font-bold">💡 Astuce :</span>
-                                                        <span>Indiquez un point de repère connu (pharmacie, mosquée, rond-point) pour faciliter l'acheminement express de votre colis.</span>
+                                                        <span>Indiquez un point de repère (pharmacie, mosquée) pour accélérer la livraison.</span>
                                                     </div>
                                                 </div>
                                             </motion.div>
 
                                             {/* Card 3: Sécurité & Accès au Compte */}
-                                            <motion.div variants={itemVariants} className="bg-slate-50/50 hover:bg-slate-50/80 transition-colors p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-2xs">
-                                                <div className="flex items-center gap-2.5 mb-4">
-                                                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-                                                        <ShieldCheck className="w-4 h-4" />
+                                            <motion.div variants={itemVariants} className="bg-slate-50/40 p-3 sm:p-4 rounded-xl border border-slate-200/70 shadow-2xs">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                                        <ShieldCheck className="w-3.5 h-3.5" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-sm font-bold text-[#1B1F3B]">Sécurité & Authentification</h4>
-                                                        <p className="text-[11px] text-slate-400">Identifiants protégés et niveau de compte.</p>
+                                                        <h4 className="text-xs sm:text-sm font-bold text-[#1B1F3B]">Sécurité & Authentification</h4>
+                                                        <p className="text-[10px] text-slate-400">Identifiants protégés et niveau de compte.</p>
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                                                     {/* Read-only email input */}
-                                                    <div className="flex flex-col gap-1.5">
+                                                    <div className="flex flex-col gap-1">
                                                         <div className="flex items-center justify-between">
-                                                            <label className="text-xs font-bold text-[#1B1F3B]">
+                                                            <label className="text-[11px] font-bold text-[#1B1F3B]">
                                                                 Adresse email principale
                                                             </label>
-                                                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                                                                <Check className="w-3 h-3 stroke-[3]" /> Vérifiée
+                                                            <span className="text-[9.5px] font-bold text-emerald-600 flex items-center gap-0.5">
+                                                                <Check className="w-2.5 h-2.5 stroke-[3]" /> Vérifiée
                                                             </span>
                                                         </div>
-                                                        <div className="relative rounded-xl bg-slate-100/80 border border-slate-200/80 h-12 flex items-center">
-                                                            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                                        <div className="relative rounded-lg bg-slate-100/80 border border-slate-200/80 h-10 flex items-center">
+                                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
                                                             <input
                                                                 type="email"
                                                                 value={user.email || ''}
                                                                 disabled
-                                                                className="w-full h-full pl-10 pr-10 bg-transparent rounded-xl text-base sm:text-sm font-semibold text-slate-600 cursor-not-allowed select-none"
+                                                                className="w-full h-full pl-9 pr-9 bg-transparent rounded-lg text-xs sm:text-sm font-semibold text-slate-600 cursor-not-allowed select-none"
                                                             />
-                                                            <span title="Email sécurisé non modifiable directement" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                                                                <Lock className="w-4 h-4" />
+                                                            <span title="Email sécurisé" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                                                <Lock className="w-3.5 h-3.5" />
                                                             </span>
                                                         </div>
-                                                        <span className="text-[11px] text-slate-400">Identifiant unique et sécurisé de votre compte.</span>
                                                     </div>
 
                                                     {/* Role & Password Shortcut */}
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <label className="text-xs font-bold text-[#1B1F3B]">
+                                                    <div className="flex flex-col gap-1">
+                                                        <label className="text-[11px] font-bold text-[#1B1F3B]">
                                                             Privilèges & Mot de passe
                                                         </label>
-                                                        <div className="flex items-center justify-between px-3.5 bg-white border border-slate-200 rounded-xl h-12">
-                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                                        <div className="flex items-center justify-between px-3 bg-white border border-slate-200 rounded-lg h-10">
+                                                            <div className="flex items-center gap-1.5 min-w-0">
+                                                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                                                                 <span className="text-xs font-bold text-[#1B1F3B] truncate">
-                                                                    {user.role === 'ADMIN' ? 'Administrateur Baraka' : 'Client Privilégié'}
+                                                                    {user.role === 'ADMIN' ? 'Administrateur' : 'Client Privilégié'}
                                                                 </span>
                                                             </div>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleTabChange('settings')}
-                                                                className="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-0.5 shrink-0 transition-colors active:scale-95"
+                                                                className="text-[10.5px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-0.5 shrink-0 transition-colors active:scale-95"
                                                             >
                                                                 <span>Sécurité</span>
                                                                 <ChevronRight className="w-3 h-3" />
                                                             </button>
                                                         </div>
-                                                        <span className="text-[11px] text-slate-400">Besoin de modifier votre mot de passe ? Allez dans Sécurité.</span>
                                                     </div>
                                                 </div>
                                             </motion.div>
 
                                             {/* Action Footer */}
-                                            <motion.div variants={itemVariants} className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                                                <div className="flex items-center gap-2 text-xs">
+                                            <motion.div variants={itemVariants} className="pt-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                                                <div className="flex items-center gap-1.5 text-[11px]">
                                                     {isProfileDirty ? (
-                                                        <span className="flex items-center gap-1.5 font-bold text-amber-700">
-                                                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                                        <span className="flex items-center gap-1 font-bold text-amber-700">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                                                             Modifications prêtes à être enregistrées
                                                         </span>
                                                     ) : isSavedRecently ? (
-                                                        <span className="flex items-center gap-1.5 font-bold text-emerald-600">
-                                                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                                        <span className="flex items-center gap-1 font-bold text-emerald-600">
+                                                            <Check className="w-3 h-3 stroke-[3]" />
                                                             Profil mis à jour avec succès
                                                         </span>
                                                     ) : (
-                                                        <span className="flex items-center gap-1.5 font-medium text-slate-400">
-                                                            <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
+                                                        <span className="flex items-center gap-1 font-medium text-slate-400">
+                                                            <CheckCircle2 className="w-3 h-3 text-slate-400" />
                                                             Vos informations sont à jour
                                                         </span>
                                                     )}
                                                 </div>
 
-                                                <div className="flex items-center gap-2.5">
+                                                <div className="flex items-center gap-2">
                                                     {isProfileDirty && (
                                                         <button
                                                             type="button"
                                                             onClick={handleResetProfile}
                                                             disabled={isUpdating}
-                                                            className="w-full sm:w-auto px-4 h-12 rounded-xl text-xs font-bold text-slate-500 hover:text-[#1B1F3B] hover:bg-slate-100 transition-colors active:scale-95 touch-manipulation"
+                                                            className="w-full sm:w-auto px-3.5 h-9 rounded-lg text-xs font-bold text-slate-500 hover:text-[#1B1F3B] hover:bg-slate-100 transition-colors active:scale-95 touch-manipulation"
                                                         >
                                                             Annuler
                                                         </button>
@@ -1811,7 +1809,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                         type="submit"
                                                         disabled={isUpdating || !isProfileDirty}
                                                         className={cn(
-                                                            "w-full sm:w-auto px-6 h-12 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-98 touch-manipulation shadow-xs",
+                                                            "w-full sm:w-auto px-5 h-9 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-98 touch-manipulation shadow-xs",
                                                             isSavedRecently
                                                                 ? "bg-emerald-600 text-white shadow-emerald-500/20"
                                                                 : isProfileDirty
@@ -1821,18 +1819,18 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                     >
                                                         {isUpdating ? (
                                                             <>
-                                                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                                                <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                                                 <span>Enregistrement...</span>
                                                             </>
                                                         ) : isSavedRecently ? (
                                                             <>
-                                                                <Check className="w-4 h-4 stroke-[3]" />
+                                                                <Check className="w-3.5 h-3.5 stroke-[3]" />
                                                                 <span>Enregistré !</span>
                                                             </>
                                                         ) : (
                                                             <>
-                                                                <Save className="w-4 h-4" />
-                                                                <span>Enregistrer les modifications</span>
+                                                                <Save className="w-3.5 h-3.5" />
+                                                                <span>Enregistrer</span>
                                                             </>
                                                         )}
                                                     </button>
@@ -1847,8 +1845,8 @@ export default function AccountContent({ user }: AccountContentProps) {
                                     <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-4 sm:gap-6">
                                         <div className="border-b border-gray-100 pb-3.5 sm:pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                             <div>
-                                                <h3 className="text-xl sm:text-2xl font-black text-[#1B1F3B] tracking-tight mb-0.5">Paramètres & Sécurité</h3>
-                                                <p className="text-xs text-gray-500">Gérez la sécurité de votre compte et vos préférences de contact conformément aux normes de sécurité.</p>
+                                                <h3 className="text-base sm:text-xl font-black text-[#1B1F3B] tracking-tight mb-0.5">Paramètres & Sécurité</h3>
+                                                <p className="text-[11px] sm:text-xs text-gray-500">Gérez la sécurité de votre compte et vos préférences de contact.</p>
                                             </div>
                                             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 border border-orange-200/60 text-orange-800 text-xs font-semibold self-start sm:self-auto">
                                                 <ShieldCheck className="w-4 h-4 text-orange-600" />
@@ -2229,38 +2227,38 @@ function OrderCard({
             id={`order-${order.id}`}
             data-order-id={order.id}
             className={cn(
-                "bg-white border rounded-2xl overflow-hidden transition-all duration-300 shadow-xs hover:shadow-sm scroll-mt-28",
+                "bg-white border rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-200 shadow-2xs hover:shadow-xs scroll-mt-28",
                 isExpandedDefault
-                    ? "border-orange-500 ring-4 ring-orange-500/20 shadow-md shadow-orange-500/10"
-                    : "border-gray-100 hover:border-orange-200/80"
+                    ? "border-orange-500 ring-2 ring-orange-500/20 shadow-xs"
+                    : "border-slate-100 hover:border-slate-200"
             )}
         >
             <div
-                className="p-3 sm:p-4.5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer select-none touch-manipulation"
+                className="p-2.5 sm:p-3.5 flex items-center justify-between gap-2.5 cursor-pointer select-none touch-manipulation hover:bg-slate-50/50 transition-colors"
                 onClick={() => setExpanded(!expanded)}
             >
-                <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-[#1B1F3B] shrink-0">
-                        <Package className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center text-[#1B1F3B] shrink-0">
+                        <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" />
                     </div>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm sm:text-base font-black text-[#1B1F3B] uppercase">
+                    <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs sm:text-sm font-black text-[#1B1F3B] uppercase tracking-tight">
                                 #{order.id.slice(0, 8)}
                             </span>
-                            <div className={cn("px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 border", config.bg, config.color)}>
-                                <StatusIcon className="w-3 h-3" />
-                                {config.label}
+                            <div className={cn("px-1.5 py-0.2 rounded-full text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider flex items-center gap-0.5 border", config.bg, config.color)}>
+                                <StatusIcon className="w-2.5 h-2.5 shrink-0" />
+                                <span>{config.label}</span>
                             </div>
                             {isExpandedDefault && (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-orange-50 text-orange-600 border border-orange-200 flex items-center gap-1">
-                                    <Sparkles className="w-2.5 h-2.5 text-orange-500" />
-                                    Commande ciblée
+                                <span className="px-1.5 py-0.2 rounded-full text-[8.5px] font-bold bg-orange-50 text-orange-600 border border-orange-200 hidden xs:inline-flex items-center gap-0.5">
+                                    <Sparkles className="w-2 h-2 text-orange-500" />
+                                    Ciblée
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
-                            <Clock className="w-3 h-3 shrink-0" />
+                        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-medium text-slate-400 mt-0.5">
+                            <Clock className="w-2.5 h-2.5 shrink-0" />
                             <span>{new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                             <span>•</span>
                             <span>{items.length} art.</span>
@@ -2268,22 +2266,21 @@ function OrderCard({
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-5 border-t border-gray-100 md:border-t-0 pt-2.5 md:pt-0">
-                    <div className="text-left md:text-right">
-                        <span className="text-[10px] sm:text-xs text-gray-400 block font-medium">Total</span>
-                        <span className="text-base sm:text-lg font-black text-[#1B1F3B] tracking-normal tabular-nums">
-                            {formatNumber(order.total)} <span className="text-[10px] sm:text-xs font-bold text-gray-500">FCFA</span>
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <div className="text-right">
+                        <span className="text-xs sm:text-sm font-black text-[#1B1F3B] tabular-nums whitespace-nowrap">
+                            {formatNumber(order.total)} <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">FCFA</span>
                         </span>
                     </div>
-                    <button
+                    <div
                         className={cn(
-                            "w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 shrink-0",
-                            expanded && "rotate-180 bg-orange-50 text-orange-600"
+                            "w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 shrink-0",
+                            expanded && "rotate-180 bg-orange-50 text-orange-600 border-orange-200"
                         )}
                         aria-label="Afficher les détails"
                     >
-                        <ChevronDown className="w-4 h-4" />
-                    </button>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                    </div>
                 </div>
             </div>
 
@@ -2294,22 +2291,22 @@ function OrderCard({
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="bg-gray-50/60 border-t border-gray-100 overflow-hidden"
+                        className="bg-slate-50/50 border-t border-slate-100 overflow-hidden"
                     >
-                        <div className="p-3.5 sm:p-5 flex flex-col gap-3.5">
+                        <div className="p-3 sm:p-4 flex flex-col gap-3">
                             
                             {/* Order Stepper Progress Tracking (Mobile & Desktop) */}
                             {currentStep > 0 && (
-                                <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100 shadow-2xs">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-2.5">
+                                <div className="bg-white rounded-xl p-2.5 sm:p-3.5 border border-slate-100 shadow-2xs">
+                                    <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
                                         Suivi de la livraison
                                     </span>
-                                    <div className="flex items-center justify-between relative">
+                                    <div className="flex items-center justify-between relative px-1">
                                         {/* Connecting background line */}
-                                        <div className="absolute left-3 right-3 top-3 h-0.5 bg-gray-200 -z-0" />
+                                        <div className="absolute left-3 right-3 top-2.5 h-0.5 bg-slate-200 -z-0" />
                                         {/* Filled progress line */}
                                         <div
-                                            className="absolute left-3 top-3 h-0.5 bg-orange-500 -z-0 transition-all duration-500"
+                                            className="absolute left-3 top-2.5 h-0.5 bg-orange-500 -z-0 transition-all duration-500"
                                             style={{
                                                 width: `${Math.min(100, Math.max(0, ((currentStep - 1) / (steps.length - 1)) * 100))}%`
                                             }}
@@ -2321,18 +2318,18 @@ function OrderCard({
                                             return (
                                                 <div key={st.stepNum} className="flex flex-col items-center gap-1 z-10">
                                                     <div className={cn(
-                                                        "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all",
+                                                        "w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all",
                                                         isCurrent
-                                                            ? "bg-orange-500 text-white ring-4 ring-orange-100"
+                                                            ? "bg-orange-500 text-white ring-3 ring-orange-100"
                                                             : isDone
                                                                 ? "bg-emerald-500 text-white"
-                                                                : "bg-white border-2 border-gray-200 text-gray-400"
+                                                                : "bg-white border-2 border-slate-200 text-slate-400"
                                                     )}>
-                                                        {isDone && !isCurrent ? <Check className="w-3 h-3 stroke-[3]" /> : st.stepNum}
+                                                        {isDone && !isCurrent ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : st.stepNum}
                                                     </div>
                                                     <span className={cn(
-                                                        "text-[9px] sm:text-[10px] font-bold text-center",
-                                                        isCurrent ? "text-orange-600" : isDone ? "text-gray-700" : "text-gray-400"
+                                                        "text-[8.5px] sm:text-[9.5px] font-bold text-center",
+                                                        isCurrent ? "text-orange-600" : isDone ? "text-slate-700" : "text-slate-400"
                                                     )}>
                                                         {st.label}
                                                     </span>
@@ -2343,44 +2340,44 @@ function OrderCard({
                                 </div>
                             )}
 
-                            <h5 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                 Articles commandés
                             </h5>
 
                             {items.length > 0 ? (
-                                <div className="space-y-2">
+                                <div className="space-y-1.5">
                                     {items.map((item: any, idx: number) => {
                                         const productImg = item.product?.images?.[0] || item.product?.image || '/placeholder.png';
                                         return (
                                             <div
                                                 key={idx}
-                                                className="flex items-center justify-between text-xs sm:text-sm bg-white p-2.5 sm:p-3 rounded-xl border border-gray-100 gap-2.5"
+                                                className="flex items-center justify-between text-xs bg-white p-2 sm:p-2.5 rounded-lg border border-slate-100 gap-2"
                                             >
-                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                    <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-1">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
                                                         <Image
                                                             src={productImg}
                                                             alt={item.product?.name || "Produit"}
                                                             fill
-                                                            sizes="48px"
-                                                            className="object-contain p-1"
+                                                            sizes="40px"
+                                                            className="object-contain p-0.5"
                                                             unoptimized
                                                         />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <Link
                                                             href={item.product?.id ? `/product/${item.product.id}` : '#'}
-                                                            className="font-bold text-[#1B1F3B] hover:text-orange-600 transition-colors truncate block"
+                                                            className="font-bold text-[#1B1F3B] hover:text-orange-600 transition-colors truncate block text-xs"
                                                         >
                                                             {item.product?.name || "Article indisponible"}
                                                         </Link>
-                                                        <span className="text-[11px] text-gray-400">
-                                                            Qté : <strong className="text-gray-700">{item.quantity}</strong>
+                                                        <span className="text-[10px] text-slate-400">
+                                                            Qté : <strong className="text-slate-700">{item.quantity}</strong>
                                                             {item.selectedColor && ` • ${item.selectedColor}`}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span className="font-black text-[#1B1F3B] whitespace-nowrap text-right text-xs sm:text-sm tabular-nums">
+                                                <span className="font-black text-[#1B1F3B] whitespace-nowrap text-right text-xs tabular-nums">
                                                     {formatPrice(item.price * item.quantity)}
                                                 </span>
                                             </div>
@@ -2388,12 +2385,12 @@ function OrderCard({
                                     })}
                                 </div>
                             ) : (
-                                <p className="text-xs text-gray-400">Détails des articles non disponibles.</p>
+                                <p className="text-xs text-slate-400">Détails des articles non disponibles.</p>
                             )}
 
                             {/* Order Details Footer */}
                             {(order.deliveryMethod || order.deliveryZone || (order as any).shippingAddress || order.paymentMethod) && (
-                                <div className="pt-2.5 border-t border-gray-200/60 flex flex-wrap gap-2.5 sm:gap-4 text-[11px] text-gray-500 items-center">
+                                <div className="pt-2 border-t border-slate-200/60 flex flex-wrap gap-2 sm:gap-3.5 text-[10.5px] text-slate-500 items-center">
                                     {order.deliveryMethod && (
                                         <span>Livraison : <strong className="text-[#1B1F3B]">{order.deliveryMethod === 'retrait' ? 'Retrait boutique' : 'À domicile'}</strong></span>
                                     )}
@@ -2412,22 +2409,22 @@ function OrderCard({
                                     {order.paymentMethod && (
                                         <span>Règlement : <strong className="text-[#1B1F3B]">{order.paymentMethod === 'cash' || order.paymentMethod?.toLowerCase().includes('livraison') ? 'Paiement à la livraison' : order.paymentMethod}</strong></span>
                                     )}
-                                    <span className="flex items-center gap-1.5">
+                                    <span className="flex items-center gap-1">
                                         Paiement :{' '}
                                         {order.paymentStatus === 'PAID' ? (
-                                            <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                            <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded-full text-[9.5px] inline-flex items-center gap-1">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Payée
                                             </span>
                                         ) : order.paymentStatus === 'REFUNDED' ? (
-                                            <span className="font-bold text-purple-700 bg-purple-50 border border-purple-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                            <span className="font-bold text-purple-700 bg-purple-50 border border-purple-200/80 px-1.5 py-0.2 rounded-full text-[9.5px] inline-flex items-center gap-1">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Remboursée
                                             </span>
                                         ) : order.paymentStatus === 'FAILED' ? (
-                                            <span className="font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                            <span className="font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-1.5 py-0.2 rounded-full text-[9.5px] inline-flex items-center gap-1">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Échoué
                                             </span>
                                         ) : (
-                                            <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                                            <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded-full text-[9.5px] inline-flex items-center gap-1">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> En attente
                                             </span>
                                         )}
@@ -2436,13 +2433,13 @@ function OrderCard({
                             )}
 
                             {/* Direct order page tracking link */}
-                            <div className="pt-2 flex items-center justify-end">
+                            <div className="pt-1.5 flex items-center justify-end">
                                 <Link
                                     href={`/order-success?orderId=${order.id}`}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100/80 text-orange-700 text-[11px] font-bold transition-all active:scale-95"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 hover:bg-orange-100/80 text-orange-700 text-[10.5px] font-bold transition-all active:scale-95"
                                 >
                                     <span>Page de suivi en direct</span>
-                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    <ExternalLink className="w-3 h-3" />
                                 </Link>
                             </div>
                         </div>
