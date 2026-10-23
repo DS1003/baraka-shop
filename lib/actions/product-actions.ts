@@ -163,8 +163,13 @@ export async function getProductByIdAction(id: string) {
     if (!id) return null;
     return await rememberCache(`product:${id}`, 600, async () => {
         try {
-            return await withDbRetry(() => prisma.product.findUnique({
-                where: { id },
+            return await withDbRetry(() => prisma.product.findFirst({
+                where: {
+                    OR: [
+                        { id },
+                        { slug: id }
+                    ]
+                },
                 include: {
                     category: true,
                     subCategory: true,

@@ -1,7 +1,18 @@
 import React from 'react'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
-export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false }: { logoUrl?: string, isThumbnail?: boolean, isCard?: boolean }) => {
+export const WatermarkOverlay = ({ 
+    logoUrl, 
+    isThumbnail = false, 
+    isCard = false,
+    className = ""
+}: { 
+    logoUrl?: string; 
+    isThumbnail?: boolean; 
+    isCard?: boolean;
+    className?: string;
+}) => {
 
     // ── Premium Corner Mark SVG (positioned in bottom-right of 140x140 box) ──
     const cornerMarkSvg = (
@@ -92,26 +103,26 @@ export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false 
         </svg>
     );
 
-    // ── 1. Thumbnail View (Small preview boxes) ──
+    // ── 1. Thumbnail View (Small preview boxes, e.g. 50px - 90px) ──
     if (isThumbnail) {
         return (
-            <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]">
-                {/* Bottom Left Corner Mark (Flipped horizontally inside its container) */}
-                <div className="absolute bottom-0 left-0 w-8 h-8 md:w-10 md:h-10">
+            <div className={cn("absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]", className)}>
+                {/* Bottom Left Corner Mark */}
+                <div className="absolute bottom-0 left-0 w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-70">
                     <div className="w-full h-full scale-x-[-1]">
                         {cornerMarkSvg}
                     </div>
                 </div>
 
                 {/* Bottom Right Corner Mark */}
-                <div className="absolute bottom-0 right-0 w-8 h-8 md:w-10 md:h-10">
+                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-70">
                     {cornerMarkSvg}
                 </div>
 
-                {/* Centered Logo */}
+                {/* Centered Discreet Logo */}
                 {logoUrl && (
                     <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2">
-                        <div className="relative w-10 h-3 md:w-12 md:h-3.5 opacity-95">
+                        <div className="relative w-7 h-2 sm:w-8 sm:h-2.5 max-w-[45%] opacity-85">
                             <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
                         </div>
                     </div>
@@ -120,26 +131,26 @@ export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false 
         )
     }
 
-    // ── 2. Product Card View (Grid items) ──
+    // ── 2. Product Card View (Grid & List items, e.g. 140px - 280px) ──
     if (isCard) {
         return (
-            <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]">
-                {/* Bottom Left Corner Mark (Flipped horizontally inside its container) */}
-                <div className="absolute bottom-0 left-0 w-16 h-16 md:w-20 md:h-20">
+            <div className={cn("absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]", className)}>
+                {/* Bottom Left Corner Mark */}
+                <div className="absolute bottom-0 left-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 opacity-75">
                     <div className="w-full h-full scale-x-[-1]">
                         {cornerMarkSvg}
                     </div>
                 </div>
 
                 {/* Bottom Right Corner Mark */}
-                <div className="absolute bottom-0 right-0 w-16 h-16 md:w-20 md:h-20">
+                <div className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 opacity-75">
                     {cornerMarkSvg}
                 </div>
 
-                {/* Centered Logo */}
+                {/* Centered Proportionate Logo */}
                 {logoUrl && (
-                    <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2">
-                        <div className="relative w-20 h-6 md:w-24 md:h-7 opacity-95">
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
+                        <div className="relative w-11 h-3 sm:w-13 sm:h-3.5 md:w-15 md:h-4 max-w-[40%] opacity-85">
                             <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
                         </div>
                     </div>
@@ -150,23 +161,23 @@ export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false 
 
     // ── 3. Full Page Main Product & Lightbox Modal View ──
     return (
-        <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]">
-            {/* Bottom Left Corner Mark (Flipped horizontally inside its container) */}
-            <div className="absolute bottom-0 left-0 w-28 h-28 md:w-40 md:h-40 lg:w-48 lg:h-48">
+        <div className={cn("absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]", className)}>
+            {/* Bottom Left Corner Mark */}
+            <div className="absolute bottom-0 left-0 w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 lg:w-26 lg:h-26 opacity-80">
                 <div className="w-full h-full scale-x-[-1]">
                     {cornerMarkSvg}
                 </div>
             </div>
 
             {/* Bottom Right Corner Mark */}
-            <div className="absolute bottom-0 right-0 w-28 h-28 md:w-40 md:h-40 lg:w-48 lg:h-48">
+            <div className="absolute bottom-0 right-0 w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 lg:w-26 lg:h-26 opacity-80">
                 {cornerMarkSvg}
             </div>
 
-            {/* Centered Logo */}
+            {/* Centered Proportionate Logo */}
             {logoUrl && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-                    <div className="relative w-28 h-8 md:w-36 md:h-10 lg:w-40 lg:h-11 opacity-95">
+                <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2">
+                    <div className="relative w-18 h-5 sm:w-22 sm:h-6 md:w-26 md:h-7 lg:w-28 lg:h-8 max-w-[35%] opacity-90">
                         <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-bottom" unoptimized />
                     </div>
                 </div>
@@ -174,3 +185,4 @@ export const WatermarkOverlay = ({ logoUrl, isThumbnail = false, isCard = false 
         </div>
     )
 }
+
