@@ -34,16 +34,26 @@ import { Container } from '@/ui/Container'
 
 export default async function Home() {
   // Pre-fetch all data server-side to avoid client-side waterfalls
-  const [categories, newestProducts, topRatedProducts, promoProductsResult, popularUniverses, brands, promos, banners] = await Promise.all([
+  // 1. Fetch newest products and other static homepage sections in parallel
+  const [categories, newestProducts, promoProductsResult, popularUniverses, brands, promos, banners] = await Promise.all([
     getCategoriesAction(),
-    getProductsAction({ sort: 'newest', limit: 8 }),
-    getProductsAction({ sort: 'top_rated', limit: 8 }),
-    getProductsAction({ onSale: true, limit: 8 }),
+    getProductsAction({ sort: 'newest', limit: 10 }),
+    getProductsAction({ onSale: true, limit: 10 }),
     getPopularUniversesAction(),
     getBrandsAction(),
     getHomePromos(),
     getBigBanners()
-  ])
+  ]);
+
+  // Extract newest product IDs so that "Meilleures Ventes" displays completely distinct products
+  const newestIds = (newestProducts?.products || []).map((p: any) => p.id);
+
+  // 2. Fetch top rated / best sellers, excluding the newest products to guarantee 100% distinct lists
+  const topRatedProducts = await getProductsAction({
+    sort: 'top_rated',
+    limit: 10,
+    excludeIds: newestIds
+  });
 
   const sliderSlides = categories.slice(0, 6).map((cat: any) => ({
     id: cat.id,

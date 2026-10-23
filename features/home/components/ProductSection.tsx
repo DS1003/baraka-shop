@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useRef } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Plus } from 'reicon-react'
 import { cn } from '@/lib/utils'
 import { ProductCard } from '@/ui/ProductCard'
@@ -17,6 +16,59 @@ interface ProductSectionProps {
     priority?: boolean;
     className?: string;
     hideIfEmpty?: boolean;
+}
+
+/**
+ * Hook de glissement fluide à la souris et au doigt
+ * Permet de glisser avec le doigt sur smartphone tout en autorisant le drag souris dans Chrome DevTools
+ */
+function useDragToScroll() {
+    const isDown = useRef(false)
+    const startX = useRef(0)
+    const scrollLeft = useRef(0)
+    const hasDragged = useRef(false)
+
+    const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (e.button !== 0) return
+        const el = e.currentTarget
+        isDown.current = true
+        hasDragged.current = false
+        startX.current = e.pageX - el.offsetLeft
+        scrollLeft.current = el.scrollLeft
+    }
+
+    const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDown.current) return
+        const el = e.currentTarget
+        const x = e.pageX - el.offsetLeft
+        const walk = (x - startX.current) * 1.3
+        if (Math.abs(walk) > 4) {
+            hasDragged.current = true
+            el.scrollLeft = scrollLeft.current - walk
+        }
+    }
+
+    const onMouseUp = () => {
+        isDown.current = false
+        setTimeout(() => {
+            hasDragged.current = false
+        }, 80)
+    }
+
+    const onClickCapture = (e: React.MouseEvent) => {
+        if (hasDragged.current) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
+    }
+
+    return {
+        onMouseDown,
+        onMouseMove,
+        onMouseUp,
+        onMouseLeave: onMouseUp,
+        onClickCapture
+    }
 }
 
 export function ProductSection({
@@ -34,84 +86,38 @@ export function ProductSection({
         return null;
     }
 
-    const [currentIndex, setCurrentIndex] = useState(0)
-    const [direction, setDirection] = useState(0)
-    const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
+    const mobileScrollRef = useRef<HTMLDivElement>(null)
+    const desktopScrollRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        const updateDeviceType = () => {
-            const width = window.innerWidth
-            if (width < 768) {
-                setDeviceType('mobile')
-            } else if (width < 1280) {
-                setDeviceType('tablet')
-            } else {
-                setDeviceType('desktop')
-            }
-        }
-        updateDeviceType()
-        window.addEventListener('resize', updateDeviceType)
-        return () => window.removeEventListener('resize', updateDeviceType)
-    }, [])
-
-    const chunkSize = deviceType === 'mobile' ? 2 : deviceType === 'tablet' ? 3 : 4
-    const productChunks = products.reduce((resultArray: any[][], item, index) => {
-        const chunkIndex = Math.floor(index / chunkSize);
-        if (!resultArray[chunkIndex]) {
-            resultArray[chunkIndex] = [];
-        }
-        resultArray[chunkIndex].push(item);
-        return resultArray;
-    }, []);
-
-    useEffect(() => {
-        if (currentIndex >= productChunks.length) {
-            setCurrentIndex(0)
-        }
-    }, [productChunks.length, currentIndex])
+    const mobileDrag = useDragToScroll()
+    const desktopDrag = useDragToScroll()
 
     const slideNext = () => {
-        if (productChunks.length <= 1) return
-        setDirection(1)
-        setCurrentIndex((prev) => (prev + 1) % productChunks.length)
+        if (mobileScrollRef.current) {
+            const first = mobileScrollRef.current.firstElementChild as HTMLElement
+            const stride = first ? first.offsetWidth + 12 : 172
+            mobileScrollRef.current.scrollBy({ left: stride * 1.5, behavior: 'smooth' })
+        }
+        if (desktopScrollRef.current) {
+            const stride = desktopScrollRef.current.clientWidth * 0.8
+            desktopScrollRef.current.scrollBy({ left: stride, behavior: 'smooth' })
+        }
     }
 
     const slidePrev = () => {
-        if (productChunks.length <= 1) return
-        setDirection(-1)
-        setCurrentIndex((prev) => (prev - 1 + productChunks.length) % productChunks.length)
-    }
-
-    const handleDragEnd = (_: any, info: { offset: { x: number; y: number }; velocity: { x: number; y: number } }) => {
-        if (productChunks.length <= 1) return
-        const isSwipeLeft = info.offset.x < -35 || (info.offset.x < -10 && info.velocity.x < -150)
-        const isSwipeRight = info.offset.x > 35 || (info.offset.x > 10 && info.velocity.x > 150)
-        if (isSwipeLeft) {
-            slideNext()
-        } else if (isSwipeRight) {
-            slidePrev()
+        if (mobileScrollRef.current) {
+            const first = mobileScrollRef.current.firstElementChild as HTMLElement
+            const stride = first ? first.offsetWidth + 12 : 172
+            mobileScrollRef.current.scrollBy({ left: -stride * 1.5, behavior: 'smooth' })
+        }
+        if (desktopScrollRef.current) {
+            const stride = desktopScrollRef.current.clientWidth * 0.8
+            desktopScrollRef.current.scrollBy({ left: -stride, behavior: 'smooth' })
         }
     }
 
-    const variants = {
-        enter: (direction: number) => ({
-            x: direction > 0 ? '100%' : '-100%',
-            opacity: 0
-        }),
-        center: {
-            zIndex: 1,
-            x: 0,
-            opacity: 1
-        },
-        exit: (direction: number) => ({
-            zIndex: 0,
-            x: direction < 0 ? '100%' : '-100%',
-            opacity: 0
-        })
-    }
-
     return (
-        <section className={cn("relative overflow-hidden py-1 md:py-2", className)}>
+        <section className={cn("relative overflow-hidden py-1 md:py-3 select-none", className)}>
             <div className="relative z-10">
                 {/* Header matching Baraka Section UI */}
                 <div className="mb-2.5 md:mb-6">
@@ -130,16 +136,16 @@ export function ProductSection({
                             <div className="flex gap-1">
                                 <button
                                     onClick={slidePrev}
-                                    disabled={productChunks.length <= 1}
-                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    disabled={products.length <= 1}
+                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
                                     aria-label="Précédent"
                                 >
                                     <ChevronLeft className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                     onClick={slideNext}
-                                    disabled={productChunks.length <= 1}
-                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    disabled={products.length <= 1}
+                                    className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
                                     aria-label="Suivant"
                                 >
                                     <ChevronRight className="w-3.5 h-3.5" />
@@ -191,16 +197,16 @@ export function ProductSection({
                             <div className="flex gap-2">
                                 <button
                                     onClick={slidePrev}
-                                    disabled={productChunks.length <= 1}
-                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    disabled={products.length <= 1}
+                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
                                     aria-label="Précédent"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={slideNext}
-                                    disabled={productChunks.length <= 1}
-                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95"
+                                    disabled={products.length <= 1}
+                                    className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] disabled:opacity-20 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
                                     aria-label="Suivant"
                                 >
                                     <ChevronRight className="w-5 h-5" />
@@ -210,7 +216,7 @@ export function ProductSection({
                             {viewAllHref && (
                                 <Link
                                     href={viewAllHref}
-                                    className="w-14 h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary"
+                                    className="w-14 h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary cursor-pointer"
                                     title="Voir tous les produits"
                                 >
                                     <Plus className="w-7 h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
@@ -220,72 +226,61 @@ export function ProductSection({
                     </div>
                 </div>
 
-                {/* Carousel Content */}
-                <div className="relative h-[272px] sm:h-[325px] md:h-[415px] lg:h-[425px] xl:h-[485px] mb-2 md:mb-5">
-                    <AnimatePresence initial={false} custom={direction} mode="popLayout">
-                        {productChunks.length > 0 ? (
-                            <motion.div
-                                key={currentIndex}
-                                custom={direction}
-                                variants={variants}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{
-                                    x: { type: "spring", stiffness: 350, damping: 32, mass: 0.8 },
-                                    opacity: { duration: 0.18 }
-                                }}
-                                drag="x"
-                                dragConstraints={{ left: 0, right: 0 }}
-                                dragElastic={0.15}
-                                onDragEnd={handleDragEnd}
-                                className={cn(
-                                    "absolute inset-0 grid touch-pan-y transform-gpu will-change-transform",
-                                    deviceType === 'mobile'
-                                        ? "grid-cols-2 gap-2.5 sm:gap-3"
-                                        : deviceType === 'tablet'
-                                            ? "grid-cols-3 gap-4 md:gap-5 lg:gap-6"
-                                            : "grid-cols-4 gap-6 xl:gap-8"
-                                )}
-                            >
-                                {productChunks[currentIndex].map((product, idx) => (
-                                    <ProductCard
-                                        key={product.id || idx}
-                                        product={product}
-                                        priority={priority && currentIndex === 0 && idx < 4}
-                                    />
-                                ))}
-                            </motion.div>
-                        ) : (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-3xl w-full">
-                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[10px] md:text-xs">
-                                        Arrivage en cours...
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </AnimatePresence>
-                </div>
-
-                {/* Pagination Dots */}
-                {productChunks.length > 1 && (
-                    <div className="flex justify-center items-center gap-1.5 md:gap-2 pt-1 md:pt-3">
-                        {productChunks.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => {
-                                    setDirection(idx > currentIndex ? 1 : -1)
-                                    setCurrentIndex(idx)
-                                }}
-                                className={cn(
-                                    "h-1.5 rounded-full transition-all duration-300",
-                                    currentIndex === idx ? "w-6 md:w-8 bg-primary" : "w-1.5 md:w-2 bg-gray-200 hover:bg-gray-300"
-                                )}
-                                aria-label={`Page ${idx + 1}`}
-                            />
-                        ))}
+                {/* Empty State */}
+                {products.length === 0 ? (
+                    <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-3xl w-full">
+                        <p className="text-gray-400 font-black uppercase tracking-widest text-[10px] md:text-xs">
+                            Arrivage en cours...
+                        </p>
                     </div>
+                ) : (
+                    <>
+                        {/* Desktop Carousel Rail (Smooth hardware accelerated + Drag to scroll) */}
+                        <div
+                            ref={desktopScrollRef}
+                            className="hidden md:flex items-stretch gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-2 scroll-pl-1 cursor-grab active:cursor-grabbing select-none"
+                            style={{
+                                scrollbarWidth: 'none',
+                                msOverflowStyle: 'none',
+                                WebkitOverflowScrolling: 'touch',
+                                touchAction: 'pan-x pan-y'
+                            }}
+                            {...desktopDrag}
+                        >
+                            {products.map((product, idx) => (
+                                <div key={product.id || idx} className="w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] shrink-0 snap-start">
+                                    <ProductCard
+                                        product={product}
+                                        priority={priority && idx < 4}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Mobile Snap-Scroll Rail (Same smooth finger swipe as Univers Populaires) */}
+                        <div className="md:hidden">
+                            <div
+                                ref={mobileScrollRef}
+                                className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain scroll-pl-4 scroll-pr-4 transform-gpu cursor-grab active:cursor-grabbing select-none"
+                                style={{
+                                    scrollbarWidth: 'none',
+                                    msOverflowStyle: 'none',
+                                    WebkitOverflowScrolling: 'touch',
+                                    touchAction: 'pan-x pan-y'
+                                }}
+                                {...mobileDrag}
+                            >
+                                {products.map((product, idx) => (
+                                    <div key={product.id || idx} className="w-[160px] sm:w-[180px] shrink-0 snap-start">
+                                        <ProductCard
+                                            product={product}
+                                            priority={priority && idx < 2}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
                 )}
             </div>
         </section>

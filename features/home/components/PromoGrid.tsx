@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Container } from '@/ui/Container'
 import { ChevronRight, ChevronLeft, ArrowRight } from 'reicon-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getOptimizedImageUrl } from '@/lib/utils'
@@ -124,33 +123,32 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
 
     return (
         <section className="overflow-hidden py-1 md:py-3">
-            <Container>
-                {/* Header */}
-                <div className="mb-2.5 md:mb-6">
-                    {/* Mobile Top Row: Eyebrow + Controls */}
-                    <div className="flex md:hidden items-center justify-between gap-2 mb-1.5">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                            <div className="w-5 h-[2px] bg-primary rounded-full shrink-0" />
-                            <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">Baraka Selection</span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                            <button
-                                onClick={slidePrev}
-                                className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
-                                aria-label="Précédent"
-                            >
-                                <ChevronLeft className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                                onClick={slideNext}
-                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-95 transition-all text-primary"
-                                aria-label="Suivant"
-                            >
-                                <ChevronRight className="w-3.5 h-3.5" />
-                            </button>
-                        </div>
+            {/* Header */}
+            <div className="mb-2.5 md:mb-6">
+                {/* Mobile Top Row: Eyebrow + Controls */}
+                <div className="flex md:hidden items-center justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="w-5 h-[2px] bg-primary rounded-full shrink-0" />
+                        <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">Baraka Selection</span>
                     </div>
+
+                    <div className="flex items-center gap-1 shrink-0 ml-auto">
+                        <button
+                            onClick={slidePrev}
+                            className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
+                            aria-label="Précédent"
+                        >
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                            onClick={slideNext}
+                            className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs active:scale-95 transition-all text-[#1B1F3B]"
+                            aria-label="Suivant"
+                        >
+                            <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
 
                     <div className="flex flex-col gap-0.5 md:gap-2">
                         {/* Desktop Eyebrow */}
@@ -219,7 +217,6 @@ export function PromoGrid({ initialPromos }: { initialPromos?: any[] }) {
                         ))}
                     </div>
                 </div>
-            </Container>
         </section>
     )
 }

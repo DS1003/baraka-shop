@@ -23,6 +23,7 @@ export async function getProductsAction(options: {
     limit?: number;
     onSale?: boolean;
     isNew?: boolean;
+    excludeIds?: string[];
 } = {}) {
     const query = options.query;
     const category = options.category;
@@ -37,10 +38,11 @@ export async function getProductsAction(options: {
     const limit = options.limit || 12;
     const onSale = options.onSale || false;
     const isNew = options.isNew || false;
+    const excludeIds = options.excludeIds || [];
 
     // Clé de cache déterministe normalisée : évite la fragmentation du cache
     const cacheKey = [
-        'products:v3',
+        'products:v4',
         `q=${(query || '').trim().toLowerCase()}`,
         `cat=${category || ''}`,
         `sub=${subCategory || ''}`,
@@ -53,7 +55,8 @@ export async function getProductsAction(options: {
         `p=${page}`,
         `lim=${limit}`,
         `sale=${Boolean(onSale)}`,
-        `new=${Boolean(isNew)}`
+        `new=${Boolean(isNew)}`,
+        `ex=${[...excludeIds].sort().join(',')}`
     ].join(':');
 
     return await rememberCache(cacheKey, 300, async () => {
@@ -122,11 +125,25 @@ export async function getProductsAction(options: {
                 if (maxPrice !== undefined) where.price.lte = maxPrice;
             }
 
+            if (excludeIds && Array.isArray(excludeIds) && excludeIds.length > 0) {
+                where.id = { notIn: excludeIds };
+            }
+
             // Construction du SORT
             let orderBy: any = { createdAt: 'desc' };
-            if (sort === 'price_asc') orderBy = { price: 'asc' };
-            if (sort === 'price_desc') orderBy = { price: 'desc' };
-            if (sort === 'oldest') orderBy = { createdAt: 'asc' };
+            if (sort === 'price_asc') {
+                orderBy = { price: 'asc' };
+            } else if (sort === 'price_desc') {
+                orderBy = { price: 'desc' };
+            } else if (sort === 'oldest') {
+                orderBy = { createdAt: 'asc' };
+            } else if (sort === 'top_rated' || sort === 'best_sellers' || sort === 'popular') {
+                orderBy = [
+                    { orderItems: { _count: 'desc' } },
+                    { reviews: { _count: 'desc' } },
+                    { updatedAt: 'desc' }
+                ];
+            }
 
             const [products, total] = await withDbRetry(() => Promise.all([
                 prisma.product.findMany({

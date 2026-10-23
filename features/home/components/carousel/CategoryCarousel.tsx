@@ -3,7 +3,6 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Container } from '@/ui/Container'
 import { ArrowRight, ChevronLeft, ChevronRight, Plus } from 'reicon-react'
 import { formatUniverseHref, getOptimizedImageUrl } from '@/lib/utils'
 
@@ -134,153 +133,164 @@ export function CategoryCarousel({
 
     return (
         <section className="py-1 md:py-3 overflow-hidden select-none">
-            <Container>
-                <div className="mb-3 md:mb-8">
-                    {/* Mobile Top Row: Eyebrow + Mobile Arrows */}
-                    <div className="flex md:hidden items-center justify-between gap-2 mb-1.5">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                            <div className="w-5 h-[2px] bg-primary rounded-full shrink-0" />
-                            <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">Exploration</span>
-                        </div>
+            <div className="mb-2.5 md:mb-6">
+                {/* Mobile Top Row: Eyebrow + Controls */}
+                <div className="flex md:hidden items-center justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="w-5 h-[2px] bg-primary rounded-full shrink-0" />
+                        <span className="text-primary font-black text-[8.5px] uppercase tracking-[0.25em] truncate">
+                            Exploration
+                        </span>
+                    </div>
 
-                        <div className="flex items-center gap-1 shrink-0 ml-auto">
+                    <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                        <div className="flex gap-1">
                             <button
                                 onClick={slidePrev}
                                 aria-label="Univers précédent"
-                                className="w-7 h-7 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-xs active:scale-90 transition-all text-[#1B1F3B] cursor-pointer"
+                                className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] active:scale-95 transition-all cursor-pointer"
                             >
                                 <ChevronLeft className="w-3.5 h-3.5" />
                             </button>
                             <button
                                 onClick={slideNext}
                                 aria-label="Univers suivant"
-                                className="w-7 h-7 rounded-full bg-[#1B1F3B] text-white flex items-center justify-center shadow-xs active:scale-90 transition-all text-primary cursor-pointer"
+                                className="w-7 h-7 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs text-[#1B1F3B] active:scale-95 transition-all cursor-pointer"
                             >
                                 <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                         </div>
-                    </div>
-
-                    {/* Main Header Row */}
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-4">
-                        <div className="flex flex-col gap-0.5 md:gap-2">
-                            {/* Desktop Eyebrow */}
-                            <div className="hidden md:flex items-center gap-3">
-                                <div className="w-8 md:w-10 h-[2px] bg-primary rounded-full" />
-                                <span className="text-primary font-black text-[9px] md:text-[11px] uppercase tracking-[0.4em]">Exploration</span>
-                            </div>
-
-                            {/* Title: 100% full width, no overlap with buttons */}
-                            <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-none">
-                                Univers <span className="text-primary italic inline-block pr-1.5">Populaires</span>
-                            </h2>
-
-                            <p className="text-gray-400 text-xs md:text-base font-medium italic mt-0.5">
-                               Tout ce que vous aimez est là
-                            </p>
-                        </div>
-
-                        {/* Desktop Arrows + See All Button */}
-                        <div className="hidden md:flex items-center gap-3">
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={slidePrev}
-                                    aria-label="Précédent"
-                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B] cursor-pointer"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={slideNext}
-                                    aria-label="Suivant"
-                                    className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all text-[#1B1F3B] cursor-pointer"
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <Link
-                                href="/univers"
-                                className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary cursor-pointer"
-                                title="Voir tous les univers"
-                            >
-                                <Plus className="w-6 h-6 md:w-7 md:h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
-                            </Link>
-                        </div>
+                        <Link
+                            href="/univers"
+                            className="w-7 h-7 rounded-lg bg-[#1B1F3B] text-white flex items-center justify-center shadow-sm active:scale-95 group/plus-premium transition-all hover:bg-primary"
+                            title="Voir tous les univers"
+                        >
+                            <Plus className="w-3.5 h-3.5 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={2.5} />
+                        </Link>
                     </div>
                 </div>
 
-                {/* Desktop Carousel Rail (Smooth hardware accelerated + Drag to scroll) */}
+                {/* Main Header Row: Title & Subtitle + Desktop Controls */}
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 md:gap-4">
+                    <div className="flex flex-col gap-0.5 md:gap-2">
+                        {/* Desktop Eyebrow */}
+                        <div className="hidden md:flex items-center gap-2">
+                            <div className="w-8 h-[2px] bg-primary rounded-full" />
+                            <span className="text-primary font-black text-[10px] uppercase tracking-[0.4em]">
+                                Exploration
+                            </span>
+                        </div>
+
+                        {/* Title: 100% full width, no overlap with buttons */}
+                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-[#1B1F3B] uppercase tracking-tight leading-none">
+                            Univers <span className="text-primary italic inline-block pr-1.5">Populaires</span>
+                        </h2>
+
+                        <p className="text-slate-400 text-[10px] sm:text-xs md:text-sm font-medium mt-1 md:mt-1.5 max-w-sm md:max-w-xl leading-relaxed">
+                            Tout ce que vous aimez est là
+                        </p>
+                    </div>
+
+                    {/* Desktop Arrows + See All Button */}
+                    <div className="hidden md:flex items-center gap-2.5 shrink-0 self-end">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={slidePrev}
+                                aria-label="Précédent"
+                                className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] active:scale-95 cursor-pointer"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={slideNext}
+                                aria-label="Suivant"
+                                className="w-11 h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-xs md:shadow-sm hover:shadow-md transition-all text-[#1B1F3B] active:scale-95 cursor-pointer"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <Link
+                            href="/univers"
+                            className="w-14 h-14 rounded-2xl bg-[#1B1F3B] text-white flex items-center justify-center shadow-xl shadow-black/10 active:scale-95 group/plus-premium transition-all hover:bg-primary cursor-pointer"
+                            title="Voir tous les univers"
+                        >
+                            <Plus className="w-7 h-7 transition-transform group-hover/plus-premium:rotate-90" strokeWidth={3} />
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop Carousel Rail (Smooth hardware accelerated + Drag to scroll) */}
+            <div
+                ref={desktopScrollRef}
+                className="hidden md:flex items-stretch gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-2 scroll-pl-1 cursor-grab active:cursor-grabbing select-none"
+                style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch',
+                    touchAction: 'pan-x pan-y'
+                }}
+                {...desktopDrag}
+            >
+                {displayItems.map((item, idx) => (
+                    <div key={item.id} className="w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] shrink-0 snap-start">
+                        <UniverseCard item={item} idx={idx} />
+                    </div>
+                ))}
+                {/* Final Discovery Card Desktop */}
+                <div className="w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] shrink-0 snap-start">
+                    <Link
+                        href="/univers"
+                        draggable={false}
+                        className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] md:h-[260px] lg:h-[270px] xl:h-[280px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl md:rounded-3xl p-5 md:p-6 text-center group active:scale-95 transition-all shadow-md border border-white/10 hover:border-primary/50 select-none"
+                    >
+                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 md:mb-4 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
+                            <Plus className="w-6 h-6 md:w-7 md:h-7 text-white" strokeWidth={2.5} />
+                        </div>
+                        <span className="text-sm md:text-base font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
+                        <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-widest mt-1.5 md:mt-2 flex items-center gap-1.5 pointer-events-none">
+                            Explorer tout le catalogue <ArrowRight className="w-3 md:w-3.5 h-3 md:h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Mobile Snap-Scroll Rail (Ultra-fluid finger swipe + DevTools mouse drag) */}
+            <div className="md:hidden">
                 <div
-                    ref={desktopScrollRef}
-                    className="hidden md:flex items-stretch gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory py-2 scroll-pl-1 cursor-grab active:cursor-grabbing select-none"
+                    ref={mobileScrollRef}
+                    className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain scroll-pl-4 scroll-pr-4 transform-gpu cursor-grab active:cursor-grabbing select-none"
                     style={{
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',
                         WebkitOverflowScrolling: 'touch',
                         touchAction: 'pan-x pan-y'
                     }}
-                    {...desktopDrag}
+                    {...mobileDrag}
                 >
                     {displayItems.map((item, idx) => (
-                        <div key={item.id} className="w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] shrink-0 snap-start">
+                        <div key={item.id} className="w-[160px] sm:w-[180px] shrink-0 snap-start">
                             <UniverseCard item={item} idx={idx} />
                         </div>
                     ))}
-                    {/* Final Discovery Card Desktop */}
-                    <div className="w-[calc(33.333%-16px)] xl:w-[calc(25%-18px)] shrink-0 snap-start">
+                    {/* Final Discovery Card Mobile */}
+                    <div className="w-[140px] shrink-0 snap-start">
                         <Link
                             href="/univers"
                             draggable={false}
-                            className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] md:h-[260px] lg:h-[270px] xl:h-[280px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl md:rounded-3xl p-5 md:p-6 text-center group active:scale-95 transition-all shadow-md border border-white/10 hover:border-primary/50 select-none"
+                            className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl p-4 text-center group active:scale-95 transition-all shadow-md border border-white/10 select-none"
                         >
-                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 md:mb-4 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
-                                <Plus className="w-6 h-6 md:w-7 md:h-7 text-white" strokeWidth={2.5} />
+                            <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
+                                <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
                             </div>
-                            <span className="text-sm md:text-base font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
-                            <span className="text-[10px] md:text-xs font-bold text-primary uppercase tracking-widest mt-1.5 md:mt-2 flex items-center gap-1.5 pointer-events-none">
-                                Explorer tout le catalogue <ArrowRight className="w-3 md:w-3.5 h-3 md:h-3.5 group-hover:translate-x-1 transition-transform" />
+                            <span className="text-xs font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
+                            <span className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1 flex items-center gap-1 pointer-events-none">
+                                Voir tout <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-1 transition-transform" />
                             </span>
                         </Link>
                     </div>
                 </div>
-
-                {/* Mobile Snap-Scroll Rail (Ultra-fluid finger swipe + DevTools mouse drag) */}
-                <div className="md:hidden">
-                    <div
-                        ref={mobileScrollRef}
-                        className="flex items-stretch gap-3 overflow-x-auto overflow-y-hidden snap-x snap-mandatory no-scrollbar py-2 -mx-4 px-4 overscroll-x-contain scroll-pl-4 scroll-pr-4 transform-gpu cursor-grab active:cursor-grabbing select-none"
-                        style={{
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none',
-                            WebkitOverflowScrolling: 'touch',
-                            touchAction: 'pan-x pan-y'
-                        }}
-                        {...mobileDrag}
-                    >
-                        {displayItems.map((item, idx) => (
-                            <div key={item.id} className="w-[160px] sm:w-[180px] shrink-0 snap-start">
-                                <UniverseCard item={item} idx={idx} />
-                            </div>
-                        ))}
-                        {/* Final Discovery Card Mobile */}
-                        <div className="w-[140px] shrink-0 snap-start">
-                            <Link
-                                href="/univers"
-                                draggable={false}
-                                className="relative overflow-hidden flex flex-col items-center justify-center h-[215px] bg-gradient-to-br from-[#15192D] via-[#1B1F3B] to-[#0D101E] text-white rounded-2xl p-4 text-center group active:scale-95 transition-all shadow-md border border-white/10 select-none"
-                            >
-                                <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3 group-hover:bg-primary group-hover:border-primary transition-all duration-300 shadow-sm group-hover:rotate-90 pointer-events-none">
-                                    <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
-                                </div>
-                                <span className="text-xs font-black uppercase tracking-wider text-white pointer-events-none">Tous les univers</span>
-                                <span className="text-[9px] font-bold text-primary uppercase tracking-widest mt-1 flex items-center gap-1 pointer-events-none">
-                                    Voir tout <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-1 transition-transform" />
-                                </span>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </Container>
+            </div>
         </section>
     )
 }
