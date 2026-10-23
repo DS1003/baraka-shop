@@ -1156,7 +1156,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                             <div className="flex gap-2.5 sm:gap-3">
                                                                 {/* Thumbnail */}
                                                                 <Link
-                                                                    href={`/product/${product.slug || product.id}`}
+                                                                    href={`/product/${product.id}`}
                                                                     className="relative w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] rounded-lg bg-gray-50/80 border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-1 group-hover:border-orange-100 transition-colors"
                                                                 >
                                                                     <WatermarkOverlay logoUrl={headerLogo} isThumbnail />
@@ -1192,7 +1192,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                         </div>
 
                                                                         <Link
-                                                                            href={`/product/${product.slug || product.id}`}
+                                                                            href={`/product/${product.id}`}
                                                                             className="font-bold text-xs sm:text-sm text-[#1B1F3B] hover:text-orange-600 transition-colors line-clamp-1 leading-snug mb-0.5 block"
                                                                         >
                                                                             {product.name}
@@ -1256,7 +1256,7 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                     )}
                                                                 </button>
                                                                 <Link
-                                                                    href={`/product/${product.slug || product.id}`}
+                                                                    href={`/product/${product.id}`}
                                                                     className="h-8 px-2.5 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-600 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors touch-manipulation active:scale-95 shrink-0"
                                                                 >
                                                                     <Eye className="w-3 h-3" />
