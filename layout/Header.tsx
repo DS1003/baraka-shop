@@ -309,7 +309,7 @@ export function Header() {
                         <Link href="/" className="shrink-0 flex items-center">
                             <img
                                 src={headerLogo}
-                                alt="Baraka Shop"
+                                alt="Baraka Electronique - Baraka Shop Dakar"
                                 className="h-10 md:h-12 lg:h-14 w-auto object-contain"
                             />
                         </Link>
@@ -587,7 +587,7 @@ export function Header() {
                 </button>
 
                 <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center">
-                    <img src={headerLogo} alt="Baraka Shop" className="h-10 sm:h-12 w-auto object-contain" />
+                    <img src={headerLogo} alt="Baraka Electronique - Baraka Shop Dakar" className="h-10 sm:h-12 w-auto object-contain" />
                 </Link>
 
                 <div className="flex items-center gap-1">

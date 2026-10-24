@@ -16,13 +16,13 @@ export function ShippingPromoBand() {
                             <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                                 <Truck className="w-6 h-6" />
                             </div>
-                            <h3 className="text-white text-2xl font-black uppercase tracking-tight">Livraison Express Gratuite</h3>
+                            <h3 className="text-white text-2xl font-black uppercase tracking-tight">Livraison Express &amp; Sécurisée</h3>
                         </div>
 
                         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 mt-6">
-                            <p className="text-gray-400 text-sm max-w-[200px] text-center md:text-left">Sur toutes les commandes de plus de <span className="text-white font-bold">500.000FCFA</span></p>
+                            <p className="text-gray-400 text-sm max-w-[200px] text-center md:text-left">Expédition rapide sur Dakar et dans toutes les régions du Sénégal</p>
                             <div className="px-6 py-2 bg-white/5 border border-white/10 rounded-full text-white text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                                Code: EXPRESS24
+                                EXPRESS SÉNÉGAL
                             </div>
                         </div>
                     </div>

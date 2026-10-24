@@ -30,27 +30,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.8,
         }))
 
-        const categoryUrls = categories.map((category) => ({
-            url: `${baseUrl}/boutique?category=${category.slug}`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly' as const,
-            priority: 0.7,
-        }))
+        // Clean category URLs & boutique category filters
+        const categoryUrls = categories.flatMap((category) => [
+            {
+                url: `${baseUrl}/category/${category.slug}`,
+                lastModified: new Date(),
+                changeFrequency: 'weekly' as const,
+                priority: 0.8,
+            },
+            {
+                url: `${baseUrl}/boutique?category=${category.slug}`,
+                lastModified: new Date(),
+                changeFrequency: 'weekly' as const,
+                priority: 0.7,
+            }
+        ])
 
         const brandUrls = brands.map((brand) => ({
             url: `${baseUrl}/marques/${brand.slug}`,
             lastModified: new Date(),
-            changeFrequency: 'monthly' as const,
-            priority: 0.6,
+            changeFrequency: 'weekly' as const,
+            priority: 0.7,
         }))
-
 
         return [
             {
                 url: baseUrl,
                 lastModified: new Date(),
                 changeFrequency: 'daily',
-                priority: 1,
+                priority: 1.0,
             },
             {
                 url: `${baseUrl}/boutique`,
@@ -68,25 +76,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 url: `${baseUrl}/nouveautes`,
                 lastModified: new Date(),
                 changeFrequency: 'daily',
+                priority: 0.9,
+            },
+            {
+                url: `${baseUrl}/boutiques`,
+                lastModified: new Date(),
+                changeFrequency: 'weekly',
+                priority: 0.8,
+            },
+            {
+                url: `${baseUrl}/marques`,
+                lastModified: new Date(),
+                changeFrequency: 'weekly',
                 priority: 0.8,
             },
             {
                 url: `${baseUrl}/about`,
                 lastModified: new Date(),
                 changeFrequency: 'monthly',
-                priority: 0.5,
+                priority: 0.7,
             },
             {
                 url: `${baseUrl}/contact`,
                 lastModified: new Date(),
                 changeFrequency: 'monthly',
-                priority: 0.5,
+                priority: 0.7,
             },
             {
                 url: `${baseUrl}/faq`,
                 lastModified: new Date(),
                 changeFrequency: 'monthly',
-                priority: 0.5,
+                priority: 0.6,
             },
             {
                 url: `${baseUrl}/legal`,
@@ -94,14 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 changeFrequency: 'monthly',
                 priority: 0.5,
             },
-            {
-                url: `${baseUrl}/wishlist`,
-                lastModified: new Date(),
-                changeFrequency: 'weekly',
-                priority: 0.8,
-            },
             ...categoryUrls,
-
             ...brandUrls,
             ...productUrls,
         ]

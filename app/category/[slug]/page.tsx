@@ -24,8 +24,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-        title: `${category.name} | Baraka Shop - Rayons Spécialisés`,
-        description: `Explorez notre sélection de ${category.name} chez Baraka Shop. High-Tech de premier choix au Sénégal.`
+        title: {
+            absolute: `${category.name} Dakar | Baraka Electronique (Baraka Shop) Sénégal`,
+        },
+        description: `Achetez ${category.name} au meilleur prix chez Baraka Electronique (Baraka Shop) à Dakar (90 Rue Av. K. Bourgi). Matériel garanti et livraison express au Sénégal.`,
+        keywords: [category.name, 'Baraka electronique', 'baraka electronique dakar', 'baraka shop', `${category.name} dakar`, 'materiel informatique dakar'],
+        alternates: {
+            canonical: `https://baraka.sn/category/${category.slug}`,
+        },
     }
 }
 

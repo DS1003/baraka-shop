@@ -1,8 +1,15 @@
 'use server';
+
 import prisma from '@/lib/prisma';
 import { rememberCache } from '@/lib/redis';
+import { auth } from '@/auth';
 
 export async function globalAdminSearch(query: string) {
+    const session = await auth();
+    if (!session?.user || (session.user as any).role !== 'ADMIN') {
+        return { products: [], categories: [], users: [] };
+    }
+
     if (!query || query.length < 2) return { products: [], categories: [], users: [] };
 
     const cacheKey = `search:admin:${encodeURIComponent(query.trim().toLowerCase())}`;

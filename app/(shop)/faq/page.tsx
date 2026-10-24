@@ -71,8 +71,8 @@ const faqCategories = [
                 a: "À Dakar : livraison en 24 à 48h ouvrées. En régions : livraison en 3 à 5 jours ouvrés. Les délais peuvent varier selon la disponibilité du produit et votre localisation."
             },
             {
-                q: 'La livraison est-elle gratuite ?',
-                a: "La livraison est gratuite à Dakar pour toute commande supérieure à 50 000 FCFA. Pour les commandes en dessous de ce montant ou en régions, des frais de livraison s'appliquent et sont calculés au checkout."
+                q: 'Combien coûte la livraison ?',
+                a: "La livraison est offerte dès 50 000 FCFA d'achats à Dakar ! En dessous de ce montant ou pour les régions du Sénégal, les frais de livraison s'appliquent selon votre zone géographique. Le retrait en boutique (Click & Collect) est quant à lui 100% gratuit."
             },
             {
                 q: 'Livrez-vous en dehors de Dakar ?',

@@ -98,7 +98,7 @@ export default function AboutPage() {
 
                             {/* Subtitle */}
                             <p className="text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl font-medium">
-                                Depuis plus de 10 ans, <strong className="text-white font-bold">Baraka Shop (Baraka Electronique)</strong> sélectionne le meilleur de la technologie mondiale pour particuliers et entreprises au Sénégal. Produits 100% authentiques, garanties constructeur et conseils d&apos;experts.
+                                Au cœur de Sandaga, <strong className="text-white font-bold">Baraka</strong> est plus qu&apos;un distributeur. C&apos;est le partenaire de confiance qui connecte le Sénégal avec le meilleur de la technologie mondiale sans compromis sur la qualité, sans concession sur les prix.
                             </p>
 
                             {/* Action Buttons */}

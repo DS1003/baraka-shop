@@ -7,8 +7,8 @@ import { Truck, Refresh as RotateCcw, ShieldCheck, Headphones, CreditCard } from
 const features = [
     {
         icon: Truck,
-        title: "Livraison Gratuite",
-        description: "Dès 200.000FCFA d'achat"
+        title: "Livraison Rapide",
+        description: "Dakar & partout au Sénégal"
     },
     {
         icon: RotateCcw,

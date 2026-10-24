@@ -31,19 +31,18 @@ export function Footer() {
                             {/* Pictogramme */}
                             <img 
                                 src="/logo-icon.png" 
-                                alt="Baraka Shop Icon" 
+                                alt="Baraka Electronique - Logo" 
                                 className="h-10 sm:h-12 md:h-16 w-auto object-contain transition-transform duration-1000 ease-in-out group-hover:rotate-[720deg]" 
                             />
                             {/* Texte */}
                             <img 
                                 src="/logo-text.png" 
-                                alt="Baraka Shop Text" 
+                                alt="Baraka Electronique Dakar Sénégal" 
                                 className="h-7 sm:h-9 md:h-12 w-auto object-contain mt-1.5" 
                             />
                         </Link>
-                        <p className="text-gray-400 text-xs sm:text-sm md:text-base leading-relaxed tracking-wide max-w-md">
-                            Votre destination premium pour l'électronique de pointe au Sénégal. 
-                            Le meilleur de la technologie avec un service d'excellence.
+                        <p className="text-gray-300 text-xs sm:text-sm md:text-base leading-relaxed tracking-wide max-w-lg">
+                            Au cœur de Sandaga, <strong className="text-white font-bold">Baraka</strong> est plus qu&apos;un distributeur. C&apos;est le partenaire de confiance qui connecte le Sénégal avec le meilleur de la technologie mondiale sans compromis sur la qualité, sans concession sur les prix.
                         </p>
                     </div>
 
@@ -148,7 +147,7 @@ export function Footer() {
                     {/* Bottom Copyright */}
                     <div className="w-full pt-6 pb-2 border-t border-white/5 flex items-center justify-center px-4">
                         <p className="text-[10px] sm:text-xs text-gray-500 tracking-wider font-medium text-center" suppressHydrationWarning={true}>
-                            © {new Date().getFullYear()} <span className="text-gray-300 font-bold">Baraka Shop Senegal</span>. Tous droits réservés.
+                            © {new Date().getFullYear()} <span className="text-gray-300 font-bold">Baraka Electronique (Baraka Shop Sénégal)</span>. Tous droits réservés.
                         </p>
                     </div>
                 </div>

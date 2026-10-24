@@ -24,10 +24,10 @@ export async function GET() {
                 return NextResponse.json(
                     {
                         maintenanceMode: true,
-                        maintenanceTitle: config?.maintenanceTitle ?? 'Site en maintenance',
+                        maintenanceTitle: config?.maintenanceTitle ?? 'Lancement Officiel Bientôt !',
                         maintenanceMessage:
                             config?.maintenanceMessage ??
-                            'Nous effectuons des améliorations. Le site sera de retour très bientôt.',
+                            "Au cœur de Sandaga, Baraka prépare l'ouverture de sa boutique en ligne. Retrouvez le meilleur de la technologie mondiale au Sénégal sans compromis sur la qualité, sans concession sur les prix.",
                     },
                     {
                         headers: {

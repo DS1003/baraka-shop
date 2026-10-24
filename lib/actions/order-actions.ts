@@ -232,6 +232,25 @@ export async function createOrder(data: CreateOrderData) {
                 }
             }
 
+            // ── Enregistrement atomique du coupon dans la transaction ──
+            if (campaignId && couponCode) {
+                await tx.couponUsage.create({
+                    data: {
+                        campaignId,
+                        userId: session.user.id!,
+                        orderId: newOrder.id,
+                    }
+                });
+                await tx.promotionCampaign.update({
+                    where: { id: campaignId },
+                    data: {
+                        codeUses: { increment: 1 },
+                        totalRevenue: { increment: serverTotal },
+                        totalDiscount: { increment: discountAmount },
+                    }
+                });
+            }
+
             return { newOrder, depletedProductIds };
         });
 
@@ -263,12 +282,6 @@ export async function createOrder(data: CreateOrderData) {
             }
             Promise.all(promises).catch(() => {});
         }).catch(() => {});
-
-        // ── Enregistrement de l'utilisation du coupon (non-bloquant) ──
-        if (campaignId && couponCode) {
-            recordCouponUsage(campaignId, session.user.id, order.id).catch(() => {});
-            updateCampaignStats(campaignId, serverTotal, discountAmount).catch(() => {});
-        }
 
         // Notification client & admins (non-bloquant)
         const clientName = data.shippingDetails?.firstName

@@ -9,10 +9,13 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
     title: {
-        absolute: 'Promotions & Ventes Flash | Baraka Shop Sénégal',
+        absolute: 'Promotions & Ventes Flash Informatique | Baraka Electronique Dakar',
     },
-    description: 'Les meilleures promotions sur les smartphones, ordinateurs et accessoires High-Tech chez Baraka Shop (Baraka Electronique). Prix imbattables à Dakar et partout au Sénégal.',
-    keywords: ['promotion baraka', 'promo electronique dakar', 'baraka electronique promo', 'baraka shop soldes', 'vente flash sénégal', 'baraka sn promotion'],
+    description: 'Bons plans et réductions sur le matériel informatique, smartphones, PC portables et accessoires chez Baraka Electronique (Baraka Shop). Prix cassés à Dakar et au Sénégal.',
+    keywords: ['promotion baraka electronique', 'promo electronique dakar', 'soldes informatique dakar', 'baraka electronique promo', 'vente flash sénégal', 'baraka sn promotion'],
+    alternates: {
+        canonical: 'https://baraka.sn/promotions',
+    },
 }
 
 export default async function PromotionsPage() {

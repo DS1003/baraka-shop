@@ -1,9 +1,16 @@
 import prisma from '@/lib/prisma';
 import BoutiquesClient from './BoutiquesClient';
+import { Metadata } from 'next';
 
-export const metadata = {
-    title: 'Nos Boutiques | Baraka Shop',
-    description: 'Découvrez l\'univers Baraka Shop en boutique. Profitez des conseils de nos experts et d\'une prise en main immédiate.',
+export const metadata: Metadata = {
+    title: {
+        absolute: 'Nos Magasins à Dakar | Baraka Electronique (90 Rue Av. K. Bourgi)',
+    },
+    description: 'Venez visiter nos magasins physiques Baraka Electronique (Baraka Shop) à Dakar (Sandaga, 90 Rue Av. K. Bourgi). Retrouvez tout notre matériel informatique et électronique avec conseils d\'experts.',
+    keywords: ['magasin baraka electronique dakar', 'baraka electronique sandaga', '90 Rue Av. K. Bourgi', 'boutique baraka shop dakar', 'adresse baraka electronique'],
+    alternates: {
+        canonical: 'https://baraka.sn/boutiques',
+    },
 };
 
 export default async function StoresPage() {

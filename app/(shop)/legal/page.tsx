@@ -203,8 +203,8 @@ function CGVContent() {
                     <li><strong>Click & Collect :</strong> retrait gratuit en boutique sous 2h</li>
                 </ul>
                 <p>
-                    Les frais de livraison sont calculés en fonction de la zone de livraison et du poids du colis.
-                    La livraison est <strong>gratuite à Dakar</strong> pour toute commande supérieure à 50 000 FCFA.
+                    Les frais de livraison sont calculés lors de la commande en fonction de la zone sélectionnée (Dakar ou régions du Sénégal).
+                    La livraison est offerte à Dakar pour toute commande supérieure à 50 000 FCFA. Le retrait en boutique est 100% gratuit.
                 </p>
             </SectionCard>
 

@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
     title: {
-        absolute: 'Contact & Service Client | Baraka Shop Dakar Sénégal',
+        absolute: 'Contact & Magasin | Baraka Electronique (90 Rue Av. K. Bourgi Dakar)',
     },
-    description: 'Contactez le service client de Baraka Shop (Baraka Electronique) à Dakar, Sénégal. Assistance technique, conseils d\'experts et support réactif par téléphone et WhatsApp.',
-    keywords: ['contact baraka shop', 'baraka electronique telephone', 'service client baraka', 'boutique electronique dakar sandaga'],
+    description: 'Contactez Baraka Electronique (Baraka Shop) à Dakar, Sénégal. Téléphone : +221 33 822 34 22, WhatsApp : +221 76 514 98 98. Adresse : 90 Rue Av. K. Bourgi, Sandaga.',
+    keywords: ['contact baraka electronique', 'baraka electronique telephone', '33 822 34 22', 'adresse baraka electronique', '90 Rue Av. K. Bourgi Dakar', 'service client baraka shop'],
     alternates: {
         canonical: 'https://baraka.sn/contact',
     },

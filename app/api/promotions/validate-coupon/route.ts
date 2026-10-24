@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { validateCoupon } from '@/lib/promotions/validation';
 import { calculateDiscount } from '@/lib/promotions/calculation';
+import { rateLimit } from '@/lib/rate-limit';
 
 /**
  * POST /api/promotions/validate-coupon
@@ -10,6 +11,16 @@ import { calculateDiscount } from '@/lib/promotions/calculation';
  */
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'anon';
+    // Protection anti-bruteforce / énumération de coupons : 15 essais max par minute par IP
+    const limiter = await rateLimit(`coupon_validate:${ip}`, 15, 60);
+    if (!limiter.success) {
+      return NextResponse.json(
+        { valid: false, error: 'Trop de tentatives de validation. Veuillez patienter une minute.' },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const { code, subtotal } = body;
 

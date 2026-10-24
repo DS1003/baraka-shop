@@ -332,6 +332,7 @@ async function processMediaMatching(jobId: string) {
  * Statut du job
  */
 export async function getMediaJobStatus(jobId: string) {
+    await requireAdmin();
     const cached = await getCache<any>(`media-job:${jobId}`);
     if (cached) return cached;
 
@@ -341,6 +342,7 @@ export async function getMediaJobStatus(jobId: string) {
 }
 
 export async function getLatestMediaJob() {
+    await requireAdmin();
     return await prisma.mediaJob.findFirst({
         where: { status: 'PROCESSING' },
         orderBy: { updatedAt: 'desc' }

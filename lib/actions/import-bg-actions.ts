@@ -199,6 +199,7 @@ async function processSync(jobId: string, products: any[]) {
  */
 export async function getImportStatus(jobId: string) {
     try {
+        await requireAdmin();
         // Tenter d'abord Redis via notre helper sécurisé
         const cached = await getCache<any>(`job:${jobId}`);
         if (cached) return cached;
@@ -218,6 +219,7 @@ export async function getImportStatus(jobId: string) {
  */
 export async function getLatestActiveJob() {
     try {
+        await requireAdmin();
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         return await prisma.importJob.findFirst({
             where: {

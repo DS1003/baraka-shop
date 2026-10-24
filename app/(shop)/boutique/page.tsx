@@ -14,19 +14,19 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
         const formattedCategory = category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ')
         return {
             title: {
-                absolute: `${formattedCategory} | Baraka Shop Dakar Sénégal`,
+                absolute: `${formattedCategory} | Baraka Electronique (Baraka Shop) Dakar`,
             },
-            description: `Achetez ${formattedCategory} chez Baraka Shop (Baraka Electronique). Large choix, meilleur prix garanti. Livraison rapide à Dakar et partout au Sénégal.`,
-            keywords: [formattedCategory, 'Baraka electronique', 'baraka shop', 'baraka sn', 'electronique sn', `${formattedCategory} dakar`, `${formattedCategory} sénégal`],
+            description: `Achetez ${formattedCategory} chez Baraka Electronique (Baraka Shop). Large choix, garantie et meilleur prix à Dakar (90 Rue Av. K. Bourgi) et partout au Sénégal.`,
+            keywords: [formattedCategory, 'Baraka electronique', 'baraka electronique dakar', 'baraka shop', 'baraka sn', 'materiel informatique dakar', `${formattedCategory} dakar`, `${formattedCategory} sénégal`],
         }
     }
 
     return {
         title: {
-            absolute: 'Boutique en ligne High-Tech | Baraka Shop Sénégal',
+            absolute: 'Boutique Informatique & High-Tech | Baraka Electronique Dakar Sénégal',
         },
-        description: 'Parcourez tout notre catalogue chez Baraka Shop (Baraka Electronique) : smartphones, ordinateurs, audio, accessoires high-tech. Livraison rapide à Dakar, Sandaga et partout au Sénégal.',
-        keywords: ['Baraka electronique', 'baraka shop', 'baraka sn', 'boutique electronique dakar', 'electronique sn', 'baraka sandaga'],
+        description: 'Catalogue complet Baraka Electronique (Baraka Shop) : ordinateurs portables, smartphones, imprimantes, audio et matériel informatique à Dakar (90 Rue Av. K. Bourgi). Livraison rapide au Sénégal.',
+        keywords: ['Baraka electronique', 'baraka electronique dakar', 'baraka shop', 'baraka sn', 'magasin informatique dakar', 'materiel informatique dakar', 'ordinateur dakar', 'boutique electronique dakar'],
     }
 }
 

@@ -19,10 +19,15 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Baraka Shop (Baraka Electronique) | Vente en ligne High-Tech au Sénégal',
+    absolute: 'Baraka Electronique (Baraka Shop) | Magasin Informatique & High-Tech à Dakar, Sénégal',
   },
-  description: 'Bienvenue chez Baraka Shop (anciennement Baraka Electronique). Découvrez notre sélection de smartphones, ordinateurs, accessoires High-Tech et multimédia au meilleur prix à Dakar, Sandaga, Sénégal.',
-  keywords: ['Baraka electronique', 'baraka shop', 'baraka sn', 'baraka', 'electronique sn', 'baraka sandaga', 'smartphone', 'ordinateur', 'dakar', 'sénégal', 'vente en ligne'],
+  description: 'Au cœur de Sandaga, Baraka Electronique (Baraka Shop) est plus qu\'un distributeur : le partenaire de confiance qui connecte le Sénégal avec le meilleur de la technologie mondiale sans compromis sur la qualité, sans concession sur les prix.',
+  keywords: [
+    'Baraka electronique', 'baraka electronique dakar', 'baraka electronics', 'baraka electronics dakar',
+    'baraka shop', 'baraka sn', 'baraka', 'electronique sn', 'baraka sandaga', 'baraka senegal',
+    'magasin informatique dakar', 'materiel informatique dakar', 'ordinateur dakar', 'smartphone dakar',
+    '90 Rue Av. K. Bourgi', 'vente en ligne sénégal'
+  ],
   alternates: {
     canonical: 'https://baraka.sn',
   },
@@ -66,65 +71,12 @@ export default async function Home() {
     ? promoProductsResult.products
     : newestProducts.products.filter((p: any) => p.oldPrice && p.oldPrice > p.price);
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebSite',
-        '@id': 'https://www.baraka.sn/#website',
-        url: 'https://www.baraka.sn',
-        name: 'Baraka Shop',
-        alternateName: ['Baraka Electronique', 'Baraka sn', 'Baraka', 'Electronique sn', 'Baraka Sandaga'],
-        description: 'Vente de matériel électronique, informatique, smartphones et accessoires.',
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: 'https://www.baraka.sn/boutique?q={search_term_string}',
-          'query-input': 'required name=search_term_string',
-        },
-      },
-      {
-        '@type': 'Store',
-        '@id': 'https://www.baraka.sn/#store',
-        name: 'Baraka Shop',
-        alternateName: ['Baraka Electronique', 'Baraka sn', 'Baraka', 'Electronique sn', 'Baraka Sandaga'],
-        image: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
-        description: 'Spécialiste de la vente de matériel électronique, informatique, smartphones et accessoires.',
-        url: 'https://www.baraka.sn',
-        telephone: '+221338223422',
-        address: {
-          '@type': 'PostalAddress',
-          streetAddress: 'Rue Avenue ABDOU, 90 Rue Av. K. Bourgi',
-          addressLocality: 'Dakar',
-          addressCountry: 'SN'
-        },
-        openingHoursSpecification: [
-          {
-            '@type': 'OpeningHoursSpecification',
-            dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-            opens: '08:00',
-            closes: '18:30'
-          },
-          {
-            '@type': 'OpeningHoursSpecification',
-            dayOfWeek: 'Sunday',
-            opens: '09:00',
-            closes: '13:00'
-          }
-        ]
-      }
-    ]
-  }
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <Container className="flex flex-col gap-4 md:gap-8 py-3 md:py-5">
         {/* SEO Semantic H1 Heading */}
         <h1 className="sr-only">
-          Baraka Shop (Baraka Electronique) — Vente en ligne d&apos;appareils électroniques, smartphones, ordinateurs et accessoires High-Tech à Dakar, Sénégal
+          Baraka Electronique (Baraka Shop) — Magasin de Matériel Informatique, Électronique, Smartphones &amp; PC Portables à Dakar, Sénégal (90 Rue Av. K. Bourgi, Sandaga)
         </h1>
 
         <HomeSlider initialSlides={sliderSlides} />

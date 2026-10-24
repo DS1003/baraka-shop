@@ -26,13 +26,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     return {
         title: {
-            absolute: `${product.name} | Acheter chez Baraka Shop Sénégal`,
+            absolute: `${product.name} | Baraka Electronique (Baraka Shop) Sénégal`,
         },
-        description: `${product.description?.substring(0, 140) || product.name} - Disponible chez Baraka Electronique. Livraison rapide à Dakar et partout au Sénégal.`,
-        keywords: [product.name, product.brand?.name, 'Baraka electronique', 'baraka shop', 'baraka sn', 'acheter au Sénégal'].filter(Boolean),
+        description: `${product.description?.substring(0, 150) || product.name} - Disponible chez Baraka Electronique (Baraka Shop) à Dakar (90 Rue Av. K. Bourgi). Livraison express au Sénégal.`,
+        keywords: [product.name, product.brand?.name, 'Baraka electronique', 'baraka electronique dakar', 'baraka shop', 'baraka sn', 'acheter au Sénégal'].filter(Boolean) as string[],
+        alternates: {
+            canonical: `https://baraka.sn/product/${product.id}`,
+        },
         openGraph: {
-            title: `${product.name} | Baraka Shop`,
-            description: `${product.description?.substring(0, 140) || product.name} - Baraka Electronique Dakar.`,
+            title: `${product.name} | Baraka Electronique`,
+            description: `${product.description?.substring(0, 150) || product.name} - Baraka Electronique Dakar.`,
             images: product.images?.[0] ? [{ url: product.images[0], width: 800, height: 800, alt: product.name }] : [],
             type: 'website',
         }
@@ -65,17 +68,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         description: product.description?.substring(0, 300) || product.name,
         brand: {
             '@type': 'Brand',
-            name: product.brand?.name || 'Baraka Shop',
+            name: product.brand?.name || 'Baraka Electronique',
         },
         offers: {
             '@type': 'Offer',
-            url: `https://www.baraka.sn/product/${product.id}`,
+            url: `https://baraka.sn/product/${product.id}`,
             priceCurrency: 'XOF',
             price: product.price,
             availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            itemCondition: 'https://schema.org/NewCondition',
             seller: {
                 '@type': 'Organization',
-                name: 'Baraka Shop',
+                name: 'Baraka Electronique',
+                alternateName: 'Baraka Shop',
+                url: 'https://baraka.sn',
             },
         },
         ...((product as any).averageRating && (product as any).averageRating > 0 ? {

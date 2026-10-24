@@ -22,14 +22,15 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Baraka Shop | Électronique et High-Tech Premier au Sénégal',
-    template: '%s | Baraka Shop'
+    default: 'Baraka Electronique (Baraka Shop) | Magasin Informatique & High-Tech Dakar Sénégal',
+    template: '%s | Baraka Electronique'
   },
-  description: 'Baraka Shop (Baraka Electronique) : Votre destination de confiance pour l\'électronique haut de gamme, smartphones, ordinateurs et accessoires à Dakar, Sénégal (Sandaga).',
+  description: 'Au cœur de Sandaga, Baraka Electronique est plus qu\'un distributeur : le partenaire de confiance qui connecte le Sénégal avec le meilleur de la technologie mondiale sans compromis sur la qualité, sans concession sur les prix.',
   keywords: [
-    'Baraka electronique', 'baraka shop', 'baraka sn', 'baraka', 'electronique sn', 
-    'baraka sandaga', 'smartphone dakar', 'ordinateur sénégal', 'high-tech dakar', 
-    'vente électronique sénégal', 'boutique electronique dakar'
+    'Baraka electronique', 'baraka electronique dakar', 'baraka electronics', 'baraka electronics dakar',
+    'baraka shop', 'baraka sn', 'baraka', 'electronique sn', 'baraka senegal', 'baraka sandaga',
+    'magasin informatique dakar', 'materiel informatique dakar', 'ordinateur dakar', 'pc portable senegal',
+    'smartphone dakar', '90 Rue Av. K. Bourgi', 'vente electronique senegal', 'boutique electronique dakar'
   ],
   authors: [{ name: 'Baraka Electronique' }, { name: 'Baraka Shop' }],
   metadataBase: new URL('https://baraka.sn'),
@@ -37,16 +38,16 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Baraka Shop (Baraka Electronique) | High-Tech Sénégal',
-    description: 'Le meilleur de la technologie livré chez vous partout au Sénégal. Découvrez notre sélection Baraka SN.',
+    title: 'Baraka Electronique (Baraka Shop) | Magasin Informatique & High-Tech Dakar',
+    description: 'Boutique officielle Baraka Electronique (Baraka Shop) au 90 Rue Av. K. Bourgi Dakar. Ordinateurs, smartphones, tablettes et accessoires au meilleur prix au Sénégal.',
     url: 'https://baraka.sn',
-    siteName: 'Baraka Shop',
+    siteName: 'Baraka Electronique (Baraka Shop)',
     images: [
       {
         url: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
         width: 1200,
         height: 630,
-        alt: 'Baraka Shop Premium Electronics',
+        alt: 'Baraka Electronique - Magasin d\'informatique et High-Tech à Dakar',
       },
     ],
     locale: 'fr_SN',
@@ -54,8 +55,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Baraka Shop | High-Tech Sénégal',
-    description: 'Smartphones, Ordinateurs et plus au meilleur prix chez Baraka Electronique.',
+    title: 'Baraka Electronique (Baraka Shop) | Matériel Informatique & High-Tech Dakar',
+    description: 'Smartphones, Ordinateurs, Tablettes et High-Tech au meilleur prix chez Baraka Electronique Dakar.',
     images: ['https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png'],
   },
   robots: {
@@ -85,6 +86,82 @@ export const metadata: Metadata = {
   } : {}),
 }
 
+const rootJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['ElectronicsStore', 'ComputerStore', 'LocalBusiness'],
+      '@id': 'https://baraka.sn/#store',
+      name: 'Baraka Electronique',
+      legalName: 'Baraka Electronique SARL',
+      alternateName: [
+        'Baraka Shop',
+        'Baraka Electronics',
+        'Baraka.sn',
+        'Baraka SN',
+        'Baraka Senegal',
+        'Baraka Sandaga',
+        'Baraka Informatique'
+      ],
+      url: 'https://baraka.sn',
+      logo: 'https://baraka.sn/logo-icon.png',
+      image: 'https://baraka.sn/wp-content/uploads/2025/10/logo-contour-blanc-01-scaled-e1761208403239.png',
+      description: 'Au cœur de Sandaga, Baraka Electronique est plus qu\'un distributeur : le partenaire de confiance qui connecte le Sénégal avec le meilleur de la technologie mondiale sans compromis sur la qualité, sans concession sur les prix.',
+      telephone: '+221338223422',
+      email: 'contact@baraka.sn',
+      priceRange: '$$',
+      currenciesAccepted: 'XOF',
+      paymentAccepted: 'Cash, Wave, Orange Money, Carte Bancaire',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Rue Avenue ABDOU, 90 Rue Av. K. Bourgi',
+        addressLocality: 'Dakar',
+        addressRegion: 'Dakar',
+        postalCode: '10000',
+        addressCountry: 'SN'
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 14.6738,
+        longitude: -17.4398
+      },
+      hasMap: 'https://maps.google.com/?q=90+Rue+Av.+K.+Bourgi,+Dakar,+Sénégal',
+      openingHoursSpecification: [
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          opens: '08:00',
+          closes: '19:30'
+        }
+      ],
+      sameAs: [
+        'https://www.instagram.com/baraka.sn/',
+        'https://wa.me/221765149898',
+        'https://maps.google.com/?q=90+Rue+Av.+K.+Bourgi,+Dakar,+Sénégal'
+      ]
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://baraka.sn/#website',
+      url: 'https://baraka.sn',
+      name: 'Baraka Electronique',
+      alternateName: ['Baraka Shop', 'Baraka.sn'],
+      description: 'Magasin d\'informatique, ordinateurs, smartphones et matériel électronique au Sénégal.',
+      publisher: {
+        '@id': 'https://baraka.sn/#store'
+      },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://baraka.sn/boutique?q={search_term_string}'
+        },
+        'query-input': 'required name=search_term_string'
+      }
+    }
+  ]
+}
+
 import { ScrollToTop } from '@/ui/ScrollToTop'
 import { WhatsAppButton } from '@/ui/WhatsAppButton'
 
@@ -103,6 +180,12 @@ export default async function RootLayout({
   return (
     <html lang="fr" className="h-full antialiased scroll-smooth" suppressHydrationWarning>
       <head>
+        {/* Structured Data (Schema.org) for Google Knowledge Graph & Local SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(rootJsonLd) }}
+        />
+
         {/* Resource Preconnections & DNS Prefetching for Ultra-Fast Image Loading */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />

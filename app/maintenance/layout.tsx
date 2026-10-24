@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'Maintenance | Baraka Shop',
-    description: 'Notre site est temporairement en maintenance. Nous serons de retour très bientôt.',
+    title: 'Grand Lancement Bientôt | Baraka Electronique (Baraka Shop)',
+    description: 'Au cœur de Sandaga, Baraka prépare son grand lancement officiel. Le meilleur de la technologie mondiale arrive très bientôt au Sénégal.',
     robots: {
         index: false,
         follow: false,

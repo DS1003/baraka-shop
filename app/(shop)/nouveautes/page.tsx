@@ -10,10 +10,13 @@ export const fetchCache = 'force-no-store'
 
 export const metadata: Metadata = {
     title: {
-        absolute: 'Nouveautés High-Tech | Baraka Shop Sénégal',
+        absolute: 'Nouveautés High-Tech & Informatique | Baraka Electronique Dakar',
     },
-    description: 'Découvrez les dernières nouveautés high-tech chez Baraka Shop (Baraka Electronique). Smartphones, ordinateurs et accessoires dernière génération à Dakar, Sénégal.',
-    keywords: ['nouveautés baraka', 'nouveau smartphone dakar', 'baraka electronique nouveautés', 'baraka shop nouveaux produits', 'high-tech sénégal'],
+    description: 'Découvrez les dernières nouveautés high-tech et matériel informatique chez Baraka Electronique (Baraka Shop). Smartphones, ordinateurs portables et accessoires récents à Dakar, Sénégal.',
+    keywords: ['nouveautés baraka electronique', 'baraka electronique', 'baraka shop nouveautés', 'matériel informatique dakar', 'nouveau smartphone dakar', 'ordinateur portable dakar'],
+    alternates: {
+        canonical: 'https://baraka.sn/nouveautes',
+    },
 }
 
 export default async function NouveautesPage({ searchParams }: { searchParams: Promise<any> }) {
