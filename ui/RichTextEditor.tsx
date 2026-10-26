@@ -20,13 +20,18 @@ export function RichTextEditor({ name, defaultValue = '', value, onChange, place
     const initializedRef = useRef(false);
 
     useEffect(() => {
-        if (editorRef.current && !initializedRef.current) {
-            const initialValue = value !== undefined ? value : defaultValue;
-            if (initialValue) {
-                editorRef.current.innerHTML = initialValue;
-                setHiddenValue(initialValue);
+        if (editorRef.current) {
+            if (!initializedRef.current) {
+                const initialValue = value !== undefined ? value : defaultValue;
+                if (initialValue) {
+                    editorRef.current.innerHTML = initialValue;
+                    setHiddenValue(initialValue);
+                }
+                initializedRef.current = true;
+            } else if (value !== undefined && value !== editorRef.current.innerHTML) {
+                editorRef.current.innerHTML = value;
+                setHiddenValue(value);
             }
-            initializedRef.current = true;
         }
     }, [defaultValue, value]);
 

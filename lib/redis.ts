@@ -196,10 +196,13 @@ export async function mgetCache<T>(keys: string[]): Promise<(T | null)[]> {
 }
 
 /**
- * Invalide une clé unique
+ * Invalide une clé unique (mémoire L1 + Redis)
  */
 export async function invalidateCache(key: string): Promise<void> {
     try {
+        // Supprimer immédiatement du cache mémoire L1
+        l1MemoryCache.delete(key);
+
         if (redis.status !== 'ready') return;
         await redis.del(key);
     } catch (error) {
@@ -208,11 +211,18 @@ export async function invalidateCache(key: string): Promise<void> {
 }
 
 /**
- * Invalide toutes les clés correspondant à un préfixe
+ * Invalide toutes les clés correspondant à un préfixe (mémoire L1 + Redis)
  * Utilise SCAN non-bloquant pour éviter d'impacter les performances de production
  */
 export async function invalidatePrefix(prefix: string): Promise<void> {
     try {
+        // Supprimer immédiatement toutes les entrées L1 correspondantes
+        for (const k of Array.from(l1MemoryCache.keys())) {
+            if (k.startsWith(prefix)) {
+                l1MemoryCache.delete(k);
+            }
+        }
+
         if (redis.status !== 'ready') return;
         
         const stream = redis.scanStream({

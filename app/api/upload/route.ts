@@ -38,44 +38,37 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const uploadedUrls: string[] = [];
-
-        for (const file of files) {
-            // Validate file type
+        const validFiles = files.filter(file => {
             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
-            if (!allowedTypes.includes(file.type)) {
-                continue; // Skip invalid files silently
-            }
+            return allowedTypes.includes(file.type) && file.size <= 20 * 1024 * 1024;
+        });
 
-            // Validate file size (max 20MB)
-            if (file.size > 20 * 1024 * 1024) {
-                continue;
-            }
+        if (validFiles.length === 0) {
+            return NextResponse.json(
+                { error: 'Aucun fichier valide. Formats acceptés : JPG, PNG, WebP, GIF, AVIF. Max 20MB.' },
+                { status: 400 }
+            );
+        }
 
+        // Upload parallèle vers Cloudinary (préserve l'ordre initial des fichiers)
+        const uploadPromises = validFiles.map(async (file) => {
             const bytes = await file.arrayBuffer();
             const buffer = Buffer.from(bytes);
 
-            // Upload vers Cloudinary
-            const uploadResponse = await new Promise((resolve, reject) => {
+            return new Promise<string>((resolve, reject) => {
                 cloudinary.uploader.upload_stream({
                     folder: 'products_baraka',
                     resource_type: 'auto',
                     timestamp: timestamp
                 }, (error, result) => {
                     if (error) reject(error);
-                    else resolve(result);
+                    else if (result?.secure_url) resolve(result.secure_url);
+                    else reject(new Error('Cloudinary upload missing secure_url'));
                 }).end(buffer);
-            }) as any;
+            });
+        });
 
-            uploadedUrls.push(uploadResponse.secure_url);
-        }
-
-        if (uploadedUrls.length === 0) {
-            return NextResponse.json(
-                { error: 'Aucun fichier valide. Formats acceptés : JPG, PNG, WebP, GIF, AVIF. Max 20MB.' },
-                { status: 400 }
-            );
-        }
+        const uploadedUrls = await Promise.all(uploadPromises);
 
         return NextResponse.json({ urls: uploadedUrls });
     } catch (error) {

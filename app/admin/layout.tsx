@@ -100,16 +100,40 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const [unreadCount, setUnreadCount] = useState(0);
     const [hoveredTooltip, setHoveredTooltip] = useState<{label: string, top: number, left: number} | null>(null);
     const notifIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const notificationsRef = useRef<HTMLDivElement>(null);
+    const profileRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+            const target = e.target as Node;
+            if (notificationsRef.current && !notificationsRef.current.contains(target)) {
+                setIsNotificationsOpen(false);
+            }
+            if (profileRef.current && !profileRef.current.contains(target)) {
+                setIsProfileOpen(false);
+            }
+        };
+
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setIsNotificationsOpen(false);
+                setIsProfileOpen(false);
+            }
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
                 setIsSearchOpen(true);
             }
         };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 
     const fetchNotifications = useCallback(async () => {
@@ -267,7 +291,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Elevated Topbar - Compact */}
-                <header className="h-[72px] flex items-center justify-between px-8 z-20 bg-white border-b border-slate-200/50 transition-all">
+                <header className="h-[72px] flex items-center justify-between px-8 relative z-[60] bg-white border-b border-slate-200/50 transition-all">
                     <div className="flex-1 max-w-xl">
                         <div 
                             className="relative group flex items-center cursor-pointer"
@@ -286,7 +310,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                     <div className="flex items-center gap-6 ml-6">
                         <div className="flex items-center gap-3">
-                            <div className="relative">
+                            <div className="relative" ref={notificationsRef}>
                                 <button
                                     onClick={() => {
                                         setIsNotificationsOpen(!isNotificationsOpen);
@@ -311,14 +335,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                                 <AnimatePresence>
                                     {isNotificationsOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-40" onClick={() => setIsNotificationsOpen(false)} />
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                className="absolute right-0 mt-3 w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 overflow-hidden"
-                                            >
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute right-0 mt-3 w-96 bg-white rounded-2xl border border-slate-200 shadow-2xl z-[70] overflow-hidden"
+                                        >
                                                 <div className="p-4 border-b border-slate-100 flex justify-between items-center">
                                                     <h4 className="font-bold text-[14px]">Notifications</h4>
                                                     <div className="flex items-center gap-2">
@@ -420,7 +442,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                     )}
                                                 </div>
                                             </motion.div>
-                                        </>
                                     )}
                                 </AnimatePresence>
                             </div>
@@ -435,7 +456,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </Link>
                         </div>
 
-                        <div className="relative">
+                        <div className="relative" ref={profileRef}>
                             <button
                                 onClick={() => {
                                     setIsProfileOpen(!isProfileOpen);
@@ -454,14 +475,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                             <AnimatePresence>
                                 {isProfileOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute right-0 mt-3 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl z-50 p-2"
-                                        >
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className="absolute right-0 mt-3 w-64 bg-white rounded-2xl border border-slate-200 shadow-2xl z-[70] p-2"
+                                    >
                                             <div className="p-3 border-b border-slate-50">
                                                 <p className="text-[14px] font-bold text-slate-900">Admin Baraka</p>
                                                 <p className="text-[11px] text-slate-400 truncate">admin@baraka-shop.com</p>
@@ -486,7 +505,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                                 </button>
                                             </div>
                                         </motion.div>
-                                    </>
                                 )}
                             </AnimatePresence>
                         </div>

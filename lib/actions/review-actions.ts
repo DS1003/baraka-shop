@@ -83,3 +83,68 @@ export async function updateReportStatusAction(reportId: string, status: 'PENDIN
         return { success: false, message: "Erreur lors de la mise à jour." };
     }
 }
+
+export async function replyToReviewAction(reviewId: string, reply: string, productId?: string) {
+    try {
+        await checkAdmin();
+
+        const cleanReply = reply ? String(reply).trim().slice(0, 2000) : '';
+        if (!cleanReply) {
+            return { success: false, message: "La réponse ne peut pas être vide." };
+        }
+
+        const review = await prisma.review.update({
+            where: { id: reviewId },
+            data: {
+                adminReply: cleanReply,
+                adminReplyAt: new Date()
+            }
+        });
+
+        const targetProductId = productId || review.productId;
+        await invalidatePrefix('admin:reviews:');
+        if (targetProductId) {
+            await invalidatePrefix(`product:${targetProductId}`);
+            revalidatePath(`/product/${targetProductId}`);
+        }
+        revalidatePath('/admin/reviews');
+
+        return { 
+            success: true, 
+            message: "Réponse publiée avec succès !", 
+            adminReply: review.adminReply, 
+            adminReplyAt: review.adminReplyAt 
+        };
+    } catch (error: any) {
+        console.error("[Reply To Review Error]:", error);
+        return { success: false, message: error.message || "Erreur lors de la publication de la réponse." };
+    }
+}
+
+export async function deleteAdminReplyAction(reviewId: string, productId?: string) {
+    try {
+        await checkAdmin();
+
+        const review = await prisma.review.update({
+            where: { id: reviewId },
+            data: {
+                adminReply: null,
+                adminReplyAt: null
+            }
+        });
+
+        const targetProductId = productId || review.productId;
+        await invalidatePrefix('admin:reviews:');
+        if (targetProductId) {
+            await invalidatePrefix(`product:${targetProductId}`);
+            revalidatePath(`/product/${targetProductId}`);
+        }
+        revalidatePath('/admin/reviews');
+
+        return { success: true, message: "Réponse supprimée avec succès." };
+    } catch (error: any) {
+        console.error("[Delete Admin Reply Error]:", error);
+        return { success: false, message: error.message || "Erreur lors de la suppression de la réponse." };
+    }
+}
+

@@ -1531,6 +1531,12 @@ export async function upsertProduct(data: any, id?: string) {
             if (id) {
                 invalidations.push(invalidateCache(`product:${id}`));
             }
+            if (product?.id) {
+                invalidations.push(invalidateCache(`product:${product.id}`));
+            }
+            if (product?.slug) {
+                invalidations.push(invalidateCache(`product:${product.slug}`));
+            }
             await Promise.all(invalidations);
         } catch (redisError) {
             console.warn("[Redis] Cache invalidation failed (non-blocking):", redisError);
@@ -1539,9 +1545,20 @@ export async function upsertProduct(data: any, id?: string) {
         // Revalidation ciblée (plus performant que '/' layout)
         if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Revalidating paths...`);
         revalidatePath('/admin/products');
+        if (product?.id) {
+            revalidatePath(`/admin/products/${product.id}/edit`);
+        }
+        if (id && id !== product?.id) {
+            revalidatePath(`/admin/products/${id}/edit`);
+        }
         revalidatePath('/boutique');
         revalidatePath('/nouveautes');
-        revalidatePath(`/product/${product.id}`);
+        if (product?.id) {
+            revalidatePath(`/product/${product.id}`);
+        }
+        if (product?.slug) {
+            revalidatePath(`/product/${product.slug}`);
+        }
         revalidatePath('/');
         
         if (process.env.NODE_ENV !== 'production') console.log(`[AdminAction] Success!`);

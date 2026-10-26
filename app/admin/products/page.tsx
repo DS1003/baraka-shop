@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from '@/lib/sanitize';
 import {
     Plus,
     Search,

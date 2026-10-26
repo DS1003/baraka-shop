@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import DOMPurify from 'isomorphic-dompurify'
+import DOMPurify from '@/lib/sanitize'
 
 import { Container } from '@/ui/Container'
 import { Button } from '@/ui/Button'
@@ -30,7 +30,13 @@ import {
     Package,
     PenLine,
     Lock,
-    Sparkles
+    Sparkles,
+    ShieldCheck,
+    MessageSquareReply,
+    Edit3,
+    Send,
+    Loader2,
+    Trash2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn, formatNumber, formatPrice } from '@/lib/utils'
@@ -44,6 +50,7 @@ import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 import { toast } from 'sonner'
 import { checkWishlistAction, toggleWishlistAction } from '@/lib/actions/user-actions'
 import { addReviewAction, voteReviewAction, reportReviewAction } from '@/lib/actions/product-actions'
+import { replyToReviewAction, deleteAdminReplyAction } from '@/lib/actions/review-actions'
 
 const RATING_LABELS: Record<number, string> = {
     1: '1/5 — Décevant',
@@ -69,9 +76,21 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
     const [reviewRating, setReviewRating] = useState(0)
     const [reviewComment, setReviewComment] = useState('')
     const [isSubmittingReview, setIsSubmittingReview] = useState(false)
-    const [votedReviews, setVotedReviews] = useState<Set<string>>(new Set())
+    const [userVotes, setUserVotes] = useState<Record<string, 'helpful' | 'unhelpful'>>({})
     const [reportedReviews, setReportedReviews] = useState<Set<string>>(new Set())
     const [reviews, setReviews] = useState(product.reviews || [])
+
+    // Load persisted review votes from localStorage
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('baraka_review_votes')
+            if (saved) {
+                setUserVotes(JSON.parse(saved))
+            }
+        } catch (e) {
+            // Ignore parse error
+        }
+    }, [])
 
     // Report Modal State
     const [isReportModalOpen, setIsReportModalOpen] = useState(false)
@@ -80,46 +99,156 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
     const [reportComment, setReportComment] = useState('')
     const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
+    // Admin Review Reply State
+    const isAdmin = (session?.user as any)?.role === 'ADMIN'
+    const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null)
+    const [adminReplyText, setAdminReplyText] = useState('')
+    const [isSubmittingReply, setIsSubmittingReply] = useState(false)
+
+    const handleStartReply = (reviewId: string, currentReply?: string | null) => {
+        setReplyingReviewId(reviewId)
+        setAdminReplyText(currentReply || '')
+    }
+
+    const handleCancelReply = () => {
+        setReplyingReviewId(null)
+        setAdminReplyText('')
+    }
+
+    const handleSubmitReply = async (reviewId: string) => {
+        if (!adminReplyText.trim()) {
+            toast.error("Veuillez saisir votre réponse.")
+            return
+        }
+        setIsSubmittingReply(true)
+        try {
+            const res = await replyToReviewAction(reviewId, adminReplyText.trim(), product.id)
+            if (res.success) {
+                toast.success(res.message || "Réponse officielle publiée avec succès !")
+                setReviews(currentReviews => 
+                    currentReviews.map(r => 
+                        r.id === reviewId ? { ...r, adminReply: res.adminReply, adminReplyAt: res.adminReplyAt } : r
+                    )
+                )
+                setReplyingReviewId(null)
+                setAdminReplyText('')
+            } else {
+                toast.error(res.message || "Erreur lors de la publication de la réponse.")
+            }
+        } catch (e: any) {
+            toast.error("Erreur inattendue.")
+        } finally {
+            setIsSubmittingReply(false)
+        }
+    }
+
+    const handleDeleteReply = async (reviewId: string) => {
+        if (!confirm("Voulez-vous vraiment supprimer cette réponse officielle ?")) return
+        try {
+            const res = await deleteAdminReplyAction(reviewId, product.id)
+            if (res.success) {
+                toast.success("Réponse supprimée avec succès.")
+                setReviews(currentReviews => 
+                    currentReviews.map(r => 
+                        r.id === reviewId ? { ...r, adminReply: null, adminReplyAt: null } : r
+                    )
+                )
+            } else {
+                toast.error(res.message || "Erreur lors de la suppression.")
+            }
+        } catch (e: any) {
+            toast.error("Erreur inattendue.")
+        }
+    }
+
     // Update reviews when product changes
     useEffect(() => {
         setReviews(product.reviews || [])
     }, [product.reviews])
 
     const handleReviewVote = async (reviewId: string, type: 'helpful' | 'unhelpful') => {
-        if (votedReviews.has(reviewId)) {
-            toast.info("Vous avez déjà voté pour cet avis.");
+        if (!session?.user?.id) {
+            toast.info("Vous devez être connecté pour voter pour un avis.");
             return;
         }
-        setVotedReviews(prev => new Set(prev).add(reviewId));
-        
+
+        const currentVote = userVotes[reviewId];
+        const isRemoving = currentVote === type;
+        const newVoteType: 'helpful' | 'unhelpful' | null = isRemoving ? null : type;
+
         // Optimistic local update
         setReviews(currentReviews => 
             currentReviews.map(review => {
                 if (review.id === reviewId) {
-                    return {
-                        ...review,
-                        helpfulCount: type === 'helpful' ? (review.helpfulCount || 0) + 1 : review.helpfulCount,
-                        unhelpfulCount: type === 'unhelpful' ? (review.unhelpfulCount || 0) + 1 : review.unhelpfulCount
+                    let hCount = review.helpfulCount || 0;
+                    let uCount = review.unhelpfulCount || 0;
+
+                    if (isRemoving) {
+                        if (type === 'helpful') hCount = Math.max(0, hCount - 1);
+                        else uCount = Math.max(0, uCount - 1);
+                    } else if (currentVote) {
+                        if (type === 'helpful') {
+                            hCount += 1;
+                            uCount = Math.max(0, uCount - 1);
+                        } else {
+                            hCount = Math.max(0, hCount - 1);
+                            uCount += 1;
+                        }
+                    } else {
+                        if (type === 'helpful') hCount += 1;
+                        else uCount += 1;
                     }
+
+                    return { ...review, helpfulCount: hCount, unhelpfulCount: uCount };
                 }
                 return review;
             })
-        )
+        );
+
+        // Update local user votes
+        setUserVotes(prev => {
+            const next = { ...prev };
+            if (newVoteType) next[reviewId] = newVoteType;
+            else delete next[reviewId];
+            try {
+                localStorage.setItem('baraka_review_votes', JSON.stringify(next));
+            } catch (e) {}
+            return next;
+        });
 
         const res = await voteReviewAction(reviewId, type, product.id);
         if (res.success) {
-            toast.success("Merci pour votre retour !");
+            if (res.action === 'removed') {
+                toast.info(res.message || "Votre vote a été retiré.");
+            } else {
+                toast.success(res.message || "Merci pour votre vote !");
+            }
+            if (typeof (res as any).helpfulCount === 'number') {
+                setReviews(currentReviews => 
+                    currentReviews.map(r => 
+                        r.id === reviewId ? { 
+                            ...r, 
+                            helpfulCount: (res as any).helpfulCount, 
+                            unhelpfulCount: (res as any).unhelpfulCount 
+                        } : r
+                    )
+                );
+            }
         } else {
-            toast.error("Une erreur est survenue.");
-            setVotedReviews(prev => {
-                const next = new Set(prev);
-                next.delete(reviewId);
+            toast.error(res.message || "Une erreur est survenue.");
+            // Revert optimistic update
+            setUserVotes(prev => {
+                const next = { ...prev };
+                if (currentVote) next[reviewId] = currentVote;
+                else delete next[reviewId];
+                try {
+                    localStorage.setItem('baraka_review_votes', JSON.stringify(next));
+                } catch (e) {}
                 return next;
             });
-            // Revert optimistic update
             setReviews(product.reviews || []);
         }
-    }
+    };
 
     const openReportModal = (reviewId: string) => {
         if (!session?.user?.id) {
@@ -1430,38 +1559,155 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                                             </div>
                                                         )}
 
+                                                        {/* Admin Reply Display (Visible to all, editable/deletable by admin) */}
+                                                        {review.adminReply && replyingReviewId !== review.id && (
+                                                            <div className="mt-3 p-3.5 sm:p-4 bg-gradient-to-r from-orange-50/90 via-amber-50/50 to-slate-50/80 rounded-xl sm:rounded-2xl border-l-4 border-l-primary border border-orange-100/70 shadow-2xs">
+                                                                <div className="flex items-center justify-between gap-2 mb-2">
+                                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-gradient-to-r from-primary to-orange-600 text-white rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow-xs">
+                                                                            <ShieldCheck size={12} strokeWidth={2.5} />
+                                                                            Réponse de Baraka Shop
+                                                                        </span>
+                                                                        {review.adminReplyAt && (
+                                                                            <span className="text-[10px] text-slate-400 font-medium">
+                                                                                {new Date(review.adminReplyAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {isAdmin && (
+                                                                        <div className="flex items-center gap-1">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleStartReply(review.id, review.adminReply)}
+                                                                                className="px-2 py-1 text-slate-500 hover:text-primary hover:bg-white rounded-md text-[11px] font-bold flex items-center gap-1 transition-all shadow-2xs"
+                                                                                title="Modifier la réponse"
+                                                                            >
+                                                                                <Edit3 size={11} />
+                                                                                <span className="hidden sm:inline">Modifier</span>
+                                                                            </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleDeleteReply(review.id)}
+                                                                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all"
+                                                                                title="Supprimer la réponse"
+                                                                            >
+                                                                                <Trash2 size={12} />
+                                                                            </button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-slate-700 text-xs sm:text-[13px] leading-relaxed whitespace-pre-line font-medium pl-0.5">
+                                                                    {review.adminReply}
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Admin Reply Editor (Visible ONLY to Admin when replying) */}
+                                                        {isAdmin && replyingReviewId === review.id && (
+                                                            <div className="mt-3 p-3.5 sm:p-4 bg-orange-50/60 rounded-xl sm:rounded-2xl border border-orange-200/90 shadow-xs animate-in fade-in duration-200">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-primary uppercase tracking-wide">
+                                                                        <MessageSquareReply size={14} />
+                                                                        {review.adminReply ? "Modifier la réponse officielle" : "Répondre en tant que Baraka Shop"}
+                                                                    </span>
+                                                                    <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                                        Admin
+                                                                    </span>
+                                                                </div>
+                                                                <textarea
+                                                                    value={adminReplyText}
+                                                                    onChange={(e) => setAdminReplyText(e.target.value)}
+                                                                    placeholder="Écrivez votre réponse officielle au client (remerciements, conseils, assistance...)..."
+                                                                    rows={3}
+                                                                    className="w-full text-xs sm:text-sm p-3 bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none text-slate-800 placeholder:text-slate-400"
+                                                                    autoFocus
+                                                                />
+                                                                <div className="flex items-center justify-end gap-2 mt-2.5">
+                                                                    <button
+                                                                        type="button"
+                                                                        disabled={isSubmittingReply}
+                                                                        onClick={handleCancelReply}
+                                                                        className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-200/60 transition-colors"
+                                                                    >
+                                                                        Annuler
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        disabled={isSubmittingReply || !adminReplyText.trim()}
+                                                                        onClick={() => handleSubmitReply(review.id)}
+                                                                        className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-orange-600 text-white text-xs font-black rounded-lg transition-all shadow-sm shadow-primary/20 disabled:opacity-50 active:scale-95"
+                                                                    >
+                                                                        {isSubmittingReply ? (
+                                                                            <>
+                                                                                <Loader2 size={13} className="animate-spin" />
+                                                                                <span>Envoi...</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <Send size={13} />
+                                                                                <span>Publier la réponse</span>
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
                                                         {/* Action footer */}
                                                         <div className="mt-3 pt-2.5 border-t border-slate-100/70 flex flex-wrap items-center justify-between gap-2 text-xs">
                                                             <div className="flex items-center gap-1.5">
                                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline mr-1">Utile ?</span>
                                                                 <button 
                                                                     type="button"
-                                                                    disabled={votedReviews.has(review.id)}
                                                                     onClick={() => handleReviewVote(review.id, 'helpful')}
-                                                                    className={`flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-colors ${votedReviews.has(review.id) ? 'text-primary bg-primary/10 cursor-not-allowed' : 'text-slate-500 hover:text-primary hover:bg-slate-50 active:scale-95'}`}
+                                                                    className={`flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all active:scale-95 ${
+                                                                        userVotes[review.id] === 'helpful'
+                                                                            ? 'text-primary bg-primary/10 border border-primary/25 shadow-2xs font-black' 
+                                                                            : 'text-slate-500 hover:text-primary hover:bg-slate-50'
+                                                                    }`}
+                                                                    title={userVotes[review.id] === 'helpful' ? "Retirer mon vote utile" : "Marquer comme utile"}
                                                                 >
-                                                                    <ThumbsUp size={12} strokeWidth={2.5} />
+                                                                    <ThumbsUp size={12} strokeWidth={userVotes[review.id] === 'helpful' ? 2.5 : 2} className={userVotes[review.id] === 'helpful' ? "fill-primary/20" : ""} />
                                                                     <span>{review.helpfulCount || 0}</span>
                                                                 </button>
                                                                 <button 
                                                                     type="button"
-                                                                    disabled={votedReviews.has(review.id)}
                                                                     onClick={() => handleReviewVote(review.id, 'unhelpful')}
-                                                                    className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg transition-colors ${votedReviews.has(review.id) ? 'text-slate-300 cursor-not-allowed' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:scale-95'}`}
+                                                                    className={`flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg transition-all active:scale-95 ${
+                                                                        userVotes[review.id] === 'unhelpful'
+                                                                            ? 'text-rose-600 bg-rose-50 border border-rose-200/60 shadow-2xs font-black' 
+                                                                            : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                                                                    }`}
+                                                                    title={userVotes[review.id] === 'unhelpful' ? "Retirer mon vote" : "Marquer comme non utile"}
                                                                 >
-                                                                    <ThumbsDown size={12} strokeWidth={2.5} />
+                                                                    <ThumbsDown size={12} strokeWidth={userVotes[review.id] === 'unhelpful' ? 2.5 : 2} className={userVotes[review.id] === 'unhelpful' ? "fill-rose-100" : ""} />
                                                                 </button>
                                                             </div>
 
-                                                            <button 
-                                                                type="button"
-                                                                disabled={reportedReviews.has(review.id)}
-                                                                onClick={() => openReportModal(review.id)}
-                                                                className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-colors ml-auto ${reportedReviews.has(review.id) ? 'text-rose-500 cursor-not-allowed' : 'text-slate-300 hover:text-slate-500'}`}
-                                                            >
-                                                                <Flag size={10} strokeWidth={2.5} />
-                                                                <span>{reportedReviews.has(review.id) ? 'Signalé' : 'Signaler'}</span>
-                                                            </button>
+                                                            <div className="flex items-center gap-2 ml-auto">
+                                                                {/* Admin Reply Button (Visible ONLY to Admin when review has no reply yet) */}
+                                                                {isAdmin && !review.adminReply && replyingReviewId !== review.id && (
+                                                                    <button 
+                                                                        type="button"
+                                                                        onClick={() => handleStartReply(review.id)}
+                                                                        className="flex items-center gap-1 text-[11px] font-black text-primary hover:text-white hover:bg-primary px-2.5 py-1 rounded-lg border border-primary/30 transition-all active:scale-95"
+                                                                    >
+                                                                        <MessageSquareReply size={12} strokeWidth={2.5} />
+                                                                        <span>Répondre à l'avis</span>
+                                                                    </button>
+                                                                )}
+
+                                                                <button 
+                                                                    type="button"
+                                                                    disabled={reportedReviews.has(review.id)}
+                                                                    onClick={() => openReportModal(review.id)}
+                                                                    className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${reportedReviews.has(review.id) ? 'text-rose-500 cursor-not-allowed' : 'text-slate-300 hover:text-slate-500'}`}
+                                                                >
+                                                                    <Flag size={10} strokeWidth={2.5} />
+                                                                    <span>{reportedReviews.has(review.id) ? 'Signalé' : 'Signaler'}</span>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </motion.div>
                                                 ))}

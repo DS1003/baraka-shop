@@ -335,12 +335,17 @@ export async function getUnreadCount(userId: string): Promise<number> {
  */
 export async function markAsRead(notificationId: string, userId?: string) {
     try {
-        if (userId) {
+        let targetUserId = userId;
+        if (targetUserId) {
             const result = await prisma.notification.updateMany({
-                where: { id: notificationId, userId },
+                where: { id: notificationId, userId: targetUserId },
                 data: { isRead: true },
             });
-            invalidatePrefix(`notifications:${userId}`).catch(() => {});
+            await Promise.all([
+                invalidatePrefix(`notifications:unread:${targetUserId}`),
+                invalidatePrefix(`notifications:list:${targetUserId}`),
+                invalidatePrefix(`notifications:${targetUserId}`),
+            ]).catch(() => {});
             return { success: result.count > 0 };
         }
 
@@ -348,7 +353,12 @@ export async function markAsRead(notificationId: string, userId?: string) {
             where: { id: notificationId },
             data: { isRead: true },
         });
-        invalidatePrefix(`notifications:${notif.userId}`).catch(() => {});
+        targetUserId = notif.userId;
+        await Promise.all([
+            invalidatePrefix(`notifications:unread:${targetUserId}`),
+            invalidatePrefix(`notifications:list:${targetUserId}`),
+            invalidatePrefix(`notifications:${targetUserId}`),
+        ]).catch(() => {});
         return { success: true };
     } catch (error) {
         console.error('[NotificationService] Mark read error:', error);
@@ -365,7 +375,11 @@ export async function markAllAsRead(userId: string) {
             where: { userId, isRead: false },
             data: { isRead: true },
         });
-        invalidatePrefix(`notifications:${userId}`).catch(() => {});
+        await Promise.all([
+            invalidatePrefix(`notifications:unread:${userId}`),
+            invalidatePrefix(`notifications:list:${userId}`),
+            invalidatePrefix(`notifications:${userId}`),
+        ]).catch(() => {});
         return { success: true };
     } catch (error) {
         console.error('[NotificationService] Mark all read error:', error);

@@ -1,7 +1,7 @@
 'use server';
 
 import prisma, { withDbRetry } from '@/lib/prisma';
-import { getCache, setCache, rememberCache, invalidatePrefix } from '@/lib/redis';
+import { getCache, setCache, rememberCache, invalidatePrefix, invalidateCache } from '@/lib/redis';
 import { slugify } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
@@ -851,39 +851,93 @@ export async function voteReviewAction(reviewId: string, type: 'helpful' | 'unhe
     try {
         const session = await auth();
         if (!session?.user?.id) {
-            return { success: false, message: "Vous devez être connecté pour voter." };
+            return { success: false, message: "Vous devez être connecté pour voter pour un avis." };
         }
 
-        // Vérifier si l'utilisateur a déjà voté pour cet avis
         const voteKey = `review_vote:${session.user.id}:${reviewId}`;
-        const hasVoted = await getCache(voteKey);
-        if (hasVoted) {
-            return { success: false, message: "Vous avez déjà voté pour cet avis." };
+        const existingVote = await getCache<string>(voteKey);
+
+        let updatedReview;
+
+        if (existingVote === type) {
+            // L'utilisateur reclique sur le même vote => Annulation (toggle off)
+            updatedReview = await prisma.review.update({
+                where: { id: reviewId },
+                data: type === 'helpful' 
+                    ? { helpfulCount: { decrement: 1 } }
+                    : { unhelpfulCount: { decrement: 1 } },
+                select: { helpfulCount: true, unhelpfulCount: true }
+            });
+            await invalidateCache(voteKey);
+
+            if (productId) {
+                await invalidatePrefix(`product:${productId}`);
+                revalidatePath(`/product/${productId}`);
+            }
+
+            return { 
+                success: true, 
+                action: 'removed' as const, 
+                userVote: null,
+                helpfulCount: Math.max(0, updatedReview.helpfulCount),
+                unhelpfulCount: Math.max(0, updatedReview.unhelpfulCount),
+                message: "Votre vote a été retiré." 
+            };
         }
 
-        if (type === 'helpful') {
-            await prisma.review.update({
+        if (existingVote && existingVote !== type) {
+            // L'utilisateur change son vote (ex: de helpful à unhelpful ou inversement)
+            updatedReview = await prisma.review.update({
                 where: { id: reviewId },
-                data: { helpfulCount: { increment: 1 } }
+                data: type === 'helpful'
+                    ? { helpfulCount: { increment: 1 }, unhelpfulCount: { decrement: 1 } }
+                    : { helpfulCount: { decrement: 1 }, unhelpfulCount: { increment: 1 } },
+                select: { helpfulCount: true, unhelpfulCount: true }
             });
-        } else {
-            await prisma.review.update({
-                where: { id: reviewId },
-                data: { unhelpfulCount: { increment: 1 } }
-            });
+            await setCache(voteKey, type, 86400 * 30);
+
+            if (productId) {
+                await invalidatePrefix(`product:${productId}`);
+                revalidatePath(`/product/${productId}`);
+            }
+
+            return { 
+                success: true, 
+                action: 'changed' as const, 
+                userVote: type,
+                helpfulCount: Math.max(0, updatedReview.helpfulCount),
+                unhelpfulCount: Math.max(0, updatedReview.unhelpfulCount),
+                message: "Votre vote a été mis à jour." 
+            };
         }
 
-        await setCache(voteKey, type, 86400 * 30); // Enregistrer le vote pendant 30 jours
-        
+        // Nouveau vote
+        updatedReview = await prisma.review.update({
+            where: { id: reviewId },
+            data: type === 'helpful'
+                ? { helpfulCount: { increment: 1 } }
+                : { unhelpfulCount: { increment: 1 } },
+            select: { helpfulCount: true, unhelpfulCount: true }
+        });
+
+        await setCache(voteKey, type, 86400 * 30);
+
         if (productId) {
             await invalidatePrefix(`product:${productId}`);
             revalidatePath(`/product/${productId}`);
         }
 
-        return { success: true };
-    } catch (error) {
+        return { 
+            success: true, 
+            action: 'added' as const, 
+            userVote: type,
+            helpfulCount: Math.max(0, updatedReview.helpfulCount),
+            unhelpfulCount: Math.max(0, updatedReview.unhelpfulCount),
+            message: "Merci pour votre vote !" 
+        };
+    } catch (error: any) {
         console.error("[Vote Review Error]:", error);
-        return { success: false };
+        return { success: false, message: error?.message || "Erreur lors de l'enregistrement de votre vote." };
     }
 }
 
@@ -921,3 +975,4 @@ export async function reportReviewAction(reviewId: string, reason: string, comme
         return { success: false, message: "Erreur lors de l'envoi du signalement." };
     }
 }
+

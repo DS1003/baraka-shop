@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from '@/lib/sanitize';
 import {
     X,
     Save,
@@ -11,7 +11,9 @@ import {
     ImagePlus,
     Plus,
     Palette,
+    ChevronLeft,
     ChevronRight,
+    Star,
     Search,
     Check,
     ArrowLeft,
@@ -191,6 +193,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [isSaving, setIsSaving] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [shouldClose, setShouldClose] = useState(false);
+    const shouldCloseRef = React.useRef(false);
     const [formImages, setFormImages] = useState<string[]>([]);
     const [formVideos, setFormVideos] = useState<string[]>([]);
     const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -199,6 +202,16 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const videoFileInputRef = React.useRef<HTMLInputElement>(null);
+    const formRef = React.useRef<HTMLFormElement>(null);
+    const isSavingRef = React.useRef(false);
+    const initialProductIdRef = React.useRef<string | undefined>(editingProduct?.id);
+    const draftStorageKey = `baraka_draft_product_${editingProduct?.id || 'new'}`;
+    const [isDirty, setIsDirty] = useState(false);
+    const [description, setDescription] = useState(editingProduct?.description || "");
+    const [draggedImgIdx, setDraggedImgIdx] = useState<number | null>(null);
+    const [dragOverImgIdx, setDragOverImgIdx] = useState<number | null>(null);
+    const [draggedVariantImgIdx, setDraggedVariantImgIdx] = useState<number | null>(null);
+    const [dragOverVariantImgIdx, setDragOverVariantImgIdx] = useState<number | null>(null);
     const [isPublished, setIsPublished] = useState(editingProduct ? editingProduct.isPublished : false);
     const [badge, setBadge] = useState<string>(
         editingProduct?.badge || editingProduct?.metadata?.badge || (editingProduct?.isNew ? 'Nouveau' : '') || ''
@@ -304,19 +317,34 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             if (stId) {
                 setStoreId(stId);
             }
-            setFormImages(editingProduct.images || []);
-            setFormVideos(editingProduct.videos || []);
+
+            const isDifferentProduct = initialProductIdRef.current !== editingProduct.id;
+            if (isDifferentProduct) {
+                initialProductIdRef.current = editingProduct.id;
+            }
+
+            let hasDraft = false;
+            try {
+                hasDraft = !!localStorage.getItem(draftStorageKey);
+            } catch {}
+
+            // Seulement synchroniser les images et variantes si aucun brouillon local n'est présent
+            if (!hasDraft && (isDifferentProduct || !isSavingRef.current)) {
+                setFormImages(editingProduct.images || []);
+                setFormVideos(editingProduct.videos || []);
+                setColorVariants(
+                    (editingProduct.colorVariants || []).map((cv: any) => ({
+                        id: cv.id,
+                        colorName: cv.colorName,
+                        colorHex: cv.colorHex,
+                        images: cv.images || [],
+                    }))
+                );
+                setDescription(editingProduct.description || "");
+            }
             setIsPublished(editingProduct.isPublished !== undefined ? editingProduct.isPublished : false);
-            setColorVariants(
-                (editingProduct.colorVariants || []).map((cv: any) => ({
-                    id: cv.id,
-                    colorName: cv.colorName,
-                    colorHex: cv.colorHex,
-                    images: cv.images || [],
-                }))
-            );
         }
-    }, [editingProduct]);
+    }, [editingProduct, draftStorageKey]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -327,6 +355,125 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // 1. Restauration automatique et silencieuse des dernières modifications dès le rechargement de la page
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(draftStorageKey);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed.images)) {
+                    setFormImages(parsed.images);
+                }
+                if (Array.isArray(parsed.videos)) {
+                    setFormVideos(parsed.videos);
+                }
+                if (Array.isArray(parsed.colorVariants)) {
+                    setColorVariants(parsed.colorVariants);
+                }
+                if (parsed.metadataText !== undefined) {
+                    setMetadataText(parsed.metadataText);
+                }
+                if (parsed.detailedDescription !== undefined) {
+                    setDetailedDescription(parsed.detailedDescription);
+                }
+                if (parsed.description !== undefined) {
+                    setDescription(parsed.description);
+                }
+                if (parsed.badge !== undefined) {
+                    setBadge(parsed.badge);
+                }
+                if (parsed.categoryId) {
+                    setCategoryId(parsed.categoryId);
+                    getSubCategories(parsed.categoryId).then(setSubCategories);
+                }
+                if (parsed.subCategoryId) {
+                    setSubCategoryId(parsed.subCategoryId);
+                    getThirdLevelCategories(parsed.subCategoryId).then(setThirdCategories);
+                }
+                if (parsed.thirdLevelCategoryId) {
+                    setThirdLevelCategoryId(parsed.thirdLevelCategoryId);
+                }
+                if (parsed.brandId) {
+                    setBrandId(parsed.brandId);
+                }
+                if (parsed.storeId) {
+                    setStoreId(parsed.storeId);
+                }
+                if (parsed.textValues && formRef.current) {
+                    const form = formRef.current;
+                    const tv = parsed.textValues;
+                    ['name', 'price', 'stock', 'shortDescription', 'features', 'packageContent'].forEach(field => {
+                        const el = form.elements.namedItem(field) as HTMLInputElement | HTMLTextAreaElement | null;
+                        if (el && tv[field] !== undefined) {
+                            el.value = tv[field];
+                        }
+                    });
+                }
+                setIsDirty(true);
+            }
+        } catch (e) {
+            console.warn("Could not auto-restore draft:", e);
+        }
+    }, [draftStorageKey]);
+
+    // 2. Sauvegarde automatique en continu en arrière-plan des modifications
+    useEffect(() => {
+        if (!mounted || isSavingRef.current || !isDirty) return;
+
+        const timer = setTimeout(() => {
+            try {
+                const formEl = formRef.current;
+                let textValues: Record<string, string> = {};
+                if (formEl) {
+                    const fd = new FormData(formEl);
+                    textValues = {
+                        name: (fd.get('name') as string) || '',
+                        price: (fd.get('price') as string) || '',
+                        stock: (fd.get('stock') as string) || '',
+                        shortDescription: (fd.get('shortDescription') as string) || '',
+                        features: (fd.get('features') as string) || '',
+                        packageContent: (fd.get('packageContent') as string) || '',
+                    };
+                }
+                const payload = {
+                    images: formImages,
+                    videos: formVideos,
+                    colorVariants: colorVariants,
+                    metadataText: metadataText,
+                    detailedDescription: detailedDescription,
+                    description: description,
+                    badge: badge,
+                    categoryId: categoryId,
+                    subCategoryId: subCategoryId,
+                    thirdLevelCategoryId: thirdLevelCategoryId,
+                    brandId: brandId,
+                    storeId: storeId,
+                    textValues,
+                    savedAt: Date.now()
+                };
+                localStorage.setItem(draftStorageKey, JSON.stringify(payload));
+            } catch (e) {}
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [
+        isDirty,
+        formImages,
+        formVideos,
+        colorVariants,
+        metadataText,
+        detailedDescription,
+        description,
+        badge,
+        categoryId,
+        subCategoryId,
+        thirdLevelCategoryId,
+        brandId,
+        storeId,
+        mounted,
+        draftStorageKey
+    ]);
 
     const renderPreviewContent = (isMobile: boolean) => {
         if (!previewData) return null;
@@ -778,8 +925,115 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         }
     };
 
+    const handleImageFilesUpload = async (files: File[]) => {
+        const imageFiles = files.filter(f => f.type.startsWith('image/'));
+        if (imageFiles.length === 0) {
+            toast.error("Veuillez sélectionner des images valides (JPG, PNG, WebP, GIF, AVIF).");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const fd = new FormData();
+            imageFiles.forEach(f => fd.append('files', f));
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (res.ok && Array.isArray(data.urls) && data.urls.length > 0) {
+                setFormImages(prev => [...prev, ...data.urls]);
+                toast.success(`${data.urls.length} photo${data.urls.length > 1 ? 's ajoutées' : ' ajoutée'} avec succès !`);
+            } else {
+                toast.error(data.error || "Erreur lors de l'upload des images.");
+            }
+        } catch (err: any) {
+            console.error("Upload error:", err);
+            toast.error("Erreur réseau lors de l'upload.");
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const moveImage = (fromIdx: number, toIdx: number) => {
+        if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= formImages.length || toIdx >= formImages.length) return;
+        setFormImages(prev => {
+            const next = [...prev];
+            const [moved] = next.splice(fromIdx, 1);
+            next.splice(toIdx, 0, moved);
+            return next;
+        });
+    };
+
+    const makePrimaryImage = (idx: number) => {
+        if (idx === 0) return;
+        moveImage(idx, 0);
+        toast.success("Image définie comme principale !");
+    };
+
+    const removeImage = (idx: number) => {
+        setFormImages(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    const handleColorImageFilesUpload = async (files: File[], colorIdx: number) => {
+        const imageFiles = files.filter(f => f.type.startsWith('image/'));
+        if (imageFiles.length === 0) {
+            toast.error("Veuillez sélectionner des images valides.");
+            return;
+        }
+
+        setIsUploadingColor(true);
+        try {
+            const fd = new FormData();
+            imageFiles.forEach(f => fd.append('files', f));
+            const res = await fetch('/api/upload', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (res.ok && Array.isArray(data.urls) && data.urls.length > 0) {
+                setColorVariants(prev => prev.map((cv, i) => 
+                    i === colorIdx ? { ...cv, images: [...cv.images, ...data.urls] } : cv
+                ));
+                toast.success(`${data.urls.length} photo${data.urls.length > 1 ? 's ajoutées' : ' ajoutée'} à la variante !`);
+            } else {
+                toast.error(data.error || "Erreur lors de l'upload.");
+            }
+        } catch (err) {
+            toast.error("Erreur de connexion lors de l'upload.");
+        } finally {
+            setIsUploadingColor(false);
+            if (colorFileInputRef.current) colorFileInputRef.current.value = '';
+        }
+    };
+
+    const moveVariantImage = (colorIdx: number, fromIdx: number, toIdx: number) => {
+        setColorVariants(prev => prev.map((cv, i) => {
+            if (i !== colorIdx) return cv;
+            if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= cv.images.length || toIdx >= cv.images.length) return cv;
+            const nextImages = [...cv.images];
+            const [moved] = nextImages.splice(fromIdx, 1);
+            nextImages.splice(toIdx, 0, moved);
+            return { ...cv, images: nextImages };
+        }));
+    };
+
+    const removeVariantImage = (colorIdx: number, imgIdx: number) => {
+        setIsDirty(true);
+        setColorVariants(prev => prev.map((cv, i) => 
+            i === colorIdx ? { ...cv, images: cv.images.filter((_, idx) => idx !== imgIdx) } : cv
+        ));
+    };
+
     const handleUpsert = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        // Bloquer la soumission si un téléversement d'image est toujours en cours
+        if (isUploading || isUploadingColor) {
+            toast.error("Veuillez attendre la fin du téléversement des images avant d'enregistrer.");
+            return;
+        }
+
+        // Éviter les doubles clics ou soumissions concurrentes
+        if (isSaving || isSavingRef.current) {
+            return;
+        }
+
         const formData = new FormData(e.currentTarget);
         
         const nameVal = formData.get('name') as string;
@@ -817,11 +1071,12 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
         setErrors({});
         setIsSaving(true);
+        isSavingRef.current = true;
 
         const data = {
             name: nameVal,
             slug: nameVal.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-            description: (formData.get('description') as string) || "",
+            description: description || (formData.get('description') as string) || "",
             price: priceVal && priceVal.trim() !== '' ? parseFloat(priceVal) : 0,
             stock: parseInt(formData.get('stock') as string),
             categoryId: formData.get('categoryId') as string,
@@ -884,31 +1139,59 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             })()
         };
 
-        const res = await upsertProduct(data, editingProduct?.id);
-        if (res.success) {
-            toast.success(editingProduct ? '✅ Produit mis à jour !' : '✅ Produit créé !');
-            if (shouldClose) {
-                if (editingProduct) {
-                    router.back();
+        try {
+            const res = await upsertProduct(data, editingProduct?.id);
+            if (res.success) {
+                // Nettoyer le brouillon local et l'état dirty
+                try {
+                    localStorage.removeItem(draftStorageKey);
+                } catch {}
+                setIsDirty(false);
+
+                if (res.product?.images && Array.isArray(res.product.images)) {
+                    setFormImages(res.product.images);
+                }
+                toast.success(editingProduct ? '✅ Produit mis à jour !' : '✅ Produit créé !');
+                const isClosing = shouldCloseRef.current || shouldClose;
+                if (isClosing) {
+                    if (editingProduct) {
+                        router.back();
+                    } else {
+                        router.push('/admin/products');
+                    }
                 } else {
-                    router.push('/admin/products');
+                    if (!editingProduct && res.product?.id) {
+                        router.push(`/admin/products/${res.product.id}/edit`);
+                    } else {
+                        router.refresh();
+                    }
                 }
             } else {
-                if (!editingProduct && res.product?.id) {
-                    router.push(`/admin/products/${res.product.id}/edit`);
-                } else {
-                    router.refresh();
-                }
+                toast.error(res.message || "Erreur lors de la sauvegarde.");
             }
-        } else {
-            toast.error("Erreur lors de la sauvegarde.");
+        } catch (saveError: any) {
+            console.error("Save error:", saveError);
+            toast.error("Erreur inattendue lors de la sauvegarde.");
+        } finally {
+            setIsSaving(false);
+            shouldCloseRef.current = false;
+            setShouldClose(false);
+            setTimeout(() => {
+                isSavingRef.current = false;
+            }, 1000);
         }
-        setIsSaving(false);
     };
 
     return (
         <>
-        <form noValidate onSubmit={handleUpsert} className="bg-white rounded-2xl shadow-sm border border-slate-200/50 flex flex-col overflow-hidden">
+        <form 
+            ref={formRef} 
+            noValidate 
+            onSubmit={handleUpsert} 
+            onInput={() => { if (!isDirty) setIsDirty(true); }}
+            onChange={() => { if (!isDirty) setIsDirty(true); }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200/50 flex flex-col overflow-hidden"
+        >
             <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
                 <div className="flex items-center gap-4">
                     <button
@@ -1069,6 +1352,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <RichTextEditor
                             name="description"
                             defaultValue={editingProduct?.description || ""}
+                            value={description}
+                            onChange={(val) => {
+                                setDescription(val);
+                                if (!isDirty) setIsDirty(true);
+                            }}
                         />
                     </div>
 
@@ -1218,25 +1506,18 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
                     <div className="space-y-4">
                         <div
-                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                            onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
                             onDrop={async (e) => {
                                 e.preventDefault();
+                                e.stopPropagation();
                                 setIsDragging(false);
-                                const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                if (files.length === 0) return;
-                                setIsUploading(true);
-                                try {
-                                    const fd = new FormData();
-                                    files.forEach(f => fd.append('files', f));
-                                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                    const data = await res.json();
-                                    if (data.urls) setFormImages(prev => [...prev, ...data.urls]);
-                                    else toast.error(data.error || 'Erreur upload');
-                                } catch { toast.error('Erreur lors de l\'upload.'); }
-                                finally { setIsUploading(false); }
+                                const files = Array.from(e.dataTransfer.files || []);
+                                await handleImageFilesUpload(files);
                             }}
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={() => {
+                                if (!isUploading) fileInputRef.current?.click();
+                            }}
                             className={cn(
                                 "relative py-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300",
                                 isDragging
@@ -1249,27 +1530,18 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 ref={fileInputRef}
                                 type="file"
                                 multiple
-                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                                 className="hidden"
                                 onChange={async (e) => {
                                     const files = Array.from(e.target.files || []);
-                                    if (files.length === 0) return;
-                                    setIsUploading(true);
-                                    try {
-                                        const fd = new FormData();
-                                        files.forEach(f => fd.append('files', f));
-                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                        const data = await res.json();
-                                        if (data.urls) setFormImages(prev => [...prev, ...data.urls]);
-                                        else toast.error(data.error || 'Erreur upload');
-                                    } catch { toast.error('Erreur lors de l\'upload.'); }
-                                    finally { setIsUploading(false); e.target.value = ''; }
+                                    await handleImageFilesUpload(files);
                                 }}
                             />
                             {isUploading ? (
                                 <>
                                     <Loader2 size={32} className="animate-spin text-orange-500" />
-                                    <p className="text-[13px] font-bold text-orange-600">Upload en cours...</p>
+                                    <p className="text-[13px] font-bold text-orange-600">Téléversement en cours...</p>
+                                    <p className="text-[11px] text-slate-400 font-medium">Traitement simultané des images...</p>
                                 </>
                             ) : (
                                 <>
@@ -1284,7 +1556,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                             {isDragging ? 'Déposez vos images ici' : 'Glissez-déposez vos images ici'}
                                         </p>
                                         <p className="text-[11px] text-slate-400 font-medium mt-1">
-                                            ou <span className="text-orange-500 font-bold">cliquez pour parcourir</span> — JPG, PNG, WebP • Max 5 MB
+                                            ou <span className="text-orange-500 font-bold">cliquez pour parcourir</span> — JPG, PNG, WebP, GIF, AVIF • Max 20 MB par photo
                                         </p>
                                     </div>
                                 </>
@@ -1292,43 +1564,132 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         </div>
 
                         {formImages.length > 0 && (
-                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/50">
-                                {formImages.map((img, i) => (
-                                    <div 
-                                        key={i} 
-                                        className="relative aspect-square group cursor-move"
-                                        draggable
-                                        onDragStart={(e) => e.dataTransfer.setData('text/plain', i.toString())}
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDrop={(e) => {
-                                            e.preventDefault();
-                                            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                                            if (fromIdx === i || isNaN(fromIdx)) return;
-                                            setFormImages(prev => {
-                                                const newImages = [...prev];
-                                                const [moved] = newImages.splice(fromIdx, 1);
-                                                newImages.splice(i, 0, moved);
-                                                return newImages;
-                                            });
-                                        }}
-                                    >
-                                        <div className="w-full h-full rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm pointer-events-none">
-                                            <img src={img} alt="" className="w-full h-full object-cover" />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormImages(prev => prev.filter((_, idx) => idx !== i))}
-                                            className="absolute -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
-                                        >
-                                            <X size={14} strokeWidth={3} />
-                                        </button>
-                                        {i === 0 && (
-                                            <span className="absolute bottom-1 left-1 px-2 py-0.5 bg-orange-600 text-white text-[8px] font-black uppercase rounded-md tracking-wider shadow-sm">
-                                                Principal
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+                                    <span>{formImages.length} image{formImages.length > 1 ? 's' : ''} • Glissez ou utilisez les flèches pour réorganiser</span>
+                                    <span className="text-[11px] text-orange-600 font-bold">La 1ère image est la photo principale du produit</span>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/50">
+                                    {formImages.map((img, i) => {
+                                        const isDragged = draggedImgIdx === i;
+                                        const isDragOver = dragOverImgIdx === i && draggedImgIdx !== i;
+                                        return (
+                                            <div 
+                                                key={`${img}-${i}`} 
+                                                className={cn(
+                                                    "relative aspect-square group rounded-xl overflow-hidden border transition-all duration-200 select-none bg-white shadow-sm cursor-grab active:cursor-grabbing",
+                                                    isDragged && "opacity-40 scale-95 border-orange-400 border-dashed",
+                                                    isDragOver && "ring-2 ring-orange-500 ring-offset-2 border-orange-500 scale-105 z-10",
+                                                    !isDragged && !isDragOver && (i === 0 ? "border-orange-400 ring-1 ring-orange-400/40" : "border-slate-200 hover:border-slate-300 hover:shadow-md")
+                                                )}
+                                                draggable
+                                                onDragStart={(e) => {
+                                                    setDraggedImgIdx(i);
+                                                    e.dataTransfer.effectAllowed = 'move';
+                                                    e.dataTransfer.setData('text/plain', i.toString());
+                                                }}
+                                                onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    if (dragOverImgIdx !== i) setDragOverImgIdx(i);
+                                                }}
+                                                onDragLeave={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    if (dragOverImgIdx === i) setDragOverImgIdx(null);
+                                                }}
+                                                onDrop={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    const rawFrom = e.dataTransfer.getData('text/plain');
+                                                    const fromIdx = draggedImgIdx !== null ? draggedImgIdx : parseInt(rawFrom, 10);
+                                                    setDraggedImgIdx(null);
+                                                    setDragOverImgIdx(null);
+                                                    if (!isNaN(fromIdx) && fromIdx !== i) {
+                                                        moveImage(fromIdx, i);
+                                                    }
+                                                }}
+                                                onDragEnd={() => {
+                                                    setDraggedImgIdx(null);
+                                                    setDragOverImgIdx(null);
+                                                }}
+                                            >
+                                                <img src={img} alt="" className="w-full h-full object-cover pointer-events-none" />
+
+                                                {/* Position badge */}
+                                                <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+                                                    {i === 0 ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-600 text-white text-[9px] font-black uppercase rounded-md tracking-wider shadow-md">
+                                                            <Star size={10} className="fill-white" /> Principale
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-1.5 py-0.5 bg-slate-900/75 backdrop-blur-sm text-white text-[9px] font-black rounded-md shadow-sm">
+                                                            #{i + 1}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Delete button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        removeImage(i);
+                                                    }}
+                                                    title="Supprimer cette image"
+                                                    className="absolute top-2 right-2 w-7 h-7 bg-rose-500/90 hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 z-20"
+                                                >
+                                                    <X size={14} strokeWidth={2.5} />
+                                                </button>
+
+                                                {/* Bottom action bar with reorder arrows and make primary button */}
+                                                <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all z-20">
+                                                    <div className="flex items-center gap-1">
+                                                        {i > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    moveImage(i, i - 1);
+                                                                }}
+                                                                title="Déplacer vers la gauche"
+                                                                className="w-6 h-6 rounded-md bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center transition-transform hover:scale-110 shadow-sm"
+                                                            >
+                                                                <ChevronLeft size={13} strokeWidth={2.5} />
+                                                            </button>
+                                                        )}
+                                                        {i < formImages.length - 1 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    moveImage(i, i + 1);
+                                                                }}
+                                                                title="Déplacer vers la droite"
+                                                                className="w-6 h-6 rounded-md bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center transition-transform hover:scale-110 shadow-sm"
+                                                            >
+                                                                <ChevronRight size={13} strokeWidth={2.5} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    {i > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                makePrimaryImage(i);
+                                                            }}
+                                                            title="Définir comme photo principale"
+                                                            className="px-2 py-0.5 rounded-md bg-orange-600 hover:bg-orange-500 text-white text-[9px] font-bold flex items-center gap-0.5 shadow-sm transition-transform hover:scale-105"
+                                                        >
+                                                            <Star size={9} className="fill-white" /> Principale
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -1715,29 +2076,20 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                 Photos pour cette couleur
                                             </label>
                                             <div
-                                                onDragOver={(e) => { e.preventDefault(); setIsDraggingColor(true); }}
-                                                onDragLeave={(e) => { e.preventDefault(); setIsDraggingColor(false); }}
+                                                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingColor(true); }}
+                                                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingColor(false); }}
                                                 onDrop={async (e) => {
                                                     e.preventDefault();
+                                                    e.stopPropagation();
                                                     setIsDraggingColor(false);
-                                                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-                                                    if (files.length === 0) return;
-                                                    setIsUploadingColor(true);
-                                                    try {
-                                                        const fd = new FormData();
-                                                        files.forEach(f => fd.append('files', f));
-                                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                        const data = await res.json();
-                                                        if (data.urls) {
-                                                            const currentIdx = activeColorIdx;
-                                                            setColorVariants(prev => prev.map((cv, i) => i === currentIdx ? { ...cv, images: [...cv.images, ...data.urls] } : cv));
-                                                        } else {
-                                                            toast.error(data.error || 'Erreur upload');
-                                                        }
-                                                    } catch { toast.error("Erreur lors de l'upload."); }
-                                                    finally { setIsUploadingColor(false); }
+                                                    const files = Array.from(e.dataTransfer.files || []);
+                                                    if (activeColorIdx !== null) {
+                                                        await handleColorImageFilesUpload(files, activeColorIdx);
+                                                    }
                                                 }}
-                                                onClick={() => colorFileInputRef.current?.click()}
+                                                onClick={() => {
+                                                    if (!isUploadingColor) colorFileInputRef.current?.click();
+                                                }}
                                                 className={cn(
                                                     "relative py-6 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-300",
                                                     isDraggingColor
@@ -1750,31 +2102,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                                     ref={colorFileInputRef}
                                                     type="file"
                                                     multiple
-                                                    accept="image/jpeg,image/png,image/webp,image/gif"
+                                                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                                                     className="hidden"
                                                     onChange={async (e) => {
                                                         const files = Array.from(e.target.files || []);
-                                                        if (files.length === 0) return;
-                                                        setIsUploadingColor(true);
-                                                        try {
-                                                            const fd = new FormData();
-                                                            files.forEach(f => fd.append('files', f));
-                                                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                            const data = await res.json();
-                                                            if (data.urls) {
-                                                                const currentIdx = activeColorIdx;
-                                                                setColorVariants(prev => prev.map((cv, i) => i === currentIdx ? { ...cv, images: [...cv.images, ...data.urls] } : cv));
-                                                            } else {
-                                                                toast.error(data.error || 'Erreur upload');
-                                                            }
-                                                        } catch { toast.error("Erreur lors de l'upload."); }
-                                                        finally { setIsUploadingColor(false); e.target.value = ''; }
+                                                        if (activeColorIdx !== null) {
+                                                            await handleColorImageFilesUpload(files, activeColorIdx);
+                                                        }
                                                     }}
                                                 />
                                                 {isUploadingColor ? (
                                                     <>
                                                         <Loader2 size={24} className="animate-spin text-orange-500" />
-                                                        <p className="text-[12px] font-bold text-orange-600">Upload en cours...</p>
+                                                        <p className="text-[12px] font-bold text-orange-600">Téléversement en cours...</p>
                                                     </>
                                                 ) : (
                                                     <>
@@ -1788,49 +2128,125 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
                                             {colorVariants[activeColorIdx].images.length > 0 && (
                                                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
-                                                    {colorVariants[activeColorIdx].images.map((img, imgIdx) => (
-                                                        <div 
-                                                            key={imgIdx} 
-                                                            className="relative aspect-square group cursor-move"
-                                                            draggable
-                                                            onDragStart={(e) => e.dataTransfer.setData('text/plain', imgIdx.toString())}
-                                                            onDragOver={(e) => e.preventDefault()}
-                                                            onDrop={(e) => {
-                                                                e.preventDefault();
-                                                                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                                                                if (fromIdx === imgIdx || isNaN(fromIdx)) return;
-                                                                const currentIdx = activeColorIdx;
-                                                                setColorVariants(prev => prev.map((cv, i) => {
-                                                                    if (i !== currentIdx) return cv;
-                                                                    const newImages = [...cv.images];
-                                                                    const [moved] = newImages.splice(fromIdx, 1);
-                                                                    newImages.splice(imgIdx, 0, moved);
-                                                                    return { ...cv, images: newImages };
-                                                                }));
-                                                            }}
-                                                        >
-                                                            <div className="w-full h-full rounded-lg border border-slate-200 overflow-hidden bg-white shadow-sm pointer-events-none">
-                                                                <img src={img} alt="" className="w-full h-full object-cover" />
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const currentIdx = activeColorIdx;
-                                                                    setColorVariants(prev => prev.map((cv, i) =>
-                                                                        i === currentIdx ? { ...cv, images: cv.images.filter((_, idx) => idx !== imgIdx) } : cv
-                                                                    ));
+                                                    {colorVariants[activeColorIdx].images.map((img, imgIdx) => {
+                                                        const isDragged = draggedVariantImgIdx === imgIdx;
+                                                        const isDragOver = dragOverVariantImgIdx === imgIdx && draggedVariantImgIdx !== imgIdx;
+                                                        return (
+                                                            <div 
+                                                                key={`${img}-${imgIdx}`} 
+                                                                className={cn(
+                                                                    "relative aspect-square group rounded-lg overflow-hidden border transition-all duration-200 select-none bg-white shadow-sm cursor-grab active:cursor-grabbing",
+                                                                    isDragged && "opacity-40 scale-95 border-orange-400 border-dashed",
+                                                                    isDragOver && "ring-2 ring-orange-500 ring-offset-2 border-orange-500 scale-105 z-10",
+                                                                    !isDragged && !isDragOver && (imgIdx === 0 ? "border-orange-400 ring-1 ring-orange-400/40" : "border-slate-200 hover:border-slate-300 hover:shadow-md")
+                                                                )}
+                                                                draggable
+                                                                onDragStart={(e) => {
+                                                                    setDraggedVariantImgIdx(imgIdx);
+                                                                    e.dataTransfer.effectAllowed = 'move';
+                                                                    e.dataTransfer.setData('text/plain', imgIdx.toString());
                                                                 }}
-                                                                className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                                                                onDragOver={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    if (dragOverVariantImgIdx !== imgIdx) setDragOverVariantImgIdx(imgIdx);
+                                                                }}
+                                                                onDragLeave={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    if (dragOverVariantImgIdx === imgIdx) setDragOverVariantImgIdx(null);
+                                                                }}
+                                                                onDrop={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    const rawFrom = e.dataTransfer.getData('text/plain');
+                                                                    const fromIdx = draggedVariantImgIdx !== null ? draggedVariantImgIdx : parseInt(rawFrom, 10);
+                                                                    setDraggedVariantImgIdx(null);
+                                                                    setDragOverVariantImgIdx(null);
+                                                                    if (!isNaN(fromIdx) && fromIdx !== imgIdx && activeColorIdx !== null) {
+                                                                        moveVariantImage(activeColorIdx, fromIdx, imgIdx);
+                                                                    }
+                                                                }}
+                                                                onDragEnd={() => {
+                                                                    setDraggedVariantImgIdx(null);
+                                                                    setDragOverVariantImgIdx(null);
+                                                                }}
                                                             >
-                                                                <X size={12} strokeWidth={3} />
-                                                            </button>
-                                                            {imgIdx === 0 && (
-                                                                <span className="absolute bottom-0.5 left-0.5 px-1.5 py-0.5 bg-orange-600 text-white text-[7px] font-black uppercase rounded tracking-wider shadow-sm">
-                                                                    1ère
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    ))}
+                                                                <img src={img} alt="" className="w-full h-full object-cover pointer-events-none" />
+                                                                
+                                                                {/* Position badge */}
+                                                                <div className="absolute top-1 left-1 z-10">
+                                                                    {imgIdx === 0 ? (
+                                                                        <span className="px-1.5 py-0.5 bg-orange-600 text-white text-[7px] font-black uppercase rounded tracking-wider shadow-sm flex items-center gap-0.5">
+                                                                            <Star size={7} className="fill-white" /> 1ère
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="px-1 py-0.5 bg-slate-900/75 backdrop-blur-sm text-white text-[7px] font-black rounded shadow-sm">
+                                                                            #{imgIdx + 1}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Top-right delete button */}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        if (activeColorIdx !== null) removeVariantImage(activeColorIdx, imgIdx);
+                                                                    }}
+                                                                    title="Supprimer cette image"
+                                                                    className="absolute top-1 right-1 w-6 h-6 bg-rose-500/90 hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 z-20"
+                                                                >
+                                                                    <X size={12} strokeWidth={2.5} />
+                                                                </button>
+
+                                                                {/* Bottom action bar */}
+                                                                <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all z-20">
+                                                                    <div className="flex items-center gap-0.5">
+                                                                        {imgIdx > 0 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    if (activeColorIdx !== null) moveVariantImage(activeColorIdx, imgIdx, imgIdx - 1);
+                                                                                }}
+                                                                                title="Déplacer à gauche"
+                                                                                className="w-5 h-5 rounded bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center shadow-sm"
+                                                                            >
+                                                                                <ChevronLeft size={11} strokeWidth={2.5} />
+                                                                            </button>
+                                                                        )}
+                                                                        {imgIdx < colorVariants[activeColorIdx].images.length - 1 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    if (activeColorIdx !== null) moveVariantImage(activeColorIdx, imgIdx, imgIdx + 1);
+                                                                                }}
+                                                                                title="Déplacer à droite"
+                                                                                className="w-5 h-5 rounded bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center shadow-sm"
+                                                                            >
+                                                                                <ChevronRight size={11} strokeWidth={2.5} />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                    {imgIdx > 0 && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                if (activeColorIdx !== null) moveVariantImage(activeColorIdx, imgIdx, 0);
+                                                                            }}
+                                                                            title="Définir en première position"
+                                                                            className="px-1.5 py-0.5 rounded bg-orange-600 text-white text-[7px] font-bold shadow-sm"
+                                                                        >
+                                                                            1ère
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
@@ -1965,28 +2381,64 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 <button
                     type="button"
                     onClick={() => {
+                        if (isUploading || isUploadingColor) {
+                            toast.error("Veuillez attendre la fin du téléversement des images.");
+                            return;
+                        }
+                        shouldCloseRef.current = false;
                         setShouldClose(false);
-                        const form = document.querySelector('form');
-                        if (form) form.requestSubmit();
+                        formRef.current?.requestSubmit();
                     }}
-                    disabled={isSaving}
+                    disabled={isSaving || isUploading || isUploadingColor}
                     className="px-5 py-2.5 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded-full font-bold text-[12px] flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {isSaving && !shouldClose ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                    <span>Enregistrer</span>
+                    {isUploading || isUploadingColor ? (
+                        <>
+                            <Loader2 size={14} className="animate-spin" />
+                            <span>Téléversement...</span>
+                        </>
+                    ) : isSaving && !shouldClose ? (
+                        <>
+                            <Loader2 size={14} className="animate-spin" />
+                            <span>Enregistrement...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Save size={14} />
+                            <span>Enregistrer</span>
+                        </>
+                    )}
                 </button>
                 <button
                     type="button"
                     onClick={() => {
+                        if (isUploading || isUploadingColor) {
+                            toast.error("Veuillez attendre la fin du téléversement des images.");
+                            return;
+                        }
+                        shouldCloseRef.current = true;
                         setShouldClose(true);
-                        const form = document.querySelector('form');
-                        if (form) form.requestSubmit();
+                        formRef.current?.requestSubmit();
                     }}
-                    disabled={isSaving}
+                    disabled={isSaving || isUploading || isUploadingColor}
                     className="px-6 py-2.5 bg-orange-600 text-white rounded-full font-bold text-[12px] flex items-center gap-2 hover:bg-orange-500 shadow-lg shadow-orange-600/20 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {isSaving && shouldClose ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                    <span>Enregistrer & fermer</span>
+                    {isUploading || isUploadingColor ? (
+                        <>
+                            <Loader2 size={14} className="animate-spin" />
+                            <span>Téléversement...</span>
+                        </>
+                    ) : isSaving && shouldClose ? (
+                        <>
+                            <Loader2 size={14} className="animate-spin" />
+                            <span>Enregistrement...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Save size={14} />
+                            <span>Enregistrer & fermer</span>
+                        </>
+                    )}
                 </button>
             </motion.div>
         </div>
