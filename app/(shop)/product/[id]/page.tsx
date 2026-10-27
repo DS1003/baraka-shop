@@ -59,13 +59,22 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         getProductsAction({ sort: 'top_rated', limit: 8 })
     ])
 
+    // Calculate reviews and ratings for schema.org rich snippets
+    const productReviews: any[] = (product as any).reviews || []
+    const reviewCount = productReviews.length
+    const averageRating = reviewCount > 0
+        ? Number((productReviews.reduce((sum: number, r: any) => sum + (r.rating || 5), 0) / reviewCount).toFixed(1))
+        : null
+
     // Build JSON-LD Product structured data for Google rich snippets
+    const currentYear = new Date().getFullYear()
     const productJsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product.name,
         image: product.images || [],
         description: product.description?.substring(0, 300) || product.name,
+        sku: product.reference || product.id,
         brand: {
             '@type': 'Brand',
             name: product.brand?.name || 'Baraka Electronique',
@@ -75,6 +84,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             url: `https://baraka.sn/product/${product.id}`,
             priceCurrency: 'XOF',
             price: product.price,
+            priceValidUntil: `${currentYear + 1}-12-31`,
             availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
             itemCondition: 'https://schema.org/NewCondition',
             seller: {
@@ -83,13 +93,66 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 alternateName: 'Baraka Shop',
                 url: 'https://baraka.sn',
             },
+            hasMerchantReturnPolicy: {
+                '@type': 'MerchantReturnPolicy',
+                applicableCountry: 'SN',
+                returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                merchantReturnDays: 7,
+                returnMethod: 'https://schema.org/ReturnInStore',
+                returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+                url: 'https://baraka.sn/faq',
+            },
+            shippingDetails: {
+                '@type': 'OfferShippingDetails',
+                shippingRate: {
+                    '@type': 'MonetaryAmount',
+                    value: product.price && product.price >= 50000 ? 0 : 2000,
+                    currency: 'XOF',
+                },
+                shippingDestination: {
+                    '@type': 'DefinedRegion',
+                    addressCountry: 'SN',
+                },
+                deliveryTime: {
+                    '@type': 'ShippingDeliveryTime',
+                    handlingTime: {
+                        '@type': 'QuantitativeValue',
+                        minValue: 0,
+                        maxValue: 1,
+                        unitCode: 'DAY',
+                    },
+                    transitTime: {
+                        '@type': 'QuantitativeValue',
+                        minValue: 1,
+                        maxValue: 3,
+                        unitCode: 'DAY',
+                    },
+                },
+            },
         },
-        ...((product as any).averageRating && (product as any).averageRating > 0 ? {
+        ...(reviewCount > 0 && averageRating ? {
             aggregateRating: {
                 '@type': 'AggregateRating',
-                ratingValue: (product as any).averageRating,
-                reviewCount: (product as any).reviewCount || 1,
-            }
+                ratingValue: averageRating,
+                reviewCount: reviewCount,
+                bestRating: 5,
+                worstRating: 1,
+            },
+            review: productReviews.slice(0, 5).map((r: any) => ({
+                '@type': 'Review',
+                reviewRating: {
+                    '@type': 'Rating',
+                    ratingValue: r.rating || 5,
+                    bestRating: 5,
+                    worstRating: 1,
+                },
+                author: {
+                    '@type': 'Person',
+                    name: r.user?.username || 'Client vérifié',
+                },
+                datePublished: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : undefined,
+                reviewBody: r.comment || 'Avis vérifié client Baraka Shop.',
+            })),
         } : {}),
     }
 

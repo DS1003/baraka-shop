@@ -138,7 +138,16 @@ const rootJsonLd = {
         'https://www.instagram.com/baraka.sn/',
         'https://wa.me/221765149898',
         'https://maps.google.com/?q=90+Rue+Av.+K.+Bourgi,+Dakar,+Sénégal'
-      ]
+      ],
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'SN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 7,
+        returnMethod: 'https://schema.org/ReturnInStore',
+        returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+        url: 'https://baraka.sn/faq'
+      }
     },
     {
       '@type': 'WebSite',
