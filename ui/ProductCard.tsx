@@ -93,11 +93,15 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                     <div className="flex items-center justify-between mt-auto">
                         <div className="flex flex-col">
                             {(product.oldPrice || product.compareAtPrice) && <span className="text-gray-300 text-[10px] line-through font-bold tabular-nums">{formatPrice(product.oldPrice || product.compareAtPrice)}</span>}
-                            <span className="text-xl font-black text-[#1B1F3B] tracking-normal tabular-nums">{formatNumber(product.price ?? 0)} <span className="text-[10px]">FCFA</span></span>
+                            {product.price && product.price > 0 ? (
+                                <span className="text-xl font-black text-[#1B1F3B] tracking-normal tabular-nums">{formatNumber(product.price)} <span className="text-[10px]">FCFA</span></span>
+                            ) : (
+                                <span className="text-xs font-bold text-amber-600">Prix bientôt disponible</span>
+                            )}
                         </div>
-                        {customBadge === "Bientôt disponible" ? (
-                            <span className="flex items-center gap-2 bg-amber-500 text-white px-6 h-12 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg shadow-amber-500/20">
-                                <Clock className="w-4 h-4" /> Bientôt disponible
+                        {customBadge === "Bientôt disponible" || !product.price || product.price <= 0 ? (
+                            <span className="flex items-center gap-2 bg-amber-500/10 text-amber-700 border border-amber-200 px-4 h-11 rounded-xl font-black text-[9px] uppercase tracking-widest">
+                                <Clock className="w-3.5 h-3.5 text-amber-600" /> Bientôt disponible
                             </span>
                         ) : (
                             <button
@@ -238,24 +242,30 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
                                 {formatPrice(product.oldPrice || product.compareAtPrice)}
                             </span>
                         )}
-                        <span className="text-[#1B1F3B] font-black text-[11px] sm:text-[12.5px] md:text-[13.5px] lg:text-[16px] tracking-normal whitespace-nowrap leading-tight tabular-nums">
-                            {formatNumber(product.price ?? 0)} <span className="text-[7px] sm:text-[7.5px] md:text-[8px] lg:text-[9px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
-                        </span>
+                        {product.price && product.price > 0 ? (
+                            <span className="text-[#1B1F3B] font-black text-[11px] sm:text-[12.5px] md:text-[13.5px] lg:text-[16px] tracking-normal whitespace-nowrap leading-tight tabular-nums">
+                                {formatNumber(product.price)} <span className="text-[7px] sm:text-[7.5px] md:text-[8px] lg:text-[9px] font-bold text-gray-400 ml-0.5 uppercase">FCFA</span>
+                            </span>
+                        ) : (
+                            <span className="text-amber-600 font-bold text-[8.5px] sm:text-[9px] md:text-[10px] uppercase tracking-tight leading-tight">
+                                Prix bientôt disponible
+                            </span>
+                        )}
                     </div>
 
                     <button
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            if (customBadge !== "Bientôt disponible" && product.stock > 0) {
+                            if (customBadge !== "Bientôt disponible" && product.stock > 0 && product.price && product.price > 0) {
                                 addToCart(product);
                             }
                         }}
-                        disabled={customBadge === "Bientôt disponible" || product.stock <= 0}
+                        disabled={customBadge === "Bientôt disponible" || product.stock <= 0 || !product.price || product.price <= 0}
                         aria-label={`Ajouter ${product.name} au panier`}
                         className={cn(
                             "w-7 h-7 sm:w-7.5 sm:h-7.5 md:w-8 md:h-8 lg:w-9 lg:h-9 rounded-lg sm:rounded-xl md:rounded-full flex items-center justify-center transition-all shadow-xs active:scale-90 shrink-0",
-                            product.stock <= 0 || customBadge === "Bientôt disponible"
+                            product.stock <= 0 || customBadge === "Bientôt disponible" || !product.price || product.price <= 0
                                 ? "bg-gray-100 text-gray-300 cursor-not-allowed"
                                 : "bg-primary text-white md:bg-primary/10 md:text-primary md:group-hover:bg-primary md:group-hover:text-white shadow-primary/20 hover:bg-[#1B1F3B]"
                         )}

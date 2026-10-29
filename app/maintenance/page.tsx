@@ -105,23 +105,30 @@ export default function MaintenancePage() {
         setIsLoading(true)
         setError(null)
 
+        const cleanIdentifier = identifier.trim()
+        if (!cleanIdentifier || !password) {
+            setError('Veuillez remplir tous les champs.')
+            setIsLoading(false)
+            return
+        }
+
         try {
             const result = await signIn('credentials', {
-                identifier,
+                identifier: cleanIdentifier,
                 password,
                 redirect: false,
                 redirectTo: '/admin/settings',
             })
 
             if (result?.error) {
-                setError('Identifiants invalides.')
+                setError('Identifiant ou mot de passe incorrect.')
                 setIsLoading(false)
                 return
             }
 
             window.location.href = '/admin/settings'
         } catch (err) {
-            setError('Une erreur est survenue.')
+            setError('Identifiant ou mot de passe incorrect.')
             setIsLoading(false)
         }
     }

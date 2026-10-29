@@ -686,6 +686,8 @@ export default function OutOfStockPage() {
                                         <span className="font-bold text-slate-700">
                                             {selectedProduct.deactivationReason === 'OUT_OF_STOCK'
                                                 ? 'Rupture de Stock Automatique'
+                                                : selectedProduct.deactivationReason === 'NO_PRICE'
+                                                ? 'Prix Indisponible (Prix à 0)'
                                                 : selectedProduct.deactivationReason === 'MANUAL'
                                                 ? 'Désactivation Manuelle Admin'
                                                 : 'Aucun'}

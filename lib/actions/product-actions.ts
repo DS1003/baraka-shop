@@ -50,9 +50,10 @@ export async function getProductsAction(options: {
         const skip = (page - 1) * limit;
 
         try {
-            // Construction du WHERE clause sécurisée via AND list
+            // Construction du WHERE clause sécurisée via AND list (exclut les produits masqués ou sans prix)
             const andConditions: any[] = [
-                { isPublished: true }
+                { isPublished: true },
+                { price: { gt: 0 } }
             ];
 
             if (onlyNewAndComingSoon) {
@@ -265,6 +266,7 @@ export async function getSimilarProductsAction(product: any, limit: number = 8) 
             const baseWhere = {
                 id: { not: product.id },
                 stock: { gt: 0 },
+                price: { gt: 0 },
                 isPublished: true
             };
 
@@ -333,7 +335,7 @@ export async function getCategoriesAction() {
                         }
                     },
                     _count: {
-                        select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
+                        select: { products: { where: { isPublished: true, stock: { gt: 0 }, price: { gt: 0 } } } }
                     }
                 },
                 orderBy: { name: 'asc' }
@@ -350,7 +352,7 @@ export async function getBrandsAction() {
             return await withDbRetry(() => prisma.brand.findMany({
                 include: {
                     _count: {
-                        select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
+                        select: { products: { where: { isPublished: true, stock: { gt: 0 }, price: { gt: 0 } } } }
                     }
                 },
                 orderBy: { name: 'asc' }
@@ -369,7 +371,7 @@ export async function getCategoryBySlugAction(slug: string) {
                 where: { slug, isPublished: true },
                 include: {
                     _count: {
-                        select: { products: { where: { isPublished: true, stock: { gt: 0 } } } }
+                        select: { products: { where: { isPublished: true, stock: { gt: 0 }, price: { gt: 0 } } } }
                     }
                 }
             }));

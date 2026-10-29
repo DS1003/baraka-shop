@@ -79,24 +79,35 @@ export default function LoginPage() {
         setIsLoading(true);
         setError(null);
 
+        const cleanIdentifier = identifier.trim();
+
+        if (!cleanIdentifier || !password) {
+            setError('Veuillez renseigner votre identifiant et votre mot de passe.');
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const redirectTo = getRedirectUrl();
 
-            await signIn('credentials', {
-                identifier,
+            const result = await signIn('credentials', {
+                identifier: cleanIdentifier,
                 password,
                 redirect: false,
                 redirectTo,
-            }).then((result) => {
-                if (result?.error) {
-                    setError('Identifiants invalides. Veuillez réessayer.');
-                    setIsLoading(false);
-                    return;
-                }
-                window.location.href = redirectTo;
             });
-        } catch (err) {
-            setError('Une erreur est survenue.');
+
+            if (result?.error) {
+                setError('Identifiant ou mot de passe incorrect.');
+                setIsLoading(false);
+                return;
+            }
+
+            window.location.href = redirectTo;
+        } catch (err: any) {
+            console.error('[Login Error]:', err);
+            // NextAuth v5 throws an error on failed credentials
+            setError('Identifiant ou mot de passe incorrect.');
             setIsLoading(false);
         }
     };

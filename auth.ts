@@ -50,12 +50,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
                 if (!isPasswordValid) return null;
 
+                const safeImage = (user.image && typeof user.image === 'string' && !user.image.startsWith('data:') && user.image.length < 1000)
+                    ? user.image
+                    : null;
+
                 return {
                     id: user.id,
                     email: user.email,
                     username: user.username,
                     role: user.role,
-                    image: user.image,
+                    image: safeImage,
                 } as any;
             },
         }),

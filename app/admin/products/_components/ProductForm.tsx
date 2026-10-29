@@ -1049,8 +1049,14 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         if (priceVal && priceVal.trim() !== '' && (isNaN(parseFloat(priceVal)) || parseFloat(priceVal) < 0)) {
             newErrors.price = "Le prix doit être un nombre positif ou nul.";
         }
+        if (isPublished && (!priceVal || priceVal.trim() === '' || parseFloat(priceVal) <= 0)) {
+            newErrors.price = "Un produit avec un prix à 0 ou indisponible ne peut pas être publié sur le site client.";
+        }
         if (!stockVal || isNaN(parseInt(stockVal)) || parseInt(stockVal) < 0) {
             newErrors.stock = "Le stock doit être un nombre positif ou nul.";
+        }
+        if (isPublished && (!stockVal || parseInt(stockVal) <= 0)) {
+            newErrors.stock = "Un produit en rupture de stock ne peut pas être publié sur le site client.";
         }
         if (!categoryIdVal) {
             newErrors.categoryId = "La catégorie principale est obligatoire.";

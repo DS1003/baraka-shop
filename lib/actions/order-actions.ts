@@ -62,7 +62,7 @@ export async function createOrder(data: CreateOrderData) {
         const uniqueProductIds = Array.from(new Set(productIds));
         const foundProducts = await prisma.product.findMany({
             where: { id: { in: uniqueProductIds } },
-            select: { id: true, stock: true, name: true, price: true }
+            select: { id: true, stock: true, name: true, price: true, isPublished: true }
         });
 
         if (foundProducts.length !== uniqueProductIds.length) {
@@ -71,11 +71,14 @@ export async function createOrder(data: CreateOrderData) {
 
         const productMap = new Map(foundProducts.map(p => [p.id, p]));
 
-        // Vérification du stock
+        // Vérification du stock et du prix valide
         for (const item of data.items) {
             const p = productMap.get(item.productId);
             if (!p || p.stock < item.quantity) {
                 return { success: false, error: `Stock insuffisant pour le produit: ${p?.name || 'Inconnu'}` };
+            }
+            if (!p.price || p.price <= 0 || !p.isPublished) {
+                return { success: false, error: `Le produit "${p.name}" n'a pas encore de prix disponible et ne peut pas être commandé.` };
             }
         }
 

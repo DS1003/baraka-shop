@@ -285,25 +285,59 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                         const parsedStock = parseInt(String(stock), 10)
                         if (!isNaN(parsedStock)) {
                             updateData.stock = parsedStock
-                            if (parsedStock <= 0) {
-                                updateData.isPublished = false
-                                updateData.deactivationReason = 'OUT_OF_STOCK'
-                                updateData.setDeactivatedAt = true
-                            } else if (existing.stock <= 0 && parsedStock > 0 && existing.deactivationReason === 'OUT_OF_STOCK') {
-                                updateData.isPublished = false
-                                updateData.restockPendingReview = true
-                                updateData.setRestockedAt = true
-                                updateData.lastRestockedQty = parsedStock
-                                restockToNotify.push({
-                                    productId: existing.id,
-                                    productName: existing.name,
-                                    reference: existing.reference,
-                                    price: updateData.price !== undefined ? updateData.price : existing.price,
-                                    oldStock: existing.stock,
-                                    newStock: parsedStock,
-                                })
-                            }
                         }
+                    }
+
+                    // Calcul des valeurs effectives de prix et stock
+                    const effectivePrice = updateData.price !== undefined ? updateData.price : (existing.price ?? 0)
+                    const effectiveStock = updateData.stock !== undefined ? updateData.stock : existing.stock
+
+                    // ── RÈGLE COMMERCIALE CRITIQUE : Prix indisponible (prix <= 0) ──
+                    // Tout produit qui a un prix à 0 ne pourra pas être publié sur le site client
+                    if (effectivePrice <= 0) {
+                        updateData.isPublished = false
+                        if (effectiveStock <= 0) {
+                            updateData.deactivationReason = 'OUT_OF_STOCK'
+                        } else {
+                            updateData.deactivationReason = 'NO_PRICE'
+                        }
+                        updateData.setDeactivatedAt = true
+                        updateData.restockPendingReview = false
+                    } else if (effectiveStock <= 0) {
+                        // Stock épuisé avec un prix existant
+                        updateData.isPublished = false
+                        updateData.deactivationReason = 'OUT_OF_STOCK'
+                        updateData.setDeactivatedAt = true
+                    } else if (existing.stock <= 0 && effectiveStock > 0 && existing.deactivationReason === 'OUT_OF_STOCK') {
+                        // Réapprovisionnement détecté avec prix valide
+                        updateData.isPublished = false
+                        updateData.restockPendingReview = true
+                        updateData.setRestockedAt = true
+                        updateData.lastRestockedQty = effectiveStock
+                        restockToNotify.push({
+                            productId: existing.id,
+                            productName: existing.name,
+                            reference: existing.reference,
+                            price: effectivePrice,
+                            oldStock: existing.stock,
+                            newStock: effectiveStock,
+                        })
+                    } else if (existing.deactivationReason === 'NO_PRICE' && effectivePrice > 0 && effectiveStock > 0) {
+                        // Le prix était auparavant manquant, un prix valide (> 0) est maintenant disponible !
+                        // Mise en attente de validation admin pour revue avant publication
+                        updateData.isPublished = false
+                        updateData.restockPendingReview = true
+                        updateData.deactivationReason = null
+                        updateData.setRestockedAt = true
+                        updateData.lastRestockedQty = effectiveStock
+                        restockToNotify.push({
+                            productId: existing.id,
+                            productName: existing.name,
+                            reference: existing.reference,
+                            price: effectivePrice,
+                            oldStock: existing.stock,
+                            newStock: effectiveStock,
+                        })
                     }
 
                     // Update categories if resolved and different
@@ -322,7 +356,13 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                          // Still on default category, wait for resolving later if needed, nothing to update
                     }
 
-                    if (updateData.price !== undefined || updateData.stock !== undefined || updateData.categoryId !== undefined) {
+                    if (
+                        updateData.price !== undefined || 
+                        updateData.stock !== undefined || 
+                        updateData.categoryId !== undefined ||
+                        updateData.isPublished !== undefined ||
+                        updateData.deactivationReason !== undefined
+                    ) {
                         updateValues.push(updateData)
                     }
                 } else if (name) {
@@ -341,6 +381,7 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                     const safeName = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
                     const newSlug = `${safeName}-${String(ref).toLowerCase()}`.substring(0, 100)
                     const isZeroStock = parsedStock <= 0
+                    const isZeroPrice = parsedPrice <= 0
 
                     createValues.push({
                         name: String(name).trim(),
@@ -352,8 +393,8 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                         subCategoryId: resolvedCat ? resolvedCat.subCategoryId : null,
                         thirdLevelCategoryId: resolvedCat ? resolvedCat.thirdLevelCategoryId : null,
                         isPublished: false,
-                        deactivationReason: isZeroStock ? 'OUT_OF_STOCK' : null,
-                        deactivatedAt: isZeroStock ? new Date() : null,
+                        deactivationReason: isZeroStock ? 'OUT_OF_STOCK' : (isZeroPrice ? 'NO_PRICE' : null),
+                        deactivatedAt: (isZeroStock || isZeroPrice) ? new Date() : null,
                         isNew: true
                     })
                 }
@@ -384,7 +425,9 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                 }
 
                 if (item.isPublished !== undefined) sets.push(`"isPublished" = ${item.isPublished ? 'TRUE' : 'FALSE'}`)
-                if (item.deactivationReason !== undefined) sets.push(`"deactivationReason" = '${escapeSql(item.deactivationReason)}'`)
+                if (item.deactivationReason !== undefined) {
+                    sets.push(`"deactivationReason" = ${item.deactivationReason ? `'${escapeSql(item.deactivationReason)}'` : 'NULL'}`)
+                }
                 if (item.setDeactivatedAt) sets.push(`"deactivatedAt" = NOW()`)
                 if (item.restockPendingReview !== undefined) sets.push(`"restockPendingReview" = ${item.restockPendingReview ? 'TRUE' : 'FALSE'}`)
                 if (item.setRestockedAt) sets.push(`"restockedAt" = NOW()`)

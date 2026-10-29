@@ -23,7 +23,7 @@ export async function getStoresAction() {
                     _count: {
                         select: {
                             products: {
-                                where: { isPublished: true, stock: { gt: 0 } }
+                                where: { isPublished: true, stock: { gt: 0 }, price: { gt: 0 } }
                             }
                         }
                     }
@@ -47,7 +47,7 @@ export async function getStoreBySlugAction(slug: string) {
                     _count: {
                         select: {
                             products: {
-                                where: { isPublished: true, stock: { gt: 0 } }
+                                where: { isPublished: true, stock: { gt: 0 }, price: { gt: 0 } }
                             }
                         }
                     }

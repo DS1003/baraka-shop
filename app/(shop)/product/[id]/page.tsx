@@ -48,8 +48,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     // Fetch data server-side
     const product = await getProductByIdAction(id)
 
-    // Un produit désactivé ou en rupture n'est plus accessible publiquement
-    if (!product || !product.isPublished || product.stock <= 0) {
+    // Un produit désactivé, sans prix disponible ou en rupture n'est plus accessible publiquement
+    if (!product || !product.isPublished || product.stock <= 0 || !product.price || product.price <= 0) {
         notFound()
     }
 

@@ -16,7 +16,8 @@ export const authConfig = {
                 token.role = user.role;
                 token.id = user.id;
                 token.username = user.username;
-                if (user.image) {
+                // Protection stricte contre l'explosion du cookie JWT (RFC 6265, max cookie 4KB)
+                if (user.image && typeof user.image === 'string' && !user.image.startsWith('data:') && user.image.length < 1000) {
                     token.picture = user.image;
                 }
             }

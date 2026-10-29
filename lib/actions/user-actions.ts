@@ -100,6 +100,29 @@ export async function updateUserSettings(data: {
             }
         }
 
+        let finalImageUrl: string | undefined = undefined;
+        if (data.profile?.image) {
+            if (data.profile.image.startsWith('data:image/')) {
+                try {
+                    const { v2: cloudinary } = await import('cloudinary');
+                    cloudinary.config({
+                        cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+                        api_key: process.env.CLOUDINARY_API_KEY,
+                        api_secret: process.env.CLOUDINARY_API_SECRET
+                    });
+                    const uploadRes = await cloudinary.uploader.upload(data.profile.image, {
+                        folder: 'avatars',
+                        transformation: [{ width: 256, height: 256, crop: 'fill' }]
+                    });
+                    finalImageUrl = uploadRes.secure_url;
+                } catch (cErr) {
+                    console.error('[UserActions] Cloudinary avatar upload error:', cErr);
+                }
+            } else if (data.profile.image.startsWith('http://') || data.profile.image.startsWith('https://')) {
+                finalImageUrl = data.profile.image;
+            }
+        }
+
         const currentMetadata = (currentUser?.metadata as any) || {};
         const newMetadata = {
             ...currentMetadata,
@@ -113,7 +136,7 @@ export async function updateUserSettings(data: {
                 ...(data.profile?.username && { username: data.profile.username.trim().slice(0, 50) }),
                 ...(data.profile?.phone !== undefined && { phone: data.profile.phone ? data.profile.phone.trim().slice(0, 25) : null }),
                 ...(targetEmail && { email: targetEmail }),
-                ...(data.profile?.image && { image: data.profile.image }),
+                ...(finalImageUrl !== undefined && { image: finalImageUrl }),
                 ...(data.profile?.address !== undefined && { address: data.profile.address ? data.profile.address.trim().slice(0, 255) : null }),
                 metadata: newMetadata,
             } as any,

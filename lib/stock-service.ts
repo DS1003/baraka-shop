@@ -69,8 +69,20 @@ export async function processStockChange({
 
     let shouldNotifyRestock = false;
 
+    // RÈGLE COMMERCIALE CRITIQUE: Prix indisponible (prix <= 0)
+    // Tout produit qui a un prix à 0 ne pourra pas être publié sur le site client
+    if (!product.price || product.price <= 0) {
+      updateData.isPublished = false;
+      if (newStock <= 0) {
+        updateData.deactivationReason = 'OUT_OF_STOCK';
+      } else {
+        updateData.deactivationReason = 'NO_PRICE';
+      }
+      updateData.deactivatedAt = new Date();
+      updateData.restockPendingReview = false;
+    }
     // RÈGLE A: Le stock tombe à zéro (ou est négatif/nul)
-    if (newStock <= 0) {
+    else if (newStock <= 0) {
       updateData.isPublished = false;
       updateData.deactivationReason = 'OUT_OF_STOCK';
       updateData.deactivatedAt = new Date();
@@ -95,6 +107,10 @@ export async function processStockChange({
         // Interdiction absolue de publier un produit avec stock <= 0
         updateData.isPublished = false;
         updateData.deactivationReason = 'OUT_OF_STOCK';
+      } else if (!product.price || product.price <= 0) {
+        // Interdiction absolue de publier un produit avec prix <= 0
+        updateData.isPublished = false;
+        updateData.deactivationReason = 'NO_PRICE';
       } else {
         updateData.isPublished = manualIsPublished;
         if (!manualIsPublished) {
@@ -217,7 +233,7 @@ export async function sendRestockNotificationAsync(data: {
 export async function reactivateProduct(productId: string) {
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { id: true, stock: true, name: true }
+    select: { id: true, stock: true, name: true, price: true }
   });
 
   if (!product) {
@@ -228,6 +244,13 @@ export async function reactivateProduct(productId: string) {
     return {
       success: false,
       error: "Impossible de réactiver ce produit : aucune unité n'est disponible en stock."
+    };
+  }
+
+  if (!product.price || product.price <= 0) {
+    return {
+      success: false,
+      error: "Impossible de publier ce produit : le prix n'est pas encore disponible (prix à 0)."
     };
   }
 

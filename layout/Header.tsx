@@ -154,6 +154,23 @@ export function Header() {
         }, 150)
     }
 
+    const toggleMegaMenu = (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
+        if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
+        setShowMegaMenu(prev => {
+            const next = !prev
+            if (next && categories.length === 0) {
+                getMegaMenuAction().then(data => {
+                    if (data && data.length > 0) setCategories(data)
+                }).catch(() => {})
+            }
+            return next
+        })
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -257,12 +274,14 @@ export function Header() {
     }, [isMenuOpen])
 
     React.useEffect(() => {
-        let isScrolled = false
+        let isScrolled = window.scrollY > 50
+        setScrolled(isScrolled)
         const handleScroll = () => {
             const nextScrolled = window.scrollY > 50
             if (nextScrolled !== isScrolled) {
                 isScrolled = nextScrolled
                 setScrolled(nextScrolled)
+                setShowMegaMenu(false)
             }
         }
         window.addEventListener('scroll', handleScroll, { passive: true })
@@ -296,10 +315,10 @@ export function Header() {
                     </Container>
                 </div>
 
-            {/* 2. Main Header (Existing code) */}
+            {/* 2. Main Header (Sticky) */}
             <div className={cn(
                 "sticky top-0 z-[100] w-full transition-all duration-300 hidden md:block",
-                scrolled ? "shadow-[0_10px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl bg-white/95" : "bg-white"
+                scrolled ? "shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white" : "bg-white"
             )}>
                 <div className={cn(
                     "py-2 border-b border-gray-100 transition-all duration-300 w-full",
@@ -314,102 +333,180 @@ export function Header() {
                             />
                         </Link>
 
-                        <div className="flex-1 w-full max-w-2xl px-2 sm:px-4 relative min-w-0">
-                            <form onSubmit={handleSearch} className={cn(
-                                "flex w-full h-[44px] md:h-[46px] bg-[#f4f4f4] border border-gray-200 rounded-lg overflow-hidden transition-all focus-within:bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
-                                scrolled && "h-[40px]"
-                            )}>
-                                <div className="flex-1 relative flex items-center min-w-0">
-                                    <input
-                                        type="text"
-                                        placeholder="Rechercher un produit, une marque..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onFocus={() => setIsSearchFocused(true)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                        className="w-full px-4 md:px-6 h-full bg-transparent outline-none text-sm md:text-base placeholder:text-gray-400 font-medium truncate"
-                                    />
-                                    {searchQuery && (
+                        {/* Middle Section : Burger MegaMenu (sticky uniquement) + Recherche */}
+                        <div className="flex-1 w-full max-w-2xl px-2 sm:px-4 min-w-0 flex items-center">
+                            <AnimatePresence initial={false}>
+                                {scrolled && (
+                                    <motion.div
+                                        key="sticky-burger"
+                                        initial={{ width: 0, opacity: 0, marginRight: 0 }}
+                                        animate={{ width: 'auto', opacity: 1, marginRight: 10 }}
+                                        exit={{ width: 0, opacity: 0, marginRight: 0 }}
+                                        transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                        className="shrink-0 overflow-hidden"
+                                        onMouseEnter={handleMenuEnter}
+                                        onMouseLeave={handleMenuLeave}
+                                    >
                                         <button
+                                            id="sticky-megamenu-toggle"
                                             type="button"
-                                            onClick={() => setSearchQuery('')}
-                                            className="absolute right-2 p-1.5 text-gray-400 hover:text-primary transition-colors"
+                                            onClick={toggleMegaMenu}
+                                            aria-label="Ouvrir le menu des catégories"
+                                            aria-expanded={showMegaMenu}
+                                            className={cn(
+                                                "group h-[40px] flex items-center gap-2.5 pl-1.5 pr-3.5 rounded-lg border bg-white whitespace-nowrap select-none",
+                                                "transition-all duration-300 active:scale-[0.97]",
+                                                showMegaMenu
+                                                    ? "border-primary/40 bg-primary/[0.04] shadow-[0_4px_14px_-4px_rgba(232,98,26,0.35)]"
+                                                    : "border-gray-200 hover:border-gray-300 hover:shadow-[0_4px_14px_-6px_rgba(27,31,59,0.25)]"
+                                            )}
                                         >
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                <button type="submit" className="bg-primary hover:bg-primary/90 text-white w-[46px] md:w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
-                                    <Search className="w-4 h-4 md:w-5 md:h-5" />
-                                </button>
-                            </form>
-
-                            <AnimatePresence>
-                                {isSearchFocused && searchQuery.length >= 2 && (
-                                    <>
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 10 }}
-                                            className="absolute top-full left-4 right-4 mt-2 bg-white rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[110] overflow-hidden"
-                                        >
-                                            <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Résultats pour "{searchQuery}"</span>
-                                            </div>
-                                            <div className="max-h-[400px] overflow-y-auto">
-                                                {searchSuggestions.map((item: any) => (
-                                                    <Link
-                                                        key={item.id}
-                                                        href={`/product/${item.id}`}
-                                                        className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
-                                                        onClick={() => {
-                                                            setIsSearchFocused(false)
-                                                            setSearchQuery('')
-                                                        }}
-                                                    >
-                                                        <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
-                                                            <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" unoptimized />
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-[#1B1F3B] group-hover:text-primary transition-colors">{item.name}</span>
-                                                            <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category?.name || item.category}</span>
-                                                        </div>
-                                                        <div className="ml-auto flex flex-col items-end gap-1">
-                                                            <span className="text-sm font-black text-[#1B1F3B] tabular-nums">{formatPrice(item.price)}</span>
-                                                            {item.stock > 0 ? (
-                                                                <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-green-100 flex items-center gap-1">
-                                                                    <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                                                                    En Stock
-                                                                </span>
-                                                            ) : (
-                                                                <span className="bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-red-100">
-                                                                    Rupture
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </Link>
-                                                ))}
-                                                {searchSuggestions.length === 0 && (
-                                                    <div className="p-8 text-center text-gray-400 text-xs font-medium italic">
-                                                        Aucun produit trouvé...
-                                                    </div>
+                                            <span
+                                                className={cn(
+                                                    "relative w-[30px] h-[30px] rounded-md flex items-center justify-center text-white transition-colors duration-300",
+                                                    showMegaMenu ? "bg-primary" : "bg-[#1B1F3B] group-hover:bg-primary"
                                                 )}
-                                            </div>
-                                            <Link
-                                                href={`/boutique?q=${searchQuery}`}
-                                                className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
-                                                onClick={() => {
-                                                    setIsSearchFocused(false)
-                                                    setSearchQuery('')
-                                                }}
                                             >
-                                                Voir tous les résultats
-                                            </Link>
-                                        </motion.div>
-                                        <div className="fixed inset-0 z-[105] bg-black/5" onClick={() => setIsSearchFocused(false)} />
-                                    </>
+                                                <AnimatePresence mode="wait" initial={false}>
+                                                    {showMegaMenu ? (
+                                                        <motion.span
+                                                            key="close"
+                                                            initial={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                                                            animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                                                            exit={{ rotate: 90, opacity: 0, scale: 0.6 }}
+                                                            transition={{ duration: 0.18 }}
+                                                            className="flex"
+                                                        >
+                                                            <X className="w-4 h-4" strokeWidth={2} />
+                                                        </motion.span>
+                                                    ) : (
+                                                        <motion.span
+                                                            key="open"
+                                                            initial={{ rotate: 90, opacity: 0, scale: 0.6 }}
+                                                            animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                                                            exit={{ rotate: -90, opacity: 0, scale: 0.6 }}
+                                                            transition={{ duration: 0.18 }}
+                                                            className="flex"
+                                                        >
+                                                            <Menu className="w-4 h-4" strokeWidth={2} />
+                                                        </motion.span>
+                                                    )}
+                                                </AnimatePresence>
+                                            </span>
+                                            <span className="flex flex-col items-start leading-none">
+                                                <span className={cn(
+                                                    "text-[11px] font-black uppercase tracking-[0.12em] transition-colors duration-300",
+                                                    showMegaMenu ? "text-primary" : "text-[#1B1F3B] group-hover:text-primary"
+                                                )}>
+                                                    Menu
+                                                </span>
+                                                <span className="hidden lg:block text-[9px] font-semibold text-gray-400 mt-1 tracking-wide">
+                                                    Catégories
+                                                </span>
+                                            </span>
+                                        </button>
+                                    </motion.div>
                                 )}
                             </AnimatePresence>
+
+                        {/* Search Bar & Auto-suggestions */}
+                        <div className="flex-1 relative min-w-0">
+                                <form onSubmit={handleSearch} className={cn(
+                                    "flex w-full h-[44px] md:h-[46px] bg-[#f4f4f4] border border-gray-200 rounded-lg overflow-hidden transition-all focus-within:bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
+                                    scrolled && "h-[40px]"
+                                )}>
+                                    <div className="flex-1 relative flex items-center min-w-0">
+                                        <input
+                                            type="text"
+                                            placeholder="Rechercher un produit, une marque..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onFocus={() => setIsSearchFocused(true)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                            className="w-full px-4 md:px-6 h-full bg-transparent outline-none text-sm md:text-base placeholder:text-gray-400 font-medium truncate"
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setSearchQuery('')}
+                                                className="absolute right-2 p-1.5 text-gray-400 hover:text-primary transition-colors"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <button type="submit" className="bg-primary hover:bg-primary/90 text-white w-[46px] md:w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
+                                        <Search className="w-4 h-4 md:w-5 md:h-5" />
+                                    </button>
+                                </form>
+
+                                <AnimatePresence>
+                                    {isSearchFocused && searchQuery.length >= 2 && (
+                                        <>
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 10 }}
+                                                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[110] overflow-hidden"
+                                            >
+                                                <div className="p-4 border-b border-gray-50 bg-gray-50/50">
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Résultats pour "{searchQuery}"</span>
+                                                </div>
+                                                <div className="max-h-[400px] overflow-y-auto">
+                                                    {searchSuggestions.map((item: any) => (
+                                                        <Link
+                                                            key={item.id}
+                                                            href={`/product/${item.id}`}
+                                                            className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
+                                                            onClick={() => {
+                                                                setIsSearchFocused(false)
+                                                                setSearchQuery('')
+                                                            }}
+                                                        >
+                                                            <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
+                                                                <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" unoptimized />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-bold text-[#1B1F3B] group-hover:text-primary transition-colors">{item.name}</span>
+                                                                <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category?.name || item.category}</span>
+                                                            </div>
+                                                            <div className="ml-auto flex flex-col items-end gap-1">
+                                                                <span className="text-sm font-black text-[#1B1F3B] tabular-nums">{formatPrice(item.price)}</span>
+                                                                {item.stock > 0 ? (
+                                                                    <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-green-100 flex items-center gap-1">
+                                                                        <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                                                                        En Stock
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-red-100">
+                                                                        Rupture
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </Link>
+                                                    ))}
+                                                    {searchSuggestions.length === 0 && (
+                                                        <div className="p-8 text-center text-gray-400 text-xs font-medium italic">
+                                                            Aucun produit trouvé...
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <Link
+                                                    href={`/boutique?q=${searchQuery}`}
+                                                    className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
+                                                    onClick={() => {
+                                                        setIsSearchFocused(false)
+                                                        setSearchQuery('')
+                                                    }}
+                                                >
+                                                    Voir tous les résultats
+                                                </Link>
+                                            </motion.div>
+                                            <div className="fixed inset-0 z-[105] bg-black/5" onClick={() => setIsSearchFocused(false)} />
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-3 sm:gap-4 md:gap-4 lg:gap-8 shrink-0">
@@ -438,6 +535,33 @@ export function Header() {
                         </div>
                     </Container>
                 </div>
+
+                {/* MegaMenu Dropdown when Header is Sticky */}
+                <AnimatePresence>
+                    {scrolled && showMegaMenu && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute top-full left-0 right-0 h-screen z-[115] bg-[#1B1F3B]/25 backdrop-blur-[2px]"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowMegaMenu(false);
+                                }}
+                            />
+                            <div
+                                className="absolute top-full left-0 w-full z-[120] px-3 sm:px-4 md:px-6 lg:px-8 cursor-default"
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseEnter={handleMenuEnter}
+                                onMouseLeave={handleMenuLeave}
+                            >
+                                <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
+                            </div>
+                        </>
+                    )}
+                </AnimatePresence>
             </div>
 
             <div className="bg-black text-white border-t border-white/10 hidden md:block relative z-[90]">
@@ -488,7 +612,7 @@ export function Header() {
                             </div>
                         </BorderGlow>
                         <AnimatePresence>
-                            {showMegaMenu && (
+                            {!scrolled && showMegaMenu && (
                                 <>
                                     <div
                                         className="fixed inset-0 top-[135px] md:top-[155px] lg:top-[170px] z-[115] bg-black/20 backdrop-blur-xs transition-opacity"
