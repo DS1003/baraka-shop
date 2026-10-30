@@ -31,7 +31,7 @@ export function MegaMenu({ categories, onClose }: MegaMenuProps) {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-[1500px] h-[480px] md:h-[520px] lg:h-[600px] xl:h-[620px] max-h-[calc(100vh-185px)] mx-auto bg-white text-black shadow-2xl border border-gray-100 rounded-b-2xl overflow-hidden z-50 flex relative"
+            className="w-full max-w-[1500px] h-[480px] md:h-[520px] lg:h-[600px] xl:h-[620px] max-h-[calc(100vh-185px)] mx-auto bg-white text-black shadow-[0_15px_35px_-5px_rgba(0,0,0,0.14)] border border-gray-200/80 rounded-b-2xl overflow-hidden z-50 flex relative"
         >
             {/* Left Column: Categories List (Responsive Sidebar) */}
             <div className="w-[180px] sm:w-[195px] md:w-[215px] lg:w-[240px] xl:w-[260px] shrink-0 bg-white border-r border-gray-100 flex flex-col pt-1.5 md:pt-2 overflow-y-auto custom-scrollbar select-none touch-pan-y">

@@ -135,23 +135,37 @@ export function Header() {
     const [categories, setCategories] = useState<any[]>([])
     const [stores, setStores] = useState<any[]>([])
     const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const megaMenuRef = useRef<HTMLDivElement | null>(null)
+    const toggleButtonRef = useRef<HTMLDivElement | null>(null)
+    const stickyBurgerRef = useRef<HTMLDivElement | null>(null)
 
     const handleMenuEnter = () => {
-        if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
+        if (menuTimeoutRef.current) {
+            clearTimeout(menuTimeoutRef.current)
+            menuTimeoutRef.current = null
+        }
         menuTimeoutRef.current = setTimeout(() => {
             setShowMegaMenu(true)
-            // Re-fetch categories each time the menu opens to ensure dynamic content
-            getMegaMenuAction().then(data => {
-                if (data && data.length > 0) setCategories(data)
-            }).catch(() => {})
-        }, 250) // S'ouvre après 250ms de survol (intent delay)
+            if (categories.length === 0) {
+                getMegaMenuAction().then(data => {
+                    if (data && data.length > 0) setCategories(data)
+                }).catch(() => {})
+            }
+        }, 150)
+    }
+
+    const handleMenuKeepOpen = () => {
+        if (menuTimeoutRef.current) {
+            clearTimeout(menuTimeoutRef.current)
+            menuTimeoutRef.current = null
+        }
     }
 
     const handleMenuLeave = () => {
         if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
         menuTimeoutRef.current = setTimeout(() => {
             setShowMegaMenu(false)
-        }, 150)
+        }, 120)
     }
 
     const toggleMegaMenu = (e?: React.MouseEvent) => {
@@ -159,7 +173,10 @@ export function Header() {
             e.preventDefault()
             e.stopPropagation()
         }
-        if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
+        if (menuTimeoutRef.current) {
+            clearTimeout(menuTimeoutRef.current)
+            menuTimeoutRef.current = null
+        }
         setShowMegaMenu(prev => {
             const next = !prev
             if (next && categories.length === 0) {
@@ -170,6 +187,24 @@ export function Header() {
             return next
         })
     }
+
+    useEffect(() => {
+        if (!showMegaMenu) return
+        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+            const target = e.target as Node | null
+            if (!target) return
+            if (
+                megaMenuRef.current?.contains(target) ||
+                toggleButtonRef.current?.contains(target) ||
+                stickyBurgerRef.current?.contains(target)
+            ) {
+                return
+            }
+            setShowMegaMenu(false)
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showMegaMenu])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -339,6 +374,7 @@ export function Header() {
                                 {scrolled && (
                                     <motion.div
                                         key="sticky-burger"
+                                        ref={stickyBurgerRef}
                                         initial={{ width: 0, opacity: 0, marginRight: 0 }}
                                         animate={{ width: 'auto', opacity: 1, marginRight: 10 }}
                                         exit={{ width: 0, opacity: 0, marginRight: 0 }}
@@ -536,30 +572,21 @@ export function Header() {
                     </Container>
                 </div>
 
-                {/* MegaMenu Dropdown when Header is Sticky */}
+                {/* MegaMenu Dropdown when Header is Sticky (No blocking overlay) */}
                 <AnimatePresence>
                     {scrolled && showMegaMenu && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="absolute top-full left-0 right-0 h-screen z-[115] bg-[#1B1F3B]/25 backdrop-blur-[2px]"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowMegaMenu(false);
-                                }}
-                            />
+                        <div
+                            ref={megaMenuRef}
+                            className="absolute top-full left-0 w-full z-[120] px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none"
+                        >
                             <div
-                                className="absolute top-full left-0 w-full z-[120] px-3 sm:px-4 md:px-6 lg:px-8 cursor-default"
-                                onClick={(e) => e.stopPropagation()}
-                                onMouseEnter={handleMenuEnter}
+                                className="w-full max-w-[1500px] mx-auto pointer-events-auto"
+                                onMouseEnter={handleMenuKeepOpen}
                                 onMouseLeave={handleMenuLeave}
                             >
                                 <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
                             </div>
-                        </>
+                        </div>
                     )}
                 </AnimatePresence>
             </div>
@@ -587,10 +614,11 @@ export function Header() {
                 <Container className="relative flex items-center h-[52px] md:h-[55px] lg:h-[60px] z-10">
                     {/* Menu Categories - Fixed Left */}
                     <div
+                        ref={toggleButtonRef}
                         className="h-full flex items-center mr-2 md:mr-3 lg:mr-6 pr-2 md:pr-3 lg:pr-6 border-r border-white/10 cursor-pointer group shrink-0"
                         onMouseEnter={handleMenuEnter}
                         onMouseLeave={handleMenuLeave}
-                        onClick={() => setShowMegaMenu(prev => !prev)}
+                        onClick={toggleMegaMenu}
                     >
                         <BorderGlow
                             glowColor="21 82 51"
@@ -611,25 +639,6 @@ export function Header() {
                                 <ChevronDown className={cn("w-3 h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4 opacity-70 transition-transform duration-300 shrink-0", showMegaMenu && "rotate-180")} />
                             </div>
                         </BorderGlow>
-                        <AnimatePresence>
-                            {!scrolled && showMegaMenu && (
-                                <>
-                                    <div
-                                        className="fixed inset-0 top-[135px] md:top-[155px] lg:top-[170px] z-[115] bg-black/20 backdrop-blur-xs transition-opacity"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowMegaMenu(false);
-                                        }}
-                                    />
-                                    <div
-                                        className="absolute top-full left-0 w-full z-[120] px-3 sm:px-4 md:px-6 lg:px-8 cursor-default"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
-                                    </div>
-                                </>
-                            )}
-                        </AnimatePresence>
                     </div>
 
                     {/* Scrollable Container for Links and Stores on Tablet */}
@@ -695,6 +704,24 @@ export function Header() {
                         </div>
                     </div>
                 </Container>
+
+                {/* Non-sticky MegaMenu Dropdown (No blocking overlay) */}
+                <AnimatePresence>
+                    {!scrolled && showMegaMenu && (
+                        <div
+                            ref={megaMenuRef}
+                            className="absolute top-full left-0 w-full z-[120] px-3 sm:px-4 md:px-6 lg:px-8 pointer-events-none"
+                        >
+                            <div
+                                className="w-full max-w-[1500px] mx-auto pointer-events-auto"
+                                onMouseEnter={handleMenuKeepOpen}
+                                onMouseLeave={handleMenuLeave}
+                            >
+                                <MegaMenu categories={categories} onClose={() => setShowMegaMenu(false)} />
+                            </div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Mobile Header (Mobile First) */}
