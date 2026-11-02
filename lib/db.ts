@@ -1,10 +1,13 @@
 import pg from 'pg';
 
-const connectionString = process.env.DATABASE_URL;
+const rawConnectionString = process.env.DATABASE_URL;
 
-if (!connectionString) {
+if (!rawConnectionString) {
     throw new Error("DATABASE_URL environment variable is not defined");
 }
+
+// Normalize sslmode to 'verify-full' to prevent pg-connection-string security deprecation warning
+const connectionString = rawConnectionString.replace(/sslmode=(require|prefer|verify-ca)\b/g, 'sslmode=verify-full');
 
 const poolSingleton = () => {
     return new pg.Pool({

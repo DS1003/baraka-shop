@@ -42,6 +42,7 @@ import { ImportToast } from '@/features/admin/components/ImportToast';
 import { GlobalSearchModal } from '@/features/admin/components/GlobalSearchModal';
 import { Toaster } from 'sonner';
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
+import { Briefcase } from 'lucide-react';
 
 const sidebarGroups = [
     {
@@ -75,6 +76,7 @@ const sidebarGroups = [
             { icon: ShoppingCart, label: 'Commandes', href: '/admin/orders' },
             { icon: Package, label: 'Stock & Inventaire', href: '/admin/inventory' },
             { icon: Users, label: 'Gestion Clients', href: '/admin/customers' },
+            { icon: Briefcase, label: 'Collaborateurs', href: '/admin/collaborators' },
             { icon: Mail, label: 'Messages Contact', href: '/admin/messages' },
             { icon: MessageSquareWarning, label: 'Modération Avis', href: '/admin/reviews' },
         ]

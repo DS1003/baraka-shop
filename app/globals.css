@@ -104,6 +104,22 @@ html {
     }
 }
 
+/* Fix Chromium Bug #40749247: Typing in an input/textarea inside a sticky container causes unwanted upward scroll jumps when scroll-padding-top is active */
+html:has(input:focus),
+html:has(textarea:focus),
+html:has([contenteditable="true"]:focus),
+html:has(.sticky:focus-within),
+html:has(header:focus-within) {
+    scroll-padding-top: 0 !important;
+    scroll-padding-block-start: 0 !important;
+    scroll-behavior: auto !important;
+}
+
+input, textarea {
+    scroll-margin-top: 0 !important;
+    scroll-margin-block-start: 0 !important;
+}
+
 /* 2. WebKit Global Scrollbar (Chrome, Safari, Edge, Opera) */
 ::-webkit-scrollbar {
     width: 8px;

@@ -460,7 +460,60 @@ export const emailService = {
       console.error('[EmailService] Exception Newsletter Broadcast:', error);
       return { success: false, error };
     }
+  },
+
+  /**
+   * Envoyer l'email de bienvenue dans l'espace collaborateur
+   */
+  async sendCollaboratorWelcomeEmail(payload: {
+    to: string;
+    collaboratorName: string;
+    title?: string;
+    monthlySalary: number;
+    commissionRate: number;
+    commissionBase: string;
+    startDate: string;
+    dashboardUrl?: string;
+    logoUrl?: string;
+  }) {
+    try {
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation de l\'envoi d\'email Collaborateur à', payload.to);
+        return { success: true, simulated: true };
+      }
+
+      const CollaboratorWelcomeEmail = (await import('@/emails/CollaboratorWelcomeEmail')).default;
+      const htmlContent = await render(CollaboratorWelcomeEmail({
+        collaboratorName: payload.collaboratorName,
+        email: payload.to,
+        title: payload.title,
+        monthlySalary: payload.monthlySalary,
+        commissionRate: payload.commissionRate,
+        commissionBase: payload.commissionBase,
+        startDate: payload.startDate,
+        dashboardUrl: payload.dashboardUrl,
+        logoUrl: payload.logoUrl,
+      }));
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [payload.to],
+        subject: 'Bienvenue dans votre espace collaborateur – Baraka Shop',
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur Resend Collaborator Welcome:', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception Collaborator Welcome:', error);
+      return { success: false, error };
+    }
   }
 };
+
 
 

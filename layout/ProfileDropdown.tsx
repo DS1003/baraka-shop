@@ -17,8 +17,10 @@ import {
     Location as MapPin,
     InfoCircle as HelpCircle
 } from 'reicon-react'
+import { Briefcase } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOut } from 'next-auth/react'
+import { checkUserCollaboratorStatusAction } from '@/lib/actions/collaborator-actions'
 
 interface ProfileDropdownProps {
     isLoggedIn: boolean
@@ -28,7 +30,30 @@ interface ProfileDropdownProps {
 
 export function ProfileDropdown({ isLoggedIn, session, isMobile = false }: ProfileDropdownProps) {
     const [isOpen, setIsOpen] = useState(false)
+    const [isCollaborator, setIsCollaborator] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
+
+    // Vérifier le statut de collaborateur actif
+    useEffect(() => {
+        if (!isLoggedIn) {
+            setIsCollaborator(false)
+            return
+        }
+        let isMounted = true
+        checkUserCollaboratorStatusAction()
+            .then(res => {
+                if (isMounted) {
+                    setIsCollaborator(res.isCollaborator)
+                }
+            })
+            .catch(() => {
+                if (isMounted) setIsCollaborator(false)
+            })
+
+        return () => {
+            isMounted = false
+        }
+    }, [isLoggedIn, isOpen])
 
     // Close on click outside or escape
     useEffect(() => {
@@ -216,6 +241,38 @@ export function ProfileDropdown({ isLoggedIn, session, isMobile = false }: Profi
                                 )}
 
                                 {isAdmin && <div className="h-px bg-slate-100 my-1 mx-2" />}
+
+                                {/* Section: Espace Collaborateur (Visible uniquement pour collaborateurs actifs) */}
+                                {isCollaborator && (
+                                    <div className="py-1">
+                                        <div className="px-2.5 py-1 flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                                                Espace Collaborateur
+                                            </span>
+                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/10 text-primary border border-orange-500/20">
+                                                Actif
+                                            </span>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <Link
+                                                href="/collaborator/dashboard"
+                                                onClick={() => setIsOpen(false)}
+                                                className="group flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-slate-800 hover:text-slate-900 bg-orange-50/70 hover:bg-orange-100/80 border border-orange-200/70 transition-all text-[13px] shadow-xs"
+                                            >
+                                                <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                                    <Briefcase className="w-4 h-4" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <span className="font-bold text-slate-900 block leading-tight">Espace Collaborateur</span>
+                                                    <span className="text-[10px] text-slate-500 font-medium">Tableau de bord & Commissions</span>
+                                                </div>
+                                                <ChevronRight className="w-3.5 h-3.5 text-primary group-hover:translate-x-0.5 transition-all" />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {isCollaborator && <div className="h-px bg-slate-100 my-1 mx-2" />}
 
                                 {/* Section: Personal Account */}
                                 <div className="py-1">

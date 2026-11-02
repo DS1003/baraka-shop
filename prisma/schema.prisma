@@ -23,6 +23,7 @@ model User {
   reports       Report[]
   wishlist      Product[]      @relation("Wishlist")
   notifications Notification[]
+  collaboratorProfile CollaboratorProfile?
 }
 
 model Product {
@@ -157,6 +158,7 @@ model Order {
   shippingCost    Float?      @default(0)
   user            User        @relation(fields: [userId], references: [id])
   items           OrderItem[]
+  CommissionOrderEntry CommissionOrderEntry[]
 
   @@index([status])
   @@index([paymentStatus])
@@ -332,6 +334,7 @@ model SiteConfig {
 enum Role {
   USER
   ADMIN
+  COLLABORATOR
 }
 
 enum OrderStatus {
@@ -507,4 +510,203 @@ model NewsletterCampaign {
   @@index([status])
   @@index([createdAt])
 }
+
+// ─── Espace Collaborateur ───────────────────────────────────────────────────
+
+model CollaboratorProfile {
+  id                        String                      @id @default(uuid())
+  userId                    String                      @unique
+  title                     String                      @default("Collaborateur Commercial")
+  collaborationType         String                      @default("PARTENAIRE")
+  startDate                 DateTime                    @default(now())
+  endDate                   DateTime?
+  status                    String                      @default("ACTIVE") // ACTIVE, SUSPENDED, TERMINATED
+  bankDetails               String?
+  notes                     String?
+  permissions               String[]                    @default([]) // Permissions opérationnelles ex: ["MANAGE_ORDERS", "VIEW_STOCK"]
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  activities                CollaboratorActivity[]
+  payments                  CollaboratorPayment[]
+  user                      User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  CommissionPeriod          CommissionPeriod[]
+  CompensationAgreement     CompensationAgreement[]
+  CompensationChangeRequest CompensationChangeRequest[]
+  notificationHistory       CollaboratorNotificationHistory[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model CollaboratorPayment {
+  id               String              @id @default(uuid())
+  collaboratorId   String
+  periodId         String?
+  type             String              @default("SALARY_AND_COMMISSION") // SALARY, COMMISSION, SALARY_AND_COMMISSION, ADVANCE, BONUS
+  amount           Float
+  paymentDate      DateTime            @default(now())
+  paymentMethod    String              @default("BANK_TRANSFER") // BANK_TRANSFER, ORANGE_MONEY, WAVE, CASH
+  reference        String?
+  receiptUrl       String?
+  recordedById     String?
+  recordedByName   String?
+  notes            String?
+  createdAt        DateTime            @default(now())
+  collaborator     CollaboratorProfile @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  CommissionPeriod CommissionPeriod?   @relation(fields: [periodId], references: [id])
+
+  @@index([collaboratorId])
+  @@index([paymentDate])
+  @@index([periodId])
+}
+
+model CollaboratorActivity {
+  id             String              @id @default(uuid())
+  collaboratorId String
+  actionType     String
+  entityType     String              @default("COLLABORATOR")
+  entityId       String?
+  description    String
+  metadata       Json?               @default("{}")
+  ipAddress      String?
+  createdAt      DateTime            @default(now())
+  collaborator   CollaboratorProfile @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@index([collaboratorId])
+  @@index([createdAt])
+  @@index([actionType])
+}
+
+model CommissionOrderEntry {
+  id               String           @id @default(uuid())
+  periodId         String
+  orderId          String
+  orderReference   String
+  orderDate        DateTime
+  orderTotal       Float
+  eligibleAmount   Float
+  commissionRate   Float
+  commissionAmount Float
+  orderStatus      String
+  paymentStatus    String
+  createdAt        DateTime         @default(now())
+  Order            Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  CommissionPeriod CommissionPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@unique([periodId, orderId])
+  @@index([orderId])
+  @@index([periodId])
+}
+
+model CommissionPeriod {
+  id                   String                 @id @default(uuid())
+  collaboratorId       String
+  periodCode           String                 // Format YYYY-MM (ex: 2026-11)
+  startDate            DateTime
+  endDate              DateTime
+  eligibleRevenue      Float                  @default(0)
+  totalOrdersCount     Int                    @default(0)
+  eligibleOrdersCount  Int                    @default(0)
+  commissionRate       Float                  @default(0)
+  commissionAmount     Float                  @default(0)
+  salaryAmount         Float                  @default(0)
+  totalDue             Float                  @default(0)
+  commissionPaid       Float                  @default(0)
+  salaryPaid           Float                  @default(0)
+  totalPaid            Float                  @default(0)
+  remainingBalance     Float                  @default(0)
+  status               String                 @default("CALCULATING") // CALCULATING, VALIDATED, PAID, ARCHIVED
+  isFrozen             Boolean                @default(false)
+  validatedAt          DateTime?
+  validatedById        String?
+  adjustmentAmount     Float                  @default(0)
+  adjustmentReason     String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  CollaboratorPayment  CollaboratorPayment[]
+  CommissionOrderEntry CommissionOrderEntry[]
+  CollaboratorProfile  CollaboratorProfile    @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@unique([collaboratorId, periodCode])
+  @@index([collaboratorId])
+  @@index([periodCode])
+  @@index([status])
+}
+
+model CompensationAgreement {
+  id                 String              @id @default(uuid())
+  collaboratorId     String
+  monthlySalary      Float               @default(0)
+  commissionRate     Float               @default(0)
+  calculationBase    String              @default("DELIVERED_SALES") // DELIVERED_SALES, ALL_SALES, NET_MARGIN
+  eligibleStatuses   String[]            @default(["DELIVERED"])
+  includeDeliveryFee Boolean             @default(false)
+  paymentFrequency   String              @default("MONTHLY")
+  paymentDueDay      Int                 @default(5)
+  effectiveFrom      DateTime            @default(now())
+  effectiveTo        DateTime?
+  status             String              @default("ACTIVE") // ACTIVE, SUPERSEDED, CANCELLED
+  changeReason       String?
+  createdById        String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  CollaboratorProfile CollaboratorProfile @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@index([collaboratorId])
+  @@index([effectiveFrom])
+  @@index([status])
+}
+
+model CompensationChangeRequest {
+  id                  String              @id @default(uuid())
+  collaboratorId      String
+  requestedSalary     Float?
+  requestedRate       Float?
+  requestedBase       String?
+  reason              String?
+  status              String              @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewedById        String?
+  reviewNote          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  CollaboratorProfile CollaboratorProfile @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@index([collaboratorId])
+  @@index([status])
+}
+
+model FinancialAuditLog {
+  id              String    @id @default(uuid())
+  collaboratorId  String
+  action          String
+  performedById   String
+  performedByName String?
+  oldValue        Json?
+  newValue        Json?
+  reason          String?
+  effectiveDate   DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([action])
+  @@index([collaboratorId])
+  @@index([createdAt])
+}
+
+model CollaboratorNotificationHistory {
+  id             String              @id @default(uuid())
+  collaboratorId String
+  collaborator   CollaboratorProfile @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+  email          String
+  type           String              @default("WELCOME_NOMINATION")
+  status         String              @default("SENT") // SENT, FAILED, SIMULATED
+  errorMessage   String?
+  sentAt         DateTime            @default(now())
+  retries        Int                 @default(0)
+
+  @@index([collaboratorId])
+  @@index([status])
+  @@index([sentAt])
+}
+
 

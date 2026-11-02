@@ -223,6 +223,32 @@ export function Header() {
         fetchData();
     }, [])
 
+    const scrollPosOnKeyDownRef = useRef<number | null>(null)
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        scrollPosOnKeyDownRef.current = window.scrollY
+        if (e.key === 'Enter') {
+            handleSearch()
+        }
+    }
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value
+        const savedScroll = scrollPosOnKeyDownRef.current ?? window.scrollY
+        setSearchQuery(val)
+
+        // Safety: If Chromium's sticky input bug shifted scrollY during keystroke
+        if (scrollPosOnKeyDownRef.current !== null && window.scrollY !== savedScroll) {
+            window.scrollTo({ top: savedScroll, behavior: 'instant' as ScrollBehavior })
+        }
+
+        requestAnimationFrame(() => {
+            if (scrollPosOnKeyDownRef.current !== null && window.scrollY !== savedScroll) {
+                window.scrollTo({ top: savedScroll, behavior: 'instant' as ScrollBehavior })
+            }
+        })
+    }
+
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault()
         if (searchQuery.trim()) {
@@ -456,9 +482,9 @@ export function Header() {
                                             type="text"
                                             placeholder="Rechercher un produit, une marque..."
                                             value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onChange={handleSearchChange}
                                             onFocus={() => setIsSearchFocused(true)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                            onKeyDown={handleSearchKeyDown}
                                             className="w-full px-4 md:px-6 h-full bg-transparent outline-none text-sm md:text-base placeholder:text-gray-400 font-medium truncate"
                                         />
                                         {searchQuery && (
@@ -774,8 +800,9 @@ export function Header() {
                         spellCheck={false}
                         className="flex-1 min-w-0 bg-transparent pl-2 pr-1.5 outline-none text-xs font-normal text-[#1B1F3B] placeholder:text-gray-400"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={handleSearchChange}
                         onFocus={() => setIsSearchFocused(true)}
+                        onKeyDown={handleSearchKeyDown}
                     />
                     {searchQuery && (
                         <button
