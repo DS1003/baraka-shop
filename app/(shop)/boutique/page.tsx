@@ -38,11 +38,11 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
     const subCategory = params.subCategory || params.sub || ''
     const thirdLevelCategory = params.thirdLevelCategory || params.third || ''
     const brand = params.brand || ''
-    const sort = params.sort || 'newest'
+    const query = params.q || ''
+    const sort = params.sort || (query ? 'relevance' : 'newest')
     const page = Number(params.page) || 1
     const minPrice = params.minPrice ? Number(params.minPrice) : undefined
     const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined
-    const query = params.q || ''
 
     // Fetch categories and brands first to recover parent category if missing
     const [categories, brands] = await Promise.all([

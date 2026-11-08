@@ -40,6 +40,7 @@ interface ShopClientProps {
 }
 
 const SORT_OPTIONS = [
+    { value: 'relevance', label: 'Pertinence IA', desc: 'Les plus pertinents en premier', icon: Sparkles },
     { value: 'newest', label: 'Nouveautés', desc: 'Derniers arrivages en premier', icon: Sparkles },
     { value: 'price_asc', label: 'Prix : Croissant', desc: 'Du moins cher au plus cher', icon: ArrowUpRight },
     { value: 'price_desc', label: 'Prix : Décroissant', desc: 'Du plus cher au moins cher', icon: ArrowDownRight },
@@ -60,9 +61,9 @@ export function ShopClient({ initialProducts, categories, brands, pagination }: 
     const currentSubCategory = searchParams.get('subCategory') || searchParams.get('sub') || ''
     const currentThirdLevelCategory = searchParams.get('thirdLevelCategory') || searchParams.get('third') || ''
     const currentBrand = searchParams.get('brand') || ''
-    const currentSort = searchParams.get('sort') || 'newest'
-    const currentPage = Number(searchParams.get('page')) || 1
     const query = searchParams.get('q') || ''
+    const currentSort = searchParams.get('sort') || (query ? 'relevance' : 'newest')
+    const currentPage = Number(searchParams.get('page')) || 1
     const minPrice = searchParams.get('minPrice') || ''
     const maxPrice = searchParams.get('maxPrice') || ''
 

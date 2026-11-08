@@ -131,32 +131,9 @@ export const WatermarkOverlay = ({
         )
     }
 
-    // ── 2. Product Card View (Grid & List items, e.g. 140px - 280px) ──
+    // ── 2. Product Card View (Watermark removed on product cards) ──
     if (isCard) {
-        return (
-            <div className={cn("absolute inset-0 pointer-events-none z-30 overflow-hidden rounded-[inherit]", className)}>
-                {/* Bottom Left Corner Mark */}
-                <div className="absolute bottom-0 left-0 w-[46px] h-[46px] sm:w-[54px] sm:h-[54px] md:w-[62px] md:h-[62px] opacity-85">
-                    <div className="w-full h-full scale-x-[-1]">
-                        {cornerMarkSvg}
-                    </div>
-                </div>
-
-                {/* Bottom Right Corner Mark */}
-                <div className="absolute bottom-0 right-0 w-[46px] h-[46px] sm:w-[54px] sm:h-[54px] md:w-[62px] md:h-[62px] opacity-85">
-                    {cornerMarkSvg}
-                </div>
-
-                {/* Centered Proportionate Logo */}
-                {logoUrl && (
-                    <div className="absolute inset-x-0 bottom-1.5 sm:bottom-2 flex items-center justify-center pointer-events-none">
-                        <div className="relative w-[86px] h-[25px] sm:w-[102px] sm:h-[30px] md:w-[118px] md:h-[34px] max-w-[60%] opacity-95">
-                            <Image src={logoUrl} alt="Baraka Shop" fill className="object-contain object-center" unoptimized />
-                        </div>
-                    </div>
-                )}
-            </div>
-        )
+        return null;
     }
 
     // ── 3. Full Page Main Product & Lightbox Modal View ──

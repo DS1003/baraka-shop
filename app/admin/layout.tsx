@@ -42,7 +42,7 @@ import { ImportToast } from '@/features/admin/components/ImportToast';
 import { GlobalSearchModal } from '@/features/admin/components/GlobalSearchModal';
 import { Toaster } from 'sonner';
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Sparkles } from 'lucide-react';
 
 const sidebarGroups = [
     {
@@ -56,6 +56,7 @@ const sidebarGroups = [
         label: "Catalogue",
         items: [
             { icon: Box, label: 'Produits', href: '/admin/products' },
+            { icon: Sparkles, label: 'Enrichissement IA', href: '/admin/ai-enrichment' },
             { icon: AlertOctagon, label: 'Produits en rupture', href: '/admin/out-of-stock' },
             { icon: Store, label: 'Boutiques', href: '/admin/stores' },
             { icon: Store, label: 'Boutiques Physiques', href: '/admin/physical-stores' },

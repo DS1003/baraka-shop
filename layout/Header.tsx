@@ -18,6 +18,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { getProductsAction, getMegaMenuAction } from '@/lib/actions/product-actions'
 import { getStoresAction } from '@/lib/actions/store-actions'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
+import { getSmartSearchSuggestionsAction, SmartSearchResult } from '@/lib/actions/smart-search-actions'
 const MegaMenu = dynamic(() => import('@/features/home/components/MegaMenu').then(mod => mod.MegaMenu), { ssr: false })
 const CartToast = dynamic(() => import('@/components/CartToast').then(mod => mod.CartToast), { ssr: false })
 const MiniCart = dynamic(() => import('@/components/MiniCart').then(mod => mod.MiniCart), { ssr: false })
@@ -131,6 +132,8 @@ export function Header() {
     const [isSearchFocused, setIsSearchFocused] = useState(false)
     const [scrolled, setScrolled] = useState(false)
     const [searchSuggestions, setSearchSuggestions] = useState<any[]>([])
+    const [smartSearchResult, setSmartSearchResult] = useState<SmartSearchResult | null>(null)
+    const [activeResultIndex, setActiveResultIndex] = useState<number>(-1)
     const [isSearching, setIsSearching] = useState(false)
     const [categories, setCategories] = useState<any[]>([])
     const [stores, setStores] = useState<any[]>([])
@@ -138,6 +141,38 @@ export function Header() {
     const megaMenuRef = useRef<HTMLDivElement | null>(null)
     const toggleButtonRef = useRef<HTMLDivElement | null>(null)
     const stickyBurgerRef = useRef<HTMLDivElement | null>(null)
+    const desktopSearchInputRef = useRef<HTMLInputElement | null>(null)
+    const mobileSearchInputRef = useRef<HTMLInputElement | null>(null)
+
+    const focusSearchInput = (newVal?: string) => {
+        setIsSearchFocused(true)
+        const applyFocus = () => {
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+            const input = (isMobile ? mobileSearchInputRef.current : desktopSearchInputRef.current) 
+                       || desktopSearchInputRef.current 
+                       || mobileSearchInputRef.current
+            if (input) {
+                input.focus()
+                const targetLen = newVal !== undefined ? newVal.length : input.value.length
+                try {
+                    input.setSelectionRange(targetLen, targetLen)
+                } catch {
+                    // ignore if not supported
+                }
+            }
+        }
+        applyFocus()
+        setTimeout(applyFocus, 10)
+    }
+
+    useEffect(() => {
+        if (activeResultIndex >= 0) {
+            const el = document.getElementById(`search-item-${activeResultIndex}`)
+            if (el) {
+                el.scrollIntoView({ block: 'nearest' })
+            }
+        }
+    }, [activeResultIndex])
 
     const handleMenuEnter = () => {
         if (menuTimeoutRef.current) {
@@ -227,8 +262,30 @@ export function Header() {
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         scrollPosOnKeyDownRef.current = window.scrollY
-        if (e.key === 'Enter') {
-            handleSearch()
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setActiveResultIndex(prev => {
+                const max = (searchSuggestions.length || 0) - 1
+                return prev < max ? prev + 1 : 0
+            })
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setActiveResultIndex(prev => {
+                const max = (searchSuggestions.length || 0) - 1
+                return prev > 0 ? prev - 1 : max
+            })
+        } else if (e.key === 'Escape') {
+            setIsSearchFocused(false)
+        } else if (e.key === 'Enter') {
+            if (activeResultIndex >= 0 && searchSuggestions[activeResultIndex]) {
+                e.preventDefault()
+                const sel = searchSuggestions[activeResultIndex]
+                router.push(`/product/${sel.id}`)
+                setIsSearchFocused(false)
+                setSearchQuery('')
+            } else {
+                handleSearch()
+            }
         }
     }
 
@@ -260,22 +317,27 @@ export function Header() {
 
     useEffect(() => {
         const fetchSuggestions = async () => {
-            if (searchQuery.length >= 2) {
+            if (searchQuery.trim().length >= 2) {
                 setIsSearching(true)
                 try {
-                    const result = await getProductsAction({ query: searchQuery, limit: 5 })
-                    setSearchSuggestions(result.products)
+                    const result = await getSmartSearchSuggestionsAction(searchQuery.trim(), 10)
+                    setSmartSearchResult(result)
+                    setSearchSuggestions(result.products || [])
+                    setActiveResultIndex(-1)
                 } catch (error) {
                     console.error('Search suggestions error:', error)
                     setSearchSuggestions([])
+                    setSmartSearchResult(null)
                 } finally {
                     setIsSearching(false)
                 }
             } else {
                 setSearchSuggestions([])
+                setSmartSearchResult(null)
+                setActiveResultIndex(-1)
             }
         }
-        const timer = setTimeout(fetchSuggestions, 300)
+        const timer = setTimeout(fetchSuggestions, 200)
         return () => clearTimeout(timer)
     }, [searchQuery])
 
@@ -378,7 +440,8 @@ export function Header() {
 
             {/* 2. Main Header (Sticky) */}
             <div className={cn(
-                "sticky top-0 z-[100] w-full transition-all duration-300 hidden md:block",
+                "sticky top-0 w-full transition-all duration-300 hidden md:block",
+                isSearchFocused ? "z-[130]" : "z-[100]",
                 scrolled ? "shadow-[0_10px_30px_rgba(0,0,0,0.08)] bg-white" : "bg-white"
             )}>
                 <div className={cn(
@@ -472,32 +535,46 @@ export function Header() {
                             </AnimatePresence>
 
                         {/* Search Bar & Auto-suggestions */}
-                        <div className="flex-1 relative min-w-0">
+                        <div className={cn("flex-1 relative min-w-0", isSearchFocused ? "z-[120]" : "z-10")}>
                                 <form onSubmit={handleSearch} className={cn(
-                                    "flex w-full h-[44px] md:h-[46px] bg-[#f4f4f4] border border-gray-200 rounded-lg overflow-hidden transition-all focus-within:bg-white focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
+                                    "relative z-[120] flex w-full h-[44px] md:h-[46px] rounded-full overflow-hidden transition-all duration-200 border",
+                                    isSearchFocused
+                                        ? "bg-white border-primary ring-4 ring-primary/20 shadow-xl shadow-primary/10"
+                                        : "bg-[#f4f4f4] border-gray-200 hover:border-gray-300",
                                     scrolled && "h-[40px]"
                                 )}>
-                                    <div className="flex-1 relative flex items-center min-w-0">
+                                    <div className="flex-1 relative flex items-center min-w-0 bg-transparent">
                                         <input
+                                            ref={desktopSearchInputRef}
                                             type="text"
-                                            placeholder="Rechercher un produit, une marque..."
+                                            placeholder="Rechercher un produit, une marque, une référence..."
                                             value={searchQuery}
                                             onChange={handleSearchChange}
                                             onFocus={() => setIsSearchFocused(true)}
                                             onKeyDown={handleSearchKeyDown}
-                                            className="w-full px-4 md:px-6 h-full bg-transparent outline-none text-sm md:text-base placeholder:text-gray-400 font-medium truncate"
+                                            className="w-full pl-5 md:pl-6 pr-4 h-full bg-transparent outline-none text-sm md:text-base text-gray-900 placeholder:text-gray-400 font-medium truncate"
                                         />
                                         {searchQuery && (
                                             <button
                                                 type="button"
-                                                onClick={() => setSearchQuery('')}
-                                                className="absolute right-2 p-1.5 text-gray-400 hover:text-primary transition-colors"
+                                                onMouseDown={(e) => e.preventDefault()}
+                                                onClick={() => {
+                                                    setSearchQuery('');
+                                                    focusSearchInput('');
+                                                }}
+                                                className="absolute right-2 p-1.5 text-gray-400 hover:text-primary transition-colors cursor-pointer"
+                                                title="Effacer la recherche"
+                                                aria-label="Effacer"
                                             >
                                                 <X className="w-4 h-4" />
                                             </button>
                                         )}
                                     </div>
-                                    <button type="submit" className="bg-primary hover:bg-primary/90 text-white w-[46px] md:w-[50px] h-full flex items-center justify-center transition-colors shrink-0">
+                                    <button
+                                        type="submit"
+                                        aria-label="Lancer la recherche"
+                                        className="bg-primary hover:bg-primary/90 text-white w-[50px] md:w-[56px] h-full flex items-center justify-center transition-colors shrink-0 cursor-pointer"
+                                    >
                                         <Search className="w-4 h-4 md:w-5 md:h-5" />
                                     </button>
                                 </form>
@@ -506,37 +583,216 @@ export function Header() {
                                     {isSearchFocused && searchQuery.length >= 2 && (
                                         <>
                                             <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: 10 }}
-                                                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[110] overflow-hidden"
+                                                initial={{ opacity: 0, y: 10, scale: 0.99 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.99 }}
+                                                transition={{ duration: 0.15 }}
+                                                onMouseDown={(e) => {
+                                                    // Évite que cliquer dans le panneau de suggestions ne fasse perdre le focus à l'input
+                                                    const target = e.target as HTMLElement;
+                                                    if (!target.closest('a')) {
+                                                        e.preventDefault();
+                                                        focusSearchInput();
+                                                    }
+                                                }}
+                                                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.22)] border border-gray-100 z-[120] overflow-hidden"
                                             >
-                                                <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Résultats pour "{searchQuery}"</span>
+                                                {/* Header bar */}
+                                                <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-gray-50/90 via-white to-gray-50/90 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[11px] font-black text-gray-500 uppercase tracking-wider">
+                                                            Résultats pour <span className="text-primary">"{searchQuery}"</span>
+                                                        </span>
+                                                        {isSearching ? (
+                                                            <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                                        ) : (
+                                                            <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">
+                                                                {smartSearchResult?.total || searchSuggestions.length}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-[10px] text-gray-400 font-medium hidden sm:inline-flex items-center gap-1">
+                                                        Utilisez <kbd className="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-[9px] font-mono">↑</kbd><kbd className="px-1 py-0.5 bg-gray-100 border border-gray-200 rounded text-[9px] font-mono">↓</kbd> pour naviguer
+                                                    </span>
                                                 </div>
-                                                <div className="max-h-[400px] overflow-y-auto">
-                                                    {searchSuggestions.map((item: any) => (
+
+                                                {/* Did You Mean Suggestion Bar (Google-like) */}
+                                                {smartSearchResult?.didYouMean && (
+                                                    <div className="px-4 py-2 bg-amber-50/90 border-b border-amber-100/80 flex items-center justify-between text-xs animate-in fade-in">
+                                                        <span className="text-amber-900 font-medium text-[11px]">
+                                                            Essayez avec l'orthographe :{' '}
+                                                            <button
+                                                                type="button"
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onClick={() => {
+                                                                    const corrected = smartSearchResult.didYouMean!;
+                                                                    setSearchQuery(corrected);
+                                                                    setIsSearchFocused(true);
+                                                                    focusSearchInput(corrected);
+                                                                }}
+                                                                className="font-extrabold text-primary hover:underline italic ml-1 cursor-pointer"
+                                                            >
+                                                                {smartSearchResult.didYouMean}
+                                                            </button>
+                                                        </span>
+                                                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                                    </div>
+                                                )}
+
+                                                {/* Autocomplete query suggestions (Chips) */}
+                                                {smartSearchResult?.suggestions && smartSearchResult.suggestions.length > 0 && (
+                                                    <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/40 flex flex-wrap items-center gap-1.5 text-xs">
+                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mr-1">Suggestions :</span>
+                                                        {smartSearchResult.suggestions.map((sug, idx) => (
+                                                            <button
+                                                                key={idx}
+                                                                type="button"
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onClick={() => {
+                                                                    setSearchQuery(sug);
+                                                                    setIsSearchFocused(true);
+                                                                    focusSearchInput(sug);
+                                                                }}
+                                                                className="px-2.5 py-1 rounded-full bg-white hover:bg-primary hover:text-white text-gray-700 text-[11px] font-medium border border-gray-200/90 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer group"
+                                                                title={`Affiner avec "${sug}"`}
+                                                            >
+                                                                <Search className="w-3 h-3 text-gray-400 group-hover:text-white/80 transition-colors" />
+                                                                <span>{sug}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* Categories & Brands matching badges */}
+                                                {((smartSearchResult?.categories && smartSearchResult.categories.length > 0) ||
+                                                  (smartSearchResult?.brands && smartSearchResult.brands.length > 0)) && (
+                                                    <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/30 flex flex-wrap items-center gap-1.5 text-xs">
+                                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider mr-1">Filtres rapides :</span>
+                                                        {smartSearchResult?.categories?.map((cat) => (
+                                                            <div
+                                                                key={cat.id}
+                                                                className="inline-flex items-center rounded-lg bg-white border border-gray-200 overflow-hidden shadow-2xs group text-[11px]"
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    onMouseDown={(e) => e.preventDefault()}
+                                                                    onClick={() => {
+                                                                        const newQ = searchQuery.toLowerCase().includes(cat.name.toLowerCase())
+                                                                            ? searchQuery
+                                                                            : `${searchQuery} ${cat.name}`.trim();
+                                                                        setSearchQuery(newQ);
+                                                                        setIsSearchFocused(true);
+                                                                        focusSearchInput(newQ);
+                                                                    }}
+                                                                    className="px-2.5 py-1 text-gray-700 hover:bg-primary hover:text-white font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                                                                    title={`Ajouter ${cat.name} à la recherche`}
+                                                                >
+                                                                    <span className="text-gray-400 group-hover:text-white/80">Rayon :</span>
+                                                                    <strong>{cat.name}</strong>
+                                                                </button>
+                                                                <Link
+                                                                    href={`/boutique?category=${cat.slug}&q=${encodeURIComponent(searchQuery)}`}
+                                                                    onClick={() => {
+                                                                        setIsSearchFocused(false);
+                                                                        setSearchQuery('');
+                                                                    }}
+                                                                    className="px-1.5 py-1 text-gray-400 hover:text-white hover:bg-primary border-l border-gray-100 transition-colors"
+                                                                    title={`Voir tout le rayon ${cat.name}`}
+                                                                >
+                                                                    <ArrowRight className="w-3 h-3" />
+                                                                </Link>
+                                                            </div>
+                                                        ))}
+                                                        {smartSearchResult?.brands?.map((br) => (
+                                                            <div
+                                                                key={br.id}
+                                                                className="inline-flex items-center rounded-lg bg-white border border-gray-200 overflow-hidden shadow-2xs group text-[11px]"
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    onMouseDown={(e) => e.preventDefault()}
+                                                                    onClick={() => {
+                                                                        const newQ = searchQuery.toLowerCase().includes(br.name.toLowerCase())
+                                                                            ? searchQuery
+                                                                            : `${searchQuery} ${br.name}`.trim();
+                                                                        setSearchQuery(newQ);
+                                                                        setIsSearchFocused(true);
+                                                                        focusSearchInput(newQ);
+                                                                    }}
+                                                                    className="px-2.5 py-1 text-gray-700 hover:bg-primary hover:text-white font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                                                                    title={`Ajouter ${br.name} à la recherche`}
+                                                                >
+                                                                    <span className="text-gray-400 group-hover:text-white/80">Marque :</span>
+                                                                    <strong>{br.name}</strong>
+                                                                </button>
+                                                                <Link
+                                                                    href={`/boutique?brand=${br.slug}`}
+                                                                    onClick={() => {
+                                                                        setIsSearchFocused(false);
+                                                                        setSearchQuery('');
+                                                                    }}
+                                                                    className="px-1.5 py-1 text-gray-400 hover:text-white hover:bg-primary border-l border-gray-100 transition-colors"
+                                                                    title={`Voir tous les produits ${br.name}`}
+                                                                >
+                                                                    <ArrowRight className="w-3 h-3" />
+                                                                </Link>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* Products List (Re-ranked by Google Relevance) */}
+                                                <div className="max-h-[440px] md:max-h-[480px] overflow-y-auto search-dropdown-scrollbar divide-y divide-gray-50 pr-1">
+                                                    {searchSuggestions.map((item: any, idx: number) => (
                                                         <Link
                                                             key={item.id}
+                                                            id={`search-item-${idx}`}
                                                             href={`/product/${item.id}`}
-                                                            className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
+                                                            className={`flex items-center gap-3.5 p-3.5 hover:bg-primary/5 transition-all group ${
+                                                                activeResultIndex === idx ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''
+                                                            }`}
                                                             onClick={() => {
-                                                                setIsSearchFocused(false)
-                                                                setSearchQuery('')
+                                                                setIsSearchFocused(false);
+                                                                setSearchQuery('');
                                                             }}
                                                         >
-                                                            <div className="relative w-12 h-12 bg-white rounded-md border border-gray-100 overflow-hidden shrink-0">
-                                                                <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-1 group-hover:scale-110 transition-transform" unoptimized />
+                                                            <div className="relative w-12 h-12 bg-white rounded-lg border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-1 group-hover:scale-105 transition-transform">
+                                                                <Image
+                                                                    src={item.images?.[0] || item.image || '/placeholder.png'}
+                                                                    alt={item.name}
+                                                                    fill
+                                                                    className="object-contain p-1"
+                                                                    unoptimized
+                                                                />
                                                             </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-sm font-bold text-[#1B1F3B] group-hover:text-primary transition-colors">{item.name}</span>
-                                                                <span className="text-[11px] text-gray-400 font-medium uppercase">{item.category?.name || item.category}</span>
+                                                            <div className="flex flex-col min-w-0 flex-1">
+                                                                <span
+                                                                    className="text-xs font-bold text-[#1B1F3B] group-hover:text-primary transition-colors line-clamp-1"
+                                                                    dangerouslySetInnerHTML={{ __html: item.highlightedName || item.name }}
+                                                                />
+                                                                <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-gray-400">
+                                                                    <span className="font-medium uppercase">{item.category?.name || item.category || 'Produit'}</span>
+                                                                    {item.brand?.name && (
+                                                                        <>
+                                                                            <span>•</span>
+                                                                            <span className="font-semibold text-gray-500">{item.brand.name}</span>
+                                                                        </>
+                                                                    )}
+                                                                    {item.reference && (
+                                                                        <>
+                                                                            <span>•</span>
+                                                                            <span className="font-mono text-gray-400">{item.reference}</span>
+                                                                        </>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div className="ml-auto flex flex-col items-end gap-1">
-                                                                <span className="text-sm font-black text-[#1B1F3B] tabular-nums">{formatPrice(item.price)}</span>
+                                                            <div className="ml-auto flex flex-col items-end gap-1 shrink-0">
+                                                                <span className="text-xs md:text-sm font-black text-[#1B1F3B] tabular-nums">
+                                                                    {formatPrice(item.price)}
+                                                                </span>
                                                                 {item.stock > 0 ? (
-                                                                    <span className="bg-green-50 text-green-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-green-100 flex items-center gap-1">
-                                                                        <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
+                                                                    <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-widest border border-emerald-100 flex items-center gap-1">
+                                                                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                                                                         En Stock
                                                                     </span>
                                                                 ) : (
@@ -547,24 +803,38 @@ export function Header() {
                                                             </div>
                                                         </Link>
                                                     ))}
-                                                    {searchSuggestions.length === 0 && (
-                                                        <div className="p-8 text-center text-gray-400 text-xs font-medium italic">
-                                                            Aucun produit trouvé...
+
+                                                    {searchSuggestions.length === 0 && !isSearching && (
+                                                        <div className="p-8 text-center text-gray-400 text-xs font-medium space-y-1">
+                                                            <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                                                            <p className="font-semibold text-gray-600">Aucun produit trouvé pour "{searchQuery}"</p>
+                                                            <p className="text-[11px] text-gray-400">Vérifiez l'orthographe ou essayez un terme plus générique.</p>
                                                         </div>
                                                     )}
                                                 </div>
-                                                <Link
-                                                    href={`/boutique?q=${searchQuery}`}
-                                                    className="block p-4 text-center text-xs font-black text-primary hover:bg-primary hover:text-white transition-all uppercase tracking-widest bg-primary/5"
-                                                    onClick={() => {
-                                                        setIsSearchFocused(false)
-                                                        setSearchQuery('')
-                                                    }}
-                                                >
-                                                    Voir tous les résultats
-                                                </Link>
+
+                                                {/* Footer Bar */}
+                                                <div className="p-3 bg-gray-50/80 border-t border-gray-100 flex items-center justify-between text-xs">
+                                                    <span className="text-[11px] text-gray-500">
+                                                        {smartSearchResult?.total || searchSuggestions.length} produit{(smartSearchResult?.total || searchSuggestions.length) > 1 ? 's' : ''} correspondant{(smartSearchResult?.total || searchSuggestions.length) > 1 ? 's' : ''}
+                                                    </span>
+                                                    <Link
+                                                        href={`/boutique?q=${encodeURIComponent(searchQuery)}`}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary/90 transition shadow-sm"
+                                                        onClick={() => {
+                                                            setIsSearchFocused(false);
+                                                            setSearchQuery('');
+                                                        }}
+                                                    >
+                                                        <span>Voir tous les résultats</span>
+                                                        <ArrowRight className="w-3.5 h-3.5" />
+                                                    </Link>
+                                                </div>
                                             </motion.div>
-                                            <div className="fixed inset-0 z-[105] bg-black/5" onClick={() => setIsSearchFocused(false)} />
+                                            <div
+                                                className="fixed inset-0 z-[105] bg-black/25 backdrop-blur-[2px] transition-opacity"
+                                                onClick={() => setIsSearchFocused(false)}
+                                            />
                                         </>
                                     )}
                                 </AnimatePresence>
@@ -790,9 +1060,15 @@ export function Header() {
 
             {/* Mobile Search Bar */}
             <div className="md:hidden bg-white px-3 py-1.5 border-b border-gray-100 relative z-[100]">
-                <form onSubmit={handleSearch} className="relative z-[150] flex items-center w-full h-[38px] bg-[#F3F4F6] border border-gray-200/60 rounded-full pl-3 pr-1 focus-within:bg-white focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                <form onSubmit={handleSearch} className={cn(
+                    "relative z-[150] flex items-center w-full h-[38px] rounded-full pl-3 pr-1 border transition-all duration-200",
+                    isSearchFocused
+                        ? "bg-white border-primary ring-2 ring-primary/20 shadow-sm"
+                        : "bg-[#F3F4F6] border-gray-200/60"
+                )}>
                     <Search className="w-3.5 h-3.5 text-gray-400 shrink-0 pointer-events-none" />
                     <input
+                        ref={mobileSearchInputRef}
                         type="text"
                         placeholder="Rechercher un produit, une marque..."
                         autoComplete="off"
@@ -807,8 +1083,12 @@ export function Header() {
                     {searchQuery && (
                         <button
                             type="button"
-                            onClick={() => setSearchQuery('')}
-                            className="w-5 h-5 mr-1 rounded-full bg-gray-200/80 hover:bg-gray-300 text-gray-500 hover:text-gray-700 flex items-center justify-center shrink-0 active:scale-90 transition-all"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => {
+                                setSearchQuery('')
+                                focusSearchInput('')
+                            }}
+                            className="w-5 h-5 mr-1 rounded-full bg-gray-200/80 hover:bg-gray-300 text-gray-500 hover:text-gray-700 flex items-center justify-center shrink-0 active:scale-90 transition-all cursor-pointer"
                             aria-label="Effacer la recherche"
                         >
                             <X className="w-2.5 h-2.5" />
@@ -838,7 +1118,14 @@ export function Header() {
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 6 }}
-                            className="absolute left-0 right-0 top-full bg-white z-[150] shadow-xl border-t border-gray-100 max-h-[65vh] overflow-y-auto rounded-b-xl"
+                            onMouseDown={(e) => {
+                                const target = e.target as HTMLElement
+                                if (!target.closest('a')) {
+                                    e.preventDefault()
+                                    focusSearchInput()
+                                }
+                            }}
+                            className="absolute left-0 right-0 top-full bg-white z-[150] shadow-xl border-t border-gray-100 max-h-[65vh] overflow-y-auto search-dropdown-scrollbar rounded-b-xl"
                         >
                             {isSearching ? (
                                 <div className="py-6 px-4 text-center">
@@ -847,44 +1134,139 @@ export function Header() {
                                 </div>
                             ) : searchSuggestions.length > 0 ? (
                                 <div className="flex flex-col">
-                                    <div className="px-3.5 py-1.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Résultats suggérés</span>
-                                        <span className="text-[10px] text-gray-400 font-medium">{searchSuggestions.length} trouvé{searchSuggestions.length > 1 ? 's' : ''}</span>
+                                    <div className="px-3.5 py-2 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                            {smartSearchResult?.total || searchSuggestions.length} résultat{(smartSearchResult?.total || searchSuggestions.length) > 1 ? 's' : ''}
+                                        </span>
+                                        <span className="text-[10px] text-gray-400 font-medium">Pertinence Google-like</span>
                                     </div>
+
+                                    {smartSearchResult?.didYouMean && (
+                                        <div className="px-3 py-1.5 bg-amber-50 border-b border-amber-100 text-[11px] text-amber-900 flex items-center justify-between">
+                                            <span>
+                                                Orthographe :{' '}
+                                                <button
+                                                    type="button"
+                                                    onMouseDown={(e) => e.preventDefault()}
+                                                    onClick={() => {
+                                                        const corrected = smartSearchResult.didYouMean!
+                                                        setSearchQuery(corrected)
+                                                        setIsSearchFocused(true)
+                                                        focusSearchInput(corrected)
+                                                    }}
+                                                    className="font-bold text-primary underline italic cursor-pointer"
+                                                >
+                                                    {smartSearchResult.didYouMean}
+                                                </button>
+                                            </span>
+                                            <Sparkles className="w-3 h-3 text-amber-500" />
+                                        </div>
+                                    )}
+
+                                    {/* Mobile Autocomplete Suggestions */}
+                                    {smartSearchResult?.suggestions && smartSearchResult.suggestions.length > 0 && (
+                                        <div className="px-3 py-1.5 bg-gray-50/60 border-b border-gray-100 flex flex-wrap items-center gap-1">
+                                            {smartSearchResult.suggestions.map((sug, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onMouseDown={(e) => e.preventDefault()}
+                                                    onClick={() => {
+                                                        setSearchQuery(sug)
+                                                        setIsSearchFocused(true)
+                                                        focusSearchInput(sug)
+                                                    }}
+                                                    className="px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-700 text-[10px] font-medium flex items-center gap-1 active:bg-primary active:text-white transition-colors cursor-pointer"
+                                                >
+                                                    <Search className="w-2.5 h-2.5 text-gray-400" />
+                                                    <span>{sug}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Mobile Quick Category & Brand Chips */}
+                                    {((smartSearchResult?.categories && smartSearchResult.categories.length > 0) ||
+                                      (smartSearchResult?.brands && smartSearchResult.brands.length > 0)) && (
+                                        <div className="px-3 py-1.5 bg-gray-50/30 border-b border-gray-100 flex flex-wrap items-center gap-1 text-[10px]">
+                                            {smartSearchResult?.categories?.map((cat) => (
+                                                <button
+                                                    key={cat.id}
+                                                    type="button"
+                                                    onMouseDown={(e) => e.preventDefault()}
+                                                    onClick={() => {
+                                                        const newQ = searchQuery.toLowerCase().includes(cat.name.toLowerCase())
+                                                            ? searchQuery
+                                                            : `${searchQuery} ${cat.name}`.trim()
+                                                        setSearchQuery(newQ)
+                                                        setIsSearchFocused(true)
+                                                        focusSearchInput(newQ)
+                                                    }}
+                                                    className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-700 font-semibold flex items-center gap-1 cursor-pointer active:bg-primary active:text-white"
+                                                >
+                                                    <span className="text-gray-400">Rayon:</span>
+                                                    <span>{cat.name}</span>
+                                                </button>
+                                            ))}
+                                            {smartSearchResult?.brands?.map((br) => (
+                                                <button
+                                                    key={br.id}
+                                                    type="button"
+                                                    onMouseDown={(e) => e.preventDefault()}
+                                                    onClick={() => {
+                                                        const newQ = searchQuery.toLowerCase().includes(br.name.toLowerCase())
+                                                            ? searchQuery
+                                                            : `${searchQuery} ${br.name}`.trim()
+                                                        setSearchQuery(newQ)
+                                                        setIsSearchFocused(true)
+                                                        focusSearchInput(newQ)
+                                                    }}
+                                                    className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-700 font-semibold flex items-center gap-1 cursor-pointer active:bg-primary active:text-white"
+                                                >
+                                                    <span className="text-gray-400">Marque:</span>
+                                                    <span>{br.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     {searchSuggestions.map((item: any) => (
                                         <Link
                                             key={item.id}
                                             href={`/product/${item.id}`}
-                                            className="flex items-center gap-3 px-3.5 py-2 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
+                                            className="flex items-center gap-3 px-3.5 py-2.5 hover:bg-gray-50 transition-colors group border-b border-gray-50 last:border-0"
                                             onClick={() => {
                                                 setIsSearchFocused(false)
                                                 setSearchQuery('')
                                             }}
                                         >
-                                            <div className="relative w-9 h-9 bg-white rounded-lg border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                                            <div className="relative w-10 h-10 bg-white rounded-lg border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
                                                 <Image src={item.images?.[0] || item.image || '/placeholder.png'} alt={item.name} fill className="object-contain p-0.5 group-hover:scale-105 transition-transform" unoptimized />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="text-xs font-semibold text-[#1B1F3B] truncate group-hover:text-primary transition-colors">{item.name}</h4>
+                                                <h4
+                                                    className="text-xs font-semibold text-[#1B1F3B] truncate group-hover:text-primary transition-colors"
+                                                    dangerouslySetInnerHTML={{ __html: item.highlightedName || item.name }}
+                                                />
                                                 <p className="text-[11px] font-bold text-primary tabular-nums mt-0.5">{formatPrice(item.price)}</p>
                                             </div>
                                         </Link>
                                     ))}
                                     <Link
-                                        href={`/boutique?q=${searchQuery}`}
+                                        href={`/boutique?q=${encodeURIComponent(searchQuery)}`}
                                         className="block py-2.5 px-4 text-center text-xs font-bold text-primary hover:bg-primary hover:text-white transition-all bg-primary/5"
                                         onClick={() => {
                                             setIsSearchFocused(false)
                                             setSearchQuery('')
                                         }}
                                     >
-                                        Voir tous les résultats
+                                        Voir tous les résultats ({smartSearchResult?.total || searchSuggestions.length})
                                     </Link>
                                 </div>
                             ) : searchQuery.length > 1 ? (
                                 <div className="py-6 px-4 text-center text-gray-400">
                                     <Search className="w-6 h-6 mx-auto mb-2 opacity-25" />
-                                    <p className="text-xs font-bold text-gray-500">Aucun résultat trouvé</p>
+                                    <p className="text-xs font-bold text-gray-500">Aucun résultat trouvé pour "{searchQuery}"</p>
                                 </div>
                             ) : null}
                         </motion.div>

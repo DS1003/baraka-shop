@@ -8,6 +8,7 @@ import { auth } from '@/auth';
 import fs from 'fs/promises';
 import path from 'path';
 import { sendRestockNotificationAsync } from '@/lib/stock-service';
+import { tokenizeQuery, calculateProductRelevanceScore, detectSearchIntent } from '@/lib/search/smart-search-engine';
 
 export async function getProductsAction(options: {
     query?: string;
@@ -84,13 +85,23 @@ export async function getProductsAction(options: {
             }
 
             if (query) {
-                andConditions.push({
-                    OR: [
-                        { name: { contains: query, mode: 'insensitive' } },
-                        { description: { contains: query, mode: 'insensitive' } },
-                        { reference: { contains: query, mode: 'insensitive' } },
-                    ]
-                });
+                const tokens = tokenizeQuery(query);
+                if (tokens.length > 0) {
+                    andConditions.push({
+                        AND: tokens.map(token => ({
+                            OR: [
+                                { name: { contains: token, mode: 'insensitive' } },
+                                { reference: { contains: token, mode: 'insensitive' } },
+                                { brand: { name: { contains: token, mode: 'insensitive' } } },
+                                { category: { name: { contains: token, mode: 'insensitive' } } },
+                                { subCategory: { name: { contains: token, mode: 'insensitive' } } },
+                                { thirdLevelCategory: { name: { contains: token, mode: 'insensitive' } } },
+                                { shortDescription: { contains: token, mode: 'insensitive' } },
+                                { description: { contains: token, mode: 'insensitive' } }
+                            ]
+                        }))
+                    });
+                }
             }
 
             if (category) {
@@ -170,7 +181,9 @@ export async function getProductsAction(options: {
                     include: {
                         category: true,
                         subCategory: true,
-                        brand: true
+                        brand: true,
+                        orderItems: { select: { id: true } },
+                        reviews: { select: { id: true } }
                     },
                     orderBy,
                     skip,
@@ -178,6 +191,17 @@ export async function getProductsAction(options: {
                 }),
                 prisma.product.count({ where })
             ]));
+
+            // Si recherche textuelle active et tri par défaut, ordonner par score de pertinence intelligent
+            if (query && (!options.sort || options.sort === 'newest' || options.sort === 'relevance')) {
+                const queryTokens = tokenizeQuery(query);
+                const intent = detectSearchIntent(query);
+                products.sort((a: any, b: any) => {
+                    const scoreA = calculateProductRelevanceScore(a, query, queryTokens, intent);
+                    const scoreB = calculateProductRelevanceScore(b, query, queryTokens, intent);
+                    return scoreB - scoreA;
+                });
+            }
 
             return {
                 products,

@@ -23,13 +23,15 @@ import {
     Trash2,
     Eye,
     Monitor,
-    Smartphone
+    Smartphone,
+    Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { RichTextEditor } from '@/ui/RichTextEditor';
 import { ProductDescriptionBuilder, DescriptionBlock } from './ProductDescriptionBuilder';
+import { ProductAiAssistantModal } from './ProductAiAssistantModal';
 import {
     upsertProduct,
     getAdminCategories,
@@ -252,6 +254,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [detailedDescription, setDetailedDescription] = useState<DescriptionBlock[]>(editingProduct?.detailedDescription || []);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<any>(null);
+    const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
     const [previewTab, setPreviewTab] = useState<'desc' | 'specs'>('desc');
     const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
     const [activePreviewImageIdx, setActivePreviewImageIdx] = useState(0);
@@ -925,6 +928,30 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         }
     };
 
+    const handleApplyAiContent = (data: {
+        shortDescription?: string;
+        description?: string;
+        features?: string[];
+        specsText?: string;
+    }) => {
+        const form = formRef.current;
+        if (data.shortDescription !== undefined && form) {
+            const shortEl = form.elements.namedItem('shortDescription') as HTMLTextAreaElement | null;
+            if (shortEl) shortEl.value = data.shortDescription;
+        }
+        if (data.description !== undefined) {
+            setDescription(data.description);
+        }
+        if (data.features !== undefined && form) {
+            const featEl = form.elements.namedItem('features') as HTMLTextAreaElement | null;
+            if (featEl) featEl.value = data.features.join('\n');
+        }
+        if (data.specsText !== undefined) {
+            setMetadataText(data.specsText);
+        }
+        setIsDirty(true);
+    };
+
     const handleImageFilesUpload = async (files: File[]) => {
         const imageFiles = files.filter(f => f.type.startsWith('image/'));
         if (imageFiles.length === 0) {
@@ -1218,6 +1245,17 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         </div>
                         <p className="text-[11px] text-slate-400 font-medium">Configurez les détails techniques du produit.</p>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                    <button
+                        type="button"
+                        onClick={() => setIsAiAssistantOpen(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center gap-2 shadow-md shadow-orange-500/20 active:scale-95 transition-all"
+                    >
+                        <Sparkles size={15} className="animate-pulse" />
+                        <span>Générer avec l'IA</span>
+                    </button>
                 </div>
             </div>
 
@@ -2640,6 +2678,24 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             </AnimatePresence>,
             document.body
         )}
+
+        <ProductAiAssistantModal
+            isOpen={isAiAssistantOpen}
+            onClose={() => setIsAiAssistantOpen(false)}
+            productId={editingProduct?.id}
+            productName={(formRef.current?.elements.namedItem('name') as any)?.value || editingProduct?.name || ''}
+            brandName={brands.find(b => b.id === brandId)?.name || editingProduct?.brand?.name}
+            categoryName={categories.find(c => c.id === categoryId)?.name || editingProduct?.category?.name}
+            subCategoryName={subCategories.find(s => s.id === subCategoryId)?.name || editingProduct?.subCategory?.name}
+            categoryId={categoryId}
+            brandId={brandId}
+            reference={editingProduct?.reference}
+            currentShortDescription={(formRef.current?.elements.namedItem('shortDescription') as any)?.value || editingProduct?.shortDescription}
+            currentDescription={description || editingProduct?.description}
+            currentFeatures={(formRef.current?.elements.namedItem('features') as any)?.value?.split('\n').filter(Boolean) || editingProduct?.features}
+            currentSpecsText={metadataText}
+            onApplyToForm={handleApplyAiContent}
+        />
         </>
     );
 }

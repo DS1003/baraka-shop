@@ -6,8 +6,6 @@ import Link from 'next/link'
 import { Heart, ShoppingCart, Star, Flash as Zap, Clock } from 'reicon-react'
 import { cn, getOptimizedImageUrl, formatPrice, formatNumber } from '@/lib/utils'
 import { useCart } from '@/context/CartContext'
-import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
-import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 
 interface ProductCardProps {
     product: any;
@@ -22,7 +20,6 @@ function stripHtml(html: string) {
 
 export function ProductCard({ product, viewMode = 'grid', priority = false }: ProductCardProps) {
     const { addToCart } = useCart()
-    const { headerLogo } = useSiteLogos()
 
     const customBadge = product.badge || (typeof product.metadata === 'object' && product.metadata ? product.metadata.badge : undefined);
     const rawImage = product.images?.[0] || product.image || '/placeholder.png'
@@ -34,7 +31,6 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
         return (
             <div className="group flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-xs hover:shadow-xl hover:shadow-gray-200 transition-all duration-300">
                 <Link href={`/product/${product.id}`} className="relative w-full md:w-[260px] aspect-square bg-white flex items-center justify-center p-4 sm:p-6 md:p-8 shrink-0 overflow-hidden">
-                    <WatermarkOverlay logoUrl={headerLogo} isCard />
                     <Image src={displayImage} alt={product.name} fill sizes="(max-width: 768px) 100vw, 260px" className="object-contain p-4 sm:p-6 md:p-8 group-hover:scale-105 transition-transform duration-500 z-10" priority={priority} unoptimized />
                 </Link>
                 <div className="p-4 sm:p-6 md:p-8 flex flex-col justify-center flex-1">
@@ -125,7 +121,6 @@ export function ProductCard({ product, viewMode = 'grid', priority = false }: Pr
         <div className="group relative bg-white rounded-2xl md:rounded-3xl p-2 sm:p-2.5 md:p-3 lg:p-4 transition-all duration-500 border border-gray-100/80 hover:border-gray-200 hover:shadow-2xl hover:shadow-blue-900/5 flex flex-col h-full">
             {/* Image Container */}
             <div className="relative w-full aspect-square bg-[#fff] rounded-xl overflow-hidden group/img border border-gray-50 shrink-0">
-                <WatermarkOverlay logoUrl={headerLogo} isCard />
                 <Link href={`/product/${product.id}`} className="absolute inset-0 z-40">
                     <span className="sr-only">Voir {product.name}</span>
                 </Link>

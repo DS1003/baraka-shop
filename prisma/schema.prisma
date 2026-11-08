@@ -68,6 +68,8 @@ model Product {
   colorVariants        ProductColorVariant[]
   reviews              Review[]
   favoritedBy          User[]                @relation("Wishlist")
+  aiProposal           ProductAiProposal?
+  aiJobItems           AiEnrichmentJobItem[]
 
   @@index([name])
   @@index([slug])
@@ -709,4 +711,66 @@ model CollaboratorNotificationHistory {
   @@index([sentAt])
 }
 
+model ProductAiProposal {
+  id                 String    @id @default(uuid())
+  productId          String    @unique
+  status             String    @default("TO_REVIEW") // PENDING, GENERATING, GENERATED, TO_REVIEW, VALIDATED, SAVED, PUBLISHED, FAILED
+  shortDescription   String?
+  generalDescription String?
+  classicDescription String?
+  features           Json?     @default("[]")
+  specifications     Json?     @default("{}")
+  rawSpecsText       String?
+  appliedFields      String[]  @default([])
+  modelUsed          String?
+  promptTokens       Int?
+  completionTokens   Int?
+  errorMessage       String?
+  generatedAt        DateTime?
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  product            Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([status])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model AiEnrichmentJob {
+  id             String               @id @default(uuid())
+  name           String
+  status         String               @default("PENDING") // PENDING, RUNNING, COMPLETED, PAUSED, CANCELLED, FAILED
+  filterType     String?              // INCOMPLETE, CATEGORY, BRAND, MANUAL
+  filterValue    String?
+  totalProducts  Int                  @default(0)
+  processedCount Int                  @default(0)
+  successCount   Int                  @default(0)
+  errorCount     Int                  @default(0)
+  costEstimate   Float                @default(0)
+  createdById    String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  items          AiEnrichmentJobItem[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AiEnrichmentJobItem {
+  id           String          @id @default(uuid())
+  jobId        String
+  productId    String
+  status       String          @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, SKIPPED
+  errorMessage String?
+  proposalId   String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  job          AiEnrichmentJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  product      Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([productId])
+  @@index([status])
+}
