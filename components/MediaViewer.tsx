@@ -6,7 +6,6 @@ import { X, ChevronLeft, ChevronRight, Play, Maximize2, Minimize2 } from 'lucide
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
-import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 
 export type MediaItem = {
     type: 'image' | 'video' | 'youtube'
@@ -253,7 +252,6 @@ export function MediaViewer({ media, initialIndex = 0, isOpen, onClose }: MediaV
                                                         alt=""
                                                         className="max-w-full max-h-[66vh] md:max-h-[75vh] w-auto h-auto object-contain block rounded-xl md:rounded-2xl select-none pointer-events-none"
                                                     />
-                                                    <WatermarkOverlay logoUrl={headerLogo} />
                                                 </div>
                                             </div>
                                         )}

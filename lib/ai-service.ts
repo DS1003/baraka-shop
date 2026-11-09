@@ -5,7 +5,12 @@ function getAiClient() {
     if (!apiKey) {
         throw new Error("Clé API Gemini non configurée (GEMINI_API_KEY).");
     }
-    return new GoogleGenAI({ apiKey });
+    return new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+            timeout: 60000
+        }
+    });
 }
 
 export async function normalizeProductSpecs(rawText: string): Promise<string> {
@@ -57,7 +62,12 @@ Couleur: Noir
 Résolution: 1920 × 1080 pixels (Full HD)
 `;
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    const modelsToTry = [
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-flash-lite-latest',
+        'gemini-3.8-flash'
+    ];
     let lastError: any = null;
 
     for (const modelName of modelsToTry) {
@@ -116,7 +126,12 @@ RÈGLES STRICTES ET OBLIGATOIRES :
 6. NE JAMAIS INVENTER : Ne complète une information que si elle découle directement de la valeur (comme l'ajout de "4K Ultra HD" pour "3840x2160"). N'invente jamais de caractéristiques qui ne sont pas dans le texte d'origine.`;
 
     const ai = getAiClient();
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    const modelsToTry = [
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-flash-lite-latest',
+        'gemini-3.8-flash'
+    ];
     let lastError: any = null;
 
     for (const modelName of modelsToTry) {

@@ -42,7 +42,12 @@ function getAiClient(): GoogleGenAI {
     if (!apiKey) {
         throw new Error("Clé API Gemini non configurée (GEMINI_API_KEY). Veuillez la renseigner dans les paramètres du serveur.");
     }
-    return new GoogleGenAI({ apiKey });
+    return new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+            timeout: 60000
+        }
+    });
 }
 
 /**
@@ -160,7 +165,12 @@ Génère maintenant le JSON complet contenant les contenus éditoriaux conformes
 `;
 
     // 5. Exécution avec gestion des modèles et fallbacks
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+    const modelsToTry = [
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-flash-lite-latest',
+        'gemini-3.8-flash'
+    ];
     let lastError: any = null;
 
     for (const modelName of modelsToTry) {

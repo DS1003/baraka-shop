@@ -20,6 +20,7 @@ export type SiteConfigData = {
     loaderLogo: string | null
     restockNotificationEmails: string[]
     restockNotificationsEnabled: boolean
+    restockConsolidationMinutes?: number
 }
 
 export type SiteLogosData = {
@@ -53,6 +54,7 @@ export async function getSiteConfig(): Promise<SiteConfigData> {
         loaderLogo: config.loaderLogo,
         restockNotificationEmails: config.restockNotificationEmails || [],
         restockNotificationsEnabled: config.restockNotificationsEnabled ?? true,
+        restockConsolidationMinutes: config.restockConsolidationMinutes ?? 5,
     }
 
     await setCache(SITE_CONFIG_CACHE_KEY, data, 30)
@@ -106,6 +108,9 @@ export async function updateSiteConfig(data: Partial<SiteConfigData>) {
                 ...(data.maintenanceMessage !== undefined && { maintenanceMessage: data.maintenanceMessage }),
                 ...(data.restockNotificationEmails !== undefined && { restockNotificationEmails: data.restockNotificationEmails }),
                 ...(data.restockNotificationsEnabled !== undefined && { restockNotificationsEnabled: data.restockNotificationsEnabled }),
+                ...(data.restockConsolidationMinutes !== undefined && {
+                    restockConsolidationMinutes: Math.max(1, Math.min(60, Number(data.restockConsolidationMinutes) || 5)),
+                }),
             },
         })
 

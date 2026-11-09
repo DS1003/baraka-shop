@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { runFtpSync } from '@/lib/ftp-sync'
 import prisma from '@/lib/prisma'
+import { processDueRestockBatches } from '@/lib/restock-notification-service'
 
 // Augmenter le timeout sur Vercel (jusqu'à 5 minutes sur Pro, 10-60s sur Hobby)
 export const maxDuration = 300;
@@ -15,6 +16,11 @@ export async function GET(req: Request) {
     }
 
     try {
+        // Traiter en arrière-plan tous les lots de réapprovisionnement arrivés à échéance
+        processDueRestockBatches().catch(err => {
+            console.error('[Cron] Error processing due restock batches:', err);
+        });
+
         const url = new URL(req.url)
         const force = url.searchParams.get('force') === 'true'
 

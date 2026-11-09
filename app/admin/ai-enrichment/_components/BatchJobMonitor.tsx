@@ -1,28 +1,32 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Clock,
     CheckCircle2,
     AlertCircle,
     XCircle,
     RefreshCw,
-    Pause,
-    Play,
     Ban,
     Sparkles,
     Eye,
     ChevronDown,
     ChevronUp,
-    Cpu,
     DollarSign,
-    RotateCcw
+    RotateCcw,
+    Layers,
+    Filter,
+    HelpCircle,
+    Check,
+    AlertTriangle,
+    Activity
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
     getBulkJobStatusAction,
     cancelBulkJobAction,
     retryFailedJobItemsAction,
+    retrySingleJobItemAction,
     getRecentBulkJobsAction,
     getAiProposalAction
 } from '@/lib/actions/ai-enrichment-actions';
@@ -34,15 +38,77 @@ interface BatchJobMonitorProps {
     onJobCompleted?: () => void;
 }
 
+/**
+ * Traduit et humanise les messages d'erreurs techniques de l'API (notamment JSON brut)
+ */
+function humanizeError(rawError?: string | null): { title: string; detail: string; isHighDemand: boolean } {
+    if (!rawError) {
+        return { title: "Erreur inconnue", detail: "Aucun détail disponible.", isHighDemand: false };
+    }
+
+    try {
+        // Tentative de parsing JSON si l'API a renvoyé un dump JSON
+        if (rawError.trim().startsWith('{') && rawError.trim().endsWith('}')) {
+            const parsed = JSON.parse(rawError);
+            const errMsg = parsed.error?.message || parsed.message || '';
+            const code = parsed.error?.code || parsed.code;
+
+            if (code === 503 || errMsg.toLowerCase().includes('high demand') || errMsg.toLowerCase().includes('unavailable')) {
+                return {
+                    title: "Capacité Google temporairement saturée",
+                    detail: "L'API Gemini subit un pic de demande passager. Cliquez sur Réessayer.",
+                    isHighDemand: true
+                };
+            }
+            if (code === 404 || errMsg.toLowerCase().includes('not available')) {
+                return {
+                    title: "Modèle en cours de maintenance",
+                    detail: "Le modèle sélectionné n'est pas accessible temporairement.",
+                    isHighDemand: false
+                };
+            }
+            if (code === 429 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('rate limit')) {
+                return {
+                    title: "Quota d'appels temporairement atteint",
+                    detail: "Veuillez patienter quelques instants avant de relancer.",
+                    isHighDemand: false
+                };
+            }
+            return {
+                title: "Échec de génération IA",
+                detail: errMsg || rawError,
+                isHighDemand: false
+            };
+        }
+    } catch {
+        // Pas du JSON, traitement standard
+    }
+
+    if (rawError.includes('UND_ERR_HEADERS_TIMEOUT') || rawError.toLowerCase().includes('timeout') || rawError.toLowerCase().includes('fetch failed')) {
+        return {
+            title: "Délai de connexion dépassé",
+            detail: "Le serveur distant a mis trop de temps à répondre. Réessayez.",
+            isHighDemand: false
+        };
+    }
+
+    return {
+        title: "Échec du traitement",
+        detail: rawError,
+        isHighDemand: false
+    };
+}
+
 export function BatchJobMonitor({ activeJobId, onJobCompleted }: BatchJobMonitorProps) {
     const [currentJobId, setCurrentJobId] = useState<string | null>(activeJobId || null);
     const [job, setJob] = useState<any | null>(null);
     const [recentJobs, setRecentJobs] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
     const [inspectingProposal, setInspectingProposal] = useState<any | null>(null);
     const [loadingProposal, setLoadingProposal] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
-    const [isRetrying, setIsRetrying] = useState(false);
+    const [isRetryingAll, setIsRetryingAll] = useState(false);
+    const [retryingItemId, setRetryingItemId] = useState<string | null>(null);
+    const [tableFilter, setTableFilter] = useState<'ALL' | 'COMPLETED' | 'FAILED' | 'PENDING'>('ALL');
 
     // Sync activeJobId prop
     useEffect(() => {
@@ -57,7 +123,6 @@ export function BatchJobMonitor({ activeJobId, onJobCompleted }: BatchJobMonitor
             const res = await getRecentBulkJobsAction(5);
             if (res.success && res.jobs) {
                 setRecentJobs(res.jobs);
-                // If no current job selected, pick the latest one
                 if (!currentJobId && res.jobs.length > 0) {
                     setCurrentJobId(res.jobs[0].id);
                 }
@@ -118,14 +183,14 @@ export function BatchJobMonitor({ activeJobId, onJobCompleted }: BatchJobMonitor
         }
     };
 
-    // Retry failed items
-    const handleRetry = async () => {
+    // Retry all failed items
+    const handleRetryAll = async () => {
         if (!currentJobId) return;
-        setIsRetrying(true);
+        setIsRetryingAll(true);
         try {
             const res = await retryFailedJobItemsAction(currentJobId);
             if (res.success) {
-                toast.success(`${res.count} éléments relancés !`);
+                toast.success(`${res.count} éléments relancés avec succès !`);
                 fetchJobStatus();
             } else {
                 toast.error(res.error || "Impossible de relancer.");
@@ -133,7 +198,25 @@ export function BatchJobMonitor({ activeJobId, onJobCompleted }: BatchJobMonitor
         } catch (err: any) {
             toast.error(err?.message || "Erreur.");
         } finally {
-            setIsRetrying(false);
+            setIsRetryingAll(false);
+        }
+    };
+
+    // Retry a single item
+    const handleRetrySingle = async (jobItemId: string) => {
+        setRetryingItemId(jobItemId);
+        try {
+            const res = await retrySingleJobItemAction(jobItemId);
+            if (res.success) {
+                toast.success("Produit relancé en traitement !");
+                fetchJobStatus();
+            } else {
+                toast.error(res.error || "Échec de la relance.");
+            }
+        } catch (err: any) {
+            toast.error(err?.message || "Erreur réseau.");
+        } finally {
+            setRetryingItemId(null);
         }
     };
 
@@ -154,14 +237,28 @@ export function BatchJobMonitor({ activeJobId, onJobCompleted }: BatchJobMonitor
         }
     };
 
+    // Filter items
+    const filteredItems = useMemo(() => {
+        if (!job?.items) return [];
+        if (tableFilter === 'ALL') return job.items;
+        if (tableFilter === 'COMPLETED') return job.items.filter((it: any) => it.status === 'COMPLETED');
+        if (tableFilter === 'FAILED') return job.items.filter((it: any) => it.status === 'FAILED');
+        if (tableFilter === 'PENDING') return job.items.filter((it: any) => it.status === 'PENDING' || it.status === 'PROCESSING');
+        return job.items;
+    }, [job?.items, tableFilter]);
+
     if (!job && recentJobs.length === 0) {
         return (
-            <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-12 text-center text-gray-400 space-y-3">
-                <Sparkles className="w-10 h-10 text-gray-300 mx-auto" />
-                <h4 className="font-semibold text-gray-700 text-sm">Aucun traitement récent</h4>
-                <p className="text-xs text-gray-400 max-w-sm mx-auto">
-                    Lancez un premier lot depuis l'onglet « Lancer un lot d'enrichissement » pour suivre son avancement en direct.
-                </p>
+            <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm p-12 text-center text-gray-400 space-y-4 max-w-xl mx-auto">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+                    <Sparkles className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                    <h4 className="font-bold text-gray-800 text-base">Aucun lot de traitement récent</h4>
+                    <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                        Lancez votre premier lot depuis l'onglet <strong>« Lancer un lot d'enrichissement »</strong> pour suivre la progression en temps réel.
+                    </p>
+                </div>
             </div>
         );
     }
@@ -170,226 +267,359 @@ export function BatchJobMonitor({ activeJobId, onJobCompleted }: BatchJobMonitor
         ? Math.round((job.processedCount / job.totalProducts) * 100)
         : 0;
 
+    const isRunning = job?.status === 'RUNNING' || job?.status === 'PENDING';
+
     return (
         <div className="space-y-6">
-            {/* Recent jobs switcher */}
-            {recentJobs.length > 1 && (
-                <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+            {/* Recent jobs switcher bar */}
+            {recentJobs.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap pl-1">
                         Lots récents :
                     </span>
-                    {recentJobs.map(j => (
-                        <button
-                            key={j.id}
-                            onClick={() => setCurrentJobId(j.id)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center gap-2 border ${
-                                currentJobId === j.id
-                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold shadow-sm'
-                                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                            }`}
-                        >
-                            <span className={`w-2 h-2 rounded-full ${
-                                j.status === 'RUNNING' ? 'bg-amber-500 animate-pulse' :
-                                j.status === 'COMPLETED' ? 'bg-emerald-500' :
-                                j.status === 'CANCELLED' ? 'bg-gray-400' : 'bg-red-500'
-                            }`} />
-                            {j.name}
-                        </button>
-                    ))}
+                    {recentJobs.map(j => {
+                        const isSelected = currentJobId === j.id;
+                        return (
+                            <button
+                                key={j.id}
+                                onClick={() => setCurrentJobId(j.id)}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 border ${
+                                    isSelected
+                                        ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300 text-emerald-950 font-bold shadow-sm ring-1 ring-emerald-400/30'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                }`}
+                            >
+                                <span className={`w-2 h-2 rounded-full ${
+                                    j.status === 'RUNNING' ? 'bg-amber-500 animate-ping' :
+                                    j.status === 'COMPLETED' ? 'bg-emerald-500' :
+                                    j.status === 'CANCELLED' ? 'bg-gray-400' : 'bg-rose-500'
+                                }`} />
+                                <span>{j.name}</span>
+                                {j.errorCount > 0 && (
+                                    <span className="px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 text-[10px] font-black">
+                                        {j.errorCount}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
 
             {job && (
-                <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
                     {/* Header */}
-                    <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-gray-50 via-white to-emerald-50/20">
+                    <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-gray-50/80 via-white to-emerald-50/20">
                         <div>
-                            <div className="flex items-center gap-2.5">
-                                <h3 className="font-bold text-gray-900 text-base">{job.name}</h3>
-                                <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
+                            <div className="flex flex-wrap items-center gap-2.5">
+                                <h3 className="font-extrabold text-gray-900 text-lg tracking-tight">
+                                    {job.name}
+                                </h3>
+
+                                <span className={`text-xs px-3 py-1 rounded-full font-bold border flex items-center gap-1.5 ${
                                     job.status === 'RUNNING'
-                                        ? 'bg-amber-50 border-amber-200 text-amber-800 animate-pulse'
+                                        ? 'bg-amber-50 border-amber-200 text-amber-900'
                                         : job.status === 'COMPLETED'
-                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                                         : job.status === 'CANCELLED'
-                                        ? 'bg-gray-100 border-gray-200 text-gray-600'
-                                        : 'bg-rose-50 border-rose-200 text-rose-800'
+                                        ? 'bg-gray-100 border-gray-200 text-gray-700'
+                                        : 'bg-rose-50 border-rose-200 text-rose-900'
                                 }`}>
-                                    {job.status === 'RUNNING' && '⚡ Traitement en cours...'}
-                                    {job.status === 'COMPLETED' && '✓ Terminé'}
-                                    {job.status === 'CANCELLED' && '✕ Annulé'}
+                                    {job.status === 'RUNNING' && (
+                                        <>
+                                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                                            Traitement en cours...
+                                        </>
+                                    )}
+                                    {job.status === 'COMPLETED' && (
+                                        <>
+                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                            Terminé avec succès
+                                        </>
+                                    )}
+                                    {job.status === 'CANCELLED' && '✕ Interrompu'}
                                     {job.status === 'FAILED' && '⚠ En échec'}
                                     {job.status === 'PENDING' && 'En file d\'attente'}
                                 </span>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1 flex items-center gap-3">
-                                <span>Créé le {new Date(job.createdAt).toLocaleDateString('fr-FR', {
-                                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-                                })}</span>
-                                <span>•</span>
-                                <span className="font-mono text-emerald-700 font-semibold flex items-center gap-1">
-                                    <DollarSign className="w-3.5 h-3.5" />
-                                    Coût cumulé: ${(job.costEstimate || 0).toFixed(4)} USD
+
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-1.5">
+                                <span>
+                                    Créé le {new Date(job.createdAt).toLocaleDateString('fr-FR', {
+                                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                                    })}
                                 </span>
-                            </p>
+                                <span>•</span>
+                                <span className="font-mono text-emerald-800 font-semibold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/50">
+                                    <DollarSign className="w-3 h-3 text-emerald-600" />
+                                    Coût cumulé : ${(job.costEstimate || 0).toFixed(4)} USD
+                                </span>
+                            </div>
                         </div>
 
-                        {/* Job actions */}
+                        {/* Top action buttons */}
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={fetchJobStatus}
-                                title="Actualiser"
-                                className="p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-gray-600 transition"
+                                title="Actualiser l'état du lot"
+                                className="p-2.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 transition shadow-sm"
                             >
-                                <RefreshCw className="w-4 h-4" />
+                                <RefreshCw className={`w-4 h-4 ${isRunning ? 'animate-spin text-emerald-600' : ''}`} />
                             </button>
 
-                            {job.status === 'RUNNING' && (
+                            {isRunning && (
                                 <button
                                     onClick={handleCancel}
                                     disabled={isCancelling}
-                                    className="px-3 py-2 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+                                    className="px-3.5 py-2.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                                 >
-                                    <Ban className="w-3.5 h-3.5" />
-                                    {isCancelling ? "Annulation..." : "Interrompre"}
+                                    <Ban className="w-4 h-4" />
+                                    <span>{isCancelling ? "Annulation..." : "Interrompre"}</span>
                                 </button>
                             )}
 
-                            {job.errorCount > 0 && job.status !== 'RUNNING' && (
+                            {job.errorCount > 0 && !isRunning && (
                                 <button
-                                    onClick={handleRetry}
-                                    disabled={isRetrying}
-                                    className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm"
+                                    onClick={handleRetryAll}
+                                    disabled={isRetryingAll}
+                                    className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-emerald-600/20 disabled:opacity-50"
                                 >
-                                    <RotateCcw className="w-3.5 h-3.5" />
-                                    {isRetrying ? "Relance..." : `Relancer les ${job.errorCount} erreurs`}
+                                    <RotateCcw className={`w-4 h-4 ${isRetryingAll ? 'animate-spin' : ''}`} />
+                                    <span>{isRetryingAll ? "Relance en cours..." : `Relancer les ${job.errorCount} erreurs`}</span>
                                 </button>
                             )}
                         </div>
                     </div>
 
-                    {/* Progress Bar & KPI Stats */}
-                    <div className="p-6 border-b border-gray-100 bg-gray-50/40 space-y-4">
-                        <div>
-                            <div className="flex justify-between items-center text-xs font-semibold mb-1.5">
-                                <span className="text-gray-700">Progression du traitement</span>
-                                <span className="text-emerald-700 font-bold">{progressPercent}% ({job.processedCount} / {job.totalProducts})</span>
+                    {/* Progress Bar & Metric Pills */}
+                    <div className="p-6 border-b border-gray-100 bg-gray-50/50 space-y-5">
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-xs font-bold">
+                                <span className="text-gray-700 flex items-center gap-1.5">
+                                    <Activity className="w-4 h-4 text-emerald-600" />
+                                    Progression globale du traitement
+                                </span>
+                                <span className="text-emerald-800 font-extrabold bg-emerald-100/70 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                    {progressPercent}% • {job.processedCount} / {job.totalProducts} produits
+                                </span>
                             </div>
-                            <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="w-full h-3.5 bg-gray-200 rounded-full overflow-hidden p-0.5 shadow-inner">
                                 <div
-                                    className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 rounded-full"
+                                    className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-full transition-all duration-500 shadow-sm"
                                     style={{ width: `${progressPercent}%` }}
                                 />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
-                            <div className="bg-white p-3 rounded-xl border border-gray-200 text-center">
-                                <span className="text-[11px] text-gray-500 font-medium block">Total produits</span>
-                                <span className="text-lg font-bold text-gray-900">{job.totalProducts}</span>
+                        {/* Metric Boxes */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm text-center">
+                                <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider block">Total Produits</span>
+                                <span className="text-2xl font-black text-gray-900 mt-1 block">{job.totalProducts}</span>
                             </div>
-                            <div className="bg-white p-3 rounded-xl border border-gray-200 text-center">
-                                <span className="text-[11px] text-gray-500 font-medium block">Traités</span>
-                                <span className="text-lg font-bold text-gray-900">{job.processedCount}</span>
+
+                            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm text-center">
+                                <span className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider block">Traités</span>
+                                <span className="text-2xl font-black text-gray-900 mt-1 block">{job.processedCount}</span>
                             </div>
-                            <div className="bg-white p-3 rounded-xl border border-emerald-200 bg-emerald-50/30 text-center">
-                                <span className="text-[11px] text-emerald-800 font-medium block">Succès (Propositions)</span>
-                                <span className="text-lg font-bold text-emerald-700">{job.successCount}</span>
+
+                            <div className="bg-gradient-to-br from-white to-emerald-50/40 p-4 rounded-2xl border border-emerald-200 shadow-sm text-center">
+                                <span className="text-[11px] text-emerald-900 font-semibold uppercase tracking-wider block">Succès (Propositions)</span>
+                                <span className="text-2xl font-black text-emerald-700 mt-1 block">{job.successCount}</span>
                             </div>
-                            <div className="bg-white p-3 rounded-xl border border-rose-200 bg-rose-50/30 text-center">
-                                <span className="text-[11px] text-rose-800 font-medium block">Erreurs</span>
-                                <span className="text-lg font-bold text-rose-700">{job.errorCount}</span>
+
+                            <div className="bg-gradient-to-br from-white to-rose-50/40 p-4 rounded-2xl border border-rose-200 shadow-sm text-center">
+                                <span className="text-[11px] text-rose-900 font-semibold uppercase tracking-wider block">Erreurs</span>
+                                <span className="text-2xl font-black text-rose-700 mt-1 block">{job.errorCount}</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Queue Items Table */}
+                    {/* Table Filters Toolbar */}
+                    <div className="px-6 py-3.5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3 bg-white">
+                        <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-gray-400 font-bold mr-1 flex items-center gap-1">
+                                <Filter className="w-3.5 h-3.5" />
+                                Filtrer :
+                            </span>
+                            <button
+                                onClick={() => setTableFilter('ALL')}
+                                className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+                                    tableFilter === 'ALL'
+                                        ? 'bg-gray-900 text-white'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                Tous ({job.items?.length || 0})
+                            </button>
+                            <button
+                                onClick={() => setTableFilter('COMPLETED')}
+                                className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+                                    tableFilter === 'COMPLETED'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                                }`}
+                            >
+                                Succès ({job.successCount || 0})
+                            </button>
+                            <button
+                                onClick={() => setTableFilter('FAILED')}
+                                className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+                                    tableFilter === 'FAILED'
+                                        ? 'bg-rose-600 text-white'
+                                        : 'bg-rose-50 text-rose-800 hover:bg-rose-100 border border-rose-200'
+                                }`}
+                            >
+                                Erreurs ({job.errorCount || 0})
+                            </button>
+                            <button
+                                onClick={() => setTableFilter('PENDING')}
+                                className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+                                    tableFilter === 'PENDING'
+                                        ? 'bg-amber-600 text-white'
+                                        : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'
+                                }`}
+                            >
+                                En attente ({Math.max(0, job.totalProducts - job.processedCount)})
+                            </button>
+                        </div>
+
+                        <span className="text-[11px] text-gray-400">
+                            Affichage de {filteredItems.length} produit{filteredItems.length > 1 ? 's' : ''}
+                        </span>
+                    </div>
+
+                    {/* Products Queue Table */}
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-gray-100 bg-gray-50/60 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                                    <th className="py-3 px-4">Produit</th>
-                                    <th className="py-3 px-4">Statut de la file</th>
-                                    <th className="py-3 px-4">Détail / Erreur</th>
-                                    <th className="py-3 px-4 text-right">Action</th>
+                                <tr className="border-b border-gray-100 bg-gray-50/70 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                                    <th className="py-3.5 px-6">Produit</th>
+                                    <th className="py-3.5 px-4">Statut</th>
+                                    <th className="py-3.5 px-4">Détail du traitement</th>
+                                    <th className="py-3.5 px-6 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 text-xs">
-                                {job.items?.map((item: any) => {
-                                    const product = item.product || {};
-                                    const productImage = product.images?.[0] || '/images/placeholder.png';
+                                {filteredItems.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="py-10 text-center text-gray-400">
+                                            Aucun élément dans cette catégorie de filtre.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredItems.map((item: any) => {
+                                        const product = item.product || {};
+                                        const productImage = product.images?.[0] || '/images/placeholder.png';
+                                        const errorDetails = humanizeError(item.errorMessage);
+                                        const isRetryingThis = retryingItemId === item.id;
 
-                                    return (
-                                        <tr key={item.id} className="hover:bg-gray-50/60 transition">
-                                            <td className="py-3 px-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-lg bg-gray-100 relative overflow-hidden flex-shrink-0 border border-gray-200">
-                                                        <Image
-                                                            src={productImage}
-                                                            alt={product.name || 'Produit'}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
+                                        return (
+                                            <tr key={item.id} className="hover:bg-gray-50/60 transition group">
+                                                {/* Product Col */}
+                                                <td className="py-3.5 px-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-gray-100 relative overflow-hidden flex-shrink-0 border border-gray-200">
+                                                            <Image
+                                                                src={productImage}
+                                                                alt={product.name || 'Produit'}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        </div>
+                                                        <div className="min-w-0 max-w-md">
+                                                            <span className="font-bold text-gray-900 truncate block group-hover:text-emerald-700 transition">
+                                                                {product.name}
+                                                            </span>
+                                                            <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
+                                                                <span>Réf : {product.reference || 'N/A'}</span>
+                                                                <span>•</span>
+                                                                <span className="text-gray-600 font-medium">{product.category?.name || 'Sans catégorie'}</span>
+                                                                {product.brand?.name && (
+                                                                    <>
+                                                                        <span>•</span>
+                                                                        <span className="text-emerald-700 font-semibold">{product.brand.name}</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <span className="font-semibold text-gray-900 line-clamp-1 block">
-                                                            {product.name}
-                                                        </span>
-                                                        <span className="text-[10px] text-gray-400">
-                                                            Réf: {product.reference || 'N/A'} • {product.category?.name || 'Sans catégorie'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </td>
+                                                </td>
 
-                                            <td className="py-3 px-4">
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
-                                                    item.status === 'COMPLETED'
-                                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                                                        : item.status === 'PROCESSING'
-                                                        ? 'bg-blue-50 border-blue-200 text-blue-800 animate-pulse'
-                                                        : item.status === 'FAILED'
-                                                        ? 'bg-rose-50 border-rose-200 text-rose-800'
-                                                        : 'bg-gray-100 border-gray-200 text-gray-600'
-                                                }`}>
-                                                    {item.status === 'COMPLETED' && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
-                                                    {item.status === 'PROCESSING' && <RefreshCw className="w-3 h-3 text-blue-600 animate-spin" />}
-                                                    {item.status === 'FAILED' && <AlertCircle className="w-3 h-3 text-rose-600" />}
-                                                    {item.status === 'PENDING' && <Clock className="w-3 h-3 text-gray-400" />}
+                                                {/* Status Col */}
+                                                <td className="py-3.5 px-4 whitespace-nowrap">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                                                        item.status === 'COMPLETED'
+                                                            ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                                                            : item.status === 'PROCESSING'
+                                                            ? 'bg-blue-50 border-blue-200 text-blue-900 animate-pulse'
+                                                            : item.status === 'FAILED'
+                                                            ? 'bg-rose-50 border-rose-200 text-rose-900'
+                                                            : 'bg-gray-100 border-gray-200 text-gray-700'
+                                                    }`}>
+                                                        {item.status === 'COMPLETED' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                                                        {item.status === 'PROCESSING' && <RefreshCw className="w-3.5 h-3.5 text-blue-600 animate-spin" />}
+                                                        {item.status === 'FAILED' && <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />}
+                                                        {item.status === 'PENDING' && <Clock className="w-3.5 h-3.5 text-gray-400" />}
 
-                                                    {item.status === 'COMPLETED' && 'Proposition prête'}
-                                                    {item.status === 'PROCESSING' && 'Génération IA...'}
-                                                    {item.status === 'FAILED' && 'Échec'}
-                                                    {item.status === 'PENDING' && 'En attente'}
-                                                </span>
-                                            </td>
-
-                                            <td className="py-3 px-4 text-gray-500 text-[11px]">
-                                                {item.errorMessage ? (
-                                                    <span className="text-rose-600 font-mono text-[10px] line-clamp-1" title={item.errorMessage}>
-                                                        {item.errorMessage}
+                                                        {item.status === 'COMPLETED' && 'Proposition prête'}
+                                                        {item.status === 'PROCESSING' && 'Génération IA...'}
+                                                        {item.status === 'FAILED' && 'Échec'}
+                                                        {item.status === 'PENDING' && 'En file d\'attente'}
                                                     </span>
-                                                ) : item.completedAt ? (
-                                                    <span>Terminé à {new Date(item.completedAt).toLocaleTimeString('fr-FR')}</span>
-                                                ) : (
-                                                    <span className="text-gray-400">-</span>
-                                                )}
-                                            </td>
+                                                </td>
 
-                                            <td className="py-3 px-4 text-right">
-                                                {item.status === 'COMPLETED' && (
-                                                    <button
-                                                        onClick={() => handleInspectItemProposal(item.productId)}
-                                                        className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-xs font-semibold transition inline-flex items-center gap-1 border border-emerald-200"
-                                                    >
-                                                        <Eye className="w-3.5 h-3.5" />
-                                                        Examiner
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                                                {/* Detail / Error Col (HUMANIZED) */}
+                                                <td className="py-3.5 px-4">
+                                                    {item.status === 'FAILED' ? (
+                                                        <div className="space-y-0.5 max-w-sm">
+                                                            <div className="flex items-center gap-1 text-rose-700 font-bold text-xs">
+                                                                <span>{errorDetails.title}</span>
+                                                            </div>
+                                                            <p className="text-[11px] text-gray-500 leading-snug truncate" title={item.errorMessage}>
+                                                                {errorDetails.detail}
+                                                            </p>
+                                                        </div>
+                                                    ) : item.completedAt ? (
+                                                        <div className="flex items-center gap-1.5 text-gray-600 text-xs">
+                                                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                                            <span>Terminé à {new Date(item.completedAt).toLocaleTimeString('fr-FR', {
+                                                                hour: '2-digit', minute: '2-digit', second: '2-digit'
+                                                            })}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 text-xs">-</span>
+                                                    )}
+                                                </td>
+
+                                                {/* Action Col */}
+                                                <td className="py-3.5 px-6 text-right whitespace-nowrap">
+                                                    {item.status === 'COMPLETED' && (
+                                                        <button
+                                                            onClick={() => handleInspectItemProposal(item.productId)}
+                                                            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-sm"
+                                                        >
+                                                            <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                                                            Examiner
+                                                        </button>
+                                                    )}
+
+                                                    {item.status === 'FAILED' && (
+                                                        <button
+                                                            onClick={() => handleRetrySingle(item.id)}
+                                                            disabled={isRetryingThis}
+                                                            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                                                            title="Relancer immédiatement ce produit"
+                                                        >
+                                                            <RotateCcw className={`w-3.5 h-3.5 text-rose-700 ${isRetryingThis ? 'animate-spin' : ''}`} />
+                                                            {isRetryingThis ? "Relance..." : "Réessayer"}
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
                             </tbody>
                         </table>
                     </div>

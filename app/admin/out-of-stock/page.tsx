@@ -51,6 +51,17 @@ export default function OutOfStockPage() {
     const [isReactivatingId, setIsReactivatingId] = useState<string | null>(null);
     const [confirmModalProduct, setConfirmModalProduct] = useState<any>(null);
 
+    // Initialisation depuis l'URL (ex: ?filter=RESTOCKED_PENDING depuis l'e-mail de notification)
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const urlFilter = params.get('filter');
+            if (urlFilter && ['ALL', 'OUT_OF_STOCK', 'RESTOCKED_PENDING', 'MANUAL_DEACTIVATED'].includes(urlFilter)) {
+                setFilter(urlFilter as any);
+            }
+        }
+    }, []);
+
     // Stock Adjust Modal
     const [adjustModalProduct, setAdjustModalProduct] = useState<any>(null);
     const [adjustValue, setAdjustValue] = useState<number>(0);

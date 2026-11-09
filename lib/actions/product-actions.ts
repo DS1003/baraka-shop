@@ -8,6 +8,7 @@ import { auth } from '@/auth';
 import fs from 'fs/promises';
 import path from 'path';
 import { sendRestockNotificationAsync } from '@/lib/stock-service';
+import { queueBatchRestockNotifications } from '@/lib/restock-notification-service';
 import { tokenizeQuery, calculateProductRelevanceScore, detectSearchIntent } from '@/lib/search/smart-search-engine';
 
 export async function getProductsAction(options: {
@@ -718,15 +719,17 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
                         updateData.restockedAt = new Date();
                         updateData.lastRestockedQty = newStock;
 
-                        restockNotificationsToTrigger.push({
-                            productId: ext.id,
-                            productName: ext.name,
-                            reference: ext.reference || reference || null,
-                            categoryName: p.category || '',
-                            price: newPrice,
-                            oldStock: ext.stock,
-                            newStock: newStock,
-                        });
+                        if (!ext.restockPendingReview) {
+                            restockNotificationsToTrigger.push({
+                                productId: ext.id,
+                                productName: ext.name,
+                                reference: ext.reference || reference || null,
+                                categoryName: p.category || '',
+                                price: newPrice,
+                                oldStock: ext.stock,
+                                newStock: newStock,
+                            });
+                        }
                     }
 
                     toUpdate.push({
@@ -790,15 +793,13 @@ export async function importProductsAction(products: ImportProduct[], skipRevali
             }
         }
 
-        // Déclencher les notifications de réapprovisionnement de manière asynchrone
+        // Déclencher les notifications de réapprovisionnement groupées
         if (restockNotificationsToTrigger.length > 0) {
             (async () => {
-                for (const item of restockNotificationsToTrigger) {
-                    try {
-                        await sendRestockNotificationAsync(item);
-                    } catch (notifErr) {
-                        console.error('[Import] Erreur envoi notification restock:', notifErr);
-                    }
+                try {
+                    await queueBatchRestockNotifications(restockNotificationsToTrigger);
+                } catch (notifErr) {
+                    console.error('[Import] Erreur envoi notification restock groupée:', notifErr);
                 }
             })();
         }

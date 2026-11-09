@@ -46,7 +46,6 @@ import { MediaViewer, buildProductMedia, getYouTubeId, getYouTubeThumbnail } fro
 import type { MediaItem } from '@/components/MediaViewer'
 import { useSession } from 'next-auth/react'
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos'
-import { WatermarkOverlay } from '@/ui/WatermarkOverlay'
 import { toast } from 'sonner'
 import { checkWishlistAction, toggleWishlistAction } from '@/lib/actions/user-actions'
 import { addReviewAction, voteReviewAction, reportReviewAction } from '@/lib/actions/product-actions'
@@ -572,7 +571,6 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                 transition={{ duration: 0.4 }}
                                 className="relative w-full h-full"
                             >
-                                <WatermarkOverlay logoUrl={headerLogo} />
                                 <Image
                                     src={productImages[activeImg]}
                                     alt={product.name}
@@ -632,7 +630,6 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                             )}
                                         >
                                             <Image src={img} alt={`Thumb ${idx}`} fill className="object-contain p-1.5 md:p-2" unoptimized />
-                                            <WatermarkOverlay logoUrl={headerLogo} isThumbnail />
                                             {showOverlay && (
                                                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl md:rounded-2xl">
                                                     <span className="text-white font-black text-lg md:text-xl lg:text-2xl">+{extraImagesCount}</span>
@@ -663,7 +660,6 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                             ) : (
                                                 <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" />
                                             )}
-                                            <WatermarkOverlay logoUrl={headerLogo} isThumbnail />
 
                                             <div className="absolute inset-0 flex items-center justify-center">
                                                 <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-orange-500/90 flex items-center justify-center shadow-lg shadow-orange-500/30 group-hover/vid:scale-110 transition-transform">
@@ -708,7 +704,6 @@ export function ProductClient({ product, similarProducts, bestSellers }: Product
                                     className="w-full h-full flex-shrink-0 snap-start flex items-center justify-center p-6 relative cursor-pointer overflow-hidden"
                                     onClick={() => openViewer(idx)}
                                 >
-                                    <WatermarkOverlay logoUrl={headerLogo} />
                                     {media.type === 'image' ? (
                                         <Image
                                             src={media.url}

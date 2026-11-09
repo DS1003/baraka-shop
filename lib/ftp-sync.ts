@@ -6,6 +6,7 @@ import path from 'path'
 import os from 'os'
 import { startSyncTracking, addSyncLog, updateSyncProgress, completeSyncTracking } from './sync-status'
 import { sendRestockNotificationAsync } from './stock-service'
+import { queueBatchRestockNotifications } from './restock-notification-service'
 
 export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
     // 1. Fetch config
@@ -314,14 +315,16 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                         updateData.restockPendingReview = true
                         updateData.setRestockedAt = true
                         updateData.lastRestockedQty = effectiveStock
-                        restockToNotify.push({
-                            productId: existing.id,
-                            productName: existing.name,
-                            reference: existing.reference,
-                            price: effectivePrice,
-                            oldStock: existing.stock,
-                            newStock: effectiveStock,
-                        })
+                        if (!existing.restockPendingReview) {
+                            restockToNotify.push({
+                                productId: existing.id,
+                                productName: existing.name,
+                                reference: existing.reference,
+                                price: effectivePrice,
+                                oldStock: existing.stock,
+                                newStock: effectiveStock,
+                            })
+                        }
                     } else if (existing.deactivationReason === 'NO_PRICE' && effectivePrice > 0 && effectiveStock > 0) {
                         // Le prix était auparavant manquant, un prix valide (> 0) est maintenant disponible !
                         // Mise en attente de validation admin pour revue avant publication
@@ -330,14 +333,16 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
                         updateData.deactivationReason = null
                         updateData.setRestockedAt = true
                         updateData.lastRestockedQty = effectiveStock
-                        restockToNotify.push({
-                            productId: existing.id,
-                            productName: existing.name,
-                            reference: existing.reference,
-                            price: effectivePrice,
-                            oldStock: existing.stock,
-                            newStock: effectiveStock,
-                        })
+                        if (!existing.restockPendingReview) {
+                            restockToNotify.push({
+                                productId: existing.id,
+                                productName: existing.name,
+                                reference: existing.reference,
+                                price: effectivePrice,
+                                oldStock: existing.stock,
+                                newStock: effectiveStock,
+                            })
+                        }
                     }
 
                     // Update categories if resolved and different
@@ -443,15 +448,13 @@ export async function runFtpSync(type: 'MANUAL' | 'SCHEDULED' = 'MANUAL') {
             }
         }
 
-        // Déclencher les notifications de réapprovisionnement par email
+        // Déclencher les notifications de réapprovisionnement groupées
         if (restockToNotify.length > 0) {
             (async () => {
-                for (const notif of restockToNotify) {
-                    try {
-                        await sendRestockNotificationAsync(notif)
-                    } catch (err) {
-                        console.error('[FTP-Sync] Restock email failed:', err)
-                    }
+                try {
+                    await queueBatchRestockNotifications(restockToNotify)
+                } catch (err) {
+                    console.error('[FTP-Sync] Restock batch notification queuing failed:', err)
                 }
             })()
         }

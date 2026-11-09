@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { emailService } from '@/lib/email-service';
+import { queueRestockNotification } from '@/lib/restock-notification-service';
 import { invalidateCache, invalidatePrefix } from '@/lib/redis';
 import { revalidatePath } from 'next/cache';
 
@@ -178,6 +179,7 @@ export async function processStockChange({
 
 /**
  * Envoi asynchrone sécurisé de la notification de réapprovisionnement aux admins configurés
+ * Délègue désormais au système de notification groupée avec fenêtre de consolidation.
  */
 export async function sendRestockNotificationAsync(data: {
   productId: string;
@@ -190,24 +192,7 @@ export async function sendRestockNotificationAsync(data: {
   productImageUrl?: string | null;
 }) {
   try {
-    const siteConfig = await prisma.siteConfig.findUnique({
-      where: { id: 'singleton' },
-    });
-    
-    // Vérifier si les notifications sont activées
-    if (!siteConfig || siteConfig.restockNotificationsEnabled === false) {
-      console.log('[StockService] Restock notifications are disabled or not configured in SiteConfig.');
-      return;
-    }
-
-    const recipients = siteConfig.restockNotificationEmails || [];
-    if (recipients.length === 0) {
-      console.warn('[StockService] No admin email addresses configured for restock notifications.');
-      return;
-    }
-
-    await emailService.sendProductRestockedEmail({
-      recipients,
+    await queueRestockNotification({
       productId: data.productId,
       productName: data.productName,
       reference: data.reference,
@@ -216,11 +201,9 @@ export async function sendRestockNotificationAsync(data: {
       oldStock: data.oldStock,
       newStock: data.newStock,
       productImageUrl: data.productImageUrl,
-      restockedAt: new Date(),
-      logoUrl: siteConfig.headerLogo || undefined,
     });
   } catch (err) {
-    console.error('[StockService] Failed to send restock email:', err);
+    console.error('[StockService] Failed to queue restock notification:', err);
   }
 }
 

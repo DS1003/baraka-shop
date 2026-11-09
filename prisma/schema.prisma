@@ -70,6 +70,7 @@ model Product {
   favoritedBy          User[]                @relation("Wishlist")
   aiProposal           ProductAiProposal?
   aiJobItems           AiEnrichmentJobItem[]
+  restockNotificationItems RestockNotificationItem[]
 
   @@index([name])
   @@index([slug])
@@ -330,6 +331,7 @@ model SiteConfig {
   loaderLogo                  String?
   restockNotificationEmails    String[] @default([])
   restockNotificationsEnabled Boolean  @default(true)
+  restockConsolidationMinutes Int      @default(5)
   updatedAt                   DateTime @updatedAt
 }
 
@@ -773,4 +775,41 @@ model AiEnrichmentJobItem {
   @@index([jobId])
   @@index([productId])
   @@index([status])
+}
+
+model RestockNotificationBatch {
+  id           String                    @id @default(uuid())
+  status       String                    @default("PENDING") // PENDING, PROCESSING, SENT, FAILED
+  scheduledFor DateTime
+  sentAt       DateTime?
+  errorDetails String?
+  recipients   String[]                  @default([])
+  itemsCount   Int                       @default(0)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  items        RestockNotificationItem[]
+
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([createdAt])
+}
+
+model RestockNotificationItem {
+  id              String                   @id @default(uuid())
+  batchId         String
+  productId       String
+  productName     String
+  reference       String?
+  categoryName    String?
+  price           Float                    @default(0)
+  oldStock        Int                      @default(0)
+  newStock        Int                      @default(0)
+  productImageUrl String?
+  restockedAt     DateTime                 @default(now())
+  batch           RestockNotificationBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  product         Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, productId])
+  @@index([batchId])
+  @@index([productId])
 }

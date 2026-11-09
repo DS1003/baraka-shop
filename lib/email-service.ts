@@ -332,6 +332,84 @@ export const emailService = {
   },
 
   /**
+   * Envoyer l'email groupé et consolidé de réapprovisionnement aux administrateurs
+   */
+  async sendConsolidatedRestockEmail(payload: {
+    recipients: string[];
+    items: Array<{
+      productId: string;
+      productName: string;
+      reference?: string | null;
+      categoryName?: string | null;
+      price: number;
+      oldStock: number;
+      newStock: number;
+      productImageUrl?: string | null;
+      restockedAt?: string | Date;
+    }>;
+    totalCount?: number;
+    consolidationMinutes?: number;
+    logoUrl?: string;
+  }) {
+    try {
+      if (!payload.recipients || payload.recipients.length === 0) {
+        return { success: false, error: 'Aucun destinataire configuré' };
+      }
+
+      const count = payload.totalCount || payload.items.length;
+      if (count === 0) {
+        return { success: false, error: 'Aucun produit réapprovisionné dans le lot' };
+      }
+
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️ RESEND_API_KEY non configurée. Simulation de notification groupée réapprovisionnement (' + count + ' produits) à', payload.recipients.join(', '));
+        return { success: true, simulated: true };
+      }
+
+      const baseUrl = (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost'))
+        ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
+        : 'https://baraka.sn';
+      const adminManageUrl = `${baseUrl}/admin/out-of-stock?filter=RESTOCKED_PENDING`;
+
+      const formattedDate = new Date().toLocaleString('fr-FR', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+      });
+
+      const ConsolidatedRestockEmail = (await import('@/emails/ConsolidatedRestockEmail')).default;
+      const htmlContent = await render(ConsolidatedRestockEmail({
+        items: payload.items,
+        totalCount: count,
+        consolidationWindowMinutes: payload.consolidationMinutes ?? 5,
+        generatedAt: formattedDate,
+        adminManageUrl,
+        logoUrl: payload.logoUrl,
+      }));
+
+      const subject = count > 1
+        ? `[Baraka] Réapprovisionnement — ${count} produits à vérifier`
+        : `[Baraka] Réapprovisionnement — 1 produit à vérifier`;
+
+      const { data, error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: payload.recipients,
+        subject,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[EmailService] Erreur Resend Restock groupé:', error);
+        return { success: false, error };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[EmailService] Exception lors de l\'envoi Restock groupé:', error);
+      return { success: false, error };
+    }
+  },
+
+  /**
    * Envoyer un email de test de configuration des notifications
    */
   async sendTestNotificationEmail(recipient: string) {

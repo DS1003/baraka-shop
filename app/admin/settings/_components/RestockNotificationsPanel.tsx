@@ -13,7 +13,8 @@ import {
     ShieldCheck,
     Check,
     Sparkles,
-    RefreshCw
+    RefreshCw,
+    Clock
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -33,6 +34,7 @@ export function RestockNotificationsPanel() {
     const [emailError, setEmailError] = useState('')
     const [emails, setEmails] = useState<string[]>([])
     const [enabled, setEnabled] = useState(true)
+    const [consolidationMinutes, setConsolidationMinutes] = useState<number>(5)
 
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -43,6 +45,7 @@ export function RestockNotificationsPanel() {
             if (res.success && res.config) {
                 setEmails(res.config.restockNotificationEmails || [])
                 setEnabled(res.config.restockNotificationsEnabled ?? true)
+                setConsolidationMinutes(res.config.restockConsolidationMinutes ?? 5)
             }
         } catch (err) {
             toast.error('Erreur lors du chargement des paramètres de notification')
@@ -83,15 +86,17 @@ export function RestockNotificationsPanel() {
         setEmails(updated)
     }
 
-    const handleSave = async (updatedEmails?: string[], updatedEnabled?: boolean) => {
+    const handleSave = async (updatedEmails?: string[], updatedEnabled?: boolean, updatedMinutes?: number) => {
         const toSaveEmails = updatedEmails !== undefined ? updatedEmails : emails
         const toSaveEnabled = updatedEnabled !== undefined ? updatedEnabled : enabled
+        const toSaveMinutes = updatedMinutes !== undefined ? updatedMinutes : consolidationMinutes
 
         setSaving(true)
         try {
             const res = await updateSiteConfig({
                 restockNotificationEmails: toSaveEmails,
                 restockNotificationsEnabled: toSaveEnabled,
+                restockConsolidationMinutes: toSaveMinutes,
             })
 
             if (res.success) {
@@ -234,6 +239,50 @@ export function RestockNotificationsPanel() {
                     </button>
                 </div>
             )}
+
+            {/* Regroupement intelligent (Consolidation Window) */}
+            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-start gap-4">
+                    <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+                        <Clock size={20} strokeWidth={2.2} />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h4 className="text-[15px] font-black text-slate-900 tracking-tight">
+                                Regroupement intelligent des notifications
+                            </h4>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-100 text-orange-700">
+                                1 e-mail groupé
+                            </span>
+                        </div>
+                        <p className="text-[12px] text-slate-500 font-medium mt-1 leading-relaxed max-w-xl">
+                            Tous les produits réapprovisionnés durant cette fenêtre temporelle sont automatiquement regroupés dans une notification unique avec accès direct au tableau de validation.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0 bg-slate-50 p-2.5 rounded-2xl border border-slate-200">
+                    <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 pl-1">
+                        Fenêtre :
+                    </label>
+                    <select
+                        value={consolidationMinutes}
+                        onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setConsolidationMinutes(val);
+                            handleSave(emails, enabled, val);
+                        }}
+                        className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-orange-500 cursor-pointer shadow-xs"
+                    >
+                        <option value={1}>1 minute</option>
+                        <option value={2}>2 minutes</option>
+                        <option value={5}>5 minutes (recommandé)</option>
+                        <option value={10}>10 minutes</option>
+                        <option value={15}>15 minutes</option>
+                        <option value={30}>30 minutes</option>
+                    </select>
+                </div>
+            </div>
 
             {/* Add email input */}
             <div className="space-y-3">

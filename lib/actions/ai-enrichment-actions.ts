@@ -923,3 +923,42 @@ export async function retryFailedJobItemsAction(jobId: string) {
         return { success: false, error: err?.message };
     }
 }
+
+/**
+ * Relance un seul élément en échec d'un lot
+ */
+export async function retrySingleJobItemAction(jobItemId: string) {
+    try {
+        await requireAdmin();
+        const item = await prisma.aiEnrichmentJobItem.findUnique({
+            where: { id: jobItemId },
+            include: { job: true }
+        });
+
+        if (!item) {
+            return { success: false, error: "Élément introuvable." };
+        }
+
+        // Remettre l'item en PENDING
+        await prisma.aiEnrichmentJobItem.update({
+            where: { id: jobItemId },
+            data: { status: 'PENDING', errorMessage: null }
+        });
+
+        // Remettre le job en RUNNING si besoin
+        await prisma.aiEnrichmentJob.update({
+            where: { id: item.jobId },
+            data: { status: 'RUNNING' }
+        });
+
+        // Relancer le processeur de file
+        processBulkJobQueue(item.jobId).catch(err => {
+            console.error(`[retrySingleJobItemAction ${jobItemId}] Erreur:`, err);
+        });
+
+        revalidatePath('/admin/ai-enrichment');
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err?.message };
+    }
+}

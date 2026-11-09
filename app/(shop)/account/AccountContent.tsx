@@ -55,7 +55,6 @@ import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
 import { useSiteLogos } from '@/lib/hooks/useSiteLogos';
-import { WatermarkOverlay } from '@/ui/WatermarkOverlay';
 
 interface AccountContentProps {
     user: any;
@@ -1159,7 +1158,6 @@ export default function AccountContent({ user }: AccountContentProps) {
                                                                     href={`/product/${product.id}`}
                                                                     className="relative w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] rounded-lg bg-gray-50/80 border border-gray-100 overflow-hidden shrink-0 flex items-center justify-center p-1 group-hover:border-orange-100 transition-colors"
                                                                 >
-                                                                    <WatermarkOverlay logoUrl={headerLogo} isThumbnail />
                                                                     <Image
                                                                         src={displayImage}
                                                                         alt={product.name}
