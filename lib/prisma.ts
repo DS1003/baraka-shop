@@ -51,6 +51,8 @@ if (globalThis.prismaGlobal) {
     if (
         !(globalThis.prismaGlobal as any).contactMessage ||
         !(globalThis.prismaGlobal as any).newsletterSubscriber ||
+        !(globalThis.prismaGlobal as any).productAiProposal ||
+        !(globalThis.prismaGlobal as any).aiEnrichmentJob ||
         !hasDeactivationReason ||
         !hasShippingAddress
     ) {
