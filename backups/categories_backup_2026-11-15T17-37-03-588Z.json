@@ -1,0 +1,1300 @@
+[
+  {
+    "id": "0a255641-62e5-4690-b7de-6ef82029f86f",
+    "name": "Général",
+    "slug": "gnral",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1773662359/catalogue_produits/gcmhd6gmluucgojirusp.png",
+    "isPublished": false,
+    "subCategories": []
+  },
+  {
+    "id": "12866bec-a097-47f4-ba5b-0e537f57ea8c",
+    "name": "CHARGEUR",
+    "slug": "chargeur",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1782074771/products_baraka/qc0bkddq39joxugokg67.png",
+    "isPublished": false,
+    "subCategories": []
+  },
+  {
+    "id": "237f35af-d34d-4860-9ff1-5d641d3301a5",
+    "name": "MIS EN SOMMEIL",
+    "slug": "mis-en-sommeil",
+    "reference": null,
+    "image": null,
+    "isPublished": false,
+    "subCategories": []
+  },
+  {
+    "id": "a4b53b15-1d0c-4401-8d5b-cb5dd646fc13",
+    "name": "Produits Importés (FTP)",
+    "slug": "import-ftp",
+    "reference": null,
+    "image": null,
+    "isPublished": false,
+    "subCategories": []
+  },
+  {
+    "id": "b0928b79-6ebb-4411-95f4-eb5463e550fd",
+    "name": "SOLAIRE",
+    "slug": "solaire",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1773668366/catalogue_produits/pljc3qn8ghqkytdjntwf.png",
+    "isPublished": false,
+    "subCategories": []
+  },
+  {
+    "id": "f4f65041-8bd4-43e1-a6b7-0e9c75567c1e",
+    "name": "INFORMATIQUE ",
+    "slug": "informatique-",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1777067053/catalogue_produits/heo21hzckpf9uadndg36.jpg",
+    "isPublished": false,
+    "subCategories": [
+      {
+        "id": "dcb4d81f-4d26-4b9f-9cb2-934f20505809",
+        "name": "RESEAUX ",
+        "slug": "informatique-reseaux",
+        "categoryId": "f4f65041-8bd4-43e1-a6b7-0e9c75567c1e",
+        "thirdLevelCategories": [
+          {
+            "id": "f8b49e83-dd49-48f1-a59a-bc27b59ac306",
+            "name": "ACCESS POINT & REPETITEUR",
+            "slug": "informatique-reseaux-access-point-repetiteur",
+            "subCategoryId": "dcb4d81f-4d26-4b9f-9cb2-934f20505809"
+          },
+          {
+            "id": "14546c72-fe56-49fa-bc2b-b4c6d9563ab9",
+            "name": "ACCESSOIRES RESEAUX",
+            "slug": "informatique-reseaux-accessoires-reseaux",
+            "subCategoryId": "dcb4d81f-4d26-4b9f-9cb2-934f20505809"
+          },
+          {
+            "id": "7b0adc3f-4c96-4990-a593-e36e25fc20ad",
+            "name": "CARTE RESEAUX & CPL",
+            "slug": "informatique-reseaux-carte-reseaux-cpl",
+            "subCategoryId": "dcb4d81f-4d26-4b9f-9cb2-934f20505809"
+          },
+          {
+            "id": "95f4d783-43df-4e40-888d-f637e8b43528",
+            "name": "CLE ET CARTE WIFI",
+            "slug": "informatique-reseaux-cle-et-carte-wifi",
+            "subCategoryId": "dcb4d81f-4d26-4b9f-9cb2-934f20505809"
+          },
+          {
+            "id": "7457b8a2-d9f9-40b9-ab6a-26eb75afa233",
+            "name": "MODEM & ROUTEUR",
+            "slug": "informatique-reseaux-modem-routeur",
+            "subCategoryId": "dcb4d81f-4d26-4b9f-9cb2-934f20505809"
+          },
+          {
+            "id": "3f5ea23a-cdf9-4b7a-a2f5-0f4dac468274",
+            "name": "SWITCH",
+            "slug": "informatique-reseaux-switch",
+            "subCategoryId": "dcb4d81f-4d26-4b9f-9cb2-934f20505809"
+          }
+        ]
+      },
+      {
+        "id": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c",
+        "name": "PERIPHERIQUES",
+        "slug": "informatique-peripheriques",
+        "categoryId": "f4f65041-8bd4-43e1-a6b7-0e9c75567c1e",
+        "thirdLevelCategories": [
+          {
+            "id": "6c946504-84d1-4ef2-b1c5-215b06af193c",
+            "name": "ACCESSOIRES IMPRIMANTE",
+            "slug": "informatique-peripheriques-accessoires-imprimante",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "d36b4f3b-b17b-4d7f-954d-01dcd2afdb70",
+            "name": "ACCESSOIRES STREAMING",
+            "slug": "informatique-peripheriques-accessoires-streaming",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "0501e82e-23d0-41ba-98af-fe99b38afe67",
+            "name": "CLAVIER & SOURIS 2EME",
+            "slug": "informatique-peripheriques-clavier-souris-2eme",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "7ee4e87f-ea7e-4467-8574-c48bf7276b34",
+            "name": "CLAVIER & SOURIS ORIGINAL",
+            "slug": "informatique-peripheriques-clavier-souris-original",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "d04c47fc-0f0d-4568-b307-81eb72691118",
+            "name": "ECRAN PC",
+            "slug": "informatique-peripheriques-ecran-pc",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "2b47b7f2-12d9-4e11-bc45-414739f1c52d",
+            "name": "IMPRIMANTE",
+            "slug": "informatique-peripheriques-imprimante",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "b060a9db-2ea4-49b5-ae25-dbc3fc428fb5",
+            "name": "ONDULEUR",
+            "slug": "informatique-peripheriques-onduleur",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "7f63e534-ca02-4854-b7be-64e347ab727f",
+            "name": "REGULATEUR DE TENSION",
+            "slug": "informatique-peripheriques-regulateur-de-tension",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          },
+          {
+            "id": "6b980578-7c55-479a-8efa-d4df7772c0f9",
+            "name": "WEBCAM",
+            "slug": "informatique-peripheriques-webcam",
+            "subCategoryId": "4cc9d57f-ca17-433b-bef9-7e0b50e85b1c"
+          }
+        ]
+      },
+      {
+        "id": "4907a45c-0671-4f1b-83e8-50f69789983e",
+        "name": "ORDINATEURS PORTABLES",
+        "slug": "informatique-ordinateurs-portables",
+        "categoryId": "f4f65041-8bd4-43e1-a6b7-0e9c75567c1e",
+        "thirdLevelCategories": [
+          {
+            "id": "95e87e11-6c5d-45fc-ace3-8857ce25ff89",
+            "name": "ACCESSOIRES ORDINATEUR PORTABLE",
+            "slug": "informatique-ordinateurs-portables-accessoires-ordinateur-portable",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          },
+          {
+            "id": "22198bb9-9375-4f52-a532-6cdb4f2ce1db",
+            "name": "BATTERIE ORDINATEUR PORTABLE",
+            "slug": "informatique-ordinateurs-portables-batterie-ordinateur-portable",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          },
+          {
+            "id": "56ee4c33-2cf5-4c30-b9a5-446fe1068064",
+            "name": "CHARGEUR ORDINATEUR PORTABLE",
+            "slug": "informatique-ordinateurs-portables-chargeur-ordinateur-portable",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          },
+          {
+            "id": "892bf9e3-3ad9-4c1f-9d86-d5813cf47d46",
+            "name": "MACBOOK",
+            "slug": "informatique-ordinateurs-portables-macbook",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          },
+          {
+            "id": "70bfdcf3-fba8-4fbd-b77c-6183b327fb79",
+            "name": "PC PORTABLE",
+            "slug": "informatique-ordinateurs-portables-pc-portable",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          },
+          {
+            "id": "a49d0f20-c241-4e3e-9635-e3e411a4dc4b",
+            "name": "PC PORTABLE RECONDITIONNE",
+            "slug": "informatique-ordinateurs-portables-pc-portable-reconditionne",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          },
+          {
+            "id": "8a148353-bc7b-496f-83aa-b05da57d6569",
+            "name": "REFROIDISSEUR ORDINATEUR",
+            "slug": "informatique-ordinateurs-portables-refroidisseur-ordinateur",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          },
+          {
+            "id": "f15e9017-d76c-4b75-adda-e0d1b57a1656",
+            "name": "SAC & SACOCHES",
+            "slug": "informatique-ordinateurs-portables-sac-sacoches",
+            "subCategoryId": "4907a45c-0671-4f1b-83e8-50f69789983e"
+          }
+        ]
+      },
+      {
+        "id": "eb918534-721e-4a84-8fad-05dbf9bbc64f",
+        "name": "PIECES",
+        "slug": "informatique-pieces",
+        "categoryId": "f4f65041-8bd4-43e1-a6b7-0e9c75567c1e",
+        "thirdLevelCategories": [
+          {
+            "id": "52f6e2b0-799e-4a49-aa24-84d30b39667e",
+            "name": "BARETTE ORDINATEUR",
+            "slug": "informatique-pieces-barette-ordinateur",
+            "subCategoryId": "eb918534-721e-4a84-8fad-05dbf9bbc64f"
+          },
+          {
+            "id": "72a59490-4a59-4ff7-ab28-3bc9b81af5bd",
+            "name": "ECRAN ORDINATEUR PORTABLE",
+            "slug": "informatique-pieces-ecran-ordinateur-portable",
+            "subCategoryId": "eb918534-721e-4a84-8fad-05dbf9bbc64f"
+          }
+        ]
+      },
+      {
+        "id": "afb88536-04ed-4bd2-9267-24363f904262",
+        "name": "ORDINATEURS DE BUREAU",
+        "slug": "informatique-ordinateurs-de-bureau",
+        "categoryId": "f4f65041-8bd4-43e1-a6b7-0e9c75567c1e",
+        "thirdLevelCategories": [
+          {
+            "id": "f1ad564d-b05d-4320-8f6a-8b1e7f08de53",
+            "name": "DESKTOP",
+            "slug": "informatique-ordinateurs-de-bureau-desktop",
+            "subCategoryId": "afb88536-04ed-4bd2-9267-24363f904262"
+          },
+          {
+            "id": "282039ab-b0af-4413-b822-6bdd1a95bdb2",
+            "name": "DESKTOP RECONDITIONNE",
+            "slug": "informatique-ordinateurs-de-bureau-desktop-reconditionne",
+            "subCategoryId": "afb88536-04ed-4bd2-9267-24363f904262"
+          },
+          {
+            "id": "d48272a3-61a8-4f55-bbc4-96e7059e9447",
+            "name": "SERVEUR ",
+            "slug": "informatique-ordinateurs-de-bureau-serveur",
+            "subCategoryId": "afb88536-04ed-4bd2-9267-24363f904262"
+          },
+          {
+            "id": "b889796c-7f81-4bf5-a10b-f628e4dc3d98",
+            "name": "ALL IN ONE & DESKTOP",
+            "slug": "informatique-ordinateurs-de-bureau-all-in-one-desktop-jsy",
+            "subCategoryId": "afb88536-04ed-4bd2-9267-24363f904262"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "043da06a-e771-4ccc-9d12-9917e84b5e71",
+    "name": "CABLE",
+    "slug": "cable",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779433351/catalogue_produits/qyetpcqjw3uedosz6k53.png",
+    "isPublished": false,
+    "subCategories": [
+      {
+        "id": "0a01aae6-a2ac-4344-a879-62b2a6ee4982",
+        "name": "CAMERA/CCTV",
+        "slug": "cable-cameracctv",
+        "categoryId": "043da06a-e771-4ccc-9d12-9917e84b5e71",
+        "thirdLevelCategories": []
+      }
+    ]
+  },
+  {
+    "id": "34c0b742-5abb-4f4e-a070-69282ae348fb",
+    "name": "CONSOMMABLES",
+    "slug": "consommables",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792002872/products_baraka/eayx1b9njiasyb22ocoo.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "1cec0c98-b021-4cc5-8df1-27e1ade8a80d",
+        "name": "IMPRESSION",
+        "slug": "consommables-impression",
+        "categoryId": "34c0b742-5abb-4f4e-a070-69282ae348fb",
+        "thirdLevelCategories": [
+          {
+            "id": "e6688639-67f4-4961-8f0d-6856c286f2a8",
+            "name": "TONER 2EME",
+            "slug": "consommables-impression-toner-2eme",
+            "subCategoryId": "1cec0c98-b021-4cc5-8df1-27e1ade8a80d"
+          },
+          {
+            "id": "af7915f3-7544-490a-bcb2-d30f39b583b5",
+            "name": "CARTOUCHE",
+            "slug": "consommables-impression-cartouche",
+            "subCategoryId": "1cec0c98-b021-4cc5-8df1-27e1ade8a80d"
+          },
+          {
+            "id": "61ad96a3-973e-4db9-8f40-e4bf701aed6b",
+            "name": "TONER ORIGINAL",
+            "slug": "consommables-impression-toner-original",
+            "subCategoryId": "1cec0c98-b021-4cc5-8df1-27e1ade8a80d"
+          },
+          {
+            "id": "a891ce38-ba68-4a4d-b2f1-c81884472851",
+            "name": "BOITE TONER 2EME",
+            "slug": "consommables-impression-boite-toner-2eme-q8s",
+            "subCategoryId": "1cec0c98-b021-4cc5-8df1-27e1ade8a80d"
+          }
+        ]
+      },
+      {
+        "id": "77f36009-6a5d-40f0-9ccc-0c27a757c93d",
+        "name": "STOCKAGE",
+        "slug": "consommables-stockage",
+        "categoryId": "34c0b742-5abb-4f4e-a070-69282ae348fb",
+        "thirdLevelCategories": [
+          {
+            "id": "d650c468-8281-4ac2-bca8-92dbf44b874e",
+            "name": "BOITIER DISQUE DUR",
+            "slug": "consommables-stockage-boitier-disque-dur",
+            "subCategoryId": "77f36009-6a5d-40f0-9ccc-0c27a757c93d"
+          },
+          {
+            "id": "0bdb870e-9a8f-43b7-a69c-965e2c2ba006",
+            "name": "CABLE DISQUE DUR",
+            "slug": "consommables-stockage-cable-disque-dur",
+            "subCategoryId": "77f36009-6a5d-40f0-9ccc-0c27a757c93d"
+          },
+          {
+            "id": "b1dc8ee1-b7de-44a8-ad23-41d041709c4f",
+            "name": "CARTE MEMOIRE",
+            "slug": "consommables-stockage-carte-memoire",
+            "subCategoryId": "77f36009-6a5d-40f0-9ccc-0c27a757c93d"
+          },
+          {
+            "id": "39bdc8d4-dc21-404d-8a39-9de184de2c02",
+            "name": "CLE USB",
+            "slug": "consommables-stockage-cle-usb",
+            "subCategoryId": "77f36009-6a5d-40f0-9ccc-0c27a757c93d"
+          },
+          {
+            "id": "3699579d-0ed1-4731-ba3a-cd29e0f487eb",
+            "name": "DISQUE DUR",
+            "slug": "consommables-stockage-disque-dur",
+            "subCategoryId": "77f36009-6a5d-40f0-9ccc-0c27a757c93d"
+          },
+          {
+            "id": "a12215b8-f5b5-4fc5-af00-3746304626e5",
+            "name": "LECTEUR CARTE",
+            "slug": "consommables-stockage-lecteur-carte",
+            "subCategoryId": "77f36009-6a5d-40f0-9ccc-0c27a757c93d"
+          },
+          {
+            "id": "bdd79248-5ffd-4b46-bb83-4ff118b9d372",
+            "name": "LECTEUR CARTE MEMOIRE",
+            "slug": "consommables-stockage-lecteur-carte-memoire-t6k",
+            "subCategoryId": "77f36009-6a5d-40f0-9ccc-0c27a757c93d"
+          }
+        ]
+      },
+      {
+        "id": "b05715be-cba7-405b-be8f-c03721e46611",
+        "name": "ELECTROMENAGER",
+        "slug": "consommables-electromenager",
+        "categoryId": "34c0b742-5abb-4f4e-a070-69282ae348fb",
+        "thirdLevelCategories": [
+          {
+            "id": "23d24cbe-5b05-4748-b17e-f8ade8ce5ac4",
+            "name": "LAMPE SOLAIRE",
+            "slug": "consommables-electromenager-lampe-solaire",
+            "subCategoryId": "b05715be-cba7-405b-be8f-c03721e46611"
+          },
+          {
+            "id": "d1d12279-446b-426e-8fa4-3654ead99268",
+            "name": "MATERIEL ELECTROMENAGER",
+            "slug": "consommables-electromenager-materiel-electromenager",
+            "subCategoryId": "b05715be-cba7-405b-be8f-c03721e46611"
+          },
+          {
+            "id": "2fe05130-c189-40f8-a552-7cb196e27ec0",
+            "name": "RALLONGE",
+            "slug": "consommables-electromenager-rallonge",
+            "subCategoryId": "b05715be-cba7-405b-be8f-c03721e46611"
+          },
+          {
+            "id": "4d57f5f5-8e03-4f32-a8ba-e7203421136a",
+            "name": "SOLAIRE",
+            "slug": "consommables-electromenager-solaire",
+            "subCategoryId": "b05715be-cba7-405b-be8f-c03721e46611"
+          },
+          {
+            "id": "42803aba-ba04-47a3-8a2c-02dad150bfc4",
+            "name": "SUPPORT FRIGO",
+            "slug": "consommables-electromenager-support-frigo",
+            "subCategoryId": "b05715be-cba7-405b-be8f-c03721e46611"
+          },
+          {
+            "id": "f40d656e-9fd0-40c1-9d07-6f884df86132",
+            "name": "VENTILO",
+            "slug": "consommables-electromenager-ventilo",
+            "subCategoryId": "b05715be-cba7-405b-be8f-c03721e46611"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "394be163-2f4c-45bb-9572-66939c172767",
+    "name": "IMAGE & SON",
+    "slug": "image--son",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792057201/products_baraka/fzairff30emntzjkzzlo.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "5fdeb1f3-ba93-42fa-9911-24b77b889734",
+        "name": "PHOTO",
+        "slug": "image-son-photo",
+        "categoryId": "394be163-2f4c-45bb-9572-66939c172767",
+        "thirdLevelCategories": [
+          {
+            "id": "06ad0a43-4e06-4152-af62-889e669356d4",
+            "name": "ACCESSOIRES PHOTO",
+            "slug": "image-son-photo-accessoires-photo",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "be186050-0834-4593-9ba6-456e0104d94f",
+            "name": "APPAREIL PHOTO",
+            "slug": "image-son-photo-appareil-photo",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "34e6c669-6ac8-451c-8f7d-6e32c6768348",
+            "name": "BATTERIE APPAREIL PHOTO",
+            "slug": "image-son-photo-batterie-appareil-photo",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "5c11b472-76c8-493a-9973-d4ce585ea9d4",
+            "name": "CHARGEUR APPAREIL PHOTO",
+            "slug": "image-son-photo-chargeur-appareil-photo",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "4fa94f40-f811-456e-b101-97bb973c480f",
+            "name": "FLASH APPAREIL PHOTO",
+            "slug": "image-son-photo-flash-appareil-photo",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "f9befe51-2cd6-4edf-a615-1c5d890a3f9a",
+            "name": "LED CAMERA",
+            "slug": "image-son-photo-led-camera",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "cde866c1-9a76-4ed7-bd55-ea9e8fe4fea6",
+            "name": "MICROPHONE",
+            "slug": "image-son-photo-microphone",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "5084acc0-b7e8-483d-bf94-5dd4affaf537",
+            "name": "OBJECTIF",
+            "slug": "image-son-photo-objectif",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "a236d2c4-e80e-4173-ad2c-c2837b1476eb",
+            "name": "STABILISATEUR",
+            "slug": "image-son-photo-stabilisateur",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "f36c983b-ea32-4805-afdd-c77284aa2109",
+            "name": "TREPIED MICRO",
+            "slug": "image-son-photo-trepied-micro",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          },
+          {
+            "id": "3a349d4d-1edc-4445-9951-914ffe0b5099",
+            "name": "TREPIED CAMERA",
+            "slug": "image-son-photo-trepied-camera",
+            "subCategoryId": "5fdeb1f3-ba93-42fa-9911-24b77b889734"
+          }
+        ]
+      },
+      {
+        "id": "a86ecefb-7e24-42fa-80aa-fed213ba014b",
+        "name": "TELEVISION",
+        "slug": "image-son-television",
+        "categoryId": "394be163-2f4c-45bb-9572-66939c172767",
+        "thirdLevelCategories": [
+          {
+            "id": "8821fa91-c05d-41e4-8787-bacdfb602c24",
+            "name": "ACCESSOIRE TELEVISION",
+            "slug": "image-son-television-accessoire-television",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "e1fb924a-0ddc-4b25-9404-f56b0b626451",
+            "name": "ANTENNE TV",
+            "slug": "image-son-television-antenne-tv",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "4ad4837c-e499-4c82-bce8-024be42dcf4c",
+            "name": "CASQUE AUDIO HIFI",
+            "slug": "image-son-television-casque-audio-hifi",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "96d421f2-1594-4f94-97a1-0d782b864d92",
+            "name": "DECODEUR",
+            "slug": "image-son-television-decodeur",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "1cc7fd2f-97e5-4f22-a308-7c6728991edf",
+            "name": "SUPPORT MURAL",
+            "slug": "image-son-television-support-mural",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "7f4816a3-dd70-4868-9fb2-a0c852cd4838",
+            "name": "TELECOMMANDE",
+            "slug": "image-son-television-telecommande",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "3eb050a8-ff2a-4762-a206-72c9a7f6dc66",
+            "name": "TELEVISION 2EME",
+            "slug": "image-son-television-television-2eme",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "fad2174b-c34e-4f9a-82e0-e27931e4fb4b",
+            "name": "TELEVISION ORIGINAL",
+            "slug": "image-son-television-television-original",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "efe8d8c1-f2e8-48e5-84f6-f58bc2f96de2",
+            "name": "CONNECTIQUE TV",
+            "slug": "connectique-tv-mr9ez3gl",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          },
+          {
+            "id": "ead50ecb-fbbc-4fe4-a895-369c9027d041",
+            "name": "SUPPORT DECODEUR",
+            "slug": "support-decodeur-mr9ez3wf",
+            "subCategoryId": "a86ecefb-7e24-42fa-80aa-fed213ba014b"
+          }
+        ]
+      },
+      {
+        "id": "02db5348-ad60-4765-817b-86ff2f55a94c",
+        "name": "SON NUMERIQUE",
+        "slug": "image-son-son-numerique",
+        "categoryId": "394be163-2f4c-45bb-9572-66939c172767",
+        "thirdLevelCategories": [
+          {
+            "id": "797d8079-4f88-46b3-9728-051a0853b688",
+            "name": "AIRPODS COPY",
+            "slug": "image-son-son-numerique-airpods-copy",
+            "subCategoryId": "02db5348-ad60-4765-817b-86ff2f55a94c"
+          },
+          {
+            "id": "e2b13985-62cc-4d95-92ba-0ec65044a403",
+            "name": "AIRPODS ORIGINAL",
+            "slug": "image-son-son-numerique-airpods-original",
+            "subCategoryId": "02db5348-ad60-4765-817b-86ff2f55a94c"
+          },
+          {
+            "id": "275fbb20-e924-4919-bda2-f0ec2f808fd2",
+            "name": "CASQUES",
+            "slug": "image-son-son-numerique-casques",
+            "subCategoryId": "02db5348-ad60-4765-817b-86ff2f55a94c"
+          },
+          {
+            "id": "bfd59589-70b3-4889-9f34-2e43c855717d",
+            "name": "DICTAPHONE",
+            "slug": "image-son-son-numerique-dictaphone",
+            "subCategoryId": "02db5348-ad60-4765-817b-86ff2f55a94c"
+          },
+          {
+            "id": "3734b308-f429-4652-8a3e-4f7d2a84eee0",
+            "name": "ENCEINTE BLUETOOTH",
+            "slug": "image-son-son-numerique-enceinte-bluetooth",
+            "subCategoryId": "02db5348-ad60-4765-817b-86ff2f55a94c"
+          },
+          {
+            "id": "6ad71a3e-3b90-4d5f-b23e-2b3aa85f89b0",
+            "name": "MEGAPHONE",
+            "slug": "image-son-son-numerique-megaphone",
+            "subCategoryId": "02db5348-ad60-4765-817b-86ff2f55a94c"
+          },
+          {
+            "id": "8971de9f-12a2-47f0-a8fc-f2926648eb5c",
+            "name": "RADIO",
+            "slug": "image-son-son-numerique-radio",
+            "subCategoryId": "02db5348-ad60-4765-817b-86ff2f55a94c"
+          }
+        ]
+      },
+      {
+        "id": "efe0f806-7edd-4b4f-b273-431b90ba4493",
+        "name": "HOME CINEMA ET BAFFE",
+        "slug": "image-son-home-cinema-et-baffe",
+        "categoryId": "394be163-2f4c-45bb-9572-66939c172767",
+        "thirdLevelCategories": [
+          {
+            "id": "1f590c70-7b98-422d-a898-01da1ba26449",
+            "name": "AMPLIFICATEUR",
+            "slug": "image-son-home-cinema-et-baffe-amplificateur",
+            "subCategoryId": "efe0f806-7edd-4b4f-b273-431b90ba4493"
+          },
+          {
+            "id": "2820b8f1-99c4-40e7-a241-edd72e8a8fa9",
+            "name": "BAFFLE",
+            "slug": "image-son-home-cinema-et-baffe-baffle",
+            "subCategoryId": "efe0f806-7edd-4b4f-b273-431b90ba4493"
+          },
+          {
+            "id": "628a5a11-3a5e-46ef-8909-4feb0263ba5a",
+            "name": "BARRE DE SON ",
+            "slug": "image-son-home-cinema-et-baffe-barre-de-son",
+            "subCategoryId": "efe0f806-7edd-4b4f-b273-431b90ba4493"
+          },
+          {
+            "id": "9c5310cf-6a12-4e54-a2cc-9286b9f3d0fe",
+            "name": "HOME CINEMA",
+            "slug": "image-son-home-cinema-et-baffe-home-cinema",
+            "subCategoryId": "efe0f806-7edd-4b4f-b273-431b90ba4493"
+          },
+          {
+            "id": "8c6fbec8-69ac-4841-b20f-3a4a1492c911",
+            "name": "ACCESSOIRES HOME CINEMA",
+            "slug": "accessoires-home-cinema-mr9eyz9t",
+            "subCategoryId": "efe0f806-7edd-4b4f-b273-431b90ba4493"
+          },
+          {
+            "id": "8787b928-b665-46a5-abbd-0d2abdd95eef",
+            "name": "BARRE DE SON",
+            "slug": "barre-de-son-mr9eyzp2",
+            "subCategoryId": "efe0f806-7edd-4b4f-b273-431b90ba4493"
+          }
+        ]
+      },
+      {
+        "id": "cf3d7e82-4933-4898-83a7-b305587d3a8a",
+        "name": "PROJECTION",
+        "slug": "image-son-projection",
+        "categoryId": "394be163-2f4c-45bb-9572-66939c172767",
+        "thirdLevelCategories": [
+          {
+            "id": "d566d0a3-88c3-44e3-880c-09efccdfabf6",
+            "name": "ECRAN DE PROJECTION",
+            "slug": "image-son-projection-ecran-de-projection",
+            "subCategoryId": "cf3d7e82-4933-4898-83a7-b305587d3a8a"
+          },
+          {
+            "id": "ed03443e-0e92-496f-a09d-d71cd165b1cc",
+            "name": "POINTEUR LASER",
+            "slug": "image-son-projection-pointeur-laser",
+            "subCategoryId": "cf3d7e82-4933-4898-83a7-b305587d3a8a"
+          },
+          {
+            "id": "91bcb733-49b5-4dbd-9397-10070636dd9c",
+            "name": "SUPPORT VIDEO PROJECTEUR ",
+            "slug": "image-son-projection-support-video-projecteur",
+            "subCategoryId": "cf3d7e82-4933-4898-83a7-b305587d3a8a"
+          },
+          {
+            "id": "e9239e3e-ed18-4ba2-b104-a3129f448a1b",
+            "name": "VIDEO PROJECTEUR",
+            "slug": "image-son-projection-video-projecteur",
+            "subCategoryId": "cf3d7e82-4933-4898-83a7-b305587d3a8a"
+          },
+          {
+            "id": "952866de-bc75-4ddd-b22d-14824c1a2711",
+            "name": "ACCESSOIRES VIDEO PROJECTEUR",
+            "slug": "image-son-projection-accessoires-video-projecteur-nu1",
+            "subCategoryId": "cf3d7e82-4933-4898-83a7-b305587d3a8a"
+          },
+          {
+            "id": "27508c7d-127c-4bf2-9d8e-04a08e60f8a9",
+            "name": "SUPPORT VIDEO PROJECTEUR",
+            "slug": "support-video-projecteur-mr9ez1n6",
+            "subCategoryId": "cf3d7e82-4933-4898-83a7-b305587d3a8a"
+          }
+        ]
+      },
+      {
+        "id": "af43d002-2282-45e3-bef5-92d19461026b",
+        "name": "LECTEURS ENREGISTREUR ",
+        "slug": "image-son-lecteurs-enregistreur",
+        "categoryId": "394be163-2f4c-45bb-9572-66939c172767",
+        "thirdLevelCategories": [
+          {
+            "id": "35e483b9-a7e7-4757-a9e6-3c5bf1c41e10",
+            "name": "LECTEUR MULTIMEDIA",
+            "slug": "image-son-lecteurs-enregistreur-lecteur-multimedia",
+            "subCategoryId": "af43d002-2282-45e3-bef5-92d19461026b"
+          }
+        ]
+      },
+      {
+        "id": "332d2a60-35a2-4669-98d6-7ac2472b33f7",
+        "name": "LECTEURS ENREGISTREUR",
+        "slug": "lecteurs-enregistreur-mr9eyuay",
+        "categoryId": "394be163-2f4c-45bb-9572-66939c172767",
+        "thirdLevelCategories": [
+          {
+            "id": "12e7d0e6-c2d8-473e-b9ef-2444eaad1c07",
+            "name": "LECTEUR MULTIMEDIA",
+            "slug": "lecteur-multimedia-mr9ez00c",
+            "subCategoryId": "332d2a60-35a2-4669-98d6-7ac2472b33f7"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "22b25fe0-fec5-4cb9-b715-51af715bd0b2",
+    "name": "JEUX & LOISIRS",
+    "slug": "jeux--loisirs",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792058049/products_baraka/wcabqsfeayasz2fuy4xy.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "c959e3ee-34e6-4482-bb8b-17b08cc07076",
+        "name": "MATERIELS JEUX VIDEOS",
+        "slug": "jeux-loisirs-materiels-jeux-videos",
+        "categoryId": "22b25fe0-fec5-4cb9-b715-51af715bd0b2",
+        "thirdLevelCategories": [
+          {
+            "id": "84dff3fb-13f8-415f-974b-a8320e77c322",
+            "name": "ACCESSOIRES JEUX VIDEOS",
+            "slug": "jeux-loisirs-materiels-jeux-videos-accessoires-jeux-videos",
+            "subCategoryId": "c959e3ee-34e6-4482-bb8b-17b08cc07076"
+          },
+          {
+            "id": "7851bc33-0f4c-41a7-b755-7d0094403ce4",
+            "name": "CONSOLES",
+            "slug": "jeux-loisirs-materiels-jeux-videos-consoles",
+            "subCategoryId": "c959e3ee-34e6-4482-bb8b-17b08cc07076"
+          },
+          {
+            "id": "c4e6ff5f-4ecc-4ef0-973d-38c7f3ee581b",
+            "name": "JEUX VIDEOS",
+            "slug": "jeux-loisirs-materiels-jeux-videos-jeux-videos",
+            "subCategoryId": "c959e3ee-34e6-4482-bb8b-17b08cc07076"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dbb74254-3608-4c81-ba9a-269992a20560",
+    "name": "CONNECTIQUE",
+    "slug": "connectique",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792058580/products_baraka/og0tzs4e7jxjdkxripa2.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043",
+        "name": "MATERIELS CONNECTIQUE",
+        "slug": "connectique-materiels-connectique",
+        "categoryId": "dbb74254-3608-4c81-ba9a-269992a20560",
+        "thirdLevelCategories": [
+          {
+            "id": "29b84298-f95f-4d7d-be2a-a1a4b99143e4",
+            "name": "CABLE",
+            "slug": "connectique-materiels-connectique-cable",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "b8f60060-4067-4a2d-813e-ff3a2edfbf48",
+            "name": "CABLE DVI",
+            "slug": "connectique-materiels-connectique-cable-dvi",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "4595d208-6b1b-484d-90c3-a00170cf1e0b",
+            "name": "CABLE HDMI",
+            "slug": "connectique-materiels-connectique-cable-hdmi",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "f4e97999-2743-4202-a52b-d04f69d1f91d",
+            "name": "CABLE IMPRIMANTE",
+            "slug": "connectique-materiels-connectique-cable-imprimante",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "263a3ccc-0c54-4fd8-8e78-ca5f3891cb99",
+            "name": "CABLE OPTIQUE",
+            "slug": "connectique-materiels-connectique-cable-optique",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "5dee17be-0f80-4f08-b758-1233bf058cfd",
+            "name": "CABLE RG59",
+            "slug": "connectique-materiels-connectique-cable-rg59",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "13722f88-a682-4ab1-ab81-2bad3c3e9dce",
+            "name": "CABLE RJ45",
+            "slug": "connectique-materiels-connectique-cable-rj45",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "acf2cf54-b050-4fe6-bf07-a08c55f5a717",
+            "name": "CABLE USB",
+            "slug": "connectique-materiels-connectique-cable-usb",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "7ff6615f-9046-43ad-87b2-b5dd8f046af5",
+            "name": "CABLE VGA",
+            "slug": "connectique-materiels-connectique-cable-vga",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "122e7ca4-3aeb-49ca-b769-1708d1abb27a",
+            "name": "CONVERTISSEUR",
+            "slug": "connectique-materiels-connectique-convertisseur",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "6f719ae1-dd4b-4b12-9d24-01c84d3e16b2",
+            "name": "CABLE RG11",
+            "slug": "cable-rg11-mr9ezitl",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "22ed1f2a-e24f-417b-b1e2-9147a2a6d71f",
+            "name": "CABLE TELEVISION",
+            "slug": "cable-television-mr9ezjf6",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          },
+          {
+            "id": "4ccdeaba-3e6b-4763-b0b6-aa09a556b62e",
+            "name": "CONNECTEUR RJ45",
+            "slug": "connecteur-rj45-mr9ezju6",
+            "subCategoryId": "74e432d5-3d2b-4495-8ed5-ad8c4bba3043"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "9e4b308c-e9f2-48f6-a29b-a454718529be",
+    "name": "ELECTRONIQUE",
+    "slug": "electronique",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792059006/products_baraka/ut3lthlycmfpiw038yny.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "0a89caa0-b286-4008-a6ae-12988b993348",
+        "name": "MATERIELS ELECTRONIQUE",
+        "slug": "electronique-materiels-electronique",
+        "categoryId": "9e4b308c-e9f2-48f6-a29b-a454718529be",
+        "thirdLevelCategories": [
+          {
+            "id": "4f9a0fd8-74af-4318-b96e-1689f4180a23",
+            "name": "ACCESSOIRES ELECTRONIQUE",
+            "slug": "electronique-materiels-electronique-accessoires-electronique",
+            "subCategoryId": "0a89caa0-b286-4008-a6ae-12988b993348"
+          },
+          {
+            "id": "b2f10c09-4678-4759-b512-04f5c36dde4c",
+            "name": "CALCULATRICE",
+            "slug": "electronique-materiels-electronique-calculatrice",
+            "subCategoryId": "0a89caa0-b286-4008-a6ae-12988b993348"
+          },
+          {
+            "id": "47d14b53-8196-4adc-8c39-5b5f0ac31831",
+            "name": "DIVERS",
+            "slug": "electronique-materiels-electronique-divers",
+            "subCategoryId": "0a89caa0-b286-4008-a6ae-12988b993348"
+          },
+          {
+            "id": "5d77c258-0dce-4982-a8eb-11cb1ab0a04a",
+            "name": "CHARGEUR",
+            "slug": "chargeur-mvjm31mf",
+            "subCategoryId": "0a89caa0-b286-4008-a6ae-12988b993348"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "70e57147-66c0-46d6-bb8c-cf11b050c9a0",
+    "name": "OBJETS CONNECTES",
+    "slug": "objets-connectes",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1773662409/catalogue_produits/jwelpt3gksefwkejxi3a.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "4ca708ce-d359-4925-b59d-c4add16433b9",
+        "name": "SECURITE",
+        "slug": "objets-connectes-securite",
+        "categoryId": "70e57147-66c0-46d6-bb8c-cf11b050c9a0",
+        "thirdLevelCategories": [
+          {
+            "id": "2a9f2be6-36ae-457a-8ccc-1c6c545865eb",
+            "name": "ACCESSOIRES CAMERA DE SURVEILLANCE",
+            "slug": "objets-connectes-securite-accessoires-camera-de-surveillance",
+            "subCategoryId": "4ca708ce-d359-4925-b59d-c4add16433b9"
+          },
+          {
+            "id": "9a7af4bf-c9fb-4b30-95a6-ff6f322f1bbc",
+            "name": "CAMERA DE SURVEILLANCE",
+            "slug": "objets-connectes-securite-camera-de-surveillance",
+            "subCategoryId": "4ca708ce-d359-4925-b59d-c4add16433b9"
+          }
+        ]
+      },
+      {
+        "id": "62e4b11b-8b1d-407f-b21c-1edf865e322a",
+        "name": "SPORT CONNECTE",
+        "slug": "objets-connectes-sport-connecte",
+        "categoryId": "70e57147-66c0-46d6-bb8c-cf11b050c9a0",
+        "thirdLevelCategories": [
+          {
+            "id": "92b56884-2001-4ff2-904e-5cc394641029",
+            "name": "DRONE",
+            "slug": "objets-connectes-sport-connecte-drone",
+            "subCategoryId": "62e4b11b-8b1d-407f-b21c-1edf865e322a"
+          },
+          {
+            "id": "1264c4e0-f231-4030-9bba-ca73f6ce0163",
+            "name": "MONTRE CONNECTE",
+            "slug": "objets-connectes-sport-connecte-montre-connecte",
+            "subCategoryId": "62e4b11b-8b1d-407f-b21c-1edf865e322a"
+          },
+          {
+            "id": "66894d7e-cfc7-402e-b9a4-105695e2c2d4",
+            "name": "MONTRE CONNECTEE",
+            "slug": "objets-connectes-sport-connecte-montre-connectee-2y8",
+            "subCategoryId": "62e4b11b-8b1d-407f-b21c-1edf865e322a"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "8e8f55f7-b543-4cac-9d23-66e0c555a87f",
+    "name": "SALON DE COIFFURE",
+    "slug": "salon-de-coiffure",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1773662431/catalogue_produits/pk6qg04piedhrlrzhhxk.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "36254e22-ea81-4f6c-bd5b-bd9ea7e0ae33",
+        "name": "MATERIELS SALON DE COIFFURE",
+        "slug": "salou-de-coiffure-materiels-salon-de-coiffure",
+        "categoryId": "8e8f55f7-b543-4cac-9d23-66e0c555a87f",
+        "thirdLevelCategories": [
+          {
+            "id": "203fdec3-1db0-4bcb-af3e-c34c96d8af3b",
+            "name": "ACCESSOIRES COIFFURE",
+            "slug": "salou-de-coiffure-materiels-salon-de-coiffure-accessoires-coiffure",
+            "subCategoryId": "36254e22-ea81-4f6c-bd5b-bd9ea7e0ae33"
+          },
+          {
+            "id": "c8fa9d47-ad44-45e7-a662-69ba144a1ce4",
+            "name": "CHAISE COIFFURE",
+            "slug": "salou-de-coiffure-materiels-salon-de-coiffure-chaise-coiffure",
+            "subCategoryId": "36254e22-ea81-4f6c-bd5b-bd9ea7e0ae33"
+          },
+          {
+            "id": "fae6a630-176f-42b2-a813-efba5362c85a",
+            "name": "TONDEUSE",
+            "slug": "salou-de-coiffure-materiels-salon-de-coiffure-tondeuse",
+            "subCategoryId": "36254e22-ea81-4f6c-bd5b-bd9ea7e0ae33"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "1c49da49-0cb0-45cd-9b27-4b10c032535d",
+    "name": "TELEPHONE & TABLETTE",
+    "slug": "telephone--tablette",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1773662570/catalogue_produits/ijor29s7udhedxkywhgs.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "594ca8c4-7407-493c-a4dd-fb219e6fe595",
+        "name": "TELEPHONE",
+        "slug": "telephone-tablette-telephone",
+        "categoryId": "1c49da49-0cb0-45cd-9b27-4b10c032535d",
+        "thirdLevelCategories": [
+          {
+            "id": "715f7c4b-3a71-43f0-9add-1c776914e08f",
+            "name": "ACCESSOIRES TELEPHONE",
+            "slug": "telephone-tablette-telephone-accessoires-telephone",
+            "subCategoryId": "594ca8c4-7407-493c-a4dd-fb219e6fe595"
+          },
+          {
+            "id": "7d3f6ba6-5e89-4bbc-85b5-7c1af0b382b7",
+            "name": "CHARGEUR TELEPHONE",
+            "slug": "telephone-tablette-telephone-chargeur-telephone",
+            "subCategoryId": "594ca8c4-7407-493c-a4dd-fb219e6fe595"
+          },
+          {
+            "id": "05c6b8f0-6060-49d1-ad69-b3151a01dc8d",
+            "name": "ECOUTEUR TELEPHONE",
+            "slug": "telephone-tablette-telephone-ecouteur-telephone",
+            "subCategoryId": "594ca8c4-7407-493c-a4dd-fb219e6fe595"
+          },
+          {
+            "id": "e15bc47c-8e4e-4673-acd8-fb0bc6224e1e",
+            "name": "SUPPORT TELEPHONE",
+            "slug": "telephone-tablette-telephone-support-telephone",
+            "subCategoryId": "594ca8c4-7407-493c-a4dd-fb219e6fe595"
+          },
+          {
+            "id": "a5e4142c-b564-4250-a17d-95ae6863208f",
+            "name": "TELEPHONE FIXE",
+            "slug": "telephone-tablette-telephone-telephone-fixe",
+            "subCategoryId": "594ca8c4-7407-493c-a4dd-fb219e6fe595"
+          },
+          {
+            "id": "82da56ba-9284-42bb-b321-7825f5393947",
+            "name": "POWER BANK",
+            "slug": "power-bank-mr9ez9fx",
+            "subCategoryId": "594ca8c4-7407-493c-a4dd-fb219e6fe595"
+          }
+        ]
+      },
+      {
+        "id": "4008e7cd-8a8c-4965-a9c6-d6d5999bb708",
+        "name": "TABLETTES",
+        "slug": "telephone-tablette-tablettes",
+        "categoryId": "1c49da49-0cb0-45cd-9b27-4b10c032535d",
+        "thirdLevelCategories": [
+          {
+            "id": "c84e9abf-4237-4e5c-8035-99c6d2efc400",
+            "name": "SUPPORT TABLETTES",
+            "slug": "telephone-tablette-tablettes-support-tablettes",
+            "subCategoryId": "4008e7cd-8a8c-4965-a9c6-d6d5999bb708"
+          },
+          {
+            "id": "ffcfeee1-051d-41bd-bfb8-495c1cfeb2b7",
+            "name": "TABLETTE",
+            "slug": "tablette-mr9ez87a",
+            "subCategoryId": "4008e7cd-8a8c-4965-a9c6-d6d5999bb708"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "c2519f59-c3a2-4797-84fc-8e580f094241",
+    "name": "INFORMATIQUE",
+    "slug": "informatique",
+    "reference": null,
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792057450/products_baraka/tlz90n7b1rwwwvmz2p3s.png",
+    "isPublished": true,
+    "subCategories": [
+      {
+        "id": "489d4396-c39b-487c-b412-54d545600cba",
+        "name": "ORDINATEURS DE BUREAU",
+        "slug": "ordinateurs-de-bureau-mr9eyv33",
+        "categoryId": "c2519f59-c3a2-4797-84fc-8e580f094241",
+        "thirdLevelCategories": [
+          {
+            "id": "1e62dbf9-e646-4b45-a795-b7d0344de15c",
+            "name": "ALL IN ONE & DESKTOP",
+            "slug": "all-in-one-desktop-mr9ez4sr",
+            "subCategoryId": "489d4396-c39b-487c-b412-54d545600cba"
+          },
+          {
+            "id": "5d0b902b-743b-4f30-b672-697cc5ef2661",
+            "name": "DESKTOP RECONDITIONNE",
+            "slug": "desktop-reconditionne-mr9ez51h",
+            "subCategoryId": "489d4396-c39b-487c-b412-54d545600cba"
+          },
+          {
+            "id": "08af3707-eb42-45c0-95e8-d735f561704f",
+            "name": "SERVEUR",
+            "slug": "serveur-mr9ez5b8",
+            "subCategoryId": "489d4396-c39b-487c-b412-54d545600cba"
+          }
+        ]
+      },
+      {
+        "id": "88ce81de-6929-4ff0-af9b-b09e2c28b298",
+        "name": "ORDINATEURS PORTABLES",
+        "slug": "ordinateurs-portables-mr9eyvd4",
+        "categoryId": "c2519f59-c3a2-4797-84fc-8e580f094241",
+        "thirdLevelCategories": [
+          {
+            "id": "b158a319-dd74-4d91-aeae-19397b3a07f9",
+            "name": "ACCESSOIRES ORDINATEUR PORTABLE",
+            "slug": "accessoires-ordinateur-portable-mr9ez5ir",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          },
+          {
+            "id": "c96f9e71-9d37-436c-914b-50df73f6d521",
+            "name": "BATTERIE ORDINATEUR PORTABLE",
+            "slug": "batterie-ordinateur-portable-mr9ez5tx",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          },
+          {
+            "id": "2798954d-f8ee-49a7-aa9e-adb66bcf4740",
+            "name": "CHARGEUR ORDINATEUR PORTABLE",
+            "slug": "chargeur-ordinateur-portable-mr9ez63b",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          },
+          {
+            "id": "96d683e7-d27b-47f4-92ea-73e9587d0ae3",
+            "name": "MACBOOK",
+            "slug": "macbook-mr9ez6as",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          },
+          {
+            "id": "5a24bee5-ea59-44ac-901e-b638ce1e4dd7",
+            "name": "PC PORTABLE",
+            "slug": "pc-portable-mr9ez6k4",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          },
+          {
+            "id": "1dce79a0-15b8-4ef5-8b1a-61a7a0aa99af",
+            "name": "PC PORTABLE RECONDITIONNE",
+            "slug": "pc-portable-reconditionne-mr9ez6s2",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          },
+          {
+            "id": "bfa5b191-5b31-42e9-8276-11c51025f9da",
+            "name": "REFROIDISSEUR ORDINATEUR",
+            "slug": "refroidisseur-ordinateur-mr9ez6zx",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          },
+          {
+            "id": "77792360-9d3d-4d80-8224-7937e3e90f72",
+            "name": "SAC & SACOCHES",
+            "slug": "sac-sacoches-mr9ez793",
+            "subCategoryId": "88ce81de-6929-4ff0-af9b-b09e2c28b298"
+          }
+        ]
+      },
+      {
+        "id": "0b492b09-8a20-4f7b-9a33-733c46b5e779",
+        "name": "PERIPHERIQUES",
+        "slug": "peripheriques-mr9eyvkl",
+        "categoryId": "c2519f59-c3a2-4797-84fc-8e580f094241",
+        "thirdLevelCategories": [
+          {
+            "id": "36872da2-392f-4890-8bfd-11314e76f8b7",
+            "name": "ACCESSOIRES STREAMING",
+            "slug": "accessoires-streaming-mr9eza0o",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "88492a79-86e2-4f98-9dc8-4d97e50326fc",
+            "name": "ACCESSOIRES IMPRIMANTE",
+            "slug": "accessoires-imprimante-mr9ezac1",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "613ae27a-667b-4a09-abd3-080a4169b033",
+            "name": "CLAVIER & SOURIS 2EME",
+            "slug": "clavier-souris-2eme-mr9ezajl",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "87e45663-0d9d-4e5b-abf5-2b2ff4bba685",
+            "name": "CLAVIER & SOURIS ORIGINAL",
+            "slug": "clavier-souris-original-mr9ezavy",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "caf939a3-24e9-49fa-8593-514e412b4d88",
+            "name": "ECRAN PC",
+            "slug": "ecran-pc-mr9ezb7i",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "08e50db7-c189-4992-85d0-0d2c5a694e30",
+            "name": "IMPRIMANTE",
+            "slug": "imprimante-mr9ezbgt",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "717c0167-0960-4d7a-9332-0b9ac5acfbd7",
+            "name": "ONDULEUR",
+            "slug": "onduleur-mr9ezbpk",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "43519eb5-8d12-4e24-9760-e63b6da190e8",
+            "name": "REGULATEUR DE TENSION",
+            "slug": "regulateur-de-tension-mr9ezbxv",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          },
+          {
+            "id": "12ae3b2f-8c7b-42d4-8284-cdcd0831c14b",
+            "name": "WEBCAM",
+            "slug": "webcam-mr9ezd1t",
+            "subCategoryId": "0b492b09-8a20-4f7b-9a33-733c46b5e779"
+          }
+        ]
+      },
+      {
+        "id": "6f8f1767-8f15-4d2f-99ed-19303c67a3eb",
+        "name": "PIECES",
+        "slug": "pieces-mr9eyvvi",
+        "categoryId": "c2519f59-c3a2-4797-84fc-8e580f094241",
+        "thirdLevelCategories": [
+          {
+            "id": "7b978e09-9bb9-4d85-889d-337c7aaf1e85",
+            "name": "BARETTE ORDINATEUR",
+            "slug": "barette-ordinateur-mr9ezd9w",
+            "subCategoryId": "6f8f1767-8f15-4d2f-99ed-19303c67a3eb"
+          },
+          {
+            "id": "3ac7660c-2d12-4ab5-9e37-edb0e23e562f",
+            "name": "ECRAN ORDINATEUR PORTABLE",
+            "slug": "ecran-ordinateur-portable-mr9ezdht",
+            "subCategoryId": "6f8f1767-8f15-4d2f-99ed-19303c67a3eb"
+          }
+        ]
+      },
+      {
+        "id": "877327ec-a1a0-4ff2-ad9c-559175e54fa1",
+        "name": "RESEAUX",
+        "slug": "reseaux-mr9eyw4w",
+        "categoryId": "c2519f59-c3a2-4797-84fc-8e580f094241",
+        "thirdLevelCategories": [
+          {
+            "id": "91ffe358-d597-431d-9283-62b0505b5063",
+            "name": "ACCESS POINT & REPETITEUR",
+            "slug": "access-point-repetiteur-mr9ezdt8",
+            "subCategoryId": "877327ec-a1a0-4ff2-ad9c-559175e54fa1"
+          },
+          {
+            "id": "1bcdfe89-30af-4360-8142-2c57c78a6bde",
+            "name": "ACCESSOIRES RESEAUX",
+            "slug": "accessoires-reseaux-mr9eze1y",
+            "subCategoryId": "877327ec-a1a0-4ff2-ad9c-559175e54fa1"
+          },
+          {
+            "id": "add91768-de47-4212-a7ce-a3532afef9ee",
+            "name": "CARTE RESEAUX & CPL",
+            "slug": "carte-reseaux-cpl-mr9ezea9",
+            "subCategoryId": "877327ec-a1a0-4ff2-ad9c-559175e54fa1"
+          },
+          {
+            "id": "e08514cd-2327-41d0-9b41-e9812485210f",
+            "name": "CLE ET CARTE WIFI",
+            "slug": "cle-et-carte-wifi-mr9ezeiu",
+            "subCategoryId": "877327ec-a1a0-4ff2-ad9c-559175e54fa1"
+          },
+          {
+            "id": "a82466a2-72b5-4e52-a8a2-cacb432a8ad7",
+            "name": "MODEM & ROUTEUR",
+            "slug": "modem-routeur-mr9ezerc",
+            "subCategoryId": "877327ec-a1a0-4ff2-ad9c-559175e54fa1"
+          },
+          {
+            "id": "867f6f9a-5645-4f0f-bf6d-d3151ac93a87",
+            "name": "SWITCH",
+            "slug": "switch-mr9ezf2p",
+            "subCategoryId": "877327ec-a1a0-4ff2-ad9c-559175e54fa1"
+          }
+        ]
+      }
+    ]
+  }
+]

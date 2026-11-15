@@ -1,6 +1,9 @@
 import ProductForm from '../../_components/ProductForm';
-import { getProductByIdAction } from '@/lib/actions/product-actions';
+import { getAdminProductById } from '@/lib/actions/admin-actions';
 import { redirect } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata = {
     title: 'Modifier un Produit | Admin',
@@ -8,7 +11,7 @@ export const metadata = {
 
 export default async function EditProductPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
-    const product = await getProductByIdAction(params.id);
+    const product = await getAdminProductById(params.id);
 
     if (!product) {
         redirect('/admin/products');

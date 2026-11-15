@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { RichTextEditor } from '@/ui/RichTextEditor';
 import { ProductDescriptionBuilder, DescriptionBlock } from './ProductDescriptionBuilder';
 import { ProductAiAssistantModal } from './ProductAiAssistantModal';
+import { SearchableDropdown } from './SearchableDropdown';
 import {
     upsertProduct,
     getAdminCategories,
@@ -207,8 +208,24 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const formRef = React.useRef<HTMLFormElement>(null);
     const isSavingRef = React.useRef(false);
     const initialProductIdRef = React.useRef<string | undefined>(editingProduct?.id);
+    const [currentProductId, setCurrentProductId] = useState<string | undefined>(editingProduct?.id);
+    const currentProductIdRef = React.useRef<string | undefined>(editingProduct?.id);
     const draftStorageKey = `baraka_draft_product_${editingProduct?.id || 'new'}`;
     const [isDirty, setIsDirty] = useState(false);
+    const [hasNewerDraft, setHasNewerDraft] = useState(false);
+    const [draftData, setDraftData] = useState<any>(null);
+
+    // Controlled Form State
+    const [name, setName] = useState(editingProduct?.name || "");
+    const [price, setPrice] = useState(editingProduct?.price !== undefined ? String(editingProduct.price) : "");
+    const [stock, setStock] = useState(editingProduct?.stock !== undefined ? String(editingProduct.stock) : "");
+    const [shortDescription, setShortDescription] = useState(editingProduct?.shortDescription || "");
+    const [featuresText, setFeaturesText] = useState(
+        Array.isArray(editingProduct?.features) ? editingProduct.features.join('\n') : ""
+    );
+    const [packageContentText, setPackageContentText] = useState(
+        Array.isArray(editingProduct?.packageContent) ? editingProduct.packageContent.join('\n') : ""
+    );
     const [description, setDescription] = useState(editingProduct?.description || "");
     const [draggedImgIdx, setDraggedImgIdx] = useState<number | null>(null);
     const [dragOverImgIdx, setDragOverImgIdx] = useState<number | null>(null);
@@ -298,6 +315,13 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
     useEffect(() => {
         if (editingProduct) {
+            const isDifferentProduct = initialProductIdRef.current !== editingProduct.id;
+            if (isDifferentProduct) {
+                initialProductIdRef.current = editingProduct.id;
+                currentProductIdRef.current = editingProduct.id;
+                setCurrentProductId(editingProduct.id);
+            }
+
             const cId = editingProduct.categoryId || editingProduct.category?.id;
             if (cId) {
                 setCategoryId(cId);
@@ -321,18 +345,14 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 setStoreId(stId);
             }
 
-            const isDifferentProduct = initialProductIdRef.current !== editingProduct.id;
-            if (isDifferentProduct) {
-                initialProductIdRef.current = editingProduct.id;
-            }
-
-            let hasDraft = false;
-            try {
-                hasDraft = !!localStorage.getItem(draftStorageKey);
-            } catch {}
-
-            // Seulement synchroniser les images et variantes si aucun brouillon local n'est présent
-            if (!hasDraft && (isDifferentProduct || !isSavingRef.current)) {
+            // Sync all controlled states with freshest DB data when not actively saving
+            if (!isSavingRef.current) {
+                setName(editingProduct.name || '');
+                setPrice(editingProduct.price !== undefined ? String(editingProduct.price) : '');
+                setStock(editingProduct.stock !== undefined ? String(editingProduct.stock) : '');
+                setShortDescription(editingProduct.shortDescription || '');
+                setFeaturesText(Array.isArray(editingProduct.features) ? editingProduct.features.join('\n') : '');
+                setPackageContentText(Array.isArray(editingProduct.packageContent) ? editingProduct.packageContent.join('\n') : '');
                 setFormImages(editingProduct.images || []);
                 setFormVideos(editingProduct.videos || []);
                 setColorVariants(
@@ -347,7 +367,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             }
             setIsPublished(editingProduct.isPublished !== undefined ? editingProduct.isPublished : false);
         }
-    }, [editingProduct, draftStorageKey]);
+    }, [editingProduct]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -359,109 +379,99 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // 1. Restauration automatique et silencieuse des dernières modifications dès le rechargement de la page
+    const applyDraft = (parsed: any) => {
+        if (!parsed) return;
+        if (parsed.name !== undefined) setName(parsed.name);
+        if (parsed.price !== undefined) setPrice(parsed.price);
+        if (parsed.stock !== undefined) setStock(parsed.stock);
+        if (parsed.shortDescription !== undefined) setShortDescription(parsed.shortDescription);
+        if (parsed.featuresText !== undefined) setFeaturesText(parsed.featuresText);
+        if (parsed.packageContentText !== undefined) setPackageContentText(parsed.packageContentText);
+        if (parsed.description !== undefined) setDescription(parsed.description);
+        if (Array.isArray(parsed.images)) setFormImages(parsed.images);
+        if (Array.isArray(parsed.videos)) setFormVideos(parsed.videos);
+        if (Array.isArray(parsed.colorVariants)) setColorVariants(parsed.colorVariants);
+        if (parsed.metadataText !== undefined) setMetadataText(parsed.metadataText);
+        if (Array.isArray(parsed.detailedDescription)) setDetailedDescription(parsed.detailedDescription);
+        if (parsed.badge !== undefined) setBadge(parsed.badge);
+        if (parsed.categoryId) {
+            setCategoryId(parsed.categoryId);
+            getSubCategories(parsed.categoryId).then(setSubCategories);
+        }
+        if (parsed.subCategoryId) {
+            setSubCategoryId(parsed.subCategoryId);
+            getThirdLevelCategories(parsed.subCategoryId).then(setThirdCategories);
+        }
+        if (parsed.thirdLevelCategoryId) setThirdLevelCategoryId(parsed.thirdLevelCategoryId);
+        if (parsed.brandId) setBrandId(parsed.brandId);
+        if (parsed.storeId) setStoreId(parsed.storeId);
+        setIsDirty(true);
+    };
+
+    // Safe detection of local drafts without silent overwrite
     useEffect(() => {
         try {
             const saved = localStorage.getItem(draftStorageKey);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed.images)) {
-                    setFormImages(parsed.images);
+                const draftSavedAt = typeof parsed.savedAt === 'number' ? parsed.savedAt : 0;
+                const productUpdatedAt = editingProduct?.updatedAt ? new Date(editingProduct.updatedAt).getTime() : 0;
+
+                const isStale = (productUpdatedAt > 0 && draftSavedAt <= productUpdatedAt) || (Date.now() - draftSavedAt > 48 * 3600 * 1000);
+                if (isStale) {
+                    localStorage.removeItem(draftStorageKey);
+                    setHasNewerDraft(false);
+                    setDraftData(null);
+                } else if (draftSavedAt > productUpdatedAt) {
+                    setHasNewerDraft(true);
+                    setDraftData(parsed);
                 }
-                if (Array.isArray(parsed.videos)) {
-                    setFormVideos(parsed.videos);
-                }
-                if (Array.isArray(parsed.colorVariants)) {
-                    setColorVariants(parsed.colorVariants);
-                }
-                if (parsed.metadataText !== undefined) {
-                    setMetadataText(parsed.metadataText);
-                }
-                if (parsed.detailedDescription !== undefined) {
-                    setDetailedDescription(parsed.detailedDescription);
-                }
-                if (parsed.description !== undefined) {
-                    setDescription(parsed.description);
-                }
-                if (parsed.badge !== undefined) {
-                    setBadge(parsed.badge);
-                }
-                if (parsed.categoryId) {
-                    setCategoryId(parsed.categoryId);
-                    getSubCategories(parsed.categoryId).then(setSubCategories);
-                }
-                if (parsed.subCategoryId) {
-                    setSubCategoryId(parsed.subCategoryId);
-                    getThirdLevelCategories(parsed.subCategoryId).then(setThirdCategories);
-                }
-                if (parsed.thirdLevelCategoryId) {
-                    setThirdLevelCategoryId(parsed.thirdLevelCategoryId);
-                }
-                if (parsed.brandId) {
-                    setBrandId(parsed.brandId);
-                }
-                if (parsed.storeId) {
-                    setStoreId(parsed.storeId);
-                }
-                if (parsed.textValues && formRef.current) {
-                    const form = formRef.current;
-                    const tv = parsed.textValues;
-                    ['name', 'price', 'stock', 'shortDescription', 'features', 'packageContent'].forEach(field => {
-                        const el = form.elements.namedItem(field) as HTMLInputElement | HTMLTextAreaElement | null;
-                        if (el && tv[field] !== undefined) {
-                            el.value = tv[field];
-                        }
-                    });
-                }
-                setIsDirty(true);
             }
         } catch (e) {
-            console.warn("Could not auto-restore draft:", e);
+            console.warn("Could not inspect draft:", e);
         }
-    }, [draftStorageKey]);
+    }, [draftStorageKey, editingProduct?.updatedAt]);
 
-    // 2. Sauvegarde automatique en continu en arrière-plan des modifications
+    // Background auto-save to localStorage only when dirty
     useEffect(() => {
         if (!mounted || isSavingRef.current || !isDirty) return;
 
         const timer = setTimeout(() => {
             try {
-                const formEl = formRef.current;
-                let textValues: Record<string, string> = {};
-                if (formEl) {
-                    const fd = new FormData(formEl);
-                    textValues = {
-                        name: (fd.get('name') as string) || '',
-                        price: (fd.get('price') as string) || '',
-                        stock: (fd.get('stock') as string) || '',
-                        shortDescription: (fd.get('shortDescription') as string) || '',
-                        features: (fd.get('features') as string) || '',
-                        packageContent: (fd.get('packageContent') as string) || '',
-                    };
-                }
                 const payload = {
+                    name,
+                    price,
+                    stock,
+                    shortDescription,
+                    featuresText,
+                    packageContentText,
                     images: formImages,
                     videos: formVideos,
-                    colorVariants: colorVariants,
-                    metadataText: metadataText,
-                    detailedDescription: detailedDescription,
-                    description: description,
-                    badge: badge,
-                    categoryId: categoryId,
-                    subCategoryId: subCategoryId,
-                    thirdLevelCategoryId: thirdLevelCategoryId,
-                    brandId: brandId,
-                    storeId: storeId,
-                    textValues,
+                    colorVariants,
+                    metadataText,
+                    detailedDescription,
+                    description,
+                    badge,
+                    categoryId,
+                    subCategoryId,
+                    thirdLevelCategoryId,
+                    brandId,
+                    storeId,
                     savedAt: Date.now()
                 };
                 localStorage.setItem(draftStorageKey, JSON.stringify(payload));
             } catch (e) {}
-        }, 400);
+        }, 500);
 
         return () => clearTimeout(timer);
     }, [
         isDirty,
+        name,
+        price,
+        stock,
+        shortDescription,
+        featuresText,
+        packageContentText,
         formImages,
         formVideos,
         colorVariants,
@@ -934,17 +944,14 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         features?: string[];
         specsText?: string;
     }) => {
-        const form = formRef.current;
-        if (data.shortDescription !== undefined && form) {
-            const shortEl = form.elements.namedItem('shortDescription') as HTMLTextAreaElement | null;
-            if (shortEl) shortEl.value = data.shortDescription;
+        if (data.shortDescription !== undefined) {
+            setShortDescription(data.shortDescription);
         }
         if (data.description !== undefined) {
             setDescription(data.description);
         }
-        if (data.features !== undefined && form) {
-            const featEl = form.elements.namedItem('features') as HTMLTextAreaElement | null;
-            if (featEl) featEl.value = data.features.join('\n');
+        if (data.features !== undefined) {
+            setFeaturesText(data.features.join('\n'));
         }
         if (data.specsText !== undefined) {
             setMetadataText(data.specsText);
@@ -1061,28 +1068,26 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             return;
         }
 
-        const formData = new FormData(e.currentTarget);
-        
-        const nameVal = formData.get('name') as string;
-        const priceVal = formData.get('price') as string;
-        const stockVal = formData.get('stock') as string;
-        const categoryIdVal = formData.get('categoryId') as string;
+        const nameVal = name.trim();
+        const priceVal = price.trim();
+        const stockVal = stock.trim();
+        const categoryIdVal = categoryId;
 
         const newErrors: Record<string, string> = {};
 
-        if (!nameVal || nameVal.trim().length < 2) {
+        if (!nameVal || nameVal.length < 2) {
             newErrors.name = "Le nom du produit est requis (min 2 caractères).";
         }
-        if (priceVal && priceVal.trim() !== '' && (isNaN(parseFloat(priceVal)) || parseFloat(priceVal) < 0)) {
+        if (priceVal !== '' && (isNaN(parseFloat(priceVal)) || parseFloat(priceVal) < 0)) {
             newErrors.price = "Le prix doit être un nombre positif ou nul.";
         }
-        if (isPublished && (!priceVal || priceVal.trim() === '' || parseFloat(priceVal) <= 0)) {
+        if (isPublished && (priceVal === '' || parseFloat(priceVal) <= 0)) {
             newErrors.price = "Un produit avec un prix à 0 ou indisponible ne peut pas être publié sur le site client.";
         }
-        if (!stockVal || isNaN(parseInt(stockVal)) || parseInt(stockVal) < 0) {
+        if (stockVal === '' || isNaN(parseInt(stockVal, 10)) || parseInt(stockVal, 10) < 0) {
             newErrors.stock = "Le stock doit être un nombre positif ou nul.";
         }
-        if (isPublished && (!stockVal || parseInt(stockVal) <= 0)) {
+        if (isPublished && parseInt(stockVal, 10) <= 0) {
             newErrors.stock = "Un produit en rupture de stock ne peut pas être publié sur le site client.";
         }
         if (!categoryIdVal) {
@@ -1109,21 +1114,21 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         const data = {
             name: nameVal,
             slug: nameVal.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-            description: description || (formData.get('description') as string) || "",
-            price: priceVal && priceVal.trim() !== '' ? parseFloat(priceVal) : 0,
-            stock: parseInt(formData.get('stock') as string),
-            categoryId: formData.get('categoryId') as string,
-            subCategoryId: formData.get('subCategoryId') as string || null,
-            thirdLevelCategoryId: formData.get('thirdLevelCategoryId') as string || null,
-            brandId: formData.get('brandId') as string || null,
-            storeId: formData.get('storeId') as string || null,
+            description: description !== undefined ? description : "",
+            price: priceVal !== '' ? parseFloat(priceVal) : 0,
+            stock: stockVal !== '' ? parseInt(stockVal, 10) : 0,
+            categoryId: categoryIdVal,
+            subCategoryId: subCategoryId || null,
+            thirdLevelCategoryId: thirdLevelCategoryId || null,
+            brandId: brandId || null,
+            storeId: storeId || null,
             images: formImages,
             videos: formVideos,
             colorVariants: colorVariants.filter(cv => cv.colorName.trim() !== ''),
-            shortDescription: formData.get('shortDescription') as string || null,
+            shortDescription: shortDescription || null,
             detailedDescription,
-            features: (formData.get('features') as string || "").split('\n').filter(f => f.trim() !== ""),
-            packageContent: parsePackageContent(formData.get('packageContent') as string || ""),
+            features: featuresText.split('\n').filter(f => f.trim() !== ""),
+            packageContent: parsePackageContent(packageContentText),
             isPublished,
             isNew: badge === 'Nouveau',
             metadata: (() => {
@@ -1172,28 +1177,69 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             })()
         };
 
+        const targetId = currentProductIdRef.current || currentProductId || editingProduct?.id;
+
         try {
-            const res = await upsertProduct(data, editingProduct?.id);
+            const res = await upsertProduct(data, targetId);
             if (res.success) {
                 // Nettoyer le brouillon local et l'état dirty
                 try {
                     localStorage.removeItem(draftStorageKey);
                 } catch {}
+                setHasNewerDraft(false);
+                setDraftData(null);
                 setIsDirty(false);
 
-                if (res.product?.images && Array.isArray(res.product.images)) {
-                    setFormImages(res.product.images);
+                // Verrouiller l'ID pour empêcher tout doublon ultérieur
+                if (res.product?.id) {
+                    currentProductIdRef.current = res.product.id;
+                    setCurrentProductId(res.product.id);
                 }
-                toast.success(editingProduct ? '✅ Produit mis à jour !' : '✅ Produit créé !');
+
+                // Synchroniser tous les états contrôlés avec les données retournées par Prisma
+                if (res.product) {
+                    setName(res.product.name || '');
+                    setPrice(res.product.price !== undefined ? String(res.product.price) : '');
+                    setStock(res.product.stock !== undefined ? String(res.product.stock) : '');
+                    setShortDescription(res.product.shortDescription || '');
+                    if (Array.isArray(res.product.features)) {
+                        setFeaturesText(res.product.features.join('\n'));
+                    }
+                    if (Array.isArray(res.product.packageContent)) {
+                        setPackageContentText(res.product.packageContent.join('\n'));
+                    }
+                    if (res.product.description !== undefined) {
+                        setDescription(res.product.description || '');
+                    }
+                    if (Array.isArray(res.product.images)) {
+                        setFormImages(res.product.images);
+                    }
+                    if (Array.isArray(res.product.videos)) {
+                        setFormVideos(res.product.videos);
+                    }
+                    if (Array.isArray(res.product.colorVariants)) {
+                        setColorVariants(res.product.colorVariants.map((cv: any) => ({
+                            id: cv.id,
+                            colorName: cv.colorName,
+                            colorHex: cv.colorHex,
+                            images: cv.images || [],
+                        })));
+                    }
+                    if (res.product.isPublished !== undefined) {
+                        setIsPublished(res.product.isPublished);
+                    }
+                }
+
+                toast.success(targetId ? '✅ Produit mis à jour !' : '✅ Produit créé !');
                 const isClosing = shouldCloseRef.current || shouldClose;
                 if (isClosing) {
-                    if (editingProduct) {
+                    if (targetId) {
                         router.back();
                     } else {
                         router.push('/admin/products');
                     }
                 } else {
-                    if (!editingProduct && res.product?.id) {
+                    if (!targetId && res.product?.id) {
                         router.push(`/admin/products/${res.product.id}/edit`);
                     } else {
                         router.refresh();
@@ -1259,7 +1305,46 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 </div>
             </div>
 
-            <div className="p-6 space-y-8">
+            <div className="p-6 space-y-8 pb-36">
+                {hasNewerDraft && (
+                    <div className="bg-amber-50/90 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+                        <div className="flex items-center gap-2.5">
+                            <span className="text-base">⚠️</span>
+                            <div>
+                                <p className="font-bold">Brouillon local non enregistré détecté</p>
+                                <p className="text-[11px] text-amber-700">Des modifications non enregistrées sont stockées dans ce navigateur.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    applyDraft(draftData);
+                                    setHasNewerDraft(false);
+                                    toast.success("Brouillon restauré !");
+                                }}
+                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors shadow-sm"
+                            >
+                                Restaurer
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    try {
+                                        localStorage.removeItem(draftStorageKey);
+                                    } catch {}
+                                    setHasNewerDraft(false);
+                                    setDraftData(null);
+                                    toast.info("Brouillon local supprimé.");
+                                }}
+                                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-lg transition-colors"
+                            >
+                                Ignorer
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <section className="space-y-4">
                     <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] flex items-center gap-2">
                         <div className="w-3 h-[2px] bg-orange-500 rounded-full" />
@@ -1270,7 +1355,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nom du Produit <span className="text-red-500">*</span></label>
                             <input
                                 name="name"
-                                defaultValue={editingProduct?.name}
+                                value={name}
+                                onChange={(e) => {
+                                    setName(e.target.value);
+                                    if (!isDirty) setIsDirty(true);
+                                }}
                                 required
                                 className={cn("w-full px-4 py-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:ring-4 transition-all font-medium text-[13px]", errors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-slate-200 focus:ring-orange-500/5 focus:border-orange-500/20")}
                                 placeholder="Ex: Abaya Silk Premium"
@@ -1292,7 +1381,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             <input
                                 name="price"
                                 type="number"
-                                defaultValue={editingProduct?.price}
+                                value={price}
+                                onChange={(e) => {
+                                    setPrice(e.target.value);
+                                    if (!isDirty) setIsDirty(true);
+                                }}
                                 required
                                 readOnly={editingProduct?.reference ? true : false}
                                 className={cn("w-full px-4 py-2.5 bg-slate-100 border rounded-lg focus:outline-none focus:ring-4 transition-all font-medium text-[13px]", errors.price ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-slate-200 focus:ring-orange-500/5 focus:border-orange-500/20", editingProduct?.reference ? "text-slate-500 cursor-not-allowed" : "bg-slate-50")}
@@ -1304,7 +1397,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             <input
                                 name="stock"
                                 type="number"
-                                defaultValue={editingProduct?.stock}
+                                value={stock}
+                                onChange={(e) => {
+                                    setStock(e.target.value);
+                                    if (!isDirty) setIsDirty(true);
+                                }}
                                 required
                                 readOnly={editingProduct?.reference ? true : false}
                                 className={cn("w-full px-4 py-2.5 bg-slate-100 border rounded-lg focus:outline-none focus:ring-4 transition-all font-medium text-[13px]", errors.stock ? "border-red-500 focus:border-red-500 focus:ring-red-500/10" : "border-slate-200 focus:ring-orange-500/5 focus:border-orange-500/20", editingProduct?.reference ? "text-slate-500 cursor-not-allowed" : "bg-slate-50")}
@@ -1327,16 +1424,20 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     <span>Nouvelle marque</span>
                                 </button>
                             </div>
-                            <select
-                                key={`brand-${brands.length}`}
+                            <SearchableDropdown
+                                key={`brand-${brands.length}-${brandId}`}
                                 name="brandId"
+                                options={brands.map(b => ({
+                                    id: b.id,
+                                    name: b.name,
+                                    image: b.image
+                                }))}
                                 value={brandId}
-                                onChange={(e) => setBrandId(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
-                            >
-                                <option value="">Aucune</option>
-                                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                            </select>
+                                onChange={(val) => setBrandId(val)}
+                                placeholder="Aucune"
+                                defaultLabel="Aucune"
+                                triggerClassName="bg-slate-50 px-4 py-2.5 rounded-lg text-[13px] font-medium h-[42px]"
+                            />
                         </div>
                         <div className="space-y-1.5">
                             <div className="flex justify-between items-center h-[24px]">
@@ -1382,7 +1483,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Description Courte</label>
                         <textarea
                             name="shortDescription"
-                            defaultValue={editingProduct?.shortDescription}
+                            value={shortDescription}
+                            onChange={(e) => {
+                                setShortDescription(e.target.value);
+                                if (!isDirty) setIsDirty(true);
+                            }}
                             rows={2}
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed text-[13px]"
                             placeholder="Résumé accrocheur pour le haut de page..."
@@ -1420,7 +1525,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Caractéristiques (1 par ligne)</label>
                             <textarea
                                 name="features"
-                                defaultValue={Array.isArray(editingProduct?.features) ? editingProduct.features.join('\n') : ""}
+                                value={featuresText}
+                                onChange={(e) => {
+                                    setFeaturesText(e.target.value);
+                                    if (!isDirty) setIsDirty(true);
+                                }}
                                 rows={6}
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
                                 placeholder="Ex: Coton 100%&#10;Lavage 30°C&#10;Coupe ajustée"
@@ -1466,7 +1575,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Contenu de l'emballage (1 par ligne)</label>
                         <textarea
                             name="packageContent"
-                            defaultValue={Array.isArray(editingProduct?.packageContent) ? editingProduct.packageContent.join('\n') : ""}
+                            value={packageContentText}
+                            onChange={(e) => {
+                                setPackageContentText(e.target.value);
+                                if (!isDirty) setIsDirty(true);
+                            }}
                             rows={4}
                             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
                             placeholder="Ex: 1x DJI Osmo Pocket 4&#10;1x Câble PD USB-C vers USB-C"
@@ -2323,84 +2436,80 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 <button
                     type="button"
                     onClick={() => {
-                        const form = document.querySelector('form');
-                        if (form) {
-                            const formData = new FormData(form);
-                            const name = formData.get('name') as string;
-                            const price = parseFloat(formData.get('price') as string) || 0;
-                            const stock = parseInt(formData.get('stock') as string) || 0;
-                            const shortDescription = formData.get('shortDescription') as string || "";
-                            const description = formData.get('description') as string || "";
-                            const featuresRaw = formData.get('features') as string || "";
-                            const features = featuresRaw.split('\n').filter(f => f.trim() !== "");
+                        const previewName = name;
+                        const previewPrice = parseFloat(price) || 0;
+                        const previewStock = parseInt(stock, 10) || 0;
+                        const previewShortDescription = shortDescription;
+                        const previewDescription = description;
+                        const previewFeatures = featuresText.split('\n').filter(f => f.trim() !== "");
+                        const previewPackageContent = parsePackageContent(packageContentText);
+                        
+                        const metaParsed = (() => {
+                            const raw = metadataText;
+                            if (!raw || raw.trim() === '') return {};
+                            let parsed: Record<string, any> = {};
+                            try {
+                                const parsedJson = JSON.parse(raw);
+                                if (typeof parsedJson === 'object' && parsedJson !== null && !Array.isArray(parsedJson)) {
+                                    parsed = parsedJson;
+                                }
+                            } catch { }
+
+                            if (Object.keys(parsed).length === 0) {
+                                parsed = smartParseMetadata(raw);
+                            }
                             
-                            const metaParsed = (() => {
-                                const raw = metadataText;
-                                if (!raw || raw.trim() === '') return {};
-                                let parsed: Record<string, any> = {};
-                                try {
-                                    const parsedJson = JSON.parse(raw);
-                                    if (typeof parsedJson === 'object' && parsedJson !== null && !Array.isArray(parsedJson)) {
-                                        parsed = parsedJson;
-                                    }
-                                } catch { }
-
-                                if (Object.keys(parsed).length === 0) {
-                                    parsed = smartParseMetadata(raw);
+                            const order: string[] = [];
+                            raw.split('\n').forEach(line => {
+                                let key = '';
+                                const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
+                                if (colonMatch) {
+                                    key = colonMatch[1].trim();
+                                } else if (line.includes('\t')) {
+                                    key = line.split('\t')[0].trim();
+                                } else {
+                                    key = line.trim();
                                 }
-                                
-                                const order: string[] = [];
-                                raw.split('\n').forEach(line => {
-                                    let key = '';
-                                    const colonMatch = line.match(/^([^:]+):\s*(.+)$/);
-                                    if (colonMatch) {
-                                        key = colonMatch[1].trim();
-                                    } else if (line.includes('\t')) {
-                                        key = line.split('\t')[0].trim();
-                                    } else {
-                                        key = line.trim();
-                                    }
-                                    if (key && parsed[key] !== undefined && !order.includes(key)) {
-                                        order.push(key);
-                                    }
-                                });
-                                if (order.length > 0) {
-                                    parsed._order = order;
+                                if (key && parsed[key] !== undefined && !order.includes(key)) {
+                                    order.push(key);
                                 }
-                                return parsed;
-                            })();
+                            });
+                            if (order.length > 0) {
+                                parsed._order = order;
+                            }
+                            return parsed;
+                        })();
 
-                            // Build the full product object for the preview
-                            const selectedCategory = categories.find((c: any) => c.id === categoryId);
-                            const selectedBrand = brands.find((b: any) => b.id === brandId);
+                        // Build the full product object for the preview
+                        const selectedCategory = categories.find((c: any) => c.id === categoryId);
+                        const selectedBrand = brands.find((b: any) => b.id === brandId);
 
-                            const previewProduct = {
-                                id: editingProduct?.id || 'preview-' + Date.now(),
-                                name,
-                                slug: name?.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') || '',
-                                price,
-                                stock,
-                                description,
-                                shortDescription,
-                                features,
-                                packageContent: parsePackageContent(formData.get('packageContent') as string || ""),
-                                metadata: metaParsed,
-                                images: formImages,
-                                videos: formVideos,
-                                detailedDescription,
-                                isPublished,
-                                colorVariants: colorVariants.filter(cv => cv.colorName.trim() !== ''),
-                                category: selectedCategory ? { id: selectedCategory.id, name: selectedCategory.name, slug: selectedCategory.slug } : editingProduct?.category || null,
-                                brand: selectedBrand ? { id: selectedBrand.id, name: selectedBrand.name, slug: selectedBrand.slug, image: selectedBrand.image } : editingProduct?.brand || null,
-                                reviews: editingProduct?.reviews || [],
-                                _count: editingProduct?._count || { reviews: 0 },
-                                createdAt: editingProduct?.createdAt || new Date().toISOString(),
-                            };
+                        const previewProduct = {
+                            id: currentProductIdRef.current || currentProductId || editingProduct?.id || 'preview-' + Date.now(),
+                            name: previewName,
+                            slug: previewName?.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') || '',
+                            price: previewPrice,
+                            stock: previewStock,
+                            description: previewDescription,
+                            shortDescription: previewShortDescription,
+                            features: previewFeatures,
+                            packageContent: previewPackageContent,
+                            metadata: metaParsed,
+                            images: formImages,
+                            videos: formVideos,
+                            detailedDescription,
+                            isPublished,
+                            colorVariants: colorVariants.filter(cv => cv.colorName.trim() !== ''),
+                            category: selectedCategory ? { id: selectedCategory.id, name: selectedCategory.name, slug: selectedCategory.slug } : editingProduct?.category || null,
+                            brand: selectedBrand ? { id: selectedBrand.id, name: selectedBrand.name, slug: selectedBrand.slug, image: selectedBrand.image } : editingProduct?.brand || null,
+                            reviews: editingProduct?.reviews || [],
+                            _count: editingProduct?._count || { reviews: 0 },
+                            createdAt: editingProduct?.createdAt || new Date().toISOString(),
+                        };
 
-                            localStorage.setItem('baraka-product-preview', JSON.stringify(previewProduct));
-                            window.open('/admin/products/preview', '_blank');
-                            toast.success("Aperçu ouvert dans un nouvel onglet !");
-                        }
+                        localStorage.setItem('baraka-product-preview', JSON.stringify(previewProduct));
+                        window.open('/admin/products/preview', '_blank');
+                        toast.success("Aperçu ouvert dans un nouvel onglet !");
                     }}
                     className="px-5 py-2.5 bg-slate-100 text-slate-800 rounded-full font-bold text-[12px] flex items-center gap-2 hover:bg-white transition-all active:scale-95"
                 >
@@ -2683,16 +2792,16 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             isOpen={isAiAssistantOpen}
             onClose={() => setIsAiAssistantOpen(false)}
             productId={editingProduct?.id}
-            productName={(formRef.current?.elements.namedItem('name') as any)?.value || editingProduct?.name || ''}
+            productName={name || editingProduct?.name || ''}
             brandName={brands.find(b => b.id === brandId)?.name || editingProduct?.brand?.name}
             categoryName={categories.find(c => c.id === categoryId)?.name || editingProduct?.category?.name}
             subCategoryName={subCategories.find(s => s.id === subCategoryId)?.name || editingProduct?.subCategory?.name}
             categoryId={categoryId}
             brandId={brandId}
             reference={editingProduct?.reference}
-            currentShortDescription={(formRef.current?.elements.namedItem('shortDescription') as any)?.value || editingProduct?.shortDescription}
+            currentShortDescription={shortDescription || editingProduct?.shortDescription}
             currentDescription={description || editingProduct?.description}
-            currentFeatures={(formRef.current?.elements.namedItem('features') as any)?.value?.split('\n').filter(Boolean) || editingProduct?.features}
+            currentFeatures={featuresText.split('\n').filter(Boolean)}
             currentSpecsText={metadataText}
             onApplyToForm={handleApplyAiContent}
         />

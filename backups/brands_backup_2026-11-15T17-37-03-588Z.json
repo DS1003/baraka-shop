@@ -1,0 +1,290 @@
+[
+  {
+    "id": "957136c9-623c-4679-97b0-d6bc5c537af4",
+    "name": "Lenovo",
+    "slug": "lenovo",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1783520554/products_baraka/yyeigajq8ndofjrqnrlk.jpg"
+  },
+  {
+    "id": "57aafb3b-29d9-4dab-89b8-91224d6a5ba7",
+    "name": "Xprinter",
+    "slug": "xprinter",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1783549736/products_baraka/ovdtxox6exmk7kn8t8wg.png"
+  },
+  {
+    "id": "850081a6-00ac-4387-8048-825ca10eb5e0",
+    "name": "Logitech",
+    "slug": "logitech",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779303664/products_baraka/lyreys0qlrclr9xt85mc.png"
+  },
+  {
+    "id": "56513d66-f202-4ab4-965d-083cab823952",
+    "name": "JBL",
+    "slug": "jbl",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779376219/products_baraka/xivadbmm8fcvogcibpfn.png"
+  },
+  {
+    "id": "03630e4a-a00b-46cf-9c1a-d61b10789621",
+    "name": "SONY",
+    "slug": "sony",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779376312/products_baraka/ruwkpov6snfxjucc89rm.png"
+  },
+  {
+    "id": "0a658e24-11db-4441-b329-0bcf1fad1ccd",
+    "name": "LIONENERGY",
+    "slug": "lionenergy",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1783606886/products_baraka/gg2guhjin1qv0zh2orjy.png"
+  },
+  {
+    "id": "e5ef0055-d4da-4f0b-80e1-30ff1314b783",
+    "name": "IMOU",
+    "slug": "imou",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1783619015/products_baraka/knn0q49u1kq4fkezbmt1.png"
+  },
+  {
+    "id": "adf0f817-24af-44d9-b1d7-9451e07ae97f",
+    "name": "HP",
+    "slug": "hp",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779382851/products_baraka/dofioxo3hardsua3wsha.png"
+  },
+  {
+    "id": "68238141-6159-48ff-8468-ca60ddd5cf64",
+    "name": "Tp-Link",
+    "slug": "tp-link",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779382950/products_baraka/qvsorrrbb9mymjedv7ca.png"
+  },
+  {
+    "id": "6731bc8f-18e7-4e24-a05f-3b478366d15d",
+    "name": "UBIQUITI",
+    "slug": "ubiquiti",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779402388/products_baraka/a6mz1ltepizxezgbev4d.png"
+  },
+  {
+    "id": "c1815a4b-286e-4659-9615-ca0e4d97e0ef",
+    "name": "ASUS",
+    "slug": "asus",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779403166/products_baraka/rwwlo3c2qgvsqdnt29sr.png"
+  },
+  {
+    "id": "d8fc4e04-aa50-44fc-bc58-2a7b931f4c21",
+    "name": "CANON",
+    "slug": "canon",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779461327/products_baraka/q6rggxzvuo0u87wumo0t.png"
+  },
+  {
+    "id": "8308560b-6d94-4dde-b316-6e59b90d1f8f",
+    "name": "RAPOO",
+    "slug": "rapoo",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779537034/products_baraka/blookhtm3vqscc1itipc.png"
+  },
+  {
+    "id": "a7689b06-b8f0-4899-bae8-a0710bf7901b",
+    "name": "EPSON",
+    "slug": "epson",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779541295/products_baraka/uhc7kvtzd5errm2kz3ag.png"
+  },
+  {
+    "id": "34dff4f6-59db-4a82-881f-d826e2343a4f",
+    "name": "COMAN",
+    "slug": "coman",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779557999/products_baraka/i7phmphqnes4ud4rhbv9.png"
+  },
+  {
+    "id": "a5b6b905-bf40-4077-9e7b-cb6612a30b97",
+    "name": "JABRA",
+    "slug": "jabra",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1783955194/products_baraka/ncwtgjjf8sz1w6hlljoq.png"
+  },
+  {
+    "id": "fffe48b1-fbb4-41a6-98e9-1eb851e11bdf",
+    "name": "GRANDSTREAM",
+    "slug": "grandstream",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1779801152/products_baraka/fvxyl6kwdag8c19yc3pm.png"
+  },
+  {
+    "id": "c19907e4-c6d3-4dc2-941c-49318c22a59a",
+    "name": "EZVIZ",
+    "slug": "ezviz",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1780414975/products_baraka/qbtjilogrs5y6wihwouz.png"
+  },
+  {
+    "id": "cca487f4-0021-4a7b-97ac-88e655d7c8d0",
+    "name": "iQibla",
+    "slug": "iqibla",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1780533473/products_baraka/kd6su7tcozvhieak8lw5.webp"
+  },
+  {
+    "id": "0a805cb7-eafa-4db8-b229-1a2fcd37b28f",
+    "name": "HDKATOV",
+    "slug": "hdkatov",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1781284925/products_baraka/d6wkakpxtcp82iazaqtd.png"
+  },
+  {
+    "id": "dbff8a1f-3a46-44d4-8aba-890bd19c2d48",
+    "name": "BLACKMAGIC DESIGN",
+    "slug": "blackmagic-design",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1781285433/products_baraka/prubvw9i8jrottoubso7.png"
+  },
+  {
+    "id": "17370efd-30a0-4597-a318-bba849888ae3",
+    "name": "WMARK",
+    "slug": "wmark",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1781285875/products_baraka/xnf4rjjdfu6allfvh7ib.png"
+  },
+  {
+    "id": "bf6c7227-1928-4c27-8338-0019794e6003",
+    "name": "DJI",
+    "slug": "dji",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1781286220/products_baraka/atlo59d7s9arflz63bnf.png"
+  },
+  {
+    "id": "2cd322ae-297f-4d00-8ee6-ae6c0058aeac",
+    "name": "RODE",
+    "slug": "rode",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1781606118/products_baraka/rvoathbwfvszwnydfnlo.png"
+  },
+  {
+    "id": "23c1fa20-aa5f-42a3-ba41-776540395437",
+    "name": "ZKTeco",
+    "slug": "zkteco",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1782141744/products_baraka/bvmzusglkkrmxvedps2t.png"
+  },
+  {
+    "id": "094d79bc-3bb2-4253-a232-561e4d55a965",
+    "name": "DELL",
+    "slug": "dell",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1782207418/products_baraka/vhpcz5nkykw1ou4m77di.png"
+  },
+  {
+    "id": "0b5fec29-ff5d-4d24-a4c2-4e0e3aa9fa2b",
+    "name": "Beats by Dr. Dre",
+    "slug": "beats-by-dr-dre",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1783116106/products_baraka/n3eqpltl0yx5fbi9usgj.png"
+  },
+  {
+    "id": "f2d0961b-4e4a-4481-add5-b32321ad4a42",
+    "name": "XIAOMI",
+    "slug": "xiaomi",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1784138167/products_baraka/ao4nluh58wwc6ap62ytw.png"
+  },
+  {
+    "id": "6ab8ae7d-a210-483c-9f21-e8fdc692a53b",
+    "name": "APPLE",
+    "slug": "apple",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1784237323/products_baraka/syivzdgnuxc2iin0j2do.png"
+  },
+  {
+    "id": "f5fd7e5a-7d62-4917-872f-98566bf9179a",
+    "name": "GIGA 360",
+    "slug": "giga-360",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1784567897/products_baraka/utkbhbqfj0ik9hclryz3.png"
+  },
+  {
+    "id": "79a82953-8feb-4fa3-96fa-e8fce01a9066",
+    "name": "XSTRIM",
+    "slug": "xstrim",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1784713928/products_baraka/htmkgh0opzxymk8cuygc.png"
+  },
+  {
+    "id": "3ef4a5bf-950e-4384-8b75-b1e9212e0295",
+    "name": "URBAN JUNGLE",
+    "slug": "urban-jungle",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1785237516/products_baraka/ekpwzrnwctxzigogwqvb.png"
+  },
+  {
+    "id": "de1bff12-6c46-45eb-8337-f10fafb36a66",
+    "name": "TIROLL",
+    "slug": "tiroll",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1785246889/products_baraka/vsd0pn9xlrpc6sasgkxy.png"
+  },
+  {
+    "id": "214e94f3-5373-44f2-a73f-1e7aeff8412e",
+    "name": "OTEETO",
+    "slug": "oteeto",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1785343303/products_baraka/d7n8pzuvjas1mwtyjspv.png"
+  },
+  {
+    "id": "050d9dfe-f1ac-4b11-abef-5a262c26e690",
+    "name": "G-TAB",
+    "slug": "g-tab",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1785584571/products_baraka/ai7jmpqdyzbomzzl0e4v.png"
+  },
+  {
+    "id": "7cc74494-d742-4f36-ab09-51a8bf8cffe5",
+    "name": "LEXAR",
+    "slug": "lexar",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1786192080/products_baraka/vynqzgmxe5abs7obs7h3.png"
+  },
+  {
+    "id": "e3ef819c-9487-40b3-aa0b-60a917c2c109",
+    "name": "kaspersky",
+    "slug": "kaspersky",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1787923021/products_baraka/xpaoxbokpq2olm6mow28.png"
+  },
+  {
+    "id": "39bd8322-961c-4d4a-a9ce-5862809fa7d9",
+    "name": "YUNTENG",
+    "slug": "yunteng",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1789395016/products_baraka/ck9jzowduzetg9htzffp.png"
+  },
+  {
+    "id": "fbc71ab0-04c7-4f5c-b300-ffdb77ec4aff",
+    "name": "DM Life",
+    "slug": "dm-life",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792756562/products_baraka/nvpodlfrzejjxuojekaa.png"
+  },
+  {
+    "id": "1b9b6bdf-b9ed-44e9-b322-ed3336a05d01",
+    "name": "AKKO STAR",
+    "slug": "akko-star",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792813139/products_baraka/lwwxzaxic6m1ihmwuyeg.png"
+  },
+  {
+    "id": "1a54a1a5-bb07-4334-adb5-0e48c199dcb7",
+    "name": "R SCAR",
+    "slug": "r-scar",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792840287/products_baraka/ct599heq0nylbdmxcr5q.png"
+  },
+  {
+    "id": "8120746b-6cf0-47b1-80d4-8c2918ca1968",
+    "name": "SMALLRIG",
+    "slug": "smallrig",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1793051438/products_baraka/zc3tc8cgef4sxyk5udkd.png"
+  },
+  {
+    "id": "87f20322-2b97-4c2a-8f0f-a98556903054",
+    "name": "SEAGATE",
+    "slug": "seagate",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792762267/products_baraka/fpzxo1bstb4koruulkjf.png"
+  },
+  {
+    "id": "48034197-88d9-40e4-957b-dd5018986101",
+    "name": "BARAKA",
+    "slug": "baraka",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1792834539/products_baraka/vtnsbiwfq1rnepevn702.png"
+  },
+  {
+    "id": "b006a2a2-cb34-435d-a863-3ae86a756584",
+    "name": "HEPU",
+    "slug": "hepu",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1793190019/products_baraka/mcn4kifqyt82fiqptgtx.png"
+  },
+  {
+    "id": "0d639a67-c965-40c8-9766-b3d6b1d6e2dd",
+    "name": "PLOKAMA",
+    "slug": "plokama",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1793190247/products_baraka/wubl8eyjvpg3ycqcrppq.png"
+  },
+  {
+    "id": "e978b9e7-bb15-4feb-8ecc-100f065c0e68",
+    "name": "Panasonic",
+    "slug": "panasonic",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1794576834/products_baraka/gtzff4h89zz2xyljmnv4.png"
+  },
+  {
+    "id": "b3333d74-022f-4033-980c-e8710125abde",
+    "name": "Zhiyun",
+    "slug": "zhiyun",
+    "image": "https://res.cloudinary.com/dt6ls5mte/image/upload/v1794753055/products_baraka/deecsf4yn4a3rcyboxkh.webp"
+  }
+]
