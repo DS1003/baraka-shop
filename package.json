@@ -25,6 +25,7 @@
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
     "@types/dompurify": "^3.0.5",
+    "@vercel/speed-insights": "^2.1.0",
     "basic-ftp": "^6.2.1",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
