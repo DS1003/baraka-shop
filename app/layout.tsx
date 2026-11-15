@@ -178,6 +178,7 @@ import { OrientationBlocker } from '@/components/OrientationBlocker'
 import { InitialSiteLoader } from '@/components/InitialSiteLoader'
 import { getSiteLogos } from '@/lib/actions/site-config-actions'
 import { SiteLogosProvider } from '@/lib/hooks/useSiteLogos'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export default async function RootLayout({
   children,
@@ -240,6 +241,7 @@ export default async function RootLayout({
             <ScrollToTop />
           </Providers>
         </SiteLogosProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
