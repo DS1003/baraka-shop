@@ -47,6 +47,104 @@ interface DjangoBatchImportModalProps {
     brands?: Array<{ id: string; name: string; image?: string | null }>;
 }
 
+function BarakaModalLoader({
+    title = "Chargement en cours...",
+    subtitle = "Veuillez patienter...",
+    size = "default"
+}: {
+    title?: string;
+    subtitle?: string;
+    size?: "small" | "default" | "large";
+}) {
+    const isSmall = size === "small";
+    const isLarge = size === "large";
+
+    return (
+        <div className={cn(
+            "flex flex-col items-center justify-center text-center select-none",
+            isLarge ? "py-12 space-y-4" : isSmall ? "py-6 space-y-2.5" : "py-8 space-y-3"
+        )}>
+            {/* Animated Brand Symbol with Glowing Orbit Rings */}
+            <div className={cn(
+                "relative flex items-center justify-center",
+                isLarge ? "w-20 h-20" : isSmall ? "w-12 h-12" : "w-16 h-16"
+            )}>
+                {/* Outer spinning gradient ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-orange-500/20 border-t-orange-500 animate-spin" />
+
+                {/* Secondary counter-rotating dashed ring */}
+                <div className="absolute inset-1.5 rounded-full border border-orange-300/30 border-b-orange-400/80 animate-[spin_3s_linear_infinite_reverse]" />
+
+                {/* Soft pulsing ambient glow */}
+                <div className="absolute inset-2 rounded-2xl bg-orange-500/10 blur-md animate-pulse" />
+
+                {/* Central Brand Emblem Container */}
+                <div className={cn(
+                    "relative rounded-2xl bg-white border border-orange-100 flex items-center justify-center shadow-xs overflow-hidden",
+                    isLarge ? "w-12 h-12" : isSmall ? "w-7 h-7" : "w-10 h-10"
+                )}>
+                    <img
+                        src="/loader/symbol-final.png"
+                        alt="Baraka"
+                        className="w-full h-full object-contain p-1.5 animate-pulse"
+                    />
+                </div>
+            </div>
+
+            {/* Typography */}
+            <div className="space-y-1 max-w-sm px-4">
+                <h4 className={cn(
+                    "font-bold text-slate-800 tracking-tight",
+                    isLarge ? "text-base" : isSmall ? "text-xs" : "text-sm"
+                )}>
+                    {title}
+                </h4>
+                {subtitle && (
+                    <p className={cn(
+                        "text-slate-400 font-normal leading-relaxed",
+                        isLarge ? "text-xs" : "text-[11px]"
+                    )}>
+                        {subtitle}
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function ProductCardSkeleton() {
+    return (
+        <div className="p-4 rounded-2xl border border-slate-200/70 bg-white flex flex-col justify-between animate-pulse select-none min-h-[160px]">
+            {/* Top row */}
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                <div className="h-5 w-20 bg-slate-100 rounded-lg" />
+                <div className="flex items-center gap-2">
+                    <div className="h-4 w-16 bg-slate-100 rounded-full" />
+                    <div className="h-5 w-5 bg-slate-100 rounded-lg" />
+                </div>
+            </div>
+
+            {/* Middle row */}
+            <div className="flex items-start gap-3.5 my-3">
+                <div className="w-16 h-16 rounded-xl bg-slate-100 shrink-0" />
+                <div className="flex-1 space-y-2 py-1">
+                    <div className="h-4 bg-slate-100 rounded-md w-4/5" />
+                    <div className="h-3 bg-slate-100 rounded-md w-2/3" />
+                </div>
+            </div>
+
+            {/* Bottom row */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="h-3 w-12 bg-slate-100 rounded" />
+                    <div className="h-3 w-14 bg-slate-100 rounded" />
+                </div>
+                <div className="h-3 w-10 bg-slate-100 rounded" />
+            </div>
+        </div>
+    );
+}
+
 export function DjangoBatchImportModal({
     isOpen,
     onClose,
@@ -480,10 +578,11 @@ export function DjangoBatchImportModal({
                             <div className="flex flex-col sm:flex-row items-stretch gap-3">
                                 {/* Search input */}
                                 <div className="relative flex-1">
-                                    <Search className={cn(
-                                        "absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors",
-                                        isSearching ? "text-orange-500 animate-pulse" : "text-slate-400"
-                                    )} size={16} />
+                                    {isSearching ? (
+                                        <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={16} />
+                                    ) : (
+                                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    )}
                                     <input
                                         type="text"
                                         value={searchQuery}
@@ -619,13 +718,40 @@ export function DjangoBatchImportModal({
                         </div>
 
                         {/* 4. Products Grid */}
-                        <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 bg-slate-50/50">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 bg-slate-50/50 relative">
+                            {/* Overlay loader when re-filtering or searching with existing cards */}
+                            {isSearching && filteredProducts.length > 0 && (
+                                <div className="absolute inset-0 bg-white/75 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center transition-all animate-in fade-in duration-150">
+                                    <BarakaModalLoader
+                                        title="Recherche en direct dans Django..."
+                                        subtitle="Actualisation de la sélection selon vos critères"
+                                        size="default"
+                                    />
+                                </div>
+                            )}
+
                             {searchError && (
                                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-[12px] flex items-center gap-3 shadow-xs">
                                     <AlertCircle size={20} className="text-amber-600 shrink-0" />
                                     <div className="flex-1">
                                         <p className="font-bold">Information</p>
                                         <p>{searchError}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Full loader + skeleton cards when initial load or empty results while searching */}
+                            {isSearching && filteredProducts.length === 0 && (
+                                <div className="py-6 space-y-6">
+                                    <BarakaModalLoader
+                                        title="Chargement du catalogue Django..."
+                                        subtitle="Connexion à l'API v0 et synchronisation des fiches produits"
+                                        size="large"
+                                    />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 opacity-60">
+                                        {Array.from({ length: 6 }).map((_, i) => (
+                                            <ProductCardSkeleton key={i} />
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -652,109 +778,141 @@ export function DjangoBatchImportModal({
                             )}
 
                             {/* Cards Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                                {filteredProducts.map((p) => {
-                                    const isSelected = selectedMap.has(p.reference);
-                                    const existsInBaraka = p.barakaMatch?.exists === true;
-                                    const firstImg = p.images[0];
-                                    const imageSrc = firstImg ? (firstImg.proxyUrl || firstImg.resolvedUrl) : '';
+                            {!isSearching && filteredProducts.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                                    {filteredProducts.map((p) => {
+                                        const isSelected = selectedMap.has(p.reference);
+                                        const existsInBaraka = p.barakaMatch?.exists === true;
+                                        const firstImg = p.images[0];
+                                        const imageSrc = firstImg ? (firstImg.proxyUrl || firstImg.resolvedUrl) : '';
 
-                                    return (
-                                        <motion.div
-                                            key={p.id}
-                                            whileHover={{ y: -2 }}
-                                            onClick={() => toggleSelect(p)}
-                                            className={cn(
-                                                "p-4 rounded-2xl border text-left flex flex-col justify-between cursor-pointer transition-all duration-200 select-none relative group",
-                                                isSelected
-                                                    ? "bg-orange-50/25 border-orange-500 ring-2 ring-orange-500/20 shadow-sm"
-                                                    : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
-                                            )}
-                                        >
-                                            {/* Card Top: Reference + Status + Custom Checkbox */}
-                                            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
-                                                <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-lg truncate max-w-[140px]" title={p.reference}>
-                                                    {p.reference}
-                                                </span>
+                                        return (
+                                            <motion.div
+                                                key={p.id}
+                                                whileHover={{ y: -2 }}
+                                                onClick={() => toggleSelect(p)}
+                                                className={cn(
+                                                    "p-4 rounded-2xl border text-left flex flex-col justify-between cursor-pointer transition-all duration-200 select-none relative group",
+                                                    isSelected
+                                                        ? "bg-orange-50/25 border-orange-500 ring-2 ring-orange-500/20 shadow-sm"
+                                                        : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+                                                )}
+                                            >
+                                                {/* Card Top: Reference + Status + Custom Checkbox */}
+                                                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                                                    <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-lg truncate max-w-[140px]" title={p.reference}>
+                                                        {p.reference}
+                                                    </span>
 
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    {existsInBaraka ? (
-                                                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                            <span>MAJ Baraka</span>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        {existsInBaraka ? (
+                                                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                                <span>MAJ Baraka</span>
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                                                                <span>Nouveau</span>
+                                                            </span>
+                                                        )}
+
+                                                        {/* Custom Checkbox */}
+                                                        <div className={cn(
+                                                            "w-5 h-5 rounded-lg border flex items-center justify-center transition-all",
+                                                            isSelected
+                                                                ? "bg-orange-500 border-orange-500 text-white shadow-xs"
+                                                                : "border-slate-300 bg-white group-hover:border-slate-400"
+                                                        )}>
+                                                            {isSelected && <Check size={12} strokeWidth={3} />}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Card Middle: Thumbnail + Title & Description */}
+                                                <div className="flex items-start gap-3.5 my-3">
+                                                    {/* Image Thumbnail with fallback */}
+                                                    <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center shrink-0 p-1 relative group-hover:scale-105 transition-transform">
+                                                        <ImageIcon size={22} className="text-slate-300 pointer-events-none" />
+                                                        {imageSrc && (
+                                                            <img
+                                                                src={imageSrc}
+                                                                alt={p.name}
+                                                                referrerPolicy="no-referrer"
+                                                                loading="lazy"
+                                                                onError={(e) => {
+                                                                    if (firstImg?.resolvedUrl && e.currentTarget.src !== firstImg.resolvedUrl) {
+                                                                        e.currentTarget.src = firstImg.resolvedUrl;
+                                                                    } else {
+                                                                        e.currentTarget.style.display = 'none';
+                                                                    }
+                                                                }}
+                                                                className="absolute inset-0 w-full h-full object-contain p-1.5 bg-white"
+                                                            />
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-bold text-[13px] text-slate-900 line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors" title={p.name}>
+                                                            {p.name}
+                                                        </h4>
+                                                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-1 font-normal" title={p.libelle || ''}>
+                                                            {p.libelle || "Aucun libellé court"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Card Bottom: Metadata Badges */}
+                                                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="flex items-center gap-1 text-slate-600">
+                                                            <ImageIcon size={12} className="text-slate-400" />
+                                                            <strong>{p.imageCount}</strong> img{p.imageCount > 1 ? 's' : ''}
                                                         </span>
-                                                    ) : (
-                                                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200/60 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-                                                            <span>Nouveau</span>
+                                                        <span className="flex items-center gap-1 text-slate-600">
+                                                            <Sparkles size={12} className="text-slate-400" />
+                                                            <strong>{p.features.length}</strong> caracs
                                                         </span>
-                                                    )}
+                                                    </div>
+                                                    <span className="font-mono text-[10px] text-slate-400">
+                                                        ID #{p.id}
+                                                    </span>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
-                                                    {/* Custom Checkbox */}
-                                                    <div className={cn(
-                                                        "w-5 h-5 rounded-lg border flex items-center justify-center transition-all",
-                                                        isSelected
-                                                            ? "bg-orange-500 border-orange-500 text-white shadow-xs"
-                                                            : "border-slate-300 bg-white group-hover:border-slate-400"
-                                                    )}>
-                                                        {isSelected && <Check size={12} strokeWidth={3} />}
+                            {/* When isSearching and cards exist, still keep cards visible underneath overlay */}
+                            {isSearching && filteredProducts.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 opacity-40">
+                                    {filteredProducts.map((p) => {
+                                        const isSelected = selectedMap.has(p.reference);
+                                        const existsInBaraka = p.barakaMatch?.exists === true;
+                                        return (
+                                            <div
+                                                key={p.id}
+                                                className={cn(
+                                                    "p-4 rounded-2xl border text-left flex flex-col justify-between bg-white border-slate-200/80"
+                                                )}
+                                            >
+                                                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                                                    <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg truncate max-w-[140px]">
+                                                        {p.reference}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-start gap-3.5 my-3">
+                                                    <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 shrink-0" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-bold text-[13px] text-slate-900 line-clamp-2">{p.name}</h4>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Card Middle: Thumbnail + Title & Description */}
-                                            <div className="flex items-start gap-3.5 my-3">
-                                                {/* Image Thumbnail with fallback */}
-                                                <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center shrink-0 p-1 relative group-hover:scale-105 transition-transform">
-                                                    <ImageIcon size={22} className="text-slate-300 pointer-events-none" />
-                                                    {imageSrc && (
-                                                        <img
-                                                            src={imageSrc}
-                                                            alt={p.name}
-                                                            referrerPolicy="no-referrer"
-                                                            loading="lazy"
-                                                            onError={(e) => {
-                                                                if (firstImg?.resolvedUrl && e.currentTarget.src !== firstImg.resolvedUrl) {
-                                                                    e.currentTarget.src = firstImg.resolvedUrl;
-                                                                } else {
-                                                                    e.currentTarget.style.display = 'none';
-                                                                }
-                                                            }}
-                                                            className="absolute inset-0 w-full h-full object-contain p-1.5 bg-white"
-                                                        />
-                                                    )}
-                                                </div>
-
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-bold text-[13px] text-slate-900 line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors" title={p.name}>
-                                                        {p.name}
-                                                    </h4>
-                                                    <p className="text-[11px] text-slate-400 line-clamp-1 mt-1 font-normal" title={p.libelle || ''}>
-                                                        {p.libelle || "Aucun libellé court"}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Card Bottom: Metadata Badges */}
-                                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="flex items-center gap-1 text-slate-600">
-                                                        <ImageIcon size={12} className="text-slate-400" />
-                                                        <strong>{p.imageCount}</strong> img{p.imageCount > 1 ? 's' : ''}
-                                                    </span>
-                                                    <span className="flex items-center gap-1 text-slate-600">
-                                                        <Sparkles size={12} className="text-slate-400" />
-                                                        <strong>{p.features.length}</strong> caracs
-                                                    </span>
-                                                </div>
-                                                <span className="font-mono text-[10px] text-slate-400">
-                                                    ID #{p.id}
-                                                </span>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         {/* 5. Minimalist Bottom Action & Pagination Bar */}
@@ -1024,30 +1182,65 @@ export function DjangoBatchImportModal({
 
                 {/* STEP 3: Processing State */}
                 {step === 'processing' && (
-                    <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-6 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
-                            <Loader2 size={30} className="animate-spin" />
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 space-y-7 text-center bg-slate-50/40">
+                        {/* Real Branded Animated Baraka Loader */}
+                        <div className="relative flex items-center justify-center w-24 h-24">
+                            {/* Outer spinning ring */}
+                            <div className="absolute inset-0 rounded-full border-3 border-orange-500/20 border-t-orange-500 animate-spin" />
+                            {/* Counter-rotating dashed ring */}
+                            <div className="absolute inset-2 rounded-full border-2 border-dashed border-orange-400/40 animate-[spin_4s_linear_infinite_reverse]" />
+                            {/* Ambient glow */}
+                            <div className="absolute inset-3 rounded-2xl bg-orange-500/15 blur-lg animate-pulse" />
+                            
+                            {/* Central Logo Container */}
+                            <div className="relative w-14 h-14 rounded-2xl bg-white border border-orange-100 flex items-center justify-center shadow-md p-2 overflow-hidden">
+                                <img
+                                    src="/loader/symbol-final.png"
+                                    alt="Baraka"
+                                    className="w-full h-full object-contain animate-pulse"
+                                />
+                            </div>
                         </div>
 
-                        <div className="space-y-1.5 max-w-md">
-                            <h4 className="font-bold text-[17px] text-slate-900">
-                                Importation en cours...
+                        <div className="space-y-2 max-w-md">
+                            <h4 className="font-bold text-xl text-slate-900 tracking-tight">
+                                Importation et synchronisation en cours...
                             </h4>
-                            <p className="text-[12px] text-slate-500 leading-relaxed">
+                            <p className="text-xs text-slate-500 leading-relaxed">
                                 Transfert sécurisé des données et des images vers Cloudinary. Veuillez patienter sans fermer la fenêtre.
                             </p>
                         </div>
 
-                        <div className="w-full max-w-md space-y-2">
-                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+                        {/* Progress Bar with Live Counter Card */}
+                        <div className="w-full max-w-md space-y-3 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                                <span className="flex items-center gap-2 text-orange-600">
+                                    <Loader2 size={13} className="animate-spin" />
+                                    <span>Traitement par lot...</span>
+                                </span>
+                                <span className="font-mono text-slate-900 font-black">
+                                    {progressTotal > 0 ? Math.round((progressCurrent / progressTotal) * 100) : 0} %
+                                </span>
+                            </div>
+
+                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 p-0.5">
                                 <div
-                                    className="h-full bg-orange-500 transition-all duration-300"
-                                    style={{ width: `${progressTotal > 0 ? (progressCurrent / progressTotal) * 100 : 50}%` }}
+                                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-300"
+                                    style={{ width: `${progressTotal > 0 ? (progressCurrent / progressTotal) * 100 : 25}%` }}
                                 />
                             </div>
-                            <span className="font-mono text-[11px] text-slate-400">
-                                Traitement sécurisé avec respect des quotas Cloudinary
-                            </span>
+
+                            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                                <span>Fiches traitées</span>
+                                <span className="font-mono font-bold text-slate-700">
+                                    {progressCurrent} / {progressTotal}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-800 text-[11px] font-semibold shadow-2xs">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>Prix, stocks et configurations existantes protégés à 100%</span>
                         </div>
                     </div>
                 )}

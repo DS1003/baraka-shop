@@ -47,6 +47,71 @@ interface DjangoSingleImportModalProps {
     }) => void;
 }
 
+function BarakaModalLoader({
+    title = "Chargement en cours...",
+    subtitle = "Veuillez patienter...",
+    size = "default"
+}: {
+    title?: string;
+    subtitle?: string;
+    size?: "small" | "default" | "large";
+}) {
+    const isSmall = size === "small";
+    const isLarge = size === "large";
+
+    return (
+        <div className={cn(
+            "flex flex-col items-center justify-center text-center select-none",
+            isLarge ? "py-12 space-y-4" : isSmall ? "py-6 space-y-2.5" : "py-8 space-y-3"
+        )}>
+            {/* Animated Brand Symbol with Glowing Orbit Rings */}
+            <div className={cn(
+                "relative flex items-center justify-center",
+                isLarge ? "w-20 h-20" : isSmall ? "w-12 h-12" : "w-16 h-16"
+            )}>
+                {/* Outer spinning gradient ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-orange-500/20 border-t-orange-500 animate-spin" />
+
+                {/* Secondary counter-rotating dashed ring */}
+                <div className="absolute inset-1.5 rounded-full border border-orange-300/30 border-b-orange-400/80 animate-[spin_3s_linear_infinite_reverse]" />
+
+                {/* Soft pulsing ambient glow */}
+                <div className="absolute inset-2 rounded-2xl bg-orange-500/10 blur-md animate-pulse" />
+
+                {/* Central Brand Emblem Container */}
+                <div className={cn(
+                    "relative rounded-2xl bg-white border border-orange-100 flex items-center justify-center shadow-xs overflow-hidden",
+                    isLarge ? "w-12 h-12" : isSmall ? "w-7 h-7" : "w-10 h-10"
+                )}>
+                    <img
+                        src="/loader/symbol-final.png"
+                        alt="Baraka"
+                        className="w-full h-full object-contain p-1.5 animate-pulse"
+                    />
+                </div>
+            </div>
+
+            {/* Typography */}
+            <div className="space-y-1 max-w-sm px-4">
+                <h4 className={cn(
+                    "font-bold text-slate-800 tracking-tight",
+                    isLarge ? "text-base" : isSmall ? "text-xs" : "text-sm"
+                )}>
+                    {title}
+                </h4>
+                {subtitle && (
+                    <p className={cn(
+                        "text-slate-400 font-normal leading-relaxed",
+                        isLarge ? "text-xs" : "text-[11px]"
+                    )}>
+                        {subtitle}
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export function DjangoSingleImportModal({
     isOpen,
     onClose,
@@ -315,7 +380,17 @@ export function DjangoSingleImportModal({
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 relative">
+                    {/* Transferring Images Overlay */}
+                    {isTransferringImages && (
+                        <div className="absolute inset-0 bg-white/85 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center p-6 animate-in fade-in duration-150">
+                            <BarakaModalLoader
+                                title={transferStatus || "Transfert des médias vers Cloudinary..."}
+                                subtitle="Téléchargement et persistance des images dans la galerie Baraka"
+                                size="large"
+                            />
+                        </div>
+                    )}
                     {/* Search Bar */}
                     <div className="space-y-2">
                         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
@@ -327,7 +402,11 @@ export function DjangoSingleImportModal({
                             )}
                         </label>
                         <div className="relative">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            {isSearching ? (
+                                <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={16} />
+                            ) : (
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            )}
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -337,6 +416,17 @@ export function DjangoSingleImportModal({
                             />
                         </div>
                     </div>
+
+                    {/* Searching Loader State */}
+                    {isSearching && !selectedProduct && searchResults.length === 0 && (
+                        <div className="py-6">
+                            <BarakaModalLoader
+                                title="Recherche du produit dans Django..."
+                                subtitle="Vérification de la référence et récupération des données"
+                                size="default"
+                            />
+                        </div>
+                    )}
 
                     {/* Search Error / Message */}
                     {searchError && (
