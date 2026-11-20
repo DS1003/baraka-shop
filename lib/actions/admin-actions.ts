@@ -1212,13 +1212,14 @@ export async function getAdminBrands() {
 export async function upsertBrand(data: any, id?: string) {
     try {
         await requireAdmin();
+        let brand;
         if (id) {
-            await prisma.brand.update({
+            brand = await prisma.brand.update({
                 where: { id },
                 data
             });
         } else {
-            await prisma.brand.create({
+            brand = await prisma.brand.create({
                 data
             });
         }
@@ -1226,11 +1227,16 @@ export async function upsertBrand(data: any, id?: string) {
             invalidatePrefix('brands:'),
             invalidatePrefix('admin:brands:')
         ]);
-        revalidatePath('/admin/brands');
-        revalidatePath('/');
-        revalidatePath('/marques');
-        return { success: true };
+        try {
+            revalidatePath('/admin/brands');
+            revalidatePath('/');
+            revalidatePath('/marques');
+        } catch (revalidateErr) {
+            // Revalidation skipped safely if called outside Next.js request context
+        }
+        return { success: true, brand };
     } catch (error) {
+        console.error("upsertBrand error:", error);
         return { success: false };
     }
 }
@@ -1299,6 +1305,7 @@ export async function upsertSubCategory(data: any, id?: string) {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("upsertSubCategory error:", error);
         return { success: false };
     }
 }
@@ -1326,6 +1333,7 @@ export async function deleteSubCategory(id: string) {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("deleteSubCategory error:", error);
         return { success: false };
     }
 }
@@ -1374,6 +1382,7 @@ export async function upsertThirdLevelCategory(data: any, id?: string) {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("upsertThirdLevelCategory error:", error);
         return { success: false };
     }
 }
@@ -1398,6 +1407,7 @@ export async function deleteThirdLevelCategory(id: string) {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("deleteThirdLevelCategory error:", error);
         return { success: false };
     }
 }
@@ -2048,6 +2058,7 @@ export async function deleteHomePromo(id: string) {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("deleteHomePromo error:", error);
         return { success: false };
     }
 }
@@ -2122,6 +2133,7 @@ export async function initializeHomePromos() {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("initializeHomePromos error:", error);
         return { success: false };
     }
 }
@@ -2167,6 +2179,7 @@ export async function deleteBigBanner(id: string) {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("deleteBigBanner error:", error);
         return { success: false };
     }
 }
@@ -2190,6 +2203,7 @@ export async function initializeBigBanners() {
         revalidatePath('/');
         return { success: true };
     } catch (error) {
+        console.error("initializeBigBanners error:", error);
         return { success: false };
     }
 }

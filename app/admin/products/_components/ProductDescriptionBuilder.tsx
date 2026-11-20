@@ -28,8 +28,8 @@ import {
 } from 'lucide-react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { uploadToCloudinaryAction } from '@/lib/actions/media-actions';
 import { RichTextEditor } from '@/ui/RichTextEditor';
+import { toast } from 'sonner';
 
 export type DescriptionBlock = {
     id: string;
@@ -43,6 +43,7 @@ export type DescriptionBlock = {
 interface ProductDescriptionBuilderProps {
     initialData?: any;
     onChange: (data: DescriptionBlock[]) => void;
+    onUploadingChange?: (isUploading: boolean) => void;
 }
 
 const BLOCK_CATEGORIES = [
@@ -84,8 +85,31 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
     'VIDEO_RIGHT': 'Texte + Vidéo Droite',
 };
 
-export function ProductDescriptionBuilder({ initialData = [], onChange }: ProductDescriptionBuilderProps) {
-    const [blocks, setBlocks] = useState<DescriptionBlock[]>([]);
+function normalizeBlocks(data: any): DescriptionBlock[] {
+    if (!data) return [];
+    let list: any[] = [];
+    if (Array.isArray(data)) {
+        list = data;
+    } else if (typeof data === 'string') {
+        try {
+            const parsed = JSON.parse(data);
+            if (Array.isArray(parsed)) list = parsed;
+        } catch {}
+    }
+    return list
+        .filter(b => b && typeof b === 'object' && b.type)
+        .map(b => ({
+            id: String(b.id || Math.random().toString(36).substring(2, 9)),
+            type: b.type,
+            title: typeof b.title === 'string' ? b.title : '',
+            text: typeof b.text === 'string' ? b.text : '',
+            image: typeof b.image === 'string' ? b.image : '',
+            video: typeof b.video === 'string' ? b.video : '',
+        }));
+}
+
+export function ProductDescriptionBuilder({ initialData = [], onChange, onUploadingChange }: ProductDescriptionBuilderProps) {
+    const [blocks, setBlocks] = useState<DescriptionBlock[]>(() => normalizeBlocks(initialData));
     const [isUploading, setIsUploading] = useState<string | null>(null);
     const [justAddedType, setJustAddedType] = useState<string | null>(null);
     const [newBlockId, setNewBlockId] = useState<string | null>(null);
@@ -94,20 +118,24 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
 
     const blockEndRef = useRef<HTMLDivElement>(null);
     const blockRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const prevInitialJsonRef = useRef<string>(JSON.stringify(normalizeBlocks(initialData)));
+    const isFirstRender = useRef(true);
 
     useEffect(() => {
-        if (Array.isArray(initialData)) {
-            if (JSON.stringify(initialData) !== JSON.stringify(blocks)) {
-                setBlocks(initialData);
-            }
+        const normalized = normalizeBlocks(initialData);
+        const serialized = JSON.stringify(normalized);
+        if (serialized !== prevInitialJsonRef.current && serialized !== JSON.stringify(blocks)) {
+            prevInitialJsonRef.current = serialized;
+            setBlocks(normalized);
         }
     }, [initialData]);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            onChange(blocks);
-        }, 100);
-        return () => clearTimeout(timer);
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        onChange(blocks);
     }, [blocks, onChange]);
 
     const blockCounts = useMemo(() => {
@@ -192,19 +220,43 @@ export function ProductDescriptionBuilder({ initialData = [], onChange }: Produc
         const file = e.target.files?.[0];
         if (!file) return;
 
+        if (!file.type.startsWith('image/')) {
+            toast.error("Veuillez sélectionner un fichier image valide (JPG, PNG, WebP, GIF, AVIF).");
+            return;
+        }
+
+        if (file.size > 20 * 1024 * 1024) {
+            toast.error("L'image est trop volumineuse (max 20 Mo).");
+            return;
+        }
+
         setIsUploading(id);
-        const formData = new FormData();
-        formData.append('file', file);
+        onUploadingChange?.(true);
 
         try {
-            const res = await uploadToCloudinaryAction(formData);
-            if (res.success && res.media?.url) {
-                updateBlock(id, { image: res.media.url });
+            const formData = new FormData();
+            formData.append('files', file);
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (res.ok && Array.isArray(data.urls) && data.urls[0]) {
+                const uploadedUrl = data.urls[0];
+                setBlocks(prev => prev.map(b => b.id === id ? { ...b, image: uploadedUrl } : b));
+                toast.success("Image ajoutée à la section avec succès !");
+            } else {
+                toast.error(data.error || "Erreur lors du téléversement de l'image.");
             }
         } catch (err) {
-            console.error("Upload error:", err);
+            console.error("Upload error in visual block:", err);
+            toast.error("Erreur réseau lors du téléversement.");
         } finally {
             setIsUploading(null);
+            onUploadingChange?.(false);
+            if (e.target) e.target.value = '';
         }
     };
 

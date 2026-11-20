@@ -202,6 +202,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [youtubeUrl, setYoutubeUrl] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+    const [isUploadingVisual, setIsUploadingVisual] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const videoFileInputRef = React.useRef<HTMLInputElement>(null);
@@ -212,8 +213,22 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const currentProductIdRef = React.useRef<string | undefined>(editingProduct?.id);
     const draftStorageKey = `baraka_draft_product_${editingProduct?.id || 'new'}`;
     const [isDirty, setIsDirty] = useState(false);
+    const isDirtyRef = React.useRef(false);
+    isDirtyRef.current = isDirty;
     const [hasNewerDraft, setHasNewerDraft] = useState(false);
     const [draftData, setDraftData] = useState<any>(null);
+
+    // Prevent accidental page close or refresh when form is dirty
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirtyRef.current && !isSavingRef.current) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, []);
 
     // Controlled Form State
     const [name, setName] = useState(editingProduct?.name || "");
@@ -314,13 +329,16 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     }, []);
 
     useEffect(() => {
-        if (editingProduct) {
-            const isDifferentProduct = initialProductIdRef.current !== editingProduct.id;
-            if (isDifferentProduct) {
-                initialProductIdRef.current = editingProduct.id;
-                currentProductIdRef.current = editingProduct.id;
-                setCurrentProductId(editingProduct.id);
-            }
+        if (!editingProduct) return;
+
+        const isDifferentProduct = initialProductIdRef.current !== editingProduct.id;
+        
+        // Se réinitialise SEULEMENT si on charge un produit différent pour la première fois
+        if (isDifferentProduct) {
+            initialProductIdRef.current = editingProduct.id;
+            currentProductIdRef.current = editingProduct.id;
+            setCurrentProductId(editingProduct.id);
+            setIsDirty(false);
 
             const cId = editingProduct.categoryId || editingProduct.category?.id;
             if (cId) {
@@ -333,38 +351,36 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 getThirdLevelCategories(sId).then(setThirdCategories);
             }
             const tId = editingProduct.thirdLevelCategoryId || editingProduct.thirdLevelCategory?.id;
-            if (tId) {
-                setThirdLevelCategoryId(tId);
-            }
+            if (tId) setThirdLevelCategoryId(tId);
             const bId = editingProduct.brandId || editingProduct.brand?.id;
-            if (bId) {
-                setBrandId(bId);
-            }
+            if (bId) setBrandId(bId);
             const stId = editingProduct.storeId || editingProduct.store?.id;
-            if (stId) {
-                setStoreId(stId);
-            }
+            if (stId) setStoreId(stId);
 
-            // Sync all controlled states with freshest DB data when not actively saving
-            if (!isSavingRef.current) {
-                setName(editingProduct.name || '');
-                setPrice(editingProduct.price !== undefined ? String(editingProduct.price) : '');
-                setStock(editingProduct.stock !== undefined ? String(editingProduct.stock) : '');
-                setShortDescription(editingProduct.shortDescription || '');
-                setFeaturesText(Array.isArray(editingProduct.features) ? editingProduct.features.join('\n') : '');
-                setPackageContentText(Array.isArray(editingProduct.packageContent) ? editingProduct.packageContent.join('\n') : '');
-                setFormImages(editingProduct.images || []);
-                setFormVideos(editingProduct.videos || []);
-                setColorVariants(
-                    (editingProduct.colorVariants || []).map((cv: any) => ({
-                        id: cv.id,
-                        colorName: cv.colorName,
-                        colorHex: cv.colorHex,
-                        images: cv.images || [],
-                    }))
-                );
-                setDescription(editingProduct.description || "");
-            }
+            setName(editingProduct.name || '');
+            setPrice(editingProduct.price !== undefined ? String(editingProduct.price) : '');
+            setStock(editingProduct.stock !== undefined ? String(editingProduct.stock) : '');
+            setShortDescription(editingProduct.shortDescription || '');
+            setFeaturesText(Array.isArray(editingProduct.features) ? editingProduct.features.join('\n') : '');
+            setPackageContentText(Array.isArray(editingProduct.packageContent) ? editingProduct.packageContent.join('\n') : '');
+            setFormImages(editingProduct.images || []);
+            setFormVideos(editingProduct.videos || []);
+            setColorVariants(
+                (editingProduct.colorVariants || []).map((cv: any) => ({
+                    id: cv.id,
+                    colorName: cv.colorName,
+                    colorHex: cv.colorHex,
+                    images: cv.images || [],
+                }))
+            );
+            setDescription(editingProduct.description || "");
+            setDetailedDescription(
+                Array.isArray(editingProduct.detailedDescription)
+                    ? editingProduct.detailedDescription
+                    : (typeof editingProduct.detailedDescription === 'string'
+                        ? (() => { try { return JSON.parse(editingProduct.detailedDescription); } catch { return []; } })()
+                        : [])
+            );
             setIsPublished(editingProduct.isPublished !== undefined ? editingProduct.isPublished : false);
         }
     }, [editingProduct]);
@@ -405,6 +421,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         if (parsed.thirdLevelCategoryId) setThirdLevelCategoryId(parsed.thirdLevelCategoryId);
         if (parsed.brandId) setBrandId(parsed.brandId);
         if (parsed.storeId) setStoreId(parsed.storeId);
+        if (parsed.isPublished !== undefined) setIsPublished(parsed.isPublished);
         setIsDirty(true);
     };
 
@@ -457,6 +474,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     thirdLevelCategoryId,
                     brandId,
                     storeId,
+                    isPublished,
                     savedAt: Date.now()
                 };
                 localStorage.setItem(draftStorageKey, JSON.stringify(payload));
@@ -484,6 +502,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         thirdLevelCategoryId,
         brandId,
         storeId,
+        isPublished,
         mounted,
         draftStorageKey
     ]);
@@ -865,15 +884,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
             const res = await upsertBrand(data);
             if (res.success) {
-                toast.success("Marque créée avec succès !");
-                // Reload brands list
-                const updatedBrands = await getBrands();
-                setBrands(updatedBrands);
-                
-                // Find the newly created brand by name or slug
-                const newBrand = updatedBrands.find((b: any) => b.name.toLowerCase() === data.name.toLowerCase());
-                if (newBrand) {
-                    setBrandId(newBrand.id);
+                toast.success("Marque créée et sélectionnée avec succès !");
+                let createdBrand = (res as any).brand;
+                if (!createdBrand) {
+                    const updatedBrands = await getBrands();
+                    setBrands(updatedBrands);
+                    createdBrand = updatedBrands.find((b: any) => b.name.toLowerCase() === data.name.toLowerCase());
+                } else {
+                    setBrands(prev => [createdBrand, ...prev.filter(b => b.id !== createdBrand.id)]);
+                }
+
+                if (createdBrand) {
+                    setBrandId(createdBrand.id);
+                    setIsDirty(true);
                 }
                 
                 // Reset states and close modal
@@ -974,6 +997,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             const data = await res.json();
             if (res.ok && Array.isArray(data.urls) && data.urls.length > 0) {
                 setFormImages(prev => [...prev, ...data.urls]);
+                setIsDirty(true);
                 toast.success(`${data.urls.length} photo${data.urls.length > 1 ? 's ajoutées' : ' ajoutée'} avec succès !`);
             } else {
                 toast.error(data.error || "Erreur lors de l'upload des images.");
@@ -995,16 +1019,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             next.splice(toIdx, 0, moved);
             return next;
         });
+        setIsDirty(true);
     };
 
     const makePrimaryImage = (idx: number) => {
         if (idx === 0) return;
         moveImage(idx, 0);
+        setIsDirty(true);
         toast.success("Image définie comme principale !");
     };
 
     const removeImage = (idx: number) => {
         setFormImages(prev => prev.filter((_, i) => i !== idx));
+        setIsDirty(true);
     };
 
     const handleColorImageFilesUpload = async (files: File[], colorIdx: number) => {
@@ -1024,6 +1051,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 setColorVariants(prev => prev.map((cv, i) => 
                     i === colorIdx ? { ...cv, images: [...cv.images, ...data.urls] } : cv
                 ));
+                setIsDirty(true);
                 toast.success(`${data.urls.length} photo${data.urls.length > 1 ? 's ajoutées' : ' ajoutée'} à la variante !`);
             } else {
                 toast.error(data.error || "Erreur lors de l'upload.");
@@ -1045,6 +1073,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             nextImages.splice(toIdx, 0, moved);
             return { ...cv, images: nextImages };
         }));
+        setIsDirty(true);
     };
 
     const removeVariantImage = (colorIdx: number, imgIdx: number) => {
@@ -1058,8 +1087,8 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         e.preventDefault();
 
         // Bloquer la soumission si un téléversement d'image est toujours en cours
-        if (isUploading || isUploadingColor) {
-            toast.error("Veuillez attendre la fin du téléversement des images avant d'enregistrer.");
+        if (isUploading || isUploadingColor || isUploadingVisual || isUploadingVideo) {
+            toast.error("Veuillez attendre la fin du téléversement des images/vidéos avant d'enregistrer.");
             return;
         }
 
@@ -1227,6 +1256,43 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                     }
                     if (res.product.isPublished !== undefined) {
                         setIsPublished(res.product.isPublished);
+                    }
+                    if (res.product.detailedDescription) {
+                        const parsed = Array.isArray(res.product.detailedDescription)
+                            ? res.product.detailedDescription
+                            : (typeof res.product.detailedDescription === 'string'
+                                ? (() => { try { return JSON.parse(res.product.detailedDescription); } catch { return []; } })()
+                                : []);
+                        setDetailedDescription(parsed);
+                    }
+                    if (res.product.brandId !== undefined) {
+                        setBrandId(res.product.brandId || '');
+                    }
+                    if (res.product.categoryId) {
+                        setCategoryId(res.product.categoryId);
+                    }
+                    if (res.product.subCategoryId !== undefined) {
+                        setSubCategoryId(res.product.subCategoryId || '');
+                    }
+                    if (res.product.thirdLevelCategoryId !== undefined) {
+                        setThirdLevelCategoryId(res.product.thirdLevelCategoryId || '');
+                    }
+                    if (res.product.storeId !== undefined) {
+                        setStoreId(res.product.storeId || '');
+                    }
+                    // Sync badge
+                    if (res.product.badge !== undefined) {
+                        setBadge(res.product.badge || '');
+                    } else if (res.product.metadata?.badge !== undefined) {
+                        setBadge(res.product.metadata.badge || '');
+                    }
+                    // Sync metadata text
+                    if (res.product.metadata && typeof res.product.metadata === 'object') {
+                        const meta = res.product.metadata as Record<string, any>;
+                        const entries = Object.entries(meta).filter(([k]) => k !== 'badge');
+                        if (entries.length > 0) {
+                            setMetadataText(entries.map(([k, v]) => `${k}: ${v}`).join('\n'));
+                        }
                     }
                 }
 
@@ -1433,7 +1499,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                     image: b.image
                                 }))}
                                 value={brandId}
-                                onChange={(val) => setBrandId(val)}
+                                onChange={(val) => { setBrandId(val); if (!isDirty) setIsDirty(true); }}
                                 placeholder="Aucune"
                                 defaultLabel="Aucune"
                                 triggerClassName="bg-slate-50 px-4 py-2.5 rounded-lg text-[13px] font-medium h-[42px]"
@@ -1447,7 +1513,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                                 key={`store-${stores.length}`}
                                 name="storeId"
                                 value={storeId}
-                                onChange={(e) => setStoreId(e.target.value)}
+                                onChange={(e) => { setStoreId(e.target.value); if (!isDirty) setIsDirty(true); }}
                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
                             >
                                 <option value="">Aucune (Baraka General)</option>
@@ -1460,7 +1526,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             </div>
                             <select
                                 value={badge}
-                                onChange={(e) => setBadge(e.target.value)}
+                                onChange={(e) => { setBadge(e.target.value); if (!isDirty) setIsDirty(true); }}
                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium appearance-none text-[13px]"
                             >
                                 <option value="">Aucun</option>
@@ -1516,7 +1582,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         </div>
                         <ProductDescriptionBuilder 
                             initialData={detailedDescription}
-                            onChange={setDetailedDescription}
+                            onChange={(blocks) => {
+                                setDetailedDescription(blocks);
+                                setIsDirty(true);
+                            }}
+                            onUploadingChange={setIsUploadingVisual}
                         />
                     </div>
 
@@ -1563,7 +1633,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                             <textarea
                                 name="metadata"
                                 value={metadataText}
-                                onChange={(e) => setMetadataText(e.target.value)}
+                                onChange={(e) => { setMetadataText(e.target.value); if (!isDirty) setIsDirty(true); }}
                                 rows={6}
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-orange-500/5 transition-all font-medium leading-relaxed font-mono text-[12px]"
                                 placeholder="Collez ici vos spécifications en vrac..."
@@ -2519,7 +2589,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 <div className="w-px h-6 bg-slate-700/50 mx-0.5" />
                 <button
                     type="button"
-                    onClick={() => setIsPublished(!isPublished)}
+                    onClick={() => { setIsPublished(!isPublished); if (!isDirty) setIsDirty(true); }}
                     className={cn(
                         "px-5 py-2.5 rounded-full font-bold text-[12px] flex items-center gap-2 transition-all active:scale-95",
                         isPublished 
@@ -2534,18 +2604,18 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 <button
                     type="button"
                     onClick={() => {
-                        if (isUploading || isUploadingColor) {
-                            toast.error("Veuillez attendre la fin du téléversement des images.");
+                        if (isUploading || isUploadingColor || isUploadingVisual || isUploadingVideo) {
+                            toast.error("Veuillez attendre la fin du téléversement des images/vidéos.");
                             return;
                         }
                         shouldCloseRef.current = false;
                         setShouldClose(false);
                         formRef.current?.requestSubmit();
                     }}
-                    disabled={isSaving || isUploading || isUploadingColor}
+                    disabled={isSaving || isUploading || isUploadingColor || isUploadingVisual || isUploadingVideo}
                     className="px-5 py-2.5 bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 rounded-full font-bold text-[12px] flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {isUploading || isUploadingColor ? (
+                    {isUploading || isUploadingColor || isUploadingVisual || isUploadingVideo ? (
                         <>
                             <Loader2 size={14} className="animate-spin" />
                             <span>Téléversement...</span>
@@ -2565,18 +2635,18 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 <button
                     type="button"
                     onClick={() => {
-                        if (isUploading || isUploadingColor) {
-                            toast.error("Veuillez attendre la fin du téléversement des images.");
+                        if (isUploading || isUploadingColor || isUploadingVisual || isUploadingVideo) {
+                            toast.error("Veuillez attendre la fin du téléversement des images/vidéos.");
                             return;
                         }
                         shouldCloseRef.current = true;
                         setShouldClose(true);
                         formRef.current?.requestSubmit();
                     }}
-                    disabled={isSaving || isUploading || isUploadingColor}
+                    disabled={isSaving || isUploading || isUploadingColor || isUploadingVisual || isUploadingVideo}
                     className="px-6 py-2.5 bg-orange-600 text-white rounded-full font-bold text-[12px] flex items-center gap-2 hover:bg-orange-500 shadow-lg shadow-orange-600/20 transition-all active:scale-95 disabled:opacity-50"
                 >
-                    {isUploading || isUploadingColor ? (
+                    {isUploading || isUploadingColor || isUploadingVisual || isUploadingVideo ? (
                         <>
                             <Loader2 size={14} className="animate-spin" />
                             <span>Téléversement...</span>
