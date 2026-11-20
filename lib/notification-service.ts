@@ -285,9 +285,9 @@ export async function getUserNotifications(userId: string, limit: number = 30) {
             });
         } catch (error: any) {
             // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
-            if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
+            if (error?.code === 'P1001' || error?.code === 'P2024' || error?.message?.includes('timeout exceeded') || error?.message?.includes('ETIMEDOUT') || error?.message?.includes('ECONNRESET')) {
                 try {
-                    await new Promise((r) => setTimeout(r, 1000));
+                    await new Promise((r) => setTimeout(r, 3000));
                     return await prisma.notification.findMany({
                         where: { userId },
                         orderBy: { createdAt: 'desc' },
@@ -314,9 +314,9 @@ export async function getUnreadCount(userId: string): Promise<number> {
             });
         } catch (error: any) {
             // Tentative de reconnexion si la base Neon était en veille (cold-start P1001)
-            if (error?.code === 'P1001' || error?.message?.includes('timeout exceeded')) {
+            if (error?.code === 'P1001' || error?.code === 'P2024' || error?.message?.includes('timeout exceeded') || error?.message?.includes('ETIMEDOUT') || error?.message?.includes('ECONNRESET')) {
                 try {
-                    await new Promise((r) => setTimeout(r, 1000));
+                    await new Promise((r) => setTimeout(r, 3000));
                     return await prisma.notification.count({
                         where: { userId, isRead: false },
                     });
