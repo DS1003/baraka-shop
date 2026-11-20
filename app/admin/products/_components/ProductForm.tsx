@@ -24,7 +24,8 @@ import {
     Eye,
     Monitor,
     Smartphone,
-    Sparkles
+    Sparkles,
+    CloudDownload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
@@ -32,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { RichTextEditor } from '@/ui/RichTextEditor';
 import { ProductDescriptionBuilder, DescriptionBlock } from './ProductDescriptionBuilder';
 import { ProductAiAssistantModal } from './ProductAiAssistantModal';
+import { DjangoSingleImportModal } from './DjangoSingleImportModal';
 import { SearchableDropdown } from './SearchableDropdown';
 import {
     upsertProduct,
@@ -287,6 +289,7 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<any>(null);
     const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+    const [isDjangoModalOpen, setIsDjangoModalOpen] = useState(false);
     const [previewTab, setPreviewTab] = useState<'desc' | 'specs'>('desc');
     const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
     const [activePreviewImageIdx, setActivePreviewImageIdx] = useState(0);
@@ -1083,6 +1086,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
         ));
     };
 
+    const handleApplyDjangoImport = (imported: {
+        name?: string;
+        shortDescription?: string;
+        featuresText?: string;
+        images?: string[];
+    }) => {
+        if (imported.name !== undefined) setName(imported.name);
+        if (imported.shortDescription !== undefined) setShortDescription(imported.shortDescription);
+        if (imported.featuresText !== undefined) setFeaturesText(imported.featuresText);
+        if (imported.images !== undefined) setFormImages(imported.images);
+        setIsDirty(true);
+    };
+
     const handleUpsert = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -1360,6 +1376,15 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                 </div>
 
                 <div className="flex items-center gap-2.5">
+                    <button
+                        type="button"
+                        onClick={() => setIsDjangoModalOpen(true)}
+                        className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm active:scale-95 transition-all border border-slate-700 hover:border-slate-600"
+                        title="Importer le nom, libellé, caractéristiques et images depuis Django"
+                    >
+                        <CloudDownload size={15} className="text-orange-400" />
+                        <span>Importer depuis Django</span>
+                    </button>
                     <button
                         type="button"
                         onClick={() => setIsAiAssistantOpen(true)}
@@ -2874,6 +2899,19 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             currentFeatures={featuresText.split('\n').filter(Boolean)}
             currentSpecsText={metadataText}
             onApplyToForm={handleApplyAiContent}
+        />
+
+        <DjangoSingleImportModal
+            isOpen={isDjangoModalOpen}
+            onClose={() => setIsDjangoModalOpen(false)}
+            initialReference={editingProduct?.reference || ''}
+            currentFormValues={{
+                name,
+                shortDescription,
+                featuresText,
+                images: formImages
+            }}
+            onApplyImport={handleApplyDjangoImport}
         />
         </>
     );

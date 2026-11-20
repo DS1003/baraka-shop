@@ -30,7 +30,8 @@ import {
     X,
     ExternalLink,
     Maximize2,
-    GripVertical
+    GripVertical,
+    CloudDownload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
@@ -52,6 +53,7 @@ import { clearImportJobs } from '@/lib/actions/import-bg-actions';
 import { testConnection } from '@/lib/actions/debug-actions';
 import { toast } from 'sonner';
 import { SearchableDropdown } from './_components/SearchableDropdown';
+import { DjangoBatchImportModal } from './_components/DjangoBatchImportModal';
 
 export default function ProductsPage() {
     return (
@@ -81,6 +83,8 @@ function ProductsPageContent() {
     const [loading, setLoading] = useState(true);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [detailProduct, setDetailProduct] = useState<any>(null);
+    const [isDjangoBatchModalOpen, setIsDjangoBatchModalOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     // Selection
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -139,7 +143,7 @@ function ProductsPageContent() {
         }
         const timer = setTimeout(loadProducts, 300);
         return () => clearTimeout(timer);
-    }, [searchQuery, page, activeFilters]);
+    }, [searchQuery, page, activeFilters, refreshKey]);
 
     // Sync state to URL without triggering Next.js route cancellations
     const isFirstRender = useRef(true);
@@ -363,6 +367,15 @@ function ProductsPageContent() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setIsDjangoBatchModalOpen(true)}
+                        className="flex items-center gap-2 px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white font-bold text-[12px] hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                        title="Rechercher et importer des produits depuis l'API Django"
+                    >
+                        <CloudDownload size={16} className="text-orange-400" />
+                        <span>Importer depuis Django</span>
+                    </button>
                     <Link
                         href="/admin/products/import"
                         className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 font-bold text-[12px] hover:bg-slate-50 transition-all shadow-sm"
@@ -1012,6 +1025,15 @@ function ProductsPageContent() {
                     )
                 }
             </AnimatePresence >
+
+            <DjangoBatchImportModal
+                isOpen={isDjangoBatchModalOpen}
+                onClose={() => setIsDjangoBatchModalOpen(false)}
+                onSuccessRefresh={() => {
+                    setRefreshKey(k => k + 1);
+                    router.refresh();
+                }}
+            />
         </div >
     );
 }
