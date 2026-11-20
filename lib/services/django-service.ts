@@ -50,6 +50,8 @@ export interface BarakaMatchInfo {
     isPublished?: boolean;
     categoryId?: string;
     categoryName?: string;
+    subCategoryId?: string;
+    subCategoryName?: string;
     brandId?: string;
     brandName?: string;
 }
@@ -272,8 +274,12 @@ export async function searchDjangoProducts(params?: {
                     images: true,
                     isPublished: true,
                     categoryId: true,
+                    subCategoryId: true,
                     brandId: true,
                     category: {
+                        select: { name: true }
+                    },
+                    subCategory: {
                         select: { name: true }
                     },
                     brand: {
@@ -303,6 +309,8 @@ export async function searchDjangoProducts(params?: {
                         isPublished: match.isPublished,
                         categoryId: match.categoryId,
                         categoryName: match.category?.name,
+                        subCategoryId: match.subCategoryId || undefined,
+                        subCategoryName: match.subCategory?.name || undefined,
                         brandId: match.brandId || undefined,
                         brandName: match.brand?.name || undefined
                     };
@@ -525,6 +533,7 @@ export async function transferDjangoImagesToCloudinary(imageUrls: string[]): Pro
 
 export interface BatchImportOptions {
     defaultCategoryId?: string;
+    defaultSubCategoryId?: string;
 }
 
 /**
@@ -715,6 +724,7 @@ export async function executeBatchImport(
                         features: updatePayload.features || djProduct.features,
                         images: updatePayload.images || [],
                         categoryId: categoryIdToAssign,
+                        subCategoryId: options?.defaultSubCategoryId || null,
                         price: 0,
                         stock: 0,
                         isPublished: false // CRUCIAL : Jamais publié automatiquement

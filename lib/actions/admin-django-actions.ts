@@ -102,7 +102,7 @@ export async function transferDjangoImagesAction(imageUrls: string[]): Promise<{
  */
 export async function batchImportDjangoProductsAction(
     items: BatchImportItemInput[],
-    options?: { defaultCategoryId?: string }
+    options?: { defaultCategoryId?: string; defaultSubCategoryId?: string }
 ): Promise<{
     success: boolean;
     totalProcessed: number;

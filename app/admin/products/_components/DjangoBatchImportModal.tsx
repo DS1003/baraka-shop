@@ -34,7 +34,7 @@ import {
     searchDjangoProductsAction,
     batchImportDjangoProductsAction
 } from '@/lib/actions/admin-django-actions';
-import { getAdminCategories, getAdminBrands } from '@/lib/actions/admin-actions';
+import { getAdminCategories, getAdminBrands, getSubCategories } from '@/lib/actions/admin-actions';
 import { DjangoCleanProduct, BatchImportItemInput, BatchImportResultItem } from '@/lib/services/django-service';
 import { SearchableDropdown } from './SearchableDropdown';
 import { toast } from 'sonner';
@@ -141,14 +141,16 @@ export function DjangoBatchImportModal({
     categories: initialCategories = [],
     brands: initialBrands = []
 }: DjangoBatchImportModalProps) {
-    // Categories & Brands for Select2 filters
+    // Categories, SubCategories & Brands for Select2 filters
     const [categoriesList, setCategoriesList] = useState<Array<{ id: string; name: string }>>(initialCategories);
+    const [subCategoriesList, setSubCategoriesList] = useState<Array<{ id: string; name: string; categoryId: string }>>([]);
     const [brandsList, setBrandsList] = useState<Array<{ id: string; name: string; image?: string | null }>>(initialBrands);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedBrandName, setSelectedBrandName] = useState('');
     const [selectedCategoryName, setSelectedCategoryName] = useState('');
+    const [selectedSubCategoryName, setSelectedSubCategoryName] = useState('');
     const [filterTab, setFilterTab] = useState<'all' | 'existing' | 'new'>('all');
 
     // Pagination
@@ -169,6 +171,7 @@ export function DjangoBatchImportModal({
     const [importImages, setImportImages] = useState(true);
     const [imageMode, setImageMode] = useState<'append' | 'replace'>('append');
     const [targetCategoryId, setTargetCategoryId] = useState('');
+    const [targetSubCategoryId, setTargetSubCategoryId] = useState('');
 
     // Workflow step: 'search' | 'preview' | 'processing' | 'report'
     const [step, setStep] = useState<'search' | 'preview' | 'processing' | 'report'>('search');
@@ -210,13 +213,18 @@ export function DjangoBatchImportModal({
         };
     }, [isOpen, step, onClose]);
 
-    // Load categories & brands if not provided
+    // Load categories, subcategories & brands if not provided
     useEffect(() => {
         if (!isOpen) return;
 
         if (categoriesList.length === 0) {
             getAdminCategories().then(cats => {
                 if (Array.isArray(cats)) setCategoriesList(cats);
+            }).catch(() => {});
+        }
+        if (subCategoriesList.length === 0) {
+            getSubCategories().then(subs => {
+                if (Array.isArray(subs)) setSubCategoriesList(subs);
             }).catch(() => {});
         }
         if (brandsList.length === 0) {
@@ -308,6 +316,8 @@ export function DjangoBatchImportModal({
         const found = categoriesList.find(c => c.id === catIdOrName);
         const nameToUse = found ? found.name : catIdOrName;
         setSelectedCategoryName(nameToUse);
+        setSelectedSubCategoryName('');
+        setTargetSubCategoryId('');
         if (found) {
             setTargetCategoryId(found.id);
         } else if (!catIdOrName) {
@@ -315,10 +325,32 @@ export function DjangoBatchImportModal({
         }
     };
 
+    const handleSubCategoryChange = (subCatIdOrName: string) => {
+        const found = subCategoriesList.find(s => s.id === subCatIdOrName);
+        const nameToUse = found ? found.name : subCatIdOrName;
+        setSelectedSubCategoryName(nameToUse);
+        if (found) {
+            setTargetSubCategoryId(found.id);
+            // Si une sous-catégorie est sélectionnée, s'assurer que la catégorie parente est aussi associée
+            if (!targetCategoryId && found.categoryId) {
+                const parentCat = categoriesList.find(c => c.id === found.categoryId);
+                if (parentCat) {
+                    setSelectedCategoryName(parentCat.name);
+                    setTargetCategoryId(parentCat.id);
+                }
+            }
+        } else if (!subCatIdOrName) {
+            setTargetSubCategoryId('');
+        }
+    };
+
     const handleClearAllFilters = () => {
         setSearchQuery('');
         setSelectedBrandName('');
         setSelectedCategoryName('');
+        setSelectedSubCategoryName('');
+        setTargetCategoryId('');
+        setTargetSubCategoryId('');
         setPage(1);
         executeSearch('', '', '', 1);
     };
@@ -338,14 +370,24 @@ export function DjangoBatchImportModal({
         return found ? found.id : '';
     }, [categoriesList, selectedCategoryName]);
 
-    // Filter products on current page by tab and/or Baraka Category
+    const selectedSubCategoryId = useMemo(() => {
+        const found = subCategoriesList.find(s => s.name === selectedSubCategoryName);
+        return found ? found.id : '';
+    }, [subCategoriesList, selectedSubCategoryName]);
+
+    // Filter products on current page by tab and/or Baraka Category / SubCategory
     const filteredProducts = useMemo(() => {
         let list = products;
 
-        // If category is selected, prioritize matching products that belong to this category in Baraka
-        if (selectedCategoryId) {
+        // If subcategory is selected, filter by subCategory
+        if (selectedSubCategoryId) {
+            const inSubCategory = list.filter(p => p.barakaMatch?.subCategoryId === selectedSubCategoryId);
+            if (inSubCategory.length > 0) {
+                list = inSubCategory;
+            }
+        } else if (selectedCategoryId) {
+            // Otherwise if category is selected, filter by category
             const inCategory = list.filter(p => p.barakaMatch?.categoryId === selectedCategoryId);
-            // If any products match this category in Baraka on current page, filter to them
             if (inCategory.length > 0) {
                 list = inCategory;
             }
@@ -358,7 +400,7 @@ export function DjangoBatchImportModal({
             return list.filter(p => !p.barakaMatch || p.barakaMatch.exists !== true);
         }
         return list;
-    }, [products, filterTab, selectedCategoryId]);
+    }, [products, filterTab, selectedCategoryId, selectedSubCategoryId]);
 
     // Selection handlers
     const toggleSelect = (p: DjangoCleanProduct) => {
@@ -393,7 +435,7 @@ export function DjangoBatchImportModal({
     const selectedList = Array.from(selectedMap.values());
     const existingCount = selectedList.filter(p => p.barakaMatch?.exists === true).length;
     const newCount = selectedList.length - existingCount;
-    const hasActiveFilters = Boolean(searchQuery.trim() || selectedBrandName || selectedCategoryName);
+    const hasActiveFilters = Boolean(searchQuery.trim() || selectedBrandName || selectedCategoryName || selectedSubCategoryName);
 
     // Options for Select2 dropdowns
     const brandOptions = useMemo(() => {
@@ -410,6 +452,26 @@ export function DjangoBatchImportModal({
             name: c.name
         }));
     }, [categoriesList]);
+
+    // Global subcategory options with category context: "Sous-catégorie (Catégorie)"
+    const subCategoryOptions = useMemo(() => {
+        const catMap = new Map(categoriesList.map(c => [c.id, c.name]));
+        
+        let filteredSubs = subCategoriesList;
+        // If a category is selected, show only subcategories of this category
+        if (targetCategoryId) {
+            filteredSubs = subCategoriesList.filter(s => s.categoryId === targetCategoryId);
+        }
+
+        return filteredSubs.map(s => {
+            const parentName = catMap.get(s.categoryId);
+            return {
+                id: s.id,
+                name: parentName && !targetCategoryId ? `${s.name} (${parentName})` : s.name,
+                type: parentName || undefined
+            };
+        });
+    }, [subCategoriesList, categoriesList, targetCategoryId]);
 
     // Start Batch Import
     const handleStartBatchImport = async () => {
@@ -433,7 +495,8 @@ export function DjangoBatchImportModal({
 
         try {
             const result = await batchImportDjangoProductsAction(itemsInput, {
-                defaultCategoryId: targetCategoryId || undefined
+                defaultCategoryId: targetCategoryId || undefined,
+                defaultSubCategoryId: targetSubCategoryId || undefined
             });
             if (result.success) {
                 setImportReport({
@@ -618,7 +681,7 @@ export function DjangoBatchImportModal({
                                 </div>
 
                                 {/* Select 2 Marque */}
-                                <div className="w-full sm:w-56 shrink-0 relative z-30">
+                                <div className="w-full sm:w-48 shrink-0 relative z-30">
                                     <SearchableDropdown
                                         options={brandOptions}
                                         value={selectedBrandId}
@@ -630,13 +693,25 @@ export function DjangoBatchImportModal({
                                 </div>
 
                                 {/* Select 2 Catégorie */}
-                                <div className="w-full sm:w-64 shrink-0 relative z-20">
+                                <div className="w-full sm:w-56 shrink-0 relative z-20">
                                     <SearchableDropdown
                                         options={categoryOptions}
                                         value={selectedCategoryId}
                                         onChange={handleCategoryChange}
                                         placeholder="Toutes les catégories"
                                         defaultLabel="Toutes les catégories"
+                                        triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white shadow-xs"
+                                    />
+                                </div>
+
+                                {/* Select 2 Sous-Catégorie */}
+                                <div className="w-full sm:w-56 shrink-0 relative z-20">
+                                    <SearchableDropdown
+                                        options={subCategoryOptions}
+                                        value={selectedSubCategoryId}
+                                        onChange={handleSubCategoryChange}
+                                        placeholder="Toutes les sous-catégories"
+                                        defaultLabel="Toutes les sous-catégories"
                                         triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white shadow-xs"
                                     />
                                 </div>
@@ -699,7 +774,7 @@ export function DjangoBatchImportModal({
                                         </button>
                                     </div>
 
-                                    {(selectedBrandName || selectedCategoryName) && (
+                                    {(selectedBrandName || selectedCategoryName || selectedSubCategoryName) && (
                                         <div className="flex items-center gap-1.5 text-[11px]">
                                             {selectedBrandName && (
                                                 <span className="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200/60 text-orange-800 font-semibold flex items-center gap-1">
@@ -711,6 +786,12 @@ export function DjangoBatchImportModal({
                                                 <span className="px-2.5 py-1 rounded-lg bg-violet-50 border border-violet-200/60 text-violet-800 font-semibold flex items-center gap-1">
                                                     <Layers size={11} className="text-violet-500" />
                                                     Cat : {selectedCategoryName}
+                                                </span>
+                                            )}
+                                            {selectedSubCategoryName && (
+                                                <span className="px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200/60 text-indigo-800 font-semibold flex items-center gap-1">
+                                                    <Layers size={11} className="text-indigo-500" />
+                                                    Sous-cat : {selectedSubCategoryName}
                                                 </span>
                                             )}
                                         </div>
@@ -994,22 +1075,41 @@ export function DjangoBatchImportModal({
                                 </div>
                             </div>
 
-                            {/* Destination Category for new products */}
+                            {/* Destination Category & SubCategory for new products */}
                             {newCount > 0 && (
-                                <div className="p-5 bg-white border border-slate-200/80 rounded-2xl space-y-2.5 shadow-xs">
-                                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                                        <Layers size={14} className="text-orange-500" />
-                                        Catégorie d'affectation pour les {newCount} nouveau(x) produit(s)
-                                    </label>
-                                    <div className="max-w-md">
-                                        <SearchableDropdown
-                                            options={categoryOptions}
-                                            value={targetCategoryId}
-                                            onChange={setTargetCategoryId}
-                                            placeholder="Choisir une catégorie Baraka (ou catégorie par défaut)"
-                                            defaultLabel="Catégorie par défaut"
-                                            triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white"
-                                        />
+                                <div className="p-5 bg-white border border-slate-200/80 rounded-2xl space-y-4 shadow-xs">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                                            <Layers size={14} className="text-orange-500" />
+                                            Catégorie d'affectation pour les {newCount} nouveau(x) produit(s)
+                                        </label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl">
+                                            <div>
+                                                <span className="text-[11px] font-medium text-slate-400 block mb-1">Catégorie principale</span>
+                                                <SearchableDropdown
+                                                    options={categoryOptions}
+                                                    value={targetCategoryId}
+                                                    onChange={(val) => {
+                                                        setTargetCategoryId(val);
+                                                        setTargetSubCategoryId('');
+                                                    }}
+                                                    placeholder="Choisir une catégorie principale"
+                                                    defaultLabel="Catégorie par défaut"
+                                                    triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white"
+                                                />
+                                            </div>
+                                            <div>
+                                                <span className="text-[11px] font-medium text-slate-400 block mb-1">Sous-catégorie (optionnel)</span>
+                                                <SearchableDropdown
+                                                    options={subCategoryOptions}
+                                                    value={targetSubCategoryId}
+                                                    onChange={setTargetSubCategoryId}
+                                                    placeholder="Toutes les sous-catégories"
+                                                    defaultLabel="Aucune sous-catégorie"
+                                                    triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                     <p className="text-[11px] text-slate-400">
                                         Si non spécifiée, la première catégorie disponible sera attribuée par défaut. Vous pourrez la modifier ensuite.
