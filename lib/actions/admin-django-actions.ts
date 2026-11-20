@@ -7,6 +7,7 @@ import {
     getDjangoProductByReference,
     transferDjangoImagesToCloudinary,
     executeBatchImport,
+    getDjangoCatalogFilterOptions,
     SearchDjangoResult,
     DjangoCleanProduct,
     BatchImportItemInput
@@ -24,10 +25,45 @@ async function requireAdmin() {
 }
 
 /**
- * Action serveur : Recherche de produits dans l'API Django
+ * Action serveur : Retourne les options de filtre (marques, catégories, sous-catégories)
+ * construites EXCLUSIVEMENT à partir du catalogue Django.
+ */
+export async function getDjangoFiltersAction(): Promise<{
+    success: boolean;
+    brands: Array<{ id: string; name: string; count: number }>;
+    categories: Array<{
+        id: string;
+        name: string;
+        count: number;
+        subCategories: Array<{ id: string; name: string; count: number }>;
+    }>;
+    totalCount: number;
+    error?: string;
+}> {
+    try {
+        await requireAdmin();
+        return await getDjangoCatalogFilterOptions();
+    } catch (err: any) {
+        return {
+            success: false,
+            brands: [],
+            categories: [],
+            totalCount: 0,
+            error: err.message || "Erreur lors du chargement des filtres Django."
+        };
+    }
+}
+
+/**
+ * Action serveur : Recherche multi-critères de produits dans le catalogue Django
+ * Supporte la recherche textuelle, le filtrage par marque, catégorie, sous-catégorie et onglet.
  */
 export async function searchDjangoProductsAction(params?: {
     q?: string;
+    brandId?: string;
+    categoryFamily?: string;
+    subCategoryId?: string;
+    tab?: 'all' | 'existing' | 'new';
     page?: number;
     pageSize?: number;
 }): Promise<SearchDjangoResult> {
@@ -39,7 +75,7 @@ export async function searchDjangoProductsAction(params?: {
             success: false,
             count: 0,
             page: params?.page || 1,
-            pageSize: params?.pageSize || 20,
+            pageSize: params?.pageSize || 12,
             results: [],
             error: err.message || "Erreur lors de la recherche des produits Django."
         };

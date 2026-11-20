@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
     X,
@@ -32,12 +32,36 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
     searchDjangoProductsAction,
+    getDjangoFiltersAction,
     batchImportDjangoProductsAction
 } from '@/lib/actions/admin-django-actions';
-import { getAdminCategories, getAdminBrands, getSubCategories } from '@/lib/actions/admin-actions';
-import { DjangoCleanProduct, BatchImportItemInput, BatchImportResultItem } from '@/lib/services/django-service';
+import { getAdminCategories, getSubCategories } from '@/lib/actions/admin-actions';
+import { DjangoCleanProduct, BatchImportResultItem } from '@/lib/services/django-service';
 import { SearchableDropdown } from './SearchableDropdown';
 import { toast } from 'sonner';
+
+// ---------------------------------------------------------------------------
+// TYPES
+// ---------------------------------------------------------------------------
+
+interface DjangoBrandOption {
+    id: string;
+    name: string;
+    count: number;
+}
+
+interface DjangoSubCategoryOption {
+    id: string;
+    name: string;
+    count: number;
+}
+
+interface DjangoCategoryOption {
+    id: string;
+    name: string;
+    count: number;
+    subCategories: DjangoSubCategoryOption[];
+}
 
 interface DjangoBatchImportModalProps {
     isOpen: boolean;
@@ -46,6 +70,10 @@ interface DjangoBatchImportModalProps {
     categories?: Array<{ id: string; name: string }>;
     brands?: Array<{ id: string; name: string; image?: string | null }>;
 }
+
+// ---------------------------------------------------------------------------
+// SUBCOMPONENTS
+// ---------------------------------------------------------------------------
 
 function SimpleMinimalLoader({
     text = "Chargement des données...",
@@ -62,7 +90,6 @@ function SimpleMinimalLoader({
             "flex flex-col items-center justify-center text-center select-none animate-in fade-in duration-150",
             isLarge ? "py-12 space-y-3" : isSmall ? "py-3 space-y-1.5" : "py-8 space-y-2.5"
         )}>
-            {/* Minimalist modern SVG circular spinner */}
             <svg
                 className={cn(
                     "animate-spin text-orange-500",
@@ -104,7 +131,6 @@ function SimpleMinimalLoader({
 function ProductCardSkeleton() {
     return (
         <div className="p-4 rounded-2xl border border-slate-200/70 bg-white flex flex-col justify-between animate-pulse select-none min-h-[160px]">
-            {/* Top row */}
             <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
                 <div className="h-5 w-20 bg-slate-100 rounded-lg" />
                 <div className="flex items-center gap-2">
@@ -112,8 +138,6 @@ function ProductCardSkeleton() {
                     <div className="h-5 w-5 bg-slate-100 rounded-lg" />
                 </div>
             </div>
-
-            {/* Middle row */}
             <div className="flex items-start gap-3.5 my-3">
                 <div className="w-16 h-16 rounded-xl bg-slate-100 shrink-0" />
                 <div className="flex-1 space-y-2 py-1">
@@ -121,8 +145,6 @@ function ProductCardSkeleton() {
                     <div className="h-3 bg-slate-100 rounded-md w-2/3" />
                 </div>
             </div>
-
-            {/* Bottom row */}
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="h-3 w-12 bg-slate-100 rounded" />
@@ -134,26 +156,41 @@ function ProductCardSkeleton() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// MAIN COMPONENT
+// ---------------------------------------------------------------------------
+
 export function DjangoBatchImportModal({
     isOpen,
     onClose,
     onSuccessRefresh,
-    categories: initialCategories = [],
-    brands: initialBrands = []
 }: DjangoBatchImportModalProps) {
-    // Categories, SubCategories & Brands for Select2 filters
-    const [categoriesList, setCategoriesList] = useState<Array<{ id: string; name: string }>>(initialCategories);
-    const [subCategoriesList, setSubCategoriesList] = useState<Array<{ id: string; name: string; categoryId: string }>>([]);
-    const [brandsList, setBrandsList] = useState<Array<{ id: string; name: string; image?: string | null }>>(initialBrands);
+    // -----------------------------------------------------------------------
+    // DJANGO FILTER OPTIONS (loaded from server on modal open)
+    // -----------------------------------------------------------------------
+    const [djangoBrands, setDjangoBrands] = useState<DjangoBrandOption[]>([]);
+    const [djangoCategories, setDjangoCategories] = useState<DjangoCategoryOption[]>([]);
+    const [filtersLoading, setFiltersLoading] = useState(false);
+    const [filtersError, setFiltersError] = useState<string | null>(null);
 
-    // Filter states
+    // -----------------------------------------------------------------------
+    // FILTER SELECTIONS (by ID, not name — all Django-only)
+    // -----------------------------------------------------------------------
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedBrandName, setSelectedBrandName] = useState('');
-    const [selectedCategoryName, setSelectedCategoryName] = useState('');
-    const [selectedSubCategoryName, setSelectedSubCategoryName] = useState('');
+    const [selectedBrandId, setSelectedBrandId] = useState('');
+    const [selectedCategoryFamily, setSelectedCategoryFamily] = useState('');
+    const [selectedSubCategoryId, setSelectedSubCategoryId] = useState('');
     const [filterTab, setFilterTab] = useState<'all' | 'existing' | 'new'>('all');
 
-    // Pagination
+    // -----------------------------------------------------------------------
+    // SERVER-COMPUTED TAB COUNTS & PAGINATION
+    // -----------------------------------------------------------------------
+    const [tabCounts, setTabCounts] = useState({ all: 0, existing: 0, new: 0 });
+    const [totalPages, setTotalPages] = useState(1);
+
+    // -----------------------------------------------------------------------
+    // PAGINATION & PRODUCTS
+    // -----------------------------------------------------------------------
     const [page, setPage] = useState(1);
     const pageSize = 12;
     const [isSearching, setIsSearching] = useState(false);
@@ -161,10 +198,14 @@ export function DjangoBatchImportModal({
     const [products, setProducts] = useState<DjangoCleanProduct[]>([]);
     const [searchError, setSearchError] = useState<string | null>(null);
 
-    // Selection: Map of reference -> DjangoCleanProduct
+    // -----------------------------------------------------------------------
+    // SELECTION: Map of reference -> DjangoCleanProduct
+    // -----------------------------------------------------------------------
     const [selectedMap, setSelectedMap] = useState<Map<string, DjangoCleanProduct>>(new Map());
 
-    // Import settings (Step 2)
+    // -----------------------------------------------------------------------
+    // IMPORT SETTINGS (Step 2)
+    // -----------------------------------------------------------------------
     const [importName, setImportName] = useState(true);
     const [importShortDesc, setImportShortDesc] = useState(true);
     const [importFeatures, setImportFeatures] = useState(true);
@@ -173,10 +214,15 @@ export function DjangoBatchImportModal({
     const [targetCategoryId, setTargetCategoryId] = useState('');
     const [targetSubCategoryId, setTargetSubCategoryId] = useState('');
 
-    // Workflow step: 'search' | 'preview' | 'processing' | 'report'
-    const [step, setStep] = useState<'search' | 'preview' | 'processing' | 'report'>('search');
+    // Step 2 Baraka categories (lazy-loaded only when entering preview step)
+    const [barakaCategoriesList, setBarakaCategoriesList] = useState<Array<{ id: string; name: string }>>([]);
+    const [barakaSubCategoriesList, setBarakaSubCategoriesList] = useState<Array<{ id: string; name: string; categoryId: string }>>([]);
+    const [barakaCatsLoaded, setBarakaCatsLoaded] = useState(false);
 
-    // Execution progress & results
+    // -----------------------------------------------------------------------
+    // WORKFLOW STEP & EXECUTION
+    // -----------------------------------------------------------------------
+    const [step, setStep] = useState<'search' | 'preview' | 'processing' | 'report'>('search');
     const [progressCurrent, setProgressCurrent] = useState(0);
     const [progressTotal, setProgressTotal] = useState(0);
     const [importReport, setImportReport] = useState<{
@@ -185,14 +231,20 @@ export function DjangoBatchImportModal({
         results: BatchImportResultItem[];
     } | null>(null);
 
+    // -----------------------------------------------------------------------
+    // REFS
+    // -----------------------------------------------------------------------
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const requestIdRef = useRef(0);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Body scroll lock & Escape key handling (Normes UX modales)
+    // -----------------------------------------------------------------------
+    // Body scroll lock & Escape key handling
+    // -----------------------------------------------------------------------
     useEffect(() => {
         if (!isOpen) return;
 
@@ -213,196 +265,259 @@ export function DjangoBatchImportModal({
         };
     }, [isOpen, step, onClose]);
 
-    // Load categories, subcategories & brands if not provided
+    // -----------------------------------------------------------------------
+    // LOAD DJANGO FILTER OPTIONS on modal open
+    // -----------------------------------------------------------------------
     useEffect(() => {
         if (!isOpen) return;
 
-        if (categoriesList.length === 0) {
-            getAdminCategories().then(cats => {
-                if (Array.isArray(cats)) setCategoriesList(cats);
-            }).catch(() => {});
-        }
-        if (subCategoriesList.length === 0) {
-            getSubCategories().then(subs => {
-                if (Array.isArray(subs)) setSubCategoriesList(subs);
-            }).catch(() => {});
-        }
-        if (brandsList.length === 0) {
-            getAdminBrands().then(brs => {
-                if (Array.isArray(brs)) setBrandsList(brs);
-            }).catch(() => {});
-        }
+        setFiltersLoading(true);
+        setFiltersError(null);
+        getDjangoFiltersAction()
+            .then(res => {
+                if (res.success) {
+                    setDjangoBrands(res.brands);
+                    setDjangoCategories(res.categories);
+                } else {
+                    setFiltersError(res.error || "Erreur lors du chargement des filtres.");
+                }
+            })
+            .catch(() => {
+                setFiltersError("Erreur réseau lors du chargement des filtres Django.");
+            })
+            .finally(() => setFiltersLoading(false));
     }, [isOpen]);
 
-    // Build the query to send to Django API:
-    // If text search exists, use it. If not, use brand name as query keyword (e.g. "DELL", "HP", etc.)
-    // Category is NOT concatenated into Django query since Django has no category text filter,
-    // which previously produced 0 results. Category is filtered on Baraka matches and sets default import category.
-    const buildSearchQuery = (text: string, brandName: string) => {
-        const trimmedText = text.trim();
-        const trimmedBrand = brandName.trim();
-
-        if (trimmedText) {
-            return trimmedText;
-        }
-        if (trimmedBrand) {
-            return trimmedBrand;
-        }
-        return '';
-    };
-
-    // Execute Django search
-    const executeSearch = async (text: string, brand: string, cat: string, pageNum: number) => {
+    // -----------------------------------------------------------------------
+    // EXECUTE SEARCH — sends ALL filter params to server action
+    // -----------------------------------------------------------------------
+    const executeSearch = useCallback(async (pageNum: number, overrides?: {
+        q?: string;
+        brandId?: string;
+        categoryFamily?: string;
+        subCategoryId?: string;
+        tab?: 'all' | 'existing' | 'new';
+    }) => {
         setIsSearching(true);
         setSearchError(null);
+
+        const currentRequestId = ++requestIdRef.current;
+
+        const q = overrides?.q ?? searchQuery;
+        const brand = overrides?.brandId ?? selectedBrandId;
+        const catFamily = overrides?.categoryFamily ?? selectedCategoryFamily;
+        const subCat = overrides?.subCategoryId ?? selectedSubCategoryId;
+        const tab = overrides?.tab ?? filterTab;
+
         try {
-            const djangoQuery = buildSearchQuery(text, brand);
             const res = await searchDjangoProductsAction({
-                q: djangoQuery || undefined,
+                q: q.trim() || undefined,
+                brandId: brand || undefined,
+                categoryFamily: catFamily || undefined,
+                subCategoryId: subCat || undefined,
+                tab,
                 page: pageNum,
                 pageSize
             });
+
+            // Race condition guard: ignore stale responses
+            if (currentRequestId !== requestIdRef.current) return;
+
             if (res.success) {
                 setProducts(res.results);
                 setTotalCount(res.count);
+                setTotalPages(res.totalPages || 1);
+                if (res.tabCounts) {
+                    setTabCounts(res.tabCounts);
+                }
             } else {
                 setSearchError(res.error || "Erreur de chargement des produits Django.");
             }
-        } catch (err: any) {
+        } catch {
+            if (currentRequestId !== requestIdRef.current) return;
             setSearchError("Impossible de contacter le serveur Django.");
         } finally {
-            setIsSearching(false);
+            if (currentRequestId === requestIdRef.current) {
+                setIsSearching(false);
+            }
         }
-    };
+    }, [searchQuery, selectedBrandId, selectedCategoryFamily, selectedSubCategoryId, filterTab]);
 
-    // Reset when modal opens
+    // -----------------------------------------------------------------------
+    // RESET when modal opens/closes
+    // -----------------------------------------------------------------------
     useEffect(() => {
         if (!isOpen) {
             setStep('search');
             setSelectedMap(new Map());
             setSearchQuery('');
-            setSelectedBrandName('');
-            setSelectedCategoryName('');
+            setSelectedBrandId('');
+            setSelectedCategoryFamily('');
+            setSelectedSubCategoryId('');
+            setFilterTab('all');
             setPage(1);
             setImportReport(null);
+            setTabCounts({ all: 0, existing: 0, new: 0 });
+            setTotalPages(1);
+            setTotalCount(0);
+            setProducts([]);
+            setBarakaCatsLoaded(false);
             return;
         }
-        executeSearch('', '', '', 1);
+        // Initial load: all products, no filters
+        executeSearch(1, { q: '', brandId: '', categoryFamily: '', subCategoryId: '', tab: 'all' });
     }, [isOpen]);
 
-    // Debounced search trigger
-    const triggerSearchDebounced = (text: string, brand: string, cat: string) => {
+    // -----------------------------------------------------------------------
+    // LAZY-LOAD Baraka categories when entering Step 2 (preview)
+    // -----------------------------------------------------------------------
+    useEffect(() => {
+        if (step !== 'preview' || barakaCatsLoaded) return;
+
+        getAdminCategories().then(cats => {
+            if (Array.isArray(cats)) setBarakaCategoriesList(cats);
+        }).catch(() => {});
+
+        getSubCategories().then(subs => {
+            if (Array.isArray(subs)) setBarakaSubCategoriesList(subs as any);
+        }).catch(() => {});
+
+        setBarakaCatsLoaded(true);
+    }, [step, barakaCatsLoaded]);
+
+    // -----------------------------------------------------------------------
+    // DEBOUNCED SEARCH TRIGGER
+    // -----------------------------------------------------------------------
+    const triggerSearchDebounced = useCallback((overrides: {
+        q?: string;
+        brandId?: string;
+        categoryFamily?: string;
+        subCategoryId?: string;
+        tab?: 'all' | 'existing' | 'new';
+    }) => {
         setPage(1);
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
-            executeSearch(text, brand, cat, 1);
+            executeSearch(1, overrides);
         }, 350);
-    };
+    }, [executeSearch]);
 
-    // Filter changes
+    // -----------------------------------------------------------------------
+    // FILTER CHANGE HANDLERS
+    // -----------------------------------------------------------------------
     const handleTextChange = (val: string) => {
         setSearchQuery(val);
-        triggerSearchDebounced(val, selectedBrandName, selectedCategoryName);
+        triggerSearchDebounced({ q: val });
     };
 
-    const handleBrandChange = (brandIdOrName: string) => {
-        const found = brandsList.find(b => b.id === brandIdOrName);
-        const nameToUse = found ? found.name : brandIdOrName;
-        setSelectedBrandName(nameToUse);
-        triggerSearchDebounced(searchQuery, nameToUse, selectedCategoryName);
+    const handleBrandChange = (brandId: string) => {
+        setSelectedBrandId(brandId);
+        setPage(1);
+        executeSearch(1, { brandId });
     };
 
-    const handleCategoryChange = (catIdOrName: string) => {
-        const found = categoriesList.find(c => c.id === catIdOrName);
-        const nameToUse = found ? found.name : catIdOrName;
-        setSelectedCategoryName(nameToUse);
-        setSelectedSubCategoryName('');
-        setTargetSubCategoryId('');
-        if (found) {
-            setTargetCategoryId(found.id);
-        } else if (!catIdOrName) {
-            setTargetCategoryId('');
-        }
+    const handleCategoryChange = (catFamily: string) => {
+        setSelectedCategoryFamily(catFamily);
+        // Reset sub-category since it may no longer be valid
+        setSelectedSubCategoryId('');
+        setPage(1);
+        executeSearch(1, { categoryFamily: catFamily, subCategoryId: '' });
     };
 
-    const handleSubCategoryChange = (subCatIdOrName: string) => {
-        const found = subCategoriesList.find(s => s.id === subCatIdOrName);
-        const nameToUse = found ? found.name : subCatIdOrName;
-        setSelectedSubCategoryName(nameToUse);
-        if (found) {
-            setTargetSubCategoryId(found.id);
-            // Si une sous-catégorie est sélectionnée, s'assurer que la catégorie parente est aussi associée
-            if (!targetCategoryId && found.categoryId) {
-                const parentCat = categoriesList.find(c => c.id === found.categoryId);
-                if (parentCat) {
-                    setSelectedCategoryName(parentCat.name);
-                    setTargetCategoryId(parentCat.id);
-                }
-            }
-        } else if (!subCatIdOrName) {
-            setTargetSubCategoryId('');
-        }
+    const handleSubCategoryChange = (subCatId: string) => {
+        setSelectedSubCategoryId(subCatId);
+        setPage(1);
+        executeSearch(1, { subCategoryId: subCatId });
+    };
+
+    const handleTabChange = (tab: 'all' | 'existing' | 'new') => {
+        setFilterTab(tab);
+        setPage(1);
+        executeSearch(1, { tab });
     };
 
     const handleClearAllFilters = () => {
         setSearchQuery('');
-        setSelectedBrandName('');
-        setSelectedCategoryName('');
-        setSelectedSubCategoryName('');
-        setTargetCategoryId('');
-        setTargetSubCategoryId('');
+        setSelectedBrandId('');
+        setSelectedCategoryFamily('');
+        setSelectedSubCategoryId('');
+        setFilterTab('all');
         setPage(1);
-        executeSearch('', '', '', 1);
+        executeSearch(1, { q: '', brandId: '', categoryFamily: '', subCategoryId: '', tab: 'all' });
     };
 
     const handlePageChange = (newPage: number) => {
         setPage(newPage);
-        executeSearch(searchQuery, selectedBrandName, selectedCategoryName, newPage);
+        executeSearch(newPage);
     };
 
-    const selectedBrandId = useMemo(() => {
-        const found = brandsList.find(b => b.name === selectedBrandName);
-        return found ? found.id : '';
-    }, [brandsList, selectedBrandName]);
-
-    const selectedCategoryId = useMemo(() => {
-        const found = categoriesList.find(c => c.name === selectedCategoryName);
-        return found ? found.id : '';
-    }, [categoriesList, selectedCategoryName]);
-
-    const selectedSubCategoryId = useMemo(() => {
-        const found = subCategoriesList.find(s => s.name === selectedSubCategoryName);
-        return found ? found.id : '';
-    }, [subCategoriesList, selectedSubCategoryName]);
-
-    // Filter products on current page by tab and/or Baraka Category / SubCategory
-    const filteredProducts = useMemo(() => {
-        let list = products;
-
-        // If subcategory is selected, filter by subCategory
-        if (selectedSubCategoryId) {
-            const inSubCategory = list.filter(p => p.barakaMatch?.subCategoryId === selectedSubCategoryId);
-            if (inSubCategory.length > 0) {
-                list = inSubCategory;
+    // -----------------------------------------------------------------------
+    // DERIVED: Sub-category options (dependent on selected category)
+    // -----------------------------------------------------------------------
+    const subCategoryOptions = useMemo(() => {
+        if (!selectedCategoryFamily) {
+            // No category selected: show all subcategories from all categories
+            const allSubs: Array<{ id: string; name: string; type?: string }> = [];
+            for (const cat of djangoCategories) {
+                for (const sub of cat.subCategories) {
+                    allSubs.push({
+                        id: sub.id,
+                        name: sub.name,
+                        type: cat.name
+                    });
+                }
             }
-        } else if (selectedCategoryId) {
-            // Otherwise if category is selected, filter by category
-            const inCategory = list.filter(p => p.barakaMatch?.categoryId === selectedCategoryId);
-            if (inCategory.length > 0) {
-                list = inCategory;
-            }
+            return allSubs.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
         }
+        const cat = djangoCategories.find(c => c.id === selectedCategoryFamily);
+        return cat ? cat.subCategories.map(s => ({ id: s.id, name: s.name })) : [];
+    }, [djangoCategories, selectedCategoryFamily]);
 
-        if (filterTab === 'existing') {
-            return list.filter(p => p.barakaMatch?.exists === true);
-        }
-        if (filterTab === 'new') {
-            return list.filter(p => !p.barakaMatch || p.barakaMatch.exists !== true);
-        }
-        return list;
-    }, [products, filterTab, selectedCategoryId, selectedSubCategoryId]);
+    // -----------------------------------------------------------------------
+    // DERIVED: Brand options for SearchableDropdown
+    // -----------------------------------------------------------------------
+    const brandOptions = useMemo(() => {
+        return djangoBrands.map(b => ({
+            id: b.id,
+            name: `${b.name} (${b.count})`
+        }));
+    }, [djangoBrands]);
 
-    // Selection handlers
+    // -----------------------------------------------------------------------
+    // DERIVED: Category options for SearchableDropdown
+    // -----------------------------------------------------------------------
+    const categoryOptions = useMemo(() => {
+        return djangoCategories.map(c => ({
+            id: c.id,
+            name: `${c.name} (${c.count})`
+        }));
+    }, [djangoCategories]);
+
+    // -----------------------------------------------------------------------
+    // DERIVED: Display names for filter chips
+    // -----------------------------------------------------------------------
+    const selectedBrandName = useMemo(() => {
+        if (!selectedBrandId) return '';
+        const found = djangoBrands.find(b => b.id === selectedBrandId);
+        return found ? found.name : '';
+    }, [djangoBrands, selectedBrandId]);
+
+    const selectedCategoryName = useMemo(() => {
+        return selectedCategoryFamily || '';
+    }, [selectedCategoryFamily]);
+
+    const selectedSubCategoryName = useMemo(() => {
+        if (!selectedSubCategoryId) return '';
+        for (const cat of djangoCategories) {
+            const sub = cat.subCategories.find(s => s.id === selectedSubCategoryId);
+            if (sub) return sub.name;
+        }
+        return '';
+    }, [djangoCategories, selectedSubCategoryId]);
+
+    // -----------------------------------------------------------------------
+    // SELECTION HANDLERS
+    // -----------------------------------------------------------------------
     const toggleSelect = (p: DjangoCleanProduct) => {
         setSelectedMap(prev => {
             const next = new Map(prev);
@@ -415,14 +530,14 @@ export function DjangoBatchImportModal({
         });
     };
 
-    const isAllPageSelected = filteredProducts.length > 0 && filteredProducts.every(p => selectedMap.has(p.reference));
+    const isAllPageSelected = products.length > 0 && products.every(p => selectedMap.has(p.reference));
     const toggleSelectAllPage = () => {
         setSelectedMap(prev => {
             const next = new Map(prev);
             if (isAllPageSelected) {
-                filteredProducts.forEach(p => next.delete(p.reference));
+                products.forEach(p => next.delete(p.reference));
             } else {
-                filteredProducts.forEach(p => next.set(p.reference, p));
+                products.forEach(p => next.set(p.reference, p));
             }
             return next;
         });
@@ -435,45 +550,26 @@ export function DjangoBatchImportModal({
     const selectedList = Array.from(selectedMap.values());
     const existingCount = selectedList.filter(p => p.barakaMatch?.exists === true).length;
     const newCount = selectedList.length - existingCount;
-    const hasActiveFilters = Boolean(searchQuery.trim() || selectedBrandName || selectedCategoryName || selectedSubCategoryName);
+    const hasActiveFilters = Boolean(searchQuery.trim() || selectedBrandId || selectedCategoryFamily || selectedSubCategoryId);
 
-    // Options for Select2 dropdowns
-    const brandOptions = useMemo(() => {
-        return brandsList.map(b => ({
-            id: b.id,
-            name: b.name,
-            image: b.image || null
-        }));
-    }, [brandsList]);
+    // -----------------------------------------------------------------------
+    // Step 2: Baraka category/subcategory options for import destination
+    // -----------------------------------------------------------------------
+    const barakaCategoryOptions = useMemo(() => {
+        return barakaCategoriesList.map(c => ({ id: c.id, name: c.name }));
+    }, [barakaCategoriesList]);
 
-    const categoryOptions = useMemo(() => {
-        return categoriesList.map(c => ({
-            id: c.id,
-            name: c.name
-        }));
-    }, [categoriesList]);
-
-    // Global subcategory options with category context: "Sous-catégorie (Catégorie)"
-    const subCategoryOptions = useMemo(() => {
-        const catMap = new Map(categoriesList.map(c => [c.id, c.name]));
-        
-        let filteredSubs = subCategoriesList;
-        // If a category is selected, show only subcategories of this category
+    const barakaSubCategoryOptions = useMemo(() => {
+        let filteredSubs = barakaSubCategoriesList;
         if (targetCategoryId) {
-            filteredSubs = subCategoriesList.filter(s => s.categoryId === targetCategoryId);
+            filteredSubs = barakaSubCategoriesList.filter(s => s.categoryId === targetCategoryId);
         }
+        return filteredSubs.map(s => ({ id: s.id, name: s.name }));
+    }, [barakaSubCategoriesList, targetCategoryId]);
 
-        return filteredSubs.map(s => {
-            const parentName = catMap.get(s.categoryId);
-            return {
-                id: s.id,
-                name: parentName && !targetCategoryId ? `${s.name} (${parentName})` : s.name,
-                type: parentName || undefined
-            };
-        });
-    }, [subCategoriesList, categoriesList, targetCategoryId]);
-
-    // Start Batch Import
+    // -----------------------------------------------------------------------
+    // START BATCH IMPORT
+    // -----------------------------------------------------------------------
     const handleStartBatchImport = async () => {
         if (selectedList.length === 0) return;
 
@@ -481,7 +577,7 @@ export function DjangoBatchImportModal({
         setProgressCurrent(0);
         setProgressTotal(selectedList.length);
 
-        const itemsInput: BatchImportItemInput[] = selectedList.map(p => ({
+        const itemsInput = selectedList.map(p => ({
             djangoId: p.id,
             reference: p.reference,
             selectedFields: {
@@ -516,13 +612,11 @@ export function DjangoBatchImportModal({
         }
     };
 
-    const totalPages = Math.ceil(totalCount / pageSize);
-
     if (!isOpen || !mounted) return null;
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
-            {/* Standard Backdrop Overlay - Plein écran au-dessus de la topbar et sidebar */}
+            {/* Standard Backdrop Overlay */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -545,7 +639,7 @@ export function DjangoBatchImportModal({
                 role="dialog"
                 aria-modal="true"
             >
-                {/* 1. Sleek Luminous Header */}
+                {/* 1. Header */}
                 <div className="px-5 sm:px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3.5">
                         <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100/80 flex items-center justify-center text-orange-600 shrink-0 shadow-xs">
@@ -575,7 +669,7 @@ export function DjangoBatchImportModal({
                     </button>
                 </div>
 
-                {/* 2. Modern Segmented Stepper Navigation */}
+                {/* 2. Stepper Navigation */}
                 <div className="px-5 sm:px-6 py-2.5 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
                     <div className="inline-flex items-center p-1 bg-slate-200/60 rounded-xl gap-1">
                         <button
@@ -644,12 +738,14 @@ export function DjangoBatchImportModal({
                     )}
                 </div>
 
-                {/* STEP 1: Search, Select2 Filters & Selection */}
+                {/* ============================================================= */}
+                {/* STEP 1: Search, Django Filters & Selection                     */}
+                {/* ============================================================= */}
                 {step === 'search' && (
                     <div className="flex-1 flex flex-col overflow-hidden">
-                        {/* 3. Filter Toolbar with Select2 Dropdowns */}
+                        {/* 3. Filter Toolbar */}
                         <div className="p-4 sm:p-5 border-b border-slate-100 bg-white space-y-3 shrink-0 relative z-20">
-                            {/* Row 1: Search + Select 2 Brand + Select 2 Category */}
+                            {/* Row 1: Search + Brand + Category + Sub-category */}
                             <div className="flex flex-col sm:flex-row items-stretch gap-3">
                                 {/* Search input */}
                                 <div className="relative flex-1">
@@ -680,7 +776,7 @@ export function DjangoBatchImportModal({
                                     )}
                                 </div>
 
-                                {/* Select 2 Marque */}
+                                {/* Brand dropdown (Django) */}
                                 <div className="w-full sm:w-48 shrink-0 relative z-30">
                                     <SearchableDropdown
                                         options={brandOptions}
@@ -688,23 +784,25 @@ export function DjangoBatchImportModal({
                                         onChange={handleBrandChange}
                                         placeholder="Toutes les marques"
                                         defaultLabel="Toutes les marques"
+                                        disabled={filtersLoading}
                                         triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white shadow-xs"
                                     />
                                 </div>
 
-                                {/* Select 2 Catégorie */}
+                                {/* Category dropdown (Django families) */}
                                 <div className="w-full sm:w-56 shrink-0 relative z-20">
                                     <SearchableDropdown
                                         options={categoryOptions}
-                                        value={selectedCategoryId}
+                                        value={selectedCategoryFamily}
                                         onChange={handleCategoryChange}
                                         placeholder="Toutes les catégories"
                                         defaultLabel="Toutes les catégories"
+                                        disabled={filtersLoading}
                                         triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white shadow-xs"
                                     />
                                 </div>
 
-                                {/* Select 2 Sous-Catégorie */}
+                                {/* Sub-category dropdown (Django, dependent on category) */}
                                 <div className="w-full sm:w-56 shrink-0 relative z-20">
                                     <SearchableDropdown
                                         options={subCategoryOptions}
@@ -712,11 +810,12 @@ export function DjangoBatchImportModal({
                                         onChange={handleSubCategoryChange}
                                         placeholder="Toutes les sous-catégories"
                                         defaultLabel="Toutes les sous-catégories"
+                                        disabled={filtersLoading || subCategoryOptions.length === 0}
                                         triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white shadow-xs"
                                     />
                                 </div>
 
-                                {/* Reset filters button if any active */}
+                                {/* Reset filters button */}
                                 {hasActiveFilters && (
                                     <button
                                         type="button"
@@ -730,13 +829,13 @@ export function DjangoBatchImportModal({
                                 )}
                             </div>
 
-                            {/* Row 2: Status Chips & Selection Controls */}
+                            {/* Row 2: Tabs + Filter Chips + Select All */}
                             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl">
                                         <button
                                             type="button"
-                                            onClick={() => setFilterTab('all')}
+                                            onClick={() => handleTabChange('all')}
                                             className={cn(
                                                 "px-3 py-1 rounded-lg text-[11px] font-bold transition-all",
                                                 filterTab === 'all'
@@ -744,11 +843,11 @@ export function DjangoBatchImportModal({
                                                     : "text-slate-500 hover:text-slate-800"
                                             )}
                                         >
-                                            Tous ({products.length})
+                                            Tous ({tabCounts.all})
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setFilterTab('existing')}
+                                            onClick={() => handleTabChange('existing')}
                                             className={cn(
                                                 "px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5",
                                                 filterTab === 'existing'
@@ -757,11 +856,11 @@ export function DjangoBatchImportModal({
                                             )}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                            <span>Existants Baraka</span>
+                                            <span>Existants Baraka ({tabCounts.existing})</span>
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setFilterTab('new')}
+                                            onClick={() => handleTabChange('new')}
                                             className={cn(
                                                 "px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5",
                                                 filterTab === 'new'
@@ -770,7 +869,7 @@ export function DjangoBatchImportModal({
                                             )}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-sky-500" />
-                                            <span>Nouveaux</span>
+                                            <span>Nouveaux ({tabCounts.new})</span>
                                         </button>
                                     </div>
 
@@ -815,25 +914,33 @@ export function DjangoBatchImportModal({
 
                         {/* 4. Products Grid */}
                         <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 bg-slate-50/50 relative">
-                            {/* Overlay loader when re-filtering or searching with existing cards */}
-                            {isSearching && filteredProducts.length > 0 && (
+                            {/* Overlay loader when re-filtering with existing cards */}
+                            {isSearching && products.length > 0 && (
                                 <div className="absolute inset-0 bg-white/75 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center transition-all animate-in fade-in duration-150">
                                     <SimpleMinimalLoader text="Recherche en cours..." size="default" />
                                 </div>
                             )}
 
                             {searchError && (
-                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-[12px] flex items-center gap-3 shadow-xs">
+                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-[12px] flex items-center gap-3 shadow-xs mb-4">
                                     <AlertCircle size={20} className="text-amber-600 shrink-0" />
                                     <div className="flex-1">
                                         <p className="font-bold">Information</p>
                                         <p>{searchError}</p>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => executeSearch(page)}
+                                        className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 rounded-lg text-amber-900 text-[11px] font-bold flex items-center gap-1.5 transition-colors"
+                                    >
+                                        <RefreshCw size={12} />
+                                        Réessayer
+                                    </button>
                                 </div>
                             )}
 
-                            {/* Full loader + skeleton cards when initial load or empty results while searching */}
-                            {isSearching && filteredProducts.length === 0 && (
+                            {/* Full loader + skeleton when initial load */}
+                            {isSearching && products.length === 0 && (
                                 <div className="py-6 space-y-6">
                                     <SimpleMinimalLoader text="Chargement du catalogue..." size="large" />
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 opacity-60">
@@ -844,7 +951,7 @@ export function DjangoBatchImportModal({
                                 </div>
                             )}
 
-                            {!searchError && filteredProducts.length === 0 && !isSearching && (
+                            {!searchError && products.length === 0 && !isSearching && (
                                 <div className="text-center py-20 text-slate-400 space-y-3">
                                     <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mx-auto text-slate-400 shadow-xs">
                                         <CloudDownload size={28} />
@@ -866,9 +973,9 @@ export function DjangoBatchImportModal({
                             )}
 
                             {/* Cards Grid */}
-                            {!isSearching && filteredProducts.length > 0 && (
+                            {!isSearching && products.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                                    {filteredProducts.map((p) => {
+                                    {products.map((p) => {
                                         const isSelected = selectedMap.has(p.reference);
                                         const existsInBaraka = p.barakaMatch?.exists === true;
                                         const firstImg = p.images[0];
@@ -886,7 +993,7 @@ export function DjangoBatchImportModal({
                                                         : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                                 )}
                                             >
-                                                {/* Card Top: Reference + Status + Custom Checkbox */}
+                                                {/* Card Top: Reference + Status + Checkbox */}
                                                 <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
                                                     <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-lg truncate max-w-[140px]" title={p.reference}>
                                                         {p.reference}
@@ -905,7 +1012,6 @@ export function DjangoBatchImportModal({
                                                             </span>
                                                         )}
 
-                                                        {/* Custom Checkbox */}
                                                         <div className={cn(
                                                             "w-5 h-5 rounded-lg border flex items-center justify-center transition-all",
                                                             isSelected
@@ -917,9 +1023,8 @@ export function DjangoBatchImportModal({
                                                     </div>
                                                 </div>
 
-                                                {/* Card Middle: Thumbnail + Title & Description */}
+                                                {/* Card Middle: Thumbnail + Title */}
                                                 <div className="flex items-start gap-3.5 my-3">
-                                                    {/* Image Thumbnail with fallback */}
                                                     <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center shrink-0 p-1 relative group-hover:scale-105 transition-transform">
                                                         <ImageIcon size={22} className="text-slate-300 pointer-events-none" />
                                                         {imageSrc && (
@@ -972,38 +1077,32 @@ export function DjangoBatchImportModal({
                                 </div>
                             )}
 
-                            {/* When isSearching and cards exist, still keep cards visible underneath overlay */}
-                            {isSearching && filteredProducts.length > 0 && (
+                            {/* Ghost cards underneath overlay */}
+                            {isSearching && products.length > 0 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 opacity-40">
-                                    {filteredProducts.map((p) => {
-                                        const isSelected = selectedMap.has(p.reference);
-                                        const existsInBaraka = p.barakaMatch?.exists === true;
-                                        return (
-                                            <div
-                                                key={p.id}
-                                                className={cn(
-                                                    "p-4 rounded-2xl border text-left flex flex-col justify-between bg-white border-slate-200/80"
-                                                )}
-                                            >
-                                                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
-                                                    <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg truncate max-w-[140px]">
-                                                        {p.reference}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-start gap-3.5 my-3">
-                                                    <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 shrink-0" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-bold text-[13px] text-slate-900 line-clamp-2">{p.name}</h4>
-                                                    </div>
+                                    {products.map((p) => (
+                                        <div
+                                            key={p.id}
+                                            className="p-4 rounded-2xl border text-left flex flex-col justify-between bg-white border-slate-200/80"
+                                        >
+                                            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                                                <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg truncate max-w-[140px]">
+                                                    {p.reference}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-start gap-3.5 my-3">
+                                                <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-bold text-[13px] text-slate-900 line-clamp-2">{p.name}</h4>
                                                 </div>
                                             </div>
-                                        );
-                                    })}
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
 
-                        {/* 5. Minimalist Bottom Action & Pagination Bar */}
+                        {/* 5. Bottom Action & Pagination Bar */}
                         <div className="px-5 sm:px-6 py-3.5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 shrink-0">
                             <span className="text-[12px] text-slate-500 font-medium flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -1044,7 +1143,7 @@ export function DjangoBatchImportModal({
                                     disabled={selectedList.length === 0}
                                     className="ml-2 px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-[12px] rounded-xl flex items-center gap-2 shadow-sm hover:shadow-md transition-all disabled:opacity-40 active:scale-95"
                                 >
-                                    <span>Configurer l'import ({selectedList.length})</span>
+                                    <span>Configurer l&apos;import ({selectedList.length})</span>
                                     <ArrowRight size={15} />
                                 </button>
                             </div>
@@ -1052,7 +1151,9 @@ export function DjangoBatchImportModal({
                     </div>
                 )}
 
-                {/* STEP 2: Preview & Import Settings */}
+                {/* ============================================================= */}
+                {/* STEP 2: Preview & Import Settings                              */}
+                {/* ============================================================= */}
                 {step === 'preview' && (
                     <div className="flex-1 flex flex-col overflow-hidden">
                         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-slate-50/50">
@@ -1061,7 +1162,7 @@ export function DjangoBatchImportModal({
                                 <div className="space-y-1">
                                     <h4 className="font-bold text-[15px] text-slate-900 flex items-center gap-2">
                                         <ShieldCheck className="text-orange-500" size={20} />
-                                        Validation de l'import : {selectedList.length} produit(s) sélectionné(s)
+                                        Validation de l&apos;import : {selectedList.length} produit(s) sélectionné(s)
                                     </h4>
                                     <p className="text-[12px] text-slate-600 leading-relaxed">
                                         <strong className="text-slate-900">{existingCount}</strong> produit(s) déjà présent(s) dans Baraka seront mis à jour de façon ciblée.
@@ -1075,19 +1176,19 @@ export function DjangoBatchImportModal({
                                 </div>
                             </div>
 
-                            {/* Destination Category & SubCategory for new products */}
+                            {/* Destination Category & SubCategory for new products (BARAKA DB) */}
                             {newCount > 0 && (
                                 <div className="p-5 bg-white border border-slate-200/80 rounded-2xl space-y-4 shadow-xs">
                                     <div className="space-y-2">
                                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                                             <Layers size={14} className="text-orange-500" />
-                                            Catégorie d'affectation pour les {newCount} nouveau(x) produit(s)
+                                            Catégorie d&apos;affectation pour les {newCount} nouveau(x) produit(s)
                                         </label>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl">
                                             <div>
                                                 <span className="text-[11px] font-medium text-slate-400 block mb-1">Catégorie principale</span>
                                                 <SearchableDropdown
-                                                    options={categoryOptions}
+                                                    options={barakaCategoryOptions}
                                                     value={targetCategoryId}
                                                     onChange={(val) => {
                                                         setTargetCategoryId(val);
@@ -1101,7 +1202,7 @@ export function DjangoBatchImportModal({
                                             <div>
                                                 <span className="text-[11px] font-medium text-slate-400 block mb-1">Sous-catégorie (optionnel)</span>
                                                 <SearchableDropdown
-                                                    options={subCategoryOptions}
+                                                    options={barakaSubCategoryOptions}
                                                     value={targetSubCategoryId}
                                                     onChange={setTargetSubCategoryId}
                                                     placeholder="Toutes les sous-catégories"
@@ -1157,7 +1258,7 @@ export function DjangoBatchImportModal({
                                                     <AlignLeft size={15} className="text-orange-500" />
                                                     Description courte (Libellé)
                                                 </span>
-                                                <p className="text-[11px] text-slate-400">Préserve l'existant si le libellé Django est vide</p>
+                                                <p className="text-[11px] text-slate-400">Préserve l&apos;existant si le libellé Django est vide</p>
                                             </div>
                                         </div>
                                     </label>
@@ -1193,7 +1294,7 @@ export function DjangoBatchImportModal({
                                                 />
                                                 <span className="font-bold text-[13px] text-slate-800 flex items-center gap-1.5">
                                                     <ImageIcon size={15} className="text-orange-500" />
-                                                    Galeries d'images
+                                                    Galeries d&apos;images
                                                 </span>
                                             </label>
                                             <select
@@ -1207,7 +1308,7 @@ export function DjangoBatchImportModal({
                                             </select>
                                         </div>
                                         <p className="text-[11px] text-slate-400">
-                                            Transfert sécurisé vers Cloudinary avec respect strict de l'ordre d'origine.
+                                            Transfert sécurisé vers Cloudinary avec respect strict de l&apos;ordre d&apos;origine.
                                         </p>
                                     </div>
                                 </div>
@@ -1281,18 +1382,19 @@ export function DjangoBatchImportModal({
                                 className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-[12px] rounded-xl shadow-sm hover:shadow-md flex items-center gap-2 transition-all active:scale-95"
                             >
                                 <CloudDownload size={16} />
-                                <span>Confirmer et lancer l'importation ({selectedList.length})</span>
+                                <span>Confirmer et lancer l&apos;importation ({selectedList.length})</span>
                             </button>
                         </div>
                     </div>
                 )}
 
-                {/* STEP 3: Processing State */}
+                {/* ============================================================= */}
+                {/* STEP 3: Processing State                                       */}
+                {/* ============================================================= */}
                 {step === 'processing' && (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 space-y-6 text-center bg-slate-50/40">
                         <SimpleMinimalLoader text="Importation en cours..." size="large" />
 
-                        {/* Progress Bar */}
                         <div className="w-full max-w-sm space-y-2.5 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
                             <div className="flex items-center justify-between text-xs font-medium text-slate-600">
                                 <span className="flex items-center gap-1.5 text-orange-600">
@@ -1330,11 +1432,12 @@ export function DjangoBatchImportModal({
                     </div>
                 )}
 
-                {/* STEP 4: Execution Report */}
+                {/* ============================================================= */}
+                {/* STEP 4: Execution Report                                       */}
+                {/* ============================================================= */}
                 {step === 'report' && importReport && (
                     <div className="flex-1 flex flex-col overflow-hidden">
                         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-slate-50/50">
-                            {/* Summary stat cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="p-5 bg-white border border-slate-200/80 rounded-2xl text-center shadow-xs">
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Traités</span>
@@ -1350,7 +1453,6 @@ export function DjangoBatchImportModal({
                                 </div>
                             </div>
 
-                            {/* Detailed Results List */}
                             <div className="space-y-3">
                                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                                     Détail de chaque produit traité :
