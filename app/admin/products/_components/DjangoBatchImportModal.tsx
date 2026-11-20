@@ -47,13 +47,11 @@ interface DjangoBatchImportModalProps {
     brands?: Array<{ id: string; name: string; image?: string | null }>;
 }
 
-function BarakaModalLoader({
-    title = "Chargement en cours...",
-    subtitle = "Veuillez patienter...",
+function SimpleMinimalLoader({
+    text = "Chargement des données...",
     size = "default"
 }: {
-    title?: string;
-    subtitle?: string;
+    text?: string;
     size?: "small" | "default" | "large";
 }) {
     const isSmall = size === "small";
@@ -61,53 +59,44 @@ function BarakaModalLoader({
 
     return (
         <div className={cn(
-            "flex flex-col items-center justify-center text-center select-none",
-            isLarge ? "py-12 space-y-4" : isSmall ? "py-6 space-y-2.5" : "py-8 space-y-3"
+            "flex flex-col items-center justify-center text-center select-none animate-in fade-in duration-150",
+            isLarge ? "py-12 space-y-3" : isSmall ? "py-3 space-y-1.5" : "py-8 space-y-2.5"
         )}>
-            {/* Animated Brand Symbol with Glowing Orbit Rings */}
-            <div className={cn(
-                "relative flex items-center justify-center",
-                isLarge ? "w-20 h-20" : isSmall ? "w-12 h-12" : "w-16 h-16"
-            )}>
-                {/* Outer spinning gradient ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-orange-500/20 border-t-orange-500 animate-spin" />
-
-                {/* Secondary counter-rotating dashed ring */}
-                <div className="absolute inset-1.5 rounded-full border border-orange-300/30 border-b-orange-400/80 animate-[spin_3s_linear_infinite_reverse]" />
-
-                {/* Soft pulsing ambient glow */}
-                <div className="absolute inset-2 rounded-2xl bg-orange-500/10 blur-md animate-pulse" />
-
-                {/* Central Brand Emblem Container */}
-                <div className={cn(
-                    "relative rounded-2xl bg-white border border-orange-100 flex items-center justify-center shadow-xs overflow-hidden",
-                    isLarge ? "w-12 h-12" : isSmall ? "w-7 h-7" : "w-10 h-10"
-                )}>
-                    <img
-                        src="/loader/symbol-final.png"
-                        alt="Baraka"
-                        className="w-full h-full object-contain p-1.5 animate-pulse"
-                    />
-                </div>
-            </div>
-
-            {/* Typography */}
-            <div className="space-y-1 max-w-sm px-4">
-                <h4 className={cn(
-                    "font-bold text-slate-800 tracking-tight",
-                    isLarge ? "text-base" : isSmall ? "text-xs" : "text-sm"
-                )}>
-                    {title}
-                </h4>
-                {subtitle && (
-                    <p className={cn(
-                        "text-slate-400 font-normal leading-relaxed",
-                        isLarge ? "text-xs" : "text-[11px]"
-                    )}>
-                        {subtitle}
-                    </p>
+            {/* Minimalist modern SVG circular spinner */}
+            <svg
+                className={cn(
+                    "animate-spin text-orange-500",
+                    isLarge ? "w-8 h-8" : isSmall ? "w-4 h-4" : "w-6 h-6"
                 )}
-            </div>
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <circle
+                    cx="12"
+                    cy="12"
+                    r="9.5"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    className="text-slate-200/80"
+                />
+                <path
+                    d="M12 2.5C6.75329 2.5 2.5 6.75329 2.5 12"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="text-orange-500"
+                />
+            </svg>
+
+            {text && (
+                <p className={cn(
+                    "font-medium text-slate-500 tracking-normal",
+                    isLarge ? "text-[13px]" : "text-[12px]"
+                )}>
+                    {text}
+                </p>
+            )}
         </div>
     );
 }
@@ -722,11 +711,7 @@ export function DjangoBatchImportModal({
                             {/* Overlay loader when re-filtering or searching with existing cards */}
                             {isSearching && filteredProducts.length > 0 && (
                                 <div className="absolute inset-0 bg-white/75 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center transition-all animate-in fade-in duration-150">
-                                    <BarakaModalLoader
-                                        title="Recherche en direct dans Django..."
-                                        subtitle="Actualisation de la sélection selon vos critères"
-                                        size="default"
-                                    />
+                                    <SimpleMinimalLoader text="Recherche en cours..." size="default" />
                                 </div>
                             )}
 
@@ -743,11 +728,7 @@ export function DjangoBatchImportModal({
                             {/* Full loader + skeleton cards when initial load or empty results while searching */}
                             {isSearching && filteredProducts.length === 0 && (
                                 <div className="py-6 space-y-6">
-                                    <BarakaModalLoader
-                                        title="Chargement du catalogue Django..."
-                                        subtitle="Connexion à l'API v0 et synchronisation des fiches produits"
-                                        size="large"
-                                    />
+                                    <SimpleMinimalLoader text="Chargement du catalogue..." size="large" />
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 opacity-60">
                                         {Array.from({ length: 6 }).map((_, i) => (
                                             <ProductCardSkeleton key={i} />
@@ -1182,65 +1163,43 @@ export function DjangoBatchImportModal({
 
                 {/* STEP 3: Processing State */}
                 {step === 'processing' && (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 space-y-7 text-center bg-slate-50/40">
-                        {/* Real Branded Animated Baraka Loader */}
-                        <div className="relative flex items-center justify-center w-24 h-24">
-                            {/* Outer spinning ring */}
-                            <div className="absolute inset-0 rounded-full border-3 border-orange-500/20 border-t-orange-500 animate-spin" />
-                            {/* Counter-rotating dashed ring */}
-                            <div className="absolute inset-2 rounded-full border-2 border-dashed border-orange-400/40 animate-[spin_4s_linear_infinite_reverse]" />
-                            {/* Ambient glow */}
-                            <div className="absolute inset-3 rounded-2xl bg-orange-500/15 blur-lg animate-pulse" />
-                            
-                            {/* Central Logo Container */}
-                            <div className="relative w-14 h-14 rounded-2xl bg-white border border-orange-100 flex items-center justify-center shadow-md p-2 overflow-hidden">
-                                <img
-                                    src="/loader/symbol-final.png"
-                                    alt="Baraka"
-                                    className="w-full h-full object-contain animate-pulse"
-                                />
-                            </div>
-                        </div>
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 space-y-6 text-center bg-slate-50/40">
+                        <SimpleMinimalLoader text="Importation en cours..." size="large" />
 
-                        <div className="space-y-2 max-w-md">
-                            <h4 className="font-bold text-xl text-slate-900 tracking-tight">
-                                Importation et synchronisation en cours...
-                            </h4>
-                            <p className="text-xs text-slate-500 leading-relaxed">
-                                Transfert sécurisé des données et des images vers Cloudinary. Veuillez patienter sans fermer la fenêtre.
-                            </p>
-                        </div>
-
-                        {/* Progress Bar with Live Counter Card */}
-                        <div className="w-full max-w-md space-y-3 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-                            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                                <span className="flex items-center gap-2 text-orange-600">
-                                    <Loader2 size={13} className="animate-spin" />
-                                    <span>Traitement par lot...</span>
+                        {/* Progress Bar */}
+                        <div className="w-full max-w-sm space-y-2.5 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+                            <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                                <span className="flex items-center gap-1.5 text-orange-600">
+                                    <Loader2 size={12} className="animate-spin" />
+                                    <span>Traitement par lot</span>
                                 </span>
-                                <span className="font-mono text-slate-900 font-black">
-                                    {progressTotal > 0 ? Math.round((progressCurrent / progressTotal) * 100) : 0} %
+                                <span className="font-mono text-slate-900 font-bold text-[13px]">
+                                    {progressTotal > 0 ? Math.round((progressCurrent / progressTotal) * 100) : 0}%
                                 </span>
                             </div>
 
-                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 p-0.5">
+                            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-300"
+                                    className="h-full bg-orange-500 rounded-full transition-all duration-300"
                                     style={{ width: `${progressTotal > 0 ? (progressCurrent / progressTotal) * 100 : 25}%` }}
                                 />
                             </div>
 
-                            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                            <div className="flex items-center justify-between text-[11px] text-slate-400">
                                 <span>Fiches traitées</span>
-                                <span className="font-mono font-bold text-slate-700">
+                                <span className="font-mono font-semibold text-slate-600">
                                     {progressCurrent} / {progressTotal}
                                 </span>
                             </div>
                         </div>
 
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-800 text-[11px] font-semibold shadow-2xs">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>Prix, stocks et configurations existantes protégés à 100%</span>
+                        <p className="text-[11px] text-slate-400 max-w-xs leading-relaxed">
+                            Transfert sécurisé des données et des images. Ne fermez pas cette fenêtre.
+                        </p>
+
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-[11px] font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>Prix, stocks et configurations protégés</span>
                         </div>
                     </div>
                 )}

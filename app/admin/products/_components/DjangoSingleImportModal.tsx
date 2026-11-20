@@ -47,13 +47,11 @@ interface DjangoSingleImportModalProps {
     }) => void;
 }
 
-function BarakaModalLoader({
-    title = "Chargement en cours...",
-    subtitle = "Veuillez patienter...",
+function SimpleMinimalLoader({
+    text = "Chargement des données...",
     size = "default"
 }: {
-    title?: string;
-    subtitle?: string;
+    text?: string;
     size?: "small" | "default" | "large";
 }) {
     const isSmall = size === "small";
@@ -61,53 +59,43 @@ function BarakaModalLoader({
 
     return (
         <div className={cn(
-            "flex flex-col items-center justify-center text-center select-none",
-            isLarge ? "py-12 space-y-4" : isSmall ? "py-6 space-y-2.5" : "py-8 space-y-3"
+            "flex flex-col items-center justify-center text-center select-none animate-in fade-in duration-150",
+            isLarge ? "py-12 space-y-3" : isSmall ? "py-3 space-y-1.5" : "py-8 space-y-2.5"
         )}>
-            {/* Animated Brand Symbol with Glowing Orbit Rings */}
-            <div className={cn(
-                "relative flex items-center justify-center",
-                isLarge ? "w-20 h-20" : isSmall ? "w-12 h-12" : "w-16 h-16"
-            )}>
-                {/* Outer spinning gradient ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-orange-500/20 border-t-orange-500 animate-spin" />
-
-                {/* Secondary counter-rotating dashed ring */}
-                <div className="absolute inset-1.5 rounded-full border border-orange-300/30 border-b-orange-400/80 animate-[spin_3s_linear_infinite_reverse]" />
-
-                {/* Soft pulsing ambient glow */}
-                <div className="absolute inset-2 rounded-2xl bg-orange-500/10 blur-md animate-pulse" />
-
-                {/* Central Brand Emblem Container */}
-                <div className={cn(
-                    "relative rounded-2xl bg-white border border-orange-100 flex items-center justify-center shadow-xs overflow-hidden",
-                    isLarge ? "w-12 h-12" : isSmall ? "w-7 h-7" : "w-10 h-10"
-                )}>
-                    <img
-                        src="/loader/symbol-final.png"
-                        alt="Baraka"
-                        className="w-full h-full object-contain p-1.5 animate-pulse"
-                    />
-                </div>
-            </div>
-
-            {/* Typography */}
-            <div className="space-y-1 max-w-sm px-4">
-                <h4 className={cn(
-                    "font-bold text-slate-800 tracking-tight",
-                    isLarge ? "text-base" : isSmall ? "text-xs" : "text-sm"
-                )}>
-                    {title}
-                </h4>
-                {subtitle && (
-                    <p className={cn(
-                        "text-slate-400 font-normal leading-relaxed",
-                        isLarge ? "text-xs" : "text-[11px]"
-                    )}>
-                        {subtitle}
-                    </p>
+            <svg
+                className={cn(
+                    "animate-spin text-orange-500",
+                    isLarge ? "w-8 h-8" : isSmall ? "w-4 h-4" : "w-6 h-6"
                 )}
-            </div>
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <circle
+                    cx="12"
+                    cy="12"
+                    r="9.5"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    className="text-slate-200/80"
+                />
+                <path
+                    d="M12 2.5C6.75329 2.5 2.5 6.75329 2.5 12"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    className="text-orange-500"
+                />
+            </svg>
+
+            {text && (
+                <p className={cn(
+                    "font-medium text-slate-500 tracking-normal",
+                    isLarge ? "text-[13px]" : "text-[12px]"
+                )}>
+                    {text}
+                </p>
+            )}
         </div>
     );
 }
@@ -384,11 +372,7 @@ export function DjangoSingleImportModal({
                     {/* Transferring Images Overlay */}
                     {isTransferringImages && (
                         <div className="absolute inset-0 bg-white/85 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center p-6 animate-in fade-in duration-150">
-                            <BarakaModalLoader
-                                title={transferStatus || "Transfert des médias vers Cloudinary..."}
-                                subtitle="Téléchargement et persistance des images dans la galerie Baraka"
-                                size="large"
-                            />
+                            <SimpleMinimalLoader text={transferStatus || "Transfert des images..."} size="large" />
                         </div>
                     )}
                     {/* Search Bar */}
@@ -420,11 +404,7 @@ export function DjangoSingleImportModal({
                     {/* Searching Loader State */}
                     {isSearching && !selectedProduct && searchResults.length === 0 && (
                         <div className="py-6">
-                            <BarakaModalLoader
-                                title="Recherche du produit dans Django..."
-                                subtitle="Vérification de la référence et récupération des données"
-                                size="default"
-                            />
+                            <SimpleMinimalLoader text="Recherche du produit..." size="default" />
                         </div>
                     )}
 
