@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     X,
     Search,
@@ -72,6 +73,32 @@ export function DjangoSingleImportModal({
 
     // Search timeout ref for debounce
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Body scroll lock & Escape key handling (Normes UX modales)
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && !isTransferringImages) {
+                onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, isTransferringImages, onClose]);
 
     // When modal opens or initialReference changes
     useEffect(() => {
@@ -234,15 +261,31 @@ export function DjangoSingleImportModal({
         onClose();
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden">
+            {/* Standard Backdrop Overlay */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => {
+                    if (!isTransferringImages) onClose();
+                }}
+                className="absolute inset-0 bg-slate-950/65 backdrop-blur-md"
+                aria-hidden="true"
+            />
+
+            {/* Modal Dialog Container */}
             <motion.div
                 initial={{ opacity: 0, scale: 0.96, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 10 }}
-                className="w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+                className="relative z-10 w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+                role="dialog"
+                aria-modal="true"
             >
                 {/* Header */}
                 <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between border-b border-slate-800">
@@ -627,6 +670,7 @@ export function DjangoSingleImportModal({
                     </div>
                 </div>
             </motion.div>
-        </div>
+        </div>,
+        document.body
     );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
     X,
     Search,
@@ -95,6 +96,32 @@ export function DjangoBatchImportModal({
     } | null>(null);
 
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Body scroll lock & Escape key handling (Normes UX modales)
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && step !== 'processing') {
+                onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen, step, onClose]);
 
     // Load categories & brands if not provided
     useEffect(() => {
@@ -318,15 +345,32 @@ export function DjangoBatchImportModal({
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
+            {/* Standard Backdrop Overlay - Plein écran au-dessus de la topbar et sidebar */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.98, y: 8 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => {
+                    if (step !== 'processing') onClose();
+                }}
+                className="absolute inset-0 bg-slate-950/65 backdrop-blur-md"
+                aria-hidden="true"
+            />
+
+            {/* Modal Dialog Container */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.98, y: 8 }}
-                className="w-full max-w-7xl h-[92vh] max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden"
+                exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="relative z-10 w-full max-w-7xl h-[92vh] max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden"
+                role="dialog"
+                aria-modal="true"
             >
                 {/* 1. Sleek Luminous Header */}
                 <div className="px-5 sm:px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -1086,6 +1130,7 @@ export function DjangoBatchImportModal({
                     </div>
                 )}
             </motion.div>
-        </div>
+        </div>,
+        document.body
     );
 }
