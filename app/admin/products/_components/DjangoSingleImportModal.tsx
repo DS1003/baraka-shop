@@ -381,13 +381,16 @@ export function DjangoSingleImportModal({
                             <span>Rechercher un produit dans Django (Référence ou Nom)</span>
                             {isSearching && (
                                 <span className="text-orange-500 flex items-center gap-1 text-[11px] lowercase">
-                                    <Loader2 size={12} className="animate-spin" /> recherche en cours...
+                                    <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="2.5" className="text-orange-200" /><path d="M12 2.5C6.75329 2.5 2.5 6.75329 2.5 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-orange-500" /></svg> recherche en cours...
                                 </span>
                             )}
                         </label>
                         <div className="relative">
                             {isSearching ? (
-                                <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={16} />
+                                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="2.5" className="text-slate-200/80" />
+                                    <path d="M12 2.5C6.75329 2.5 2.5 6.75329 2.5 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-orange-500" />
+                                </svg>
                             ) : (
                                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             )}

@@ -568,7 +568,10 @@ export function DjangoBatchImportModal({
                                 {/* Search input */}
                                 <div className="relative flex-1">
                                     {isSearching ? (
-                                        <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" size={16} />
+                                        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="2.5" className="text-slate-200/80" />
+                                            <path d="M12 2.5C6.75329 2.5 2.5 6.75329 2.5 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-orange-500" />
+                                        </svg>
                                     ) : (
                                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                                     )}
