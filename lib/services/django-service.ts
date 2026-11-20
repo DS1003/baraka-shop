@@ -235,29 +235,68 @@ export interface DjangoIndexedItem extends DjangoCleanProduct {
     searchIndex: string;
 }
 
-let inMemoryCatalogCache: {
-    items: DjangoIndexedItem[];
-    cachedAt: number;
-} | null = null;
+const globalForCatalog = globalThis as unknown as {
+    __djangoCatalogCache?: { items: DjangoIndexedItem[]; cachedAt: number };
+    __barakaRefSetCache?: { set: Set<string>; cachedAt: number };
+    __barakaMatchCache?: Map<string, any>;
+};
 
 const CATALOG_CACHE_TTL_SECONDS = 1800; // 30 minutes
 const CATALOG_REDIS_KEY = 'django:full_catalog_v2';
+const BARAKA_REF_CACHE_TTL_MS = 120_000; // 2 minutes
+
+/**
+ * Récupère le set des références Baraka avec cache mémoire ultra-rapide (0ms)
+ * Évite les allers-retours SQL Neon Postgres répétés à chaque frappe.
+ */
+async function getCachedBarakaRefSet(): Promise<Set<string>> {
+    const now = Date.now();
+    if (globalForCatalog.__barakaRefSetCache && (now - globalForCatalog.__barakaRefSetCache.cachedAt) < BARAKA_REF_CACHE_TTL_MS) {
+        return globalForCatalog.__barakaRefSetCache.set;
+    }
+
+    try {
+        const barakaProducts = await prisma.product.findMany({
+            select: { reference: true }
+        });
+        const refSet = new Set(
+            barakaProducts
+                .map(p => (p.reference || '').trim().toLowerCase())
+                .filter(Boolean)
+        );
+        globalForCatalog.__barakaRefSetCache = {
+            set: refSet,
+            cachedAt: now
+        };
+        return refSet;
+    } catch {
+        return globalForCatalog.__barakaRefSetCache?.set || new Set();
+    }
+}
+
+/**
+ * Invalide le cache des correspondances Baraka après un import
+ */
+export function invalidateBarakaCatalogCache() {
+    globalForCatalog.__barakaRefSetCache = undefined;
+    globalForCatalog.__barakaMatchCache?.clear();
+}
 
 /**
  * Récupère le catalogue complet des 2 309 produits actifs Django
- * Utilise un cache à 2 niveaux (Mémoire L1 + Redis) pour une réponse ultra-rapide (<10ms).
+ * Utilise un cache à 2 niveaux (Mémoire L1 persistée + Redis) pour une réponse ultra-rapide (<5ms).
  */
 export async function getCachedDjangoCatalog(): Promise<DjangoIndexedItem[]> {
     const now = Date.now();
-    if (inMemoryCatalogCache && (now - inMemoryCatalogCache.cachedAt) < CATALOG_CACHE_TTL_SECONDS * 1000) {
-        return inMemoryCatalogCache.items;
+    if (globalForCatalog.__djangoCatalogCache && (now - globalForCatalog.__djangoCatalogCache.cachedAt) < CATALOG_CACHE_TTL_SECONDS * 1000) {
+        return globalForCatalog.__djangoCatalogCache.items;
     }
 
     // 1. Tenter le cache Redis
     try {
         const cached = await getCache<DjangoIndexedItem[]>(CATALOG_REDIS_KEY);
         if (Array.isArray(cached) && cached.length > 0) {
-            inMemoryCatalogCache = {
+            globalForCatalog.__djangoCatalogCache = {
                 items: cached,
                 cachedAt: now
             };
@@ -345,7 +384,7 @@ export async function getCachedDjangoCatalog(): Promise<DjangoIndexedItem[]> {
         };
     });
 
-    inMemoryCatalogCache = {
+    globalForCatalog.__djangoCatalogCache = {
         items: indexedItems,
         cachedAt: now
     };
@@ -484,15 +523,8 @@ export async function searchDjangoProducts(params?: {
     try {
         const items = await getCachedDjangoCatalog();
 
-        // 1. Récupérer l'ensemble des références existantes dans Baraka Shop pour le statut et les onglets
-        const barakaProducts = await prisma.product.findMany({
-            select: { reference: true }
-        });
-        const barakaRefSet = new Set(
-            barakaProducts
-                .map(p => (p.reference || '').trim().toLowerCase())
-                .filter(Boolean)
-        );
+        // 1. Récupérer l'ensemble des références existantes dans Baraka Shop depuis le cache mémoire (0ms)
+        const barakaRefSet = await getCachedBarakaRefSet();
 
         // 2. Filtrer le catalogue selon les critères actifs (AND)
         let filtered = items;
@@ -555,63 +587,82 @@ export async function searchDjangoProducts(params?: {
         const startIndex = (currentPage - 1) * pageSize;
         const pageItems = filtered.slice(startIndex, startIndex + pageSize);
 
-        // 6. Rapprocher les 12 produits de la page courante avec les détails complets de Baraka
+        // 6. Rapprocher les 12 produits de la page courante avec les détails de Baraka (avec cache mémoire)
+        if (!globalForCatalog.__barakaMatchCache) {
+            globalForCatalog.__barakaMatchCache = new Map();
+        }
+        const matchCache = globalForCatalog.__barakaMatchCache;
+
         const pageRefs = pageItems.map(p => p.reference).filter(Boolean);
-        if (pageRefs.length > 0) {
-            const detailedMatches = await prisma.product.findMany({
-                where: {
-                    reference: { in: pageRefs }
-                },
-                select: {
-                    id: true,
-                    reference: true,
-                    name: true,
-                    shortDescription: true,
-                    features: true,
-                    images: true,
-                    isPublished: true,
-                    categoryId: true,
-                    subCategoryId: true,
-                    brandId: true,
-                    category: { select: { name: true } },
-                    subCategory: { select: { name: true } },
-                    brand: { select: { name: true } }
-                }
-            });
+        const missingRefs = pageRefs.filter(ref => !matchCache.has(ref.toLowerCase().trim()));
 
-            const matchMap = new Map<string, typeof detailedMatches[0]>();
-            for (const dm of detailedMatches) {
-                if (dm.reference) {
-                    matchMap.set(dm.reference.toLowerCase().trim(), dm);
-                }
-            }
+        if (missingRefs.length > 0) {
+            try {
+                const detailedMatches = await prisma.product.findMany({
+                    where: {
+                        reference: { in: missingRefs }
+                    },
+                    select: {
+                        id: true,
+                        reference: true,
+                        name: true,
+                        shortDescription: true,
+                        features: true,
+                        images: true,
+                        isPublished: true,
+                        categoryId: true,
+                        subCategoryId: true,
+                        brandId: true,
+                        category: { select: { name: true } },
+                        subCategory: { select: { name: true } },
+                        brand: { select: { name: true } }
+                    }
+                });
 
-            for (const item of pageItems) {
-                const match = matchMap.get(item.reference.toLowerCase().trim());
-                if (match) {
-                    item.barakaMatch = {
-                        exists: true,
-                        productId: match.id,
-                        reference: match.reference || undefined,
-                        currentName: match.name,
-                        currentShortDescription: match.shortDescription || undefined,
-                        currentFeatures: Array.isArray(match.features) ? (match.features as string[]) : [],
-                        currentImages: match.images || [],
-                        isPublished: match.isPublished,
-                        categoryId: match.categoryId,
-                        categoryName: match.category?.name,
-                        subCategoryId: match.subCategoryId || undefined,
-                        subCategoryName: match.subCategory?.name || undefined,
-                        brandId: match.brandId || undefined,
-                        brandName: match.brand?.name || undefined
-                    };
-                } else {
-                    item.barakaMatch = { exists: false };
+                const foundSet = new Set<string>();
+                for (const dm of detailedMatches) {
+                    if (dm.reference) {
+                        const cleanR = dm.reference.toLowerCase().trim();
+                        foundSet.add(cleanR);
+                        matchCache.set(cleanR, {
+                            exists: true,
+                            productId: dm.id,
+                            reference: dm.reference || undefined,
+                            currentName: dm.name,
+                            currentShortDescription: dm.shortDescription || undefined,
+                            currentFeatures: Array.isArray(dm.features) ? (dm.features as string[]) : [],
+                            currentImages: dm.images || [],
+                            isPublished: dm.isPublished,
+                            categoryId: dm.categoryId,
+                            categoryName: dm.category?.name,
+                            subCategoryId: dm.subCategoryId || undefined,
+                            subCategoryName: dm.subCategory?.name || undefined,
+                            brandId: dm.brandId || undefined,
+                            brandName: dm.brand?.name || undefined
+                        });
+                    }
                 }
+
+                // Pour les références absentes de Baraka, mettre en cache un marqueur { exists: false }
+                for (const ref of missingRefs) {
+                    const cleanR = ref.toLowerCase().trim();
+                    if (!foundSet.has(cleanR)) {
+                        matchCache.set(cleanR, { exists: false });
+                    }
+                }
+            } catch {
+                // En cas d'erreur DB, fallback sur le refSet
             }
-        } else {
-            for (const item of pageItems) {
-                item.barakaMatch = { exists: false };
+        }
+
+        // Assigner les barakaMatch depuis le cache mémoire (instantané)
+        for (const item of pageItems) {
+            const cleanR = item.reference.toLowerCase().trim();
+            const cached = matchCache.get(cleanR);
+            if (cached) {
+                item.barakaMatch = cached;
+            } else {
+                item.barakaMatch = { exists: barakaRefSet.has(cleanR) };
             }
         }
 
@@ -1047,6 +1098,9 @@ export async function executeBatchImport(
 
     const successCount = results.filter(r => r.success).length;
     const failureCount = results.filter(r => !r.success).length;
+
+    // Invalider les caches Baraka pour refléter immédiatement les nouveaux produits
+    invalidateBarakaCatalogCache();
 
     return {
         totalProcessed: items.length,

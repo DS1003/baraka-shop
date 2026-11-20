@@ -399,7 +399,7 @@ export function DjangoBatchImportModal({
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             executeSearch(1, overrides);
-        }, 350);
+        }, 180);
     }, [executeSearch]);
 
     // -----------------------------------------------------------------------
@@ -912,15 +912,15 @@ export function DjangoBatchImportModal({
                             </div>
                         </div>
 
+                        {/* Top progress indicator when refreshing existing results */}
+                        {isSearching && products.length > 0 && (
+                            <div className="h-0.5 w-full bg-slate-100 overflow-hidden shrink-0">
+                                <div className="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 w-full animate-pulse" />
+                            </div>
+                        )}
+
                         {/* 4. Products Grid */}
                         <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 bg-slate-50/50 relative">
-                            {/* Overlay loader when re-filtering with existing cards */}
-                            {isSearching && products.length > 0 && (
-                                <div className="absolute inset-0 bg-white/75 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center transition-all animate-in fade-in duration-150">
-                                    <SimpleMinimalLoader text="Recherche en cours..." size="default" />
-                                </div>
-                            )}
-
                             {searchError && (
                                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-[12px] flex items-center gap-3 shadow-xs mb-4">
                                     <AlertCircle size={20} className="text-amber-600 shrink-0" />
@@ -939,7 +939,7 @@ export function DjangoBatchImportModal({
                                 </div>
                             )}
 
-                            {/* Full loader + skeleton when initial load */}
+                            {/* Full loader + skeleton only when initial load with no cards */}
                             {isSearching && products.length === 0 && (
                                 <div className="py-6 space-y-6">
                                     <SimpleMinimalLoader text="Chargement du catalogue..." size="large" />
@@ -972,9 +972,12 @@ export function DjangoBatchImportModal({
                                 </div>
                             )}
 
-                            {/* Cards Grid */}
-                            {!isSearching && products.length > 0 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                            {/* Cards Grid - kept stable during search without unmount churn */}
+                            {products.length > 0 && (
+                                <div className={cn(
+                                    "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 transition-opacity duration-150",
+                                    isSearching && "opacity-65"
+                                )}>
                                     {products.map((p) => {
                                         const isSelected = selectedMap.has(p.reference);
                                         const existsInBaraka = p.barakaMatch?.exists === true;
@@ -1074,30 +1077,6 @@ export function DjangoBatchImportModal({
                                             </motion.div>
                                         );
                                     })}
-                                </div>
-                            )}
-
-                            {/* Ghost cards underneath overlay */}
-                            {isSearching && products.length > 0 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 opacity-40">
-                                    {products.map((p) => (
-                                        <div
-                                            key={p.id}
-                                            className="p-4 rounded-2xl border text-left flex flex-col justify-between bg-white border-slate-200/80"
-                                        >
-                                            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
-                                                <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg truncate max-w-[140px]">
-                                                    {p.reference}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-start gap-3.5 my-3">
-                                                <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-bold text-[13px] text-slate-900 line-clamp-2">{p.name}</h4>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
                                 </div>
                             )}
                         </div>
