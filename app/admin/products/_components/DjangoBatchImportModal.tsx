@@ -24,7 +24,8 @@ import {
     Filter,
     Layers,
     Tag,
-    Trash2
+    Trash2,
+    ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -138,7 +139,7 @@ export function DjangoBatchImportModal({
                 setSearchError(res.error || "Erreur de chargement des produits Django.");
             }
         } catch (err: any) {
-            setSearchError("Impossible de contacter le serveur.");
+            setSearchError("Impossible de contacter le serveur Django.");
         } finally {
             setIsSearching(false);
         }
@@ -263,13 +264,11 @@ export function DjangoBatchImportModal({
         }));
     }, [categoriesList]);
 
-    // Selected brand ID for Select2
     const selectedBrandId = useMemo(() => {
         const found = brandsList.find(b => b.name === selectedBrandName);
         return found ? found.id : '';
     }, [brandsList, selectedBrandName]);
 
-    // Selected category ID for Select2
     const selectedCategoryId = useMemo(() => {
         const found = categoriesList.find(c => c.name === selectedCategoryName);
         return found ? found.id : '';
@@ -312,7 +311,7 @@ export function DjangoBatchImportModal({
                 setStep('preview');
             }
         } catch (err: any) {
-            toast.error(err.message || "Erreur réseau.");
+            toast.error(err.message || "Erreur réseau lors de l'importation.");
             setStep('preview');
         }
     };
@@ -322,28 +321,29 @@ export function DjangoBatchImportModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.98, y: 8 }}
-                className="w-full max-w-7xl h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden"
+                className="w-full max-w-7xl h-[92vh] max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden"
             >
-                {/* 1. Modal Top Bar Header */}
-                <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+                {/* 1. Sleek Luminous Header */}
+                <div className="px-5 sm:px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3.5">
-                        <div className="w-10 h-10 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0 shadow-inner">
-                            <CloudDownload size={22} />
+                        <div className="w-10 h-10 rounded-2xl bg-orange-50 border border-orange-100/80 flex items-center justify-center text-orange-600 shrink-0 shadow-xs">
+                            <CloudDownload size={20} strokeWidth={2.2} />
                         </div>
                         <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-[16px] tracking-tight">Importation Globale depuis Django</h3>
-                                <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-mono border border-orange-500/30 font-bold">
-                                    API v0 • Baraka DRF
+                            <div className="flex items-center gap-2.5">
+                                <h3 className="font-bold text-[16px] text-slate-900 tracking-tight">Catalogue Source Django</h3>
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200/60">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Synchronisation active
                                 </span>
                             </div>
-                            <p className="text-[11px] text-slate-400 font-medium">
-                                Recherchez et synchronisez vos fiches produits sans écraser vos prix, stocks ni configurations personnalisées.
+                            <p className="text-[12px] text-slate-500 font-normal mt-0.5">
+                                Importation sécurisée des informations textuelles et médias sans altérer vos prix ni stocks.
                             </p>
                         </div>
                     </div>
@@ -351,84 +351,77 @@ export function DjangoBatchImportModal({
                     <button
                         onClick={onClose}
                         disabled={step === 'processing'}
-                        className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-40"
-                        title="Fermer"
+                        className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-all disabled:opacity-40"
+                        title="Fermer la fenêtre"
                     >
-                        <X size={20} />
+                        <X size={18} strokeWidth={2.2} />
                     </button>
                 </div>
 
-                {/* 2. Stepper Navigation Header */}
-                <div className="px-6 py-3 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-4 shrink-0">
-                    <div className="flex items-center gap-3 text-[12px] font-medium">
+                {/* 2. Modern Segmented Stepper Navigation */}
+                <div className="px-5 sm:px-6 py-2.5 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                    <div className="inline-flex items-center p-1 bg-slate-200/60 rounded-xl gap-1">
                         <button
                             type="button"
                             onClick={() => step !== 'processing' && setStep('search')}
                             disabled={step === 'processing'}
                             className={cn(
-                                "flex items-center gap-2 font-bold px-3 py-1.5 rounded-xl transition-all",
+                                "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all",
                                 step === 'search'
-                                    ? "bg-white text-orange-600 shadow-xs border border-orange-200"
+                                    ? "bg-white text-slate-900 shadow-xs"
                                     : "text-slate-600 hover:text-slate-900"
                             )}
                         >
+                            <span>1. Sélection des fiches</span>
                             <span className={cn(
-                                "w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold",
-                                step === 'search' ? "bg-orange-600 text-white" : "bg-slate-200 text-slate-600"
-                            )}>1</span>
-                            <span>Recherche & Sélection</span>
-                            <span className="px-1.5 py-0.2 rounded-md bg-orange-100 text-orange-700 font-mono text-[11px]">
+                                "px-2 py-0.5 rounded-md text-[11px] font-mono font-bold transition-colors",
+                                selectedList.length > 0 ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500"
+                            )}>
                                 {selectedList.length}
                             </span>
                         </button>
-
-                        <ChevronRight size={14} className="text-slate-300" />
 
                         <button
                             type="button"
                             onClick={() => step !== 'processing' && selectedList.length > 0 && setStep('preview')}
                             disabled={selectedList.length === 0 || step === 'processing'}
                             className={cn(
-                                "flex items-center gap-2 font-bold px-3 py-1.5 rounded-xl transition-all disabled:opacity-40",
+                                "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed",
                                 step === 'preview'
-                                    ? "bg-white text-orange-600 shadow-xs border border-orange-200"
+                                    ? "bg-white text-slate-900 shadow-xs"
                                     : "text-slate-600 hover:text-slate-900"
                             )}
                         >
-                            <span className={cn(
-                                "w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold",
-                                step === 'preview' ? "bg-orange-600 text-white" : "bg-slate-200 text-slate-600"
-                            )}>2</span>
-                            <span>Paramètres d'import & Validation</span>
+                            <span>2. Options & Validation</span>
                         </button>
 
                         {step === 'report' && (
-                            <>
-                                <ChevronRight size={14} className="text-slate-300" />
-                                <span className="flex items-center gap-2 font-bold px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-                                    <span className="w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold bg-emerald-600 text-white">3</span>
-                                    <span>Rapport d'exécution</span>
-                                </span>
-                            </>
+                            <span className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-[12px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-xs">
+                                <span>3. Résultat</span>
+                            </span>
                         )}
                     </div>
 
-                    {/* Quick Selection Summary in Header */}
+                    {/* Quick Selection Summary */}
                     {selectedList.length > 0 && step === 'search' && (
                         <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-bold text-slate-600">Sélectionnés :</span>
-                            <span className="text-[11px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">
-                                {existingCount} existant(s)
-                            </span>
-                            <span className="text-[11px] bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full font-bold">
-                                {newCount} nouveau(x)
-                            </span>
+                            <span className="text-[12px] text-slate-500 font-medium">Sélection :</span>
+                            {existingCount > 0 && (
+                                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
+                                    {existingCount} existant(s)
+                                </span>
+                            )}
+                            {newCount > 0 && (
+                                <span className="text-[11px] font-bold text-sky-700 bg-sky-50 border border-sky-200/60 px-2.5 py-0.5 rounded-full">
+                                    {newCount} nouveau(x)
+                                </span>
+                            )}
                             <button
                                 type="button"
                                 onClick={clearAllSelection}
-                                className="text-[11px] text-slate-400 hover:text-rose-600 font-medium underline transition-colors ml-1"
+                                className="text-[11px] font-semibold text-rose-600 hover:text-rose-700 hover:underline ml-1 transition-colors"
                             >
-                                Tout désélectionner
+                                Désélectionner tout
                             </button>
                         </div>
                     )}
@@ -437,28 +430,29 @@ export function DjangoBatchImportModal({
                 {/* STEP 1: Search, Select2 Filters & Selection */}
                 {step === 'search' && (
                     <div className="flex-1 flex flex-col overflow-hidden">
-                        {/* 3. Filter Bar with Select2 Dropdowns */}
-                        <div className="p-4 border-b border-slate-200/80 bg-white space-y-3 shrink-0 relative z-20">
+                        {/* 3. Filter Toolbar with Select2 Dropdowns */}
+                        <div className="p-4 sm:p-5 border-b border-slate-100 bg-white space-y-3 shrink-0 relative z-20">
                             {/* Row 1: Search + Select 2 Brand + Select 2 Category */}
-                            <div className="flex flex-col lg:flex-row items-stretch gap-3">
+                            <div className="flex flex-col sm:flex-row items-stretch gap-3">
                                 {/* Search input */}
                                 <div className="relative flex-1">
                                     <Search className={cn(
-                                        "absolute left-4 top-1/2 -translate-y-1/2 transition-colors",
+                                        "absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors",
                                         isSearching ? "text-orange-500 animate-pulse" : "text-slate-400"
-                                    )} size={17} />
+                                    )} size={16} />
                                     <input
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => handleTextChange(e.target.value)}
                                         placeholder="Rechercher par référence (ex: RS143, DE195V67A), mot-clé..."
-                                        className="w-full pl-11 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400"
+                                        className="w-full h-11 pl-10 pr-9 bg-slate-50 border border-slate-200/80 rounded-xl text-[13px] font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500/40 transition-all shadow-xs"
                                     />
                                     {searchQuery && (
                                         <button
                                             type="button"
                                             onClick={() => handleTextChange('')}
-                                            className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-200/50"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-200/50 transition-colors"
+                                            title="Effacer"
                                         >
                                             <X size={14} />
                                         </button>
@@ -466,26 +460,26 @@ export function DjangoBatchImportModal({
                                 </div>
 
                                 {/* Select 2 Marque */}
-                                <div className="w-full lg:w-56 shrink-0 relative z-30">
+                                <div className="w-full sm:w-56 shrink-0 relative z-30">
                                     <SearchableDropdown
                                         options={brandOptions}
                                         value={selectedBrandId}
                                         onChange={handleBrandChange}
                                         placeholder="Toutes les marques"
                                         defaultLabel="Toutes les marques"
-                                        triggerClassName="py-2.5 bg-slate-50 text-[12px] rounded-xl border-slate-200"
+                                        triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white shadow-xs"
                                     />
                                 </div>
 
                                 {/* Select 2 Catégorie */}
-                                <div className="w-full lg:w-64 shrink-0 relative z-20">
+                                <div className="w-full sm:w-64 shrink-0 relative z-20">
                                     <SearchableDropdown
                                         options={categoryOptions}
                                         value={selectedCategoryId}
                                         onChange={handleCategoryChange}
                                         placeholder="Toutes les catégories"
                                         defaultLabel="Toutes les catégories"
-                                        triggerClassName="py-2.5 bg-slate-50 text-[12px] rounded-xl border-slate-200"
+                                        triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white shadow-xs"
                                     />
                                 </div>
 
@@ -494,24 +488,24 @@ export function DjangoBatchImportModal({
                                     <button
                                         type="button"
                                         onClick={handleClearAllFilters}
-                                        className="px-3.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[12px] flex items-center gap-1.5 transition-colors shrink-0"
+                                        className="h-11 px-3.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[12px] flex items-center justify-center gap-1.5 transition-colors shrink-0 shadow-xs"
                                         title="Réinitialiser tous les filtres"
                                     >
                                         <Trash2 size={14} />
-                                        <span>Effacer filtres</span>
+                                        <span>Effacer</span>
                                     </button>
                                 )}
                             </div>
 
                             {/* Row 2: Status Chips & Selection Controls */}
                             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl">
                                         <button
                                             type="button"
                                             onClick={() => setFilterTab('all')}
                                             className={cn(
-                                                "px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all",
+                                                "px-3 py-1 rounded-lg text-[11px] font-bold transition-all",
                                                 filterTab === 'all'
                                                     ? "bg-white text-slate-900 shadow-xs"
                                                     : "text-slate-500 hover:text-slate-800"
@@ -523,7 +517,7 @@ export function DjangoBatchImportModal({
                                             type="button"
                                             onClick={() => setFilterTab('existing')}
                                             className={cn(
-                                                "px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5",
+                                                "px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5",
                                                 filterTab === 'existing'
                                                     ? "bg-white text-emerald-700 shadow-xs"
                                                     : "text-slate-500 hover:text-slate-800"
@@ -536,7 +530,7 @@ export function DjangoBatchImportModal({
                                             type="button"
                                             onClick={() => setFilterTab('new')}
                                             className={cn(
-                                                "px-3.5 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5",
+                                                "px-3 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5",
                                                 filterTab === 'new'
                                                     ? "bg-white text-sky-700 shadow-xs"
                                                     : "text-slate-500 hover:text-slate-800"
@@ -550,15 +544,15 @@ export function DjangoBatchImportModal({
                                     {(selectedBrandName || selectedCategoryName) && (
                                         <div className="flex items-center gap-1.5 text-[11px]">
                                             {selectedBrandName && (
-                                                <span className="px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 font-bold flex items-center gap-1">
-                                                    <Tag size={10} />
-                                                    Marque: {selectedBrandName}
+                                                <span className="px-2.5 py-1 rounded-lg bg-orange-50 border border-orange-200/60 text-orange-800 font-semibold flex items-center gap-1">
+                                                    <Tag size={11} className="text-orange-500" />
+                                                    Marque : {selectedBrandName}
                                                 </span>
                                             )}
                                             {selectedCategoryName && (
-                                                <span className="px-2 py-0.5 rounded-md bg-violet-100 text-violet-800 font-bold flex items-center gap-1">
-                                                    <Layers size={10} />
-                                                    Cat: {selectedCategoryName}
+                                                <span className="px-2.5 py-1 rounded-lg bg-violet-50 border border-violet-200/60 text-violet-800 font-semibold flex items-center gap-1">
+                                                    <Layers size={11} className="text-violet-500" />
+                                                    Cat : {selectedCategoryName}
                                                 </span>
                                             )}
                                         </div>
@@ -568,12 +562,12 @@ export function DjangoBatchImportModal({
                                 <button
                                     type="button"
                                     onClick={toggleSelectAllPage}
-                                    className="px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-bold rounded-xl flex items-center gap-2 transition-all"
+                                    className="px-3.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-slate-700 text-[11px] font-bold rounded-xl flex items-center gap-2 transition-all shadow-xs"
                                 >
                                     {isAllPageSelected ? (
-                                        <CheckSquare size={15} className="text-orange-600" />
+                                        <CheckSquare size={14} className="text-orange-600" />
                                     ) : (
-                                        <Square size={15} className="text-slate-400" />
+                                        <Square size={14} className="text-slate-400" />
                                     )}
                                     <span>{isAllPageSelected ? "Tout désélectionner (cette page)" : "Tout sélectionner (cette page)"}</span>
                                 </button>
@@ -581,31 +575,31 @@ export function DjangoBatchImportModal({
                         </div>
 
                         {/* 4. Products Grid */}
-                        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50/40">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 bg-slate-50/50">
                             {searchError && (
-                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-[12px] flex items-center gap-3">
+                                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-[12px] flex items-center gap-3 shadow-xs">
                                     <AlertCircle size={20} className="text-amber-600 shrink-0" />
                                     <div className="flex-1">
-                                        <p className="font-bold">Attention</p>
+                                        <p className="font-bold">Information</p>
                                         <p>{searchError}</p>
                                     </div>
                                 </div>
                             )}
 
                             {!searchError && filteredProducts.length === 0 && !isSearching && (
-                                <div className="text-center py-16 text-slate-400 space-y-3">
-                                    <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mx-auto text-slate-400">
+                                <div className="text-center py-20 text-slate-400 space-y-3">
+                                    <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mx-auto text-slate-400 shadow-xs">
                                         <CloudDownload size={28} />
                                     </div>
                                     <h4 className="font-bold text-slate-800 text-base">Aucun produit trouvé dans Django</h4>
-                                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                                    <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
                                         Modifiez les termes de recherche ou réinitialisez les filtres de marque et de catégorie.
                                     </p>
                                     {hasActiveFilters && (
                                         <button
                                             type="button"
                                             onClick={handleClearAllFilters}
-                                            className="px-4 py-2 bg-orange-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-orange-700 transition-all"
+                                            className="px-4 py-2 bg-orange-500 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-orange-600 transition-all"
                                         >
                                             Réinitialiser les filtres
                                         </button>
@@ -614,7 +608,7 @@ export function DjangoBatchImportModal({
                             )}
 
                             {/* Cards Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                                 {filteredProducts.map((p) => {
                                     const isSelected = selectedMap.has(p.reference);
                                     const existsInBaraka = p.barakaMatch?.exists === true;
@@ -629,26 +623,24 @@ export function DjangoBatchImportModal({
                                             className={cn(
                                                 "p-4 rounded-2xl border text-left flex flex-col justify-between cursor-pointer transition-all duration-200 select-none relative group",
                                                 isSelected
-                                                    ? "bg-white border-orange-500 ring-2 ring-orange-500/30 shadow-md shadow-orange-500/5"
-                                                    : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm"
+                                                    ? "bg-orange-50/25 border-orange-500 ring-2 ring-orange-500/20 shadow-sm"
+                                                    : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
                                             )}
                                         >
-                                            {/* Card Top: Reference + Status + Checkbox */}
+                                            {/* Card Top: Reference + Status + Custom Checkbox */}
                                             <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
-                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                    <span className="font-mono font-black text-[11px] text-slate-800 bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-md truncate">
-                                                        {p.reference}
-                                                    </span>
-                                                </div>
+                                                <span className="font-mono font-bold text-[11px] text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-lg truncate max-w-[140px]" title={p.reference}>
+                                                    {p.reference}
+                                                </span>
 
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     {existsInBaraka ? (
-                                                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                                             <span>MAJ Baraka</span>
                                                         </span>
                                                     ) : (
-                                                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 border border-sky-200/60 px-2 py-0.5 rounded-full flex items-center gap-1">
                                                             <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                                                             <span>Nouveau</span>
                                                         </span>
@@ -658,18 +650,18 @@ export function DjangoBatchImportModal({
                                                     <div className={cn(
                                                         "w-5 h-5 rounded-lg border flex items-center justify-center transition-all",
                                                         isSelected
-                                                            ? "bg-orange-600 border-orange-600 text-white shadow-xs"
+                                                            ? "bg-orange-500 border-orange-500 text-white shadow-xs"
                                                             : "border-slate-300 bg-white group-hover:border-slate-400"
                                                     )}>
-                                                        {isSelected && <Check size={13} strokeWidth={3} />}
+                                                        {isSelected && <Check size={12} strokeWidth={3} />}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Card Middle: Image + Text info */}
+                                            {/* Card Middle: Thumbnail + Title & Description */}
                                             <div className="flex items-start gap-3.5 my-3">
-                                                {/* Image Thumbnail with proxy and fallback */}
-                                                <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center shrink-0 p-1 relative group-hover:scale-105 transition-transform">
+                                                {/* Image Thumbnail with fallback */}
+                                                <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center shrink-0 p-1 relative group-hover:scale-105 transition-transform">
                                                     <ImageIcon size={22} className="text-slate-300 pointer-events-none" />
                                                     {imageSrc && (
                                                         <img
@@ -684,7 +676,7 @@ export function DjangoBatchImportModal({
                                                                     e.currentTarget.style.display = 'none';
                                                                 }
                                                             }}
-                                                            className="absolute inset-0 w-full h-full object-contain p-1 bg-white"
+                                                            className="absolute inset-0 w-full h-full object-contain p-1.5 bg-white"
                                                         />
                                                     )}
                                                 </div>
@@ -693,7 +685,7 @@ export function DjangoBatchImportModal({
                                                     <h4 className="font-bold text-[13px] text-slate-900 line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors" title={p.name}>
                                                         {p.name}
                                                     </h4>
-                                                    <p className="text-[11px] text-slate-500 line-clamp-1 mt-1 font-medium" title={p.libelle || ''}>
+                                                    <p className="text-[11px] text-slate-400 line-clamp-1 mt-1 font-normal" title={p.libelle || ''}>
                                                         {p.libelle || "Aucun libellé court"}
                                                     </p>
                                                 </div>
@@ -712,7 +704,7 @@ export function DjangoBatchImportModal({
                                                     </span>
                                                 </div>
                                                 <span className="font-mono text-[10px] text-slate-400">
-                                                    ID: {p.id}
+                                                    ID #{p.id}
                                                 </span>
                                             </div>
                                         </motion.div>
@@ -721,25 +713,28 @@ export function DjangoBatchImportModal({
                             </div>
                         </div>
 
-                        {/* 5. Pagination & Bottom Action Bar */}
-                        <div className="px-6 py-3.5 bg-white border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-4 shrink-0">
-                            <span className="text-[12px] text-slate-500 font-medium">
-                                Total Django : <strong className="text-slate-900 font-bold">{totalCount}</strong> produits actifs
-                                {totalPages > 1 && ` — Page ${page} sur ${totalPages}`}
+                        {/* 5. Minimalist Bottom Action & Pagination Bar */}
+                        <div className="px-5 sm:px-6 py-3.5 bg-white border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 shrink-0">
+                            <span className="text-[12px] text-slate-500 font-medium flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                <span>Total catalogue : <strong className="text-slate-900 font-bold">{totalCount}</strong> produits</span>
+                                {totalPages > 1 && (
+                                    <span className="text-slate-400 hidden sm:inline">• Page {page} sur {totalPages}</span>
+                                )}
                             </span>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2.5">
                                 <button
                                     type="button"
                                     onClick={() => handlePageChange(page - 1)}
                                     disabled={page <= 1 || isSearching}
-                                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1 disabled:opacity-40 shadow-xs"
+                                    className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1 disabled:opacity-40 transition-colors shadow-xs"
                                 >
-                                    <ChevronLeft size={16} />
+                                    <ChevronLeft size={15} />
                                     <span>Précédent</span>
                                 </button>
 
-                                <span className="font-mono text-[12px] font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                                <span className="font-mono text-[12px] font-bold text-slate-800 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200/60">
                                     {page} / {totalPages || 1}
                                 </span>
 
@@ -747,17 +742,17 @@ export function DjangoBatchImportModal({
                                     type="button"
                                     onClick={() => handlePageChange(page + 1)}
                                     disabled={page >= totalPages || isSearching}
-                                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1 disabled:opacity-40 shadow-xs"
+                                    className="px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1 disabled:opacity-40 transition-colors shadow-xs"
                                 >
                                     <span>Suivant</span>
-                                    <ChevronRight size={16} />
+                                    <ChevronRight size={15} />
                                 </button>
 
                                 <button
                                     type="button"
                                     onClick={() => setStep('preview')}
                                     disabled={selectedList.length === 0}
-                                    className="ml-4 px-5 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold text-[12px] rounded-xl flex items-center gap-2 shadow-md shadow-orange-600/20 transition-all disabled:opacity-40 active:scale-95"
+                                    className="ml-2 px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-[12px] rounded-xl flex items-center gap-2 shadow-sm hover:shadow-md transition-all disabled:opacity-40 active:scale-95"
                                 >
                                     <span>Configurer l'import ({selectedList.length})</span>
                                     <ArrowRight size={15} />
@@ -770,29 +765,29 @@ export function DjangoBatchImportModal({
                 {/* STEP 2: Preview & Import Settings */}
                 {step === 'preview' && (
                     <div className="flex-1 flex flex-col overflow-hidden">
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30">
+                        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-slate-50/50">
                             {/* Summary banner */}
-                            <div className="p-5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-orange-200 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="p-5 bg-white border border-slate-200/80 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
                                 <div className="space-y-1">
-                                    <h4 className="font-bold text-[15px] text-orange-950 flex items-center gap-2">
-                                        <ShieldCheck className="text-orange-600" size={20} />
+                                    <h4 className="font-bold text-[15px] text-slate-900 flex items-center gap-2">
+                                        <ShieldCheck className="text-orange-500" size={20} />
                                         Validation de l'import : {selectedList.length} produit(s) sélectionné(s)
                                     </h4>
-                                    <p className="text-[12px] text-orange-900">
-                                        <strong className="text-orange-950">{existingCount}</strong> produit(s) déjà présent(s) dans Baraka seront mis à jour de façon ciblée.
+                                    <p className="text-[12px] text-slate-600 leading-relaxed">
+                                        <strong className="text-slate-900">{existingCount}</strong> produit(s) déjà présent(s) dans Baraka seront mis à jour de façon ciblée.
                                         {newCount > 0 && (
-                                            <> <strong className="text-orange-950">{newCount}</strong> nouveau(x) produit(s) seront créés en <strong>brouillon non publié</strong>.</>
+                                            <> <strong className="text-slate-900">{newCount}</strong> nouveau(x) produit(s) seront créés en <strong>brouillon non publié</strong>.</>
                                         )}
                                     </p>
                                 </div>
-                                <div className="text-[11px] font-bold text-orange-800 bg-white/90 border border-orange-200 px-3.5 py-1.5 rounded-xl shadow-xs">
+                                <div className="text-[11px] font-bold text-slate-700 bg-slate-50 border border-slate-200/80 px-3.5 py-1.5 rounded-xl shadow-xs self-start md:self-center">
                                     🔒 Prix & stocks protégés à 100%
                                 </div>
                             </div>
 
                             {/* Destination Category for new products */}
                             {newCount > 0 && (
-                                <div className="p-4 bg-white border border-slate-200 rounded-2xl space-y-2">
+                                <div className="p-5 bg-white border border-slate-200/80 rounded-2xl space-y-2.5 shadow-xs">
                                     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                                         <Layers size={14} className="text-orange-500" />
                                         Catégorie d'affectation pour les {newCount} nouveau(x) produit(s)
@@ -804,7 +799,7 @@ export function DjangoBatchImportModal({
                                             onChange={setTargetCategoryId}
                                             placeholder="Choisir une catégorie Baraka (ou catégorie par défaut)"
                                             defaultLabel="Catégorie par défaut"
-                                            triggerClassName="py-2.5 bg-slate-50 text-[12px] rounded-xl border-slate-200"
+                                            triggerClassName="h-11 bg-slate-50 text-[12px] rounded-xl border-slate-200/80 hover:bg-white"
                                         />
                                     </div>
                                     <p className="text-[11px] text-slate-400">
@@ -821,7 +816,7 @@ export function DjangoBatchImportModal({
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                                     {/* Nom */}
-                                    <label className="p-4 bg-white border border-slate-200 rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-300 shadow-xs">
+                                    <label className="p-4 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-300 shadow-xs transition-colors">
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="checkbox"
@@ -840,7 +835,7 @@ export function DjangoBatchImportModal({
                                     </label>
 
                                     {/* Description courte */}
-                                    <label className="p-4 bg-white border border-slate-200 rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-300 shadow-xs">
+                                    <label className="p-4 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-300 shadow-xs transition-colors">
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="checkbox"
@@ -859,7 +854,7 @@ export function DjangoBatchImportModal({
                                     </label>
 
                                     {/* Caractéristiques */}
-                                    <label className="p-4 bg-white border border-slate-200 rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-300 shadow-xs">
+                                    <label className="p-4 bg-white border border-slate-200/80 rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-300 shadow-xs transition-colors">
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="checkbox"
@@ -878,7 +873,7 @@ export function DjangoBatchImportModal({
                                     </label>
 
                                     {/* Images */}
-                                    <div className="p-4 bg-white border border-slate-200 rounded-2xl flex flex-col justify-between gap-3 shadow-xs">
+                                    <div className="p-4 bg-white border border-slate-200/80 rounded-2xl flex flex-col justify-between gap-3 shadow-xs">
                                         <div className="flex items-center justify-between">
                                             <label className="flex items-center gap-3 cursor-pointer">
                                                 <input
@@ -896,7 +891,7 @@ export function DjangoBatchImportModal({
                                                 value={imageMode}
                                                 onChange={(e) => setImageMode(e.target.value as 'append' | 'replace')}
                                                 disabled={!importImages}
-                                                className="text-[11px] font-bold bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-1 text-slate-700"
+                                                className="text-[11px] font-bold bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1 text-slate-700"
                                             >
                                                 <option value="append">Ajouter à la suite</option>
                                                 <option value="replace">Remplacer toute la galerie</option>
@@ -917,7 +912,7 @@ export function DjangoBatchImportModal({
 
                                 <div className="border border-slate-200/80 rounded-2xl overflow-hidden max-h-64 overflow-y-auto bg-white shadow-xs">
                                     <table className="w-full text-left text-[12px]">
-                                        <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200 sticky top-0">
+                                        <thead className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200/80 sticky top-0">
                                             <tr>
                                                 <th className="py-3 px-4">Réf.</th>
                                                 <th className="py-3 px-4">Nom Django</th>
@@ -929,7 +924,7 @@ export function DjangoBatchImportModal({
                                         <tbody className="divide-y divide-slate-100">
                                             {selectedList.map(p => (
                                                 <tr key={p.id} className="hover:bg-slate-50/50">
-                                                    <td className="py-2.5 px-4 font-mono font-bold text-orange-600 text-[11px]">
+                                                    <td className="py-2.5 px-4 font-mono font-bold text-slate-800 text-[11px]">
                                                         {p.reference}
                                                     </td>
                                                     <td className="py-2.5 px-4 font-semibold text-slate-800 max-w-sm truncate">
@@ -937,11 +932,11 @@ export function DjangoBatchImportModal({
                                                     </td>
                                                     <td className="py-2.5 px-4">
                                                         {p.barakaMatch?.exists ? (
-                                                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
                                                                 Mise à jour ({p.barakaMatch.productId?.slice(0, 8)}...)
                                                             </span>
                                                         ) : (
-                                                            <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
+                                                            <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200/60">
                                                                 Nouveau brouillon
                                                             </span>
                                                         )}
@@ -961,19 +956,20 @@ export function DjangoBatchImportModal({
                         </div>
 
                         {/* Footer */}
-                        <div className="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between shrink-0">
+                        <div className="px-5 sm:px-6 py-4 bg-white border-t border-slate-100 flex items-center justify-between shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setStep('search')}
-                                className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-[12px] rounded-xl transition-all"
+                                className="px-4 py-2 border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 font-bold text-[12px] rounded-xl transition-all shadow-xs flex items-center gap-1.5"
                             >
-                                ← Revenir à la sélection
+                                <ArrowLeft size={14} />
+                                <span>Retour à la sélection</span>
                             </button>
 
                             <button
                                 type="button"
                                 onClick={handleStartBatchImport}
-                                className="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-[12px] rounded-xl shadow-lg shadow-orange-600/20 flex items-center gap-2 transition-all active:scale-95"
+                                className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-[12px] rounded-xl shadow-sm hover:shadow-md flex items-center gap-2 transition-all active:scale-95"
                             >
                                 <CloudDownload size={16} />
                                 <span>Confirmer et lancer l'importation ({selectedList.length})</span>
@@ -982,14 +978,14 @@ export function DjangoBatchImportModal({
                     </div>
                 )}
 
-                {/* STEP 3: Processing Animation */}
+                {/* STEP 3: Processing State */}
                 {step === 'processing' && (
                     <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-6 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600 shadow-inner">
-                            <Loader2 size={32} className="animate-spin" />
+                        <div className="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600 shadow-sm">
+                            <Loader2 size={30} className="animate-spin" />
                         </div>
 
-                        <div className="space-y-2 max-w-md">
+                        <div className="space-y-1.5 max-w-md">
                             <h4 className="font-bold text-[17px] text-slate-900">
                                 Importation en cours...
                             </h4>
@@ -999,14 +995,14 @@ export function DjangoBatchImportModal({
                         </div>
 
                         <div className="w-full max-w-md space-y-2">
-                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
                                 <div
-                                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-300"
+                                    className="h-full bg-orange-500 transition-all duration-300"
                                     style={{ width: `${progressTotal > 0 ? (progressCurrent / progressTotal) * 100 : 50}%` }}
                                 />
                             </div>
                             <span className="font-mono text-[11px] text-slate-400">
-                                Concurrence contrôlée pour préserver la stabilité du serveur
+                                Traitement sécurisé avec respect des quotas Cloudinary
                             </span>
                         </div>
                     </div>
@@ -1015,18 +1011,18 @@ export function DjangoBatchImportModal({
                 {/* STEP 4: Execution Report */}
                 {step === 'report' && importReport && (
                     <div className="flex-1 flex flex-col overflow-hidden">
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30">
+                        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 bg-slate-50/50">
                             {/* Summary stat cards */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="p-5 bg-white border border-slate-200 rounded-2xl text-center shadow-xs">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="p-5 bg-white border border-slate-200/80 rounded-2xl text-center shadow-xs">
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Traités</span>
                                     <p className="text-3xl font-black text-slate-900 mt-1">{importReport.results.length}</p>
                                 </div>
-                                <div className="p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl text-center shadow-xs">
+                                <div className="p-5 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl text-center shadow-xs">
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Succès</span>
                                     <p className="text-3xl font-black text-emerald-800 mt-1">{importReport.successCount}</p>
                                 </div>
-                                <div className="p-5 bg-rose-50/80 border border-rose-200 rounded-2xl text-center shadow-xs">
+                                <div className="p-5 bg-rose-50/80 border border-rose-200/80 rounded-2xl text-center shadow-xs">
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700">Échecs</span>
                                     <p className="text-3xl font-black text-rose-800 mt-1">{importReport.failureCount}</p>
                                 </div>
@@ -1040,7 +1036,7 @@ export function DjangoBatchImportModal({
 
                                 <div className="border border-slate-200/80 rounded-2xl overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-100 bg-white shadow-xs">
                                     {importReport.results.map((r) => (
-                                        <div key={r.reference} className="p-3.5 flex items-center justify-between text-[12px] hover:bg-slate-50/50">
+                                        <div key={r.reference} className="p-3.5 flex items-center justify-between text-[12px] hover:bg-slate-50/50 transition-colors">
                                             <div className="flex items-center gap-3">
                                                 {r.success ? (
                                                     <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
@@ -1078,7 +1074,7 @@ export function DjangoBatchImportModal({
                         </div>
 
                         {/* Footer */}
-                        <div className="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-end shrink-0">
+                        <div className="px-5 sm:px-6 py-4 bg-white border-t border-slate-100 flex items-center justify-end shrink-0">
                             <button
                                 type="button"
                                 onClick={onClose}
