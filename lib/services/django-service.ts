@@ -48,6 +48,10 @@ export interface BarakaMatchInfo {
     currentFeatures?: string[];
     currentImages?: string[];
     isPublished?: boolean;
+    categoryId?: string;
+    categoryName?: string;
+    brandId?: string;
+    brandName?: string;
 }
 
 export interface DjangoCleanProduct {
@@ -266,7 +270,15 @@ export async function searchDjangoProducts(params?: {
                     shortDescription: true,
                     features: true,
                     images: true,
-                    isPublished: true
+                    isPublished: true,
+                    categoryId: true,
+                    brandId: true,
+                    category: {
+                        select: { name: true }
+                    },
+                    brand: {
+                        select: { name: true }
+                    }
                 }
             });
 
@@ -288,7 +300,11 @@ export async function searchDjangoProducts(params?: {
                         currentShortDescription: match.shortDescription || undefined,
                         currentFeatures: Array.isArray(match.features) ? (match.features as string[]) : [],
                         currentImages: match.images || [],
-                        isPublished: match.isPublished
+                        isPublished: match.isPublished,
+                        categoryId: match.categoryId,
+                        categoryName: match.category?.name,
+                        brandId: match.brandId || undefined,
+                        brandName: match.brand?.name || undefined
                     };
                 } else {
                     item.barakaMatch = {

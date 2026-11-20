@@ -226,13 +226,21 @@ export function DjangoBatchImportModal({
         }
     }, [isOpen]);
 
-    // Build the combined Django query string from search text + brand + category
-    const buildSearchQuery = (text: string, brandName: string, categoryName: string) => {
-        const parts: string[] = [];
-        if (brandName.trim()) parts.push(brandName.trim());
-        if (categoryName.trim()) parts.push(categoryName.trim());
-        if (text.trim()) parts.push(text.trim());
-        return parts.join(' ');
+    // Build the query to send to Django API:
+    // If text search exists, use it. If not, use brand name as query keyword (e.g. "DELL", "HP", etc.)
+    // Category is NOT concatenated into Django query since Django has no category text filter,
+    // which previously produced 0 results. Category is filtered on Baraka matches and sets default import category.
+    const buildSearchQuery = (text: string, brandName: string) => {
+        const trimmedText = text.trim();
+        const trimmedBrand = brandName.trim();
+
+        if (trimmedText) {
+            return trimmedText;
+        }
+        if (trimmedBrand) {
+            return trimmedBrand;
+        }
+        return '';
     };
 
     // Execute Django search
@@ -240,9 +248,9 @@ export function DjangoBatchImportModal({
         setIsSearching(true);
         setSearchError(null);
         try {
-            const combinedQuery = buildSearchQuery(text, brand, cat);
+            const djangoQuery = buildSearchQuery(text, brand);
             const res = await searchDjangoProductsAction({
-                q: combinedQuery || undefined,
+                q: djangoQuery || undefined,
                 page: pageNum,
                 pageSize
             });
@@ -300,7 +308,11 @@ export function DjangoBatchImportModal({
         const found = categoriesList.find(c => c.id === catIdOrName);
         const nameToUse = found ? found.name : catIdOrName;
         setSelectedCategoryName(nameToUse);
-        triggerSearchDebounced(searchQuery, selectedBrandName, nameToUse);
+        if (found) {
+            setTargetCategoryId(found.id);
+        } else if (!catIdOrName) {
+            setTargetCategoryId('');
+        }
     };
 
     const handleClearAllFilters = () => {
@@ -316,16 +328,37 @@ export function DjangoBatchImportModal({
         executeSearch(searchQuery, selectedBrandName, selectedCategoryName, newPage);
     };
 
-    // Filter products on current page by tab
+    const selectedBrandId = useMemo(() => {
+        const found = brandsList.find(b => b.name === selectedBrandName);
+        return found ? found.id : '';
+    }, [brandsList, selectedBrandName]);
+
+    const selectedCategoryId = useMemo(() => {
+        const found = categoriesList.find(c => c.name === selectedCategoryName);
+        return found ? found.id : '';
+    }, [categoriesList, selectedCategoryName]);
+
+    // Filter products on current page by tab and/or Baraka Category
     const filteredProducts = useMemo(() => {
+        let list = products;
+
+        // If category is selected, prioritize matching products that belong to this category in Baraka
+        if (selectedCategoryId) {
+            const inCategory = list.filter(p => p.barakaMatch?.categoryId === selectedCategoryId);
+            // If any products match this category in Baraka on current page, filter to them
+            if (inCategory.length > 0) {
+                list = inCategory;
+            }
+        }
+
         if (filterTab === 'existing') {
-            return products.filter(p => p.barakaMatch?.exists === true);
+            return list.filter(p => p.barakaMatch?.exists === true);
         }
         if (filterTab === 'new') {
-            return products.filter(p => !p.barakaMatch || p.barakaMatch.exists !== true);
+            return list.filter(p => !p.barakaMatch || p.barakaMatch.exists !== true);
         }
-        return products;
-    }, [products, filterTab]);
+        return list;
+    }, [products, filterTab, selectedCategoryId]);
 
     // Selection handlers
     const toggleSelect = (p: DjangoCleanProduct) => {
@@ -377,16 +410,6 @@ export function DjangoBatchImportModal({
             name: c.name
         }));
     }, [categoriesList]);
-
-    const selectedBrandId = useMemo(() => {
-        const found = brandsList.find(b => b.name === selectedBrandName);
-        return found ? found.id : '';
-    }, [brandsList, selectedBrandName]);
-
-    const selectedCategoryId = useMemo(() => {
-        const found = categoriesList.find(c => c.name === selectedCategoryName);
-        return found ? found.id : '';
-    }, [categoriesList, selectedCategoryName]);
 
     // Start Batch Import
     const handleStartBatchImport = async () => {
