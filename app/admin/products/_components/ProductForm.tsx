@@ -199,8 +199,8 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [shouldClose, setShouldClose] = useState(false);
     const shouldCloseRef = React.useRef(false);
-    const [formImages, setFormImages] = useState<string[]>([]);
-    const [formVideos, setFormVideos] = useState<string[]>([]);
+    const [formImages, setFormImages] = useState<string[]>(Array.isArray(editingProduct?.images) ? editingProduct.images : []);
+    const [formVideos, setFormVideos] = useState<string[]>(Array.isArray(editingProduct?.videos) ? editingProduct.videos : []);
     const [youtubeUrl, setYoutubeUrl] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [isUploadingVideo, setIsUploadingVideo] = useState(false);
@@ -336,12 +336,11 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
 
         const isDifferentProduct = initialProductIdRef.current !== editingProduct.id;
         
-        // Se réinitialise SEULEMENT si on charge un produit différent pour la première fois
-        if (isDifferentProduct) {
+        // Initialiser ou actualiser si un produit est présent
+        if (isDifferentProduct || formImages.length === 0) {
             initialProductIdRef.current = editingProduct.id;
             currentProductIdRef.current = editingProduct.id;
             setCurrentProductId(editingProduct.id);
-            setIsDirty(false);
 
             const cId = editingProduct.categoryId || editingProduct.category?.id;
             if (cId) {
@@ -360,23 +359,34 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
             const stId = editingProduct.storeId || editingProduct.store?.id;
             if (stId) setStoreId(stId);
 
-            setName(editingProduct.name || '');
-            setPrice(editingProduct.price !== undefined ? String(editingProduct.price) : '');
-            setStock(editingProduct.stock !== undefined ? String(editingProduct.stock) : '');
-            setShortDescription(editingProduct.shortDescription || '');
-            setFeaturesText(Array.isArray(editingProduct.features) ? editingProduct.features.join('\n') : '');
-            setPackageContentText(Array.isArray(editingProduct.packageContent) ? editingProduct.packageContent.join('\n') : '');
-            setFormImages(editingProduct.images || []);
-            setFormVideos(editingProduct.videos || []);
-            setColorVariants(
-                (editingProduct.colorVariants || []).map((cv: any) => ({
-                    id: cv.id,
-                    colorName: cv.colorName,
-                    colorHex: cv.colorHex,
-                    images: cv.images || [],
-                }))
-            );
-            setDescription(editingProduct.description || "");
+            if (isDifferentProduct) {
+                setIsDirty(false);
+                setName(editingProduct.name || '');
+                setPrice(editingProduct.price !== undefined ? String(editingProduct.price) : '');
+                setStock(editingProduct.stock !== undefined ? String(editingProduct.stock) : '');
+                setShortDescription(editingProduct.shortDescription || '');
+                setFeaturesText(Array.isArray(editingProduct.features) ? editingProduct.features.join('\n') : '');
+                setPackageContentText(Array.isArray(editingProduct.packageContent) ? editingProduct.packageContent.join('\n') : '');
+                setDescription(editingProduct.description || "");
+                setIsPublished(editingProduct.isPublished !== undefined ? editingProduct.isPublished : false);
+            }
+
+            if (Array.isArray(editingProduct.images) && editingProduct.images.length > 0) {
+                setFormImages(editingProduct.images);
+            }
+            if (Array.isArray(editingProduct.videos) && editingProduct.videos.length > 0) {
+                setFormVideos(editingProduct.videos);
+            }
+            if (Array.isArray(editingProduct.colorVariants) && editingProduct.colorVariants.length > 0) {
+                setColorVariants(
+                    editingProduct.colorVariants.map((cv: any) => ({
+                        id: cv.id,
+                        colorName: cv.colorName,
+                        colorHex: cv.colorHex,
+                        images: cv.images || [],
+                    }))
+                );
+            }
             setDetailedDescription(
                 Array.isArray(editingProduct.detailedDescription)
                     ? editingProduct.detailedDescription
@@ -384,7 +394,6 @@ export default function ProductForm({ editingProduct }: { editingProduct?: any }
                         ? (() => { try { return JSON.parse(editingProduct.detailedDescription); } catch { return []; } })()
                         : [])
             );
-            setIsPublished(editingProduct.isPublished !== undefined ? editingProduct.isPublished : false);
         }
     }, [editingProduct]);
 
